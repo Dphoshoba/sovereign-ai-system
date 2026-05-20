@@ -1,0 +1,3435 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+model Role {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+
+  permissions RolePermission[]
+  users       UserRole[]
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  roles RolePermission[]
+}
+
+model RolePermission {
+  id           String @id @default(cuid())
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+model UserRole {
+  id        String   @id @default(cuid())
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@index([userId])
+}
+
+
+model Article {
+  id             String            @id @default(cuid())
+  title          String
+  slug           String
+  category       String
+  status         String            @default("draft")
+  excerpt        String?
+  content        String?
+  featuredImage  String?
+
+  seoTitle        String?
+  seoDescription String?
+  seoKeywords    String?
+
+  publishedAt   DateTime?
+  scheduledFor  DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  embedding      ArticleEmbedding?
+
+  @@unique([category, slug])
+  @@index([status])
+  @@index([category])
+}
+
+model ArticleEmbedding {
+  id        String   @id @default(cuid())
+  articleId String   @unique
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  content   String
+  embedding Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+  
+
+model AuditEvent {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
+
+model AiMemory {
+  id        String   @id @default(cuid())
+  type      String
+  title     String
+  content   String
+  source    String?
+  tags      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type])
+  @@index([createdAt])
+}
+
+model AiJob {
+  id          String   @id @default(cuid())
+  type        String
+  status      String   @default("queued")
+  payload     Json?
+  result      Json?
+  error       String?
+  attempts    Int      @default(0)
+  scheduledAt DateTime @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([type])
+  @@index([scheduledAt])
+}
+
+model ClientProfile {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  type      String   @default("lead")
+  status    String   @default("new")
+  source    String?
+  interests String?
+  notes     String?
+  tags      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model AiWorkflow {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  trigger     String
+  action      String
+  status      String   @default("active")
+  config      Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([trigger])
+}
+
+model AiDepartment {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  agents      AiAgent[]
+
+  @@index([status])
+}
+
+model AiAgent {
+  id           String       @id @default(cuid())
+  name         String
+  departmentId String?
+  department   AiDepartment? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  role         String
+  instructions String
+  tools        String?
+  tags         String?
+  status       String       @default("active")
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([status])
+  @@index([departmentId])
+}
+
+model AiScheduledOperation {
+  id          String    @id @default(cuid())
+  name        String
+  type        String
+  status      String    @default("active")
+  frequency   String
+  payload     Json?
+  lastRunAt   DateTime?
+  nextRunAt   DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status])
+  @@index([type])
+  @@index([nextRunAt])
+}
+
+model AiPermissionRule {
+  id          String   @id @default(cuid())
+  agentId     String?
+  department  String?
+  action      String
+  allowed     Boolean  @default(false)
+  requiresApproval Boolean @default(true)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([agentId])
+  @@index([department])
+  @@index([action])
+}
+
+model AiApprovalRequest {
+  id        String   @id @default(cuid())
+  action    String
+  payload   Json?
+  status    String   @default("pending")
+  reason    String?
+  result    Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([action])
+}
+
+model RevenueRecord {
+  id          String   @id @default(cuid())
+  source      String
+  category    String
+  clientName  String?
+  amount      Float
+  currency    String   @default("AUD")
+  recurring   Boolean  @default(false)
+  status      String   @default("received")
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([source])
+  @@index([category])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model RevenueInsight {
+  id          String   @id @default(cuid())
+  title       String
+  insight     String
+  priority    String   @default("medium")
+  confidence  Float?
+  source      String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([priority])
+  @@index([createdAt])
+}
+
+model KnowledgeNode {
+  id         String   @id @default(cuid())
+  type       String
+  label      String
+  entityId   String?
+  summary    String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  outgoingEdges KnowledgeEdge[] @relation("FromNode")
+  incomingEdges KnowledgeEdge[] @relation("ToNode")
+
+  @@index([type])
+  @@index([entityId])
+}
+
+model KnowledgeEdge {
+  id         String   @id @default(cuid())
+  fromNodeId String
+  toNodeId   String
+  relation   String
+  weight     Float    @default(1)
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  fromNode KnowledgeNode @relation("FromNode", fields: [fromNodeId], references: [id], onDelete: Cascade)
+  toNode   KnowledgeNode @relation("ToNode", fields: [toNodeId], references: [id], onDelete: Cascade)
+
+  @@index([relation])
+  @@index([fromNodeId])
+  @@index([toNodeId])
+}
+
+model AiAutonomousAction {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  source      String
+  status      String   @default("proposed")
+  priority    String   @default("medium")
+  actionType  String
+  payload     Json?
+  result      Json?
+  error       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([priority])
+  @@index([actionType])
+  @@index([createdAt])
+}
+
+model CreatorLead {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  creatorType   String?
+  source        String   @default("starter-pack")
+  status        String   @default("new")
+  leadScore     Int      @default(50)
+  readiness     String   @default("unknown")
+  niche         String?
+  bottlenecks   String?
+  notes         String?
+  projectedValue Float?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([readiness])
+  @@index([createdAt])
+}
+
+model CreatorNurtureEvent {
+  id        String   @id @default(cuid())
+  leadId    String
+  type      String
+  subject   String?
+  body      String?
+  status    String   @default("draft")
+  metadata  Json?
+  sentAt    DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([leadId])
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model CreatorLeadInsight {
+  id          String   @id @default(cuid())
+  leadId      String
+  title       String
+  insight     String
+  priority    String   @default("medium")
+  recommendedAction String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([leadId])
+  @@index([priority])
+  @@index([createdAt])
+}
+
+model CreatorAuditRequest {
+  id                String   @id @default(cuid())
+  name              String
+  email             String
+  creatorType        String?
+  niche             String?
+  audienceSize       String?
+  publishingFrequency String?
+  monetizationMethod String?
+  currentTools       String?
+  biggestBottleneck  String?
+  automationGoals    String?
+  status             String   @default("audit-requested")
+  opportunityScore   Int      @default(50)
+  auditSummary       String?
+  recommendedSystems String?
+  nextActions        String?
+  proposalDraft      String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([opportunityScore])
+  @@index([createdAt])
+}
+
+model CreatorAutomationAction {
+  id          String   @id @default(cuid())
+  source      String
+  title       String
+  description String?
+  actionType  String
+  status      String   @default("pending")
+  priority    String   @default("medium")
+  leadId      String?
+  auditId     String?
+  payload     Json?
+  result      Json?
+  error       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([source])
+  @@index([status])
+  @@index([priority])
+  @@index([leadId])
+  @@index([auditId])
+  @@index([createdAt])
+}
+
+model CreatorProposal {
+  id              String   @id @default(cuid())
+  auditId         String?
+  leadId          String?
+  title           String
+  description     String?
+  packageType     String?
+  status          String   @default("draft")
+  estimatedValue  Float?
+  implementationWeeks Int?
+  proposalContent String?
+  pricingBreakdown Json?
+  aiSummary       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([auditId])
+  @@index([leadId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model CreatorInvoice {
+  id              String   @id @default(cuid())
+  proposalId      String?
+  leadId          String?
+  invoiceNumber   String   @unique
+  status          String   @default("draft")
+  amount          Float
+  currency        String   @default("AUD")
+  dueDate         DateTime?
+  paidAt          DateTime?
+  notes           String?
+  paymentLink     String?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([proposalId])
+  @@index([leadId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model CreatorRevenueEvent {
+  id          String   @id @default(cuid())
+  type        String
+  title       String
+  amount      Float?
+  status      String   @default("pending")
+  leadId      String?
+  proposalId  String?
+  invoiceId   String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([type])
+  @@index([status])
+  @@index([leadId])
+  @@index([createdAt])
+}
+
+model CreatorLearningMemory {
+  id          String   @id @default(cuid())
+  type        String
+  title       String
+  insight     String
+  evidence    Json?
+  confidence  Float    @default(0.7)
+  priority    String   @default("medium")
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([type])
+  @@index([priority])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model CreatorLearningRun {
+  id          String   @id @default(cuid())
+  summary     String?
+  status      String   @default("completed")
+  findings    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model ExecutiveAgent {
+  id          String   @id @default(cuid())
+  name        String
+  role        String
+  department  String
+  mission     String
+  status      String   @default("active")
+  tools       String?
+  memoryScope String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([department])
+  @@index([status])
+}
+
+model ExecutiveAgentRun {
+  id        String   @id @default(cuid())
+  agentId   String
+  agentName String
+  task      String
+  output    Json?
+  summary   String?
+  status    String   @default("completed")
+  createdAt DateTime @default(now())
+
+  @@index([agentId])
+  @@index([agentName])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model AgentDelegation {
+  id              String   @id @default(cuid())
+  fromAgentId      String
+  fromAgentName    String
+  toAgentId        String
+  toAgentName      String
+  task             String
+  context          String?
+  status           String   @default("pending")
+  priority         String   @default("medium")
+  responseSummary  String?
+  responsePayload  Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([fromAgentId])
+  @@index([toAgentId])
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+}
+
+model AgentCollaborationSession {
+  id        String   @id @default(cuid())
+  title     String
+  objective String
+  status    String   @default("active")
+  summary   String?
+  result    Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model AutonomousMissionCycle {
+  id            String   @id @default(cuid())
+  title         String
+  objective     String
+  cycleType     String
+  status        String   @default("running")
+  summary       String?
+  findings      Json?
+  startedAt     DateTime @default(now())
+  completedAt   DateTime?
+  createdAt     DateTime @default(now())
+
+  @@index([cycleType])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model AutonomousMissionTask {
+  id            String   @id @default(cuid())
+  cycleId       String
+  agentName     String
+  task          String
+  status        String   @default("pending")
+  priority      String   @default("medium")
+  resultSummary String?
+  resultPayload Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([cycleId])
+  @@index([agentName])
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+}
+
+model OperationalEvent {
+  id          String   @id @default(cuid())
+  type        String
+  source      String
+  title       String
+  message     String?
+  severity    String   @default("info")
+  status      String   @default("new")
+  entityType  String?
+  entityId    String?
+  payload     Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([type])
+  @@index([source])
+  @@index([severity])
+  @@index([status])
+  @@index([entityType])
+  @@index([createdAt])
+}
+
+model PredictiveForecast {
+  id            String   @id @default(cuid())
+  title         String
+  forecastType  String
+  timeframe     String
+  confidence    Float
+  summary       String?
+  prediction    Json?
+  recommendations Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([forecastType])
+  @@index([timeframe])
+  @@index([createdAt])
+}
+
+model StrategicSimulation {
+  id            String   @id @default(cuid())
+  title         String
+  scenario      String
+  assumptions   Json?
+  results       Json?
+  riskLevel     String   @default("medium")
+  recommendation String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([riskLevel])
+  @@index([createdAt])
+}
+
+model OptimizationRun {
+  id              String   @id @default(cuid())
+  title           String
+  status          String   @default("completed")
+  summary         String?
+  healthScore     Int      @default(70)
+  findings        Json?
+  createdAt       DateTime @default(now())
+
+  @@index([status])
+  @@index([healthScore])
+  @@index([createdAt])
+}
+
+model OptimizationAction {
+  id              String   @id @default(cuid())
+  runId           String?
+  title           String
+  description     String?
+  actionType      String
+  targetSystem    String
+  priority        String   @default("medium")
+  status          String   @default("proposed")
+  riskLevel       String   @default("medium")
+  payload         Json?
+  result          Json?
+  error           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([runId])
+  @@index([targetSystem])
+  @@index([priority])
+  @@index([status])
+  @@index([riskLevel])
+  @@index([createdAt])
+}
+
+model ExecutiveCopilotConversation {
+  id        String   @id @default(cuid())
+  title     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+}
+
+model ExecutiveCopilotMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String
+  content        String
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  @@index([conversationId])
+  @@index([role])
+  @@index([createdAt])
+}
+
+model ExternalIntegration {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  provider    String
+  category    String
+  status      String   @default("not-configured")
+  enabled     Boolean  @default(false)
+  config      Json?
+  lastChecked DateTime?
+  lastError   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([provider])
+  @@index([category])
+  @@index([status])
+  @@index([enabled])
+}
+
+model ExternalOperationLog {
+  id            String   @id @default(cuid())
+  integration   String
+  operationType String
+  status        String   @default("pending")
+  title         String
+  payload       Json?
+  result        Json?
+  error         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([integration])
+  @@index([operationType])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model EmailExecution {
+  id          String   @id @default(cuid())
+  to          String
+  subject     String
+  body        String
+  status      String   @default("draft")
+  provider    String   @default("resend")
+  leadId      String?
+  source      String?
+  riskLevel   String   @default("medium")
+  approved    Boolean  @default(false)
+  providerId  String?
+  error       String?
+  metadata    Json?
+  sentAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([to])
+  @@index([status])
+  @@index([leadId])
+  @@index([provider])
+  @@index([createdAt])
+}
+
+model WorkflowAutomationRule {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  eventType   String
+  enabled     Boolean  @default(true)
+  priority    String   @default("medium")
+  actions     Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([eventType])
+  @@index([enabled])
+  @@index([priority])
+}
+
+model WorkflowAutomationRun {
+  id          String   @id @default(cuid())
+  ruleId      String?
+  eventId     String?
+  status      String   @default("running")
+  summary     String?
+  result      Json?
+  error       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([ruleId])
+  @@index([eventId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model WorkflowAutomationStep {
+  id          String   @id @default(cuid())
+  runId       String
+  actionType  String
+  status      String   @default("pending")
+  title       String
+  payload     Json?
+  result      Json?
+  error       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([runId])
+  @@index([actionType])
+  @@index([status])
+}
+
+model WorkflowDefinition {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  triggerType String
+  enabled     Boolean  @default(true)
+  riskLevel   String   @default("medium")
+  config      Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([triggerType])
+  @@index([enabled])
+}
+
+model WorkflowExecution {
+  id             String   @id @default(cuid())
+  workflowId     String
+  workflowName   String
+  triggerType    String
+  triggerSource  String?
+  status         String   @default("queued")
+  currentStep    String?
+  completedSteps Json?
+  payload        Json?
+  result         Json?
+  error          String?
+  startedAt      DateTime @default(now())
+  completedAt    DateTime?
+  createdAt      DateTime @default(now())
+
+  @@index([workflowId])
+  @@index([workflowName])
+  @@index([triggerType])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model WorkflowAction {
+  id            String   @id @default(cuid())
+  executionId   String
+  actionType    String
+  title         String
+  status        String   @default("pending")
+  payload       Json?
+  result        Json?
+  error         String?
+  executedAt    DateTime?
+  createdAt     DateTime @default(now())
+
+  @@index([executionId])
+  @@index([actionType])
+  @@index([status])
+}
+
+model OrchestrationKernelRun {
+  id          String   @id @default(cuid())
+  title       String
+  status      String   @default("completed")
+  mode        String   @default("autonomous")
+  priority    String   @default("medium")
+  summary     String?
+  decisions   Json?
+  healthScore Int      @default(80)
+  createdAt   DateTime @default(now())
+
+  @@index([status])
+  @@index([mode])
+  @@index([priority])
+  @@index([createdAt])
+}
+
+model OrchestrationDecision {
+  id          String   @id @default(cuid())
+  runId       String?
+  title       String
+  decisionType String
+  targetSystem String
+  priority    String   @default("medium")
+  status      String   @default("proposed")
+  reason      String?
+  payload     Json?
+  result      Json?
+  error       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([runId])
+  @@index([decisionType])
+  @@index([targetSystem])
+  @@index([priority])
+  @@index([status])
+}
+
+
+model RuntimeObjective {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  priority    String   @default("medium")
+  status      String   @default("active")
+  cadence     String   @default("manual")
+  lastRunAt   DateTime?
+  nextRunAt   DateTime?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([priority])
+  @@index([cadence])
+  @@index([nextRunAt])
+}
+
+model RuntimeHeartbeat {
+  id          String   @id @default(cuid())
+  status      String   @default("alive")
+  summary     String?
+  healthScore Int      @default(80)
+  metrics     Json?
+  createdAt   DateTime @default(now())
+
+  @@index([status])
+  @@index([healthScore])
+  @@index([createdAt])
+}
+
+model RuntimeMemorySnapshot {
+  id          String   @id @default(cuid())
+  title       String
+  summary     String?
+  snapshot    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model RuntimeRetryQueue {
+  id          String   @id @default(cuid())
+  source      String
+  sourceId    String?
+  title       String
+  status      String   @default("queued")
+  attempts    Int      @default(0)
+  maxAttempts Int      @default(3)
+  error       String?
+  payload     Json?
+  nextRetryAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([source])
+  @@index([status])
+  @@index([nextRetryAt])
+}
+
+model EvolutionRun {
+  id          String   @id @default(cuid())
+  title       String
+  status      String   @default("completed")
+  summary     String?
+  maturityScore Int    @default(70)
+  findings    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([status])
+  @@index([maturityScore])
+  @@index([createdAt])
+}
+
+model EvolutionInsight {
+  id          String   @id @default(cuid())
+  runId       String?
+  type        String
+  title       String
+  insight     String
+  priority    String   @default("medium")
+  confidence  Float    @default(0.7)
+  targetSystem String?
+  status      String   @default("active")
+  evidence    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([runId])
+  @@index([type])
+  @@index([priority])
+  @@index([targetSystem])
+  @@index([status])
+}
+
+model EvolutionPolicyRecommendation {
+  id          String   @id @default(cuid())
+  runId       String?
+  title       String
+  policyArea  String
+  recommendation String
+  priority    String   @default("medium")
+  riskLevel   String   @default("medium")
+  status      String   @default("proposed")
+  payload     Json?
+  result      Json?
+  error       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([runId])
+  @@index([policyArea])
+  @@index([priority])
+  @@index([status])
+}
+
+model StrategicPlan {
+  id              String   @id @default(cuid())
+  title           String
+  timeHorizon     String   @default("90-days")
+  status          String   @default("draft")
+  strategicThesis String?
+  priorities      Json?
+  initiatives     Json?
+  resourcePlan    Json?
+  riskMap         Json?
+  successMetrics  Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([timeHorizon])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model StrategicInitiative {
+  id             String   @id @default(cuid())
+  planId         String?
+  title          String
+  description    String?
+  priority       String   @default("medium")
+  status         String   @default("proposed")
+  ownerSystem    String?
+  targetOutcome  String?
+  executionPath  Json?
+  riskLevel      String   @default("medium")
+  result         Json?
+  error          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([planId])
+  @@index([priority])
+  @@index([status])
+  @@index([ownerSystem])
+  @@index([riskLevel])
+}
+
+model StrategicDecisionLog {
+  id          String   @id @default(cuid())
+  title       String
+  decision    String
+  rationale   String?
+  status      String   @default("recorded")
+  impactArea  String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([status])
+  @@index([impactArea])
+  @@index([createdAt])
+}
+
+model GovernancePolicy {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  policyType    String
+  severity      String   @default("medium")
+  enforcement   String   @default("advisory")
+  status        String   @default("active")
+  conditions    Json?
+  actions       Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([policyType])
+  @@index([severity])
+  @@index([enforcement])
+  @@index([status])
+}
+
+model GovernanceArbitration {
+  id              String   @id @default(cuid())
+  title           String
+  arbitrationType String
+  targetSystem    String?
+  status          String   @default("pending")
+  severity        String   @default("medium")
+  rationale       String?
+  competingItems  Json?
+  resolution      Json?
+  riskScore       Int      @default(50)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([arbitrationType])
+  @@index([targetSystem])
+  @@index([status])
+  @@index([severity])
+  @@index([riskScore])
+}
+
+model GovernanceApproval {
+  id            String   @id @default(cuid())
+  title         String
+  targetType    String
+  targetId      String?
+  requestedBy   String?
+  status        String   @default("pending")
+  priority      String   @default("medium")
+  rationale     String?
+  decisionNotes String?
+  approvedAt    DateTime?
+  rejectedAt    DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([targetType])
+  @@index([targetId])
+  @@index([status])
+  @@index([priority])
+}
+
+model GovernanceRiskSignal {
+  id            String   @id @default(cuid())
+  title         String
+  signalType    String
+  severity      String   @default("medium")
+  affectedArea  String?
+  description   String?
+  recommendation String?
+  status        String   @default("open")
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([signalType])
+  @@index([severity])
+  @@index([affectedArea])
+  @@index([status])
+}
+
+model ExternalSignalSource {
+  id          String   @id @default(cuid())
+  name        String
+  sourceType  String
+  category    String
+  url         String?
+  enabled     Boolean  @default(true)
+  scanCadence String   @default("manual")
+  lastScanned DateTime?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([sourceType])
+  @@index([category])
+  @@index([enabled])
+}
+
+model ExternalIntelligenceSignal {
+  id             String   @id @default(cuid())
+  sourceName     String
+  signalType     String
+  category       String
+  title          String
+  summary        String?
+  relevanceScore Int      @default(50)
+  severity       String   @default("medium")
+  opportunity    Boolean  @default(false)
+  risk           Boolean  @default(false)
+  payload        Json?
+  status         String   @default("new")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([signalType])
+  @@index([category])
+  @@index([relevanceScore])
+  @@index([severity])
+  @@index([status])
+}
+
+model ExternalWorldScan {
+  id          String   @id @default(cuid())
+  title       String
+  scanType    String
+  status      String   @default("completed")
+  summary     String?
+  findings    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([scanType])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model CognitiveEntity {
+  id          String   @id @default(cuid())
+  entityType  String
+  entityId    String?
+  name        String
+  summary     String?
+  importance  Int      @default(50)
+  status      String   @default("active")
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([entityType])
+  @@index([entityId])
+  @@index([importance])
+  @@index([status])
+}
+
+model CognitiveRelation {
+  id              String   @id @default(cuid())
+  sourceEntityId  String
+  targetEntityId  String
+  relationType    String
+  strength        Float    @default(0.5)
+  summary         String?
+  evidence        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([sourceEntityId])
+  @@index([targetEntityId])
+  @@index([relationType])
+  @@index([strength])
+}
+
+model CognitiveSynthesisRun {
+  id          String   @id @default(cuid())
+  title       String
+  status      String   @default("completed")
+  summary     String?
+  graphHealth Int      @default(75)
+  findings    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([status])
+  @@index([graphHealth])
+  @@index([createdAt])
+}
+
+model CognitiveInsight {
+  id            String   @id @default(cuid())
+  runId         String?
+  title         String
+  insight       String
+  insightType   String
+  priority      String   @default("medium")
+  confidence    Float    @default(0.7)
+  relatedEntities Json?
+  status        String   @default("active")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([runId])
+  @@index([insightType])
+  @@index([priority])
+  @@index([confidence])
+  @@index([status])
+}
+
+model ExecutiveOperationCampaign {
+  id              String   @id @default(cuid())
+  title           String
+  description     String?
+  campaignType    String
+  priority        String   @default("medium")
+  status          String   @default("planned")
+  strategicGoal   String?
+  executionTempo  String   @default("normal")
+  targetSystems   Json?
+  orchestrationPlan Json?
+  progressScore   Int      @default(0)
+  riskLevel       String   @default("medium")
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([campaignType])
+  @@index([priority])
+  @@index([status])
+  @@index([executionTempo])
+  @@index([riskLevel])
+}
+
+model ExecutiveOperationTask {
+  id            String   @id @default(cuid())
+  campaignId    String?
+  title         String
+  description   String?
+  ownerSystem   String?
+  taskType      String
+  priority      String   @default("medium")
+  status        String   @default("queued")
+  executionMode String   @default("semi-autonomous")
+  progress      Int      @default(0)
+  result        Json?
+  error         String?
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([campaignId])
+  @@index([ownerSystem])
+  @@index([taskType])
+  @@index([priority])
+  @@index([status])
+}
+
+model ExecutiveCommandDecision {
+  id            String   @id @default(cuid())
+  title         String
+  decisionType  String
+  rationale     String?
+  impactLevel   String   @default("medium")
+  executionPlan Json?
+  status        String   @default("active")
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  @@index([decisionType])
+  @@index([impactLevel])
+  @@index([status])
+}
+
+model ExecutiveOperationalPulse {
+  id                String   @id @default(cuid())
+  title             String
+  operationalHealth Int      @default(75)
+  executionVelocity Int      @default(70)
+  coordinationScore Int      @default(70)
+  strategicAlignment Int     @default(70)
+  riskPressure      Int      @default(40)
+  summary           String?
+  recommendations   Json?
+  createdAt         DateTime @default(now())
+
+  @@index([operationalHealth])
+  @@index([executionVelocity])
+  @@index([coordinationScore])
+  @@index([strategicAlignment])
+}
+
+model EconomicIntelligenceRun {
+  id              String   @id @default(cuid())
+  title           String
+  status          String   @default("completed")
+  revenueHealth   Int      @default(70)
+  opportunityScore Int     @default(70)
+  riskPressure    Int      @default(40)
+  summary         String?
+  findings        Json?
+  createdAt       DateTime @default(now())
+
+  @@index([status])
+  @@index([revenueHealth])
+  @@index([opportunityScore])
+  @@index([riskPressure])
+  @@index([createdAt])
+}
+
+model RevenueOpportunity {
+  id              String   @id @default(cuid())
+  title           String
+  description     String?
+  opportunityType String
+  estimatedValue  Float    @default(0)
+  confidence      Float    @default(0.7)
+  priority        String   @default("medium")
+  status          String   @default("identified")
+  riskLevel       String   @default("medium")
+  targetSystem    String?
+  executionPath   Json?
+  result          Json?
+  error           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([opportunityType])
+  @@index([priority])
+  @@index([status])
+  @@index([riskLevel])
+  @@index([targetSystem])
+}
+
+model EconomicCampaign {
+  id              String   @id @default(cuid())
+  title           String
+  description     String?
+  campaignType    String
+  revenueGoal     Float    @default(0)
+  priority        String   @default("medium")
+  status          String   @default("planned")
+  riskLevel       String   @default("medium")
+  targetAudience  String?
+  strategy        Json?
+  progressScore   Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([campaignType])
+  @@index([priority])
+  @@index([status])
+  @@index([riskLevel])
+}
+
+model EconomicDecision {
+  id              String   @id @default(cuid())
+  title           String
+  decisionType    String
+  rationale       String?
+  expectedImpact  String?
+  status          String   @default("proposed")
+  priority        String   @default("medium")
+  payload         Json?
+  result          Json?
+  error           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([decisionType])
+  @@index([status])
+  @@index([priority])
+}
+
+model TemporalSimulationRun {
+  id                 String   @id @default(cuid())
+  title              String
+  simulationType     String
+  status             String   @default("completed")
+  timelineHorizon    String   @default("12-months")
+  confidenceScore    Float    @default(0.7)
+  stabilityScore     Int      @default(70)
+  strategicHealth    Int      @default(75)
+  economicProjection Float    @default(0)
+  summary            String?
+  findings           Json?
+  createdAt          DateTime @default(now())
+
+  @@index([simulationType])
+  @@index([status])
+  @@index([timelineHorizon])
+  @@index([stabilityScore])
+}
+
+model FutureScenario {
+  id                String   @id @default(cuid())
+  simulationRunId   String?
+  title             String
+  scenarioType      String
+  probability       Float    @default(0.5)
+  impactLevel       String   @default("medium")
+  strategicOutcome  String?
+  economicOutcome   String?
+  operationalOutcome String?
+  governanceOutcome String?
+  narrative         String?
+  recommendations   Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([simulationRunId])
+  @@index([scenarioType])
+  @@index([impactLevel])
+}
+
+model StrategicTimelineEvent {
+  id               String   @id @default(cuid())
+  simulationRunId  String?
+  title            String
+  eventType        String
+  projectedDate    String
+  severity         String   @default("medium")
+  confidence       Float    @default(0.7)
+  implications     Json?
+  createdAt        DateTime @default(now())
+
+  @@index([simulationRunId])
+  @@index([eventType])
+  @@index([severity])
+}
+
+model TemporalRecommendation {
+  id                String   @id @default(cuid())
+  simulationRunId   String?
+  title             String
+  recommendationType String
+  priority          String   @default("medium")
+  rationale         String?
+  executionWindow   String?
+  expectedBenefit   String?
+  status            String   @default("proposed")
+  payload           Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([simulationRunId])
+  @@index([recommendationType])
+  @@index([priority])
+  @@index([status])
+}
+
+model FederatedNode {
+  id          String   @id @default(cuid())
+  name        String
+  nodeType    String
+  domain      String?
+  status      String   @default("active")
+  trustLevel  Int      @default(50)
+  capabilities Json?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([nodeType])
+  @@index([status])
+  @@index([trustLevel])
+}
+
+model FederationSignal {
+  id          String   @id @default(cuid())
+  sourceNode  String
+  signalType  String
+  title       String
+  summary     String?
+  priority    String   @default("medium")
+  status      String   @default("new")
+  payload     Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([sourceNode])
+  @@index([signalType])
+  @@index([priority])
+  @@index([status])
+}
+
+model FederationCouncilSession {
+  id          String   @id @default(cuid())
+  title       String
+  status      String   @default("completed")
+  purpose     String?
+  participants Json?
+  findings    Json?
+  decisions   Json?
+  createdAt   DateTime @default(now())
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model FederationAgreement {
+  id          String   @id @default(cuid())
+  title       String
+  agreementType String
+  parties     Json?
+  terms       Json?
+  status      String   @default("proposed")
+  riskLevel   String   @default("medium")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([agreementType])
+  @@index([status])
+  @@index([riskLevel])
+}
+
+model FederationAction {
+  id          String   @id @default(cuid())
+  title       String
+  actionType  String
+  targetNode  String?
+  priority    String   @default("medium")
+  status      String   @default("proposed")
+  rationale   String?
+  payload     Json?
+  result      Json?
+  error       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([actionType])
+  @@index([targetNode])
+  @@index([priority])
+  @@index([status])
+}
+
+model RecursiveEvolutionCycle {
+  id                    String   @id @default(cuid())
+  title                 String
+  cycleType             String
+  status                String   @default("completed")
+  architectureHealth    Int      @default(75)
+  optimizationScore     Int      @default(75)
+  governanceCoherence   Int      @default(75)
+  operationalEfficiency Int      @default(75)
+  cognitiveAlignment    Int      @default(75)
+  summary               String?
+  findings              Json?
+  createdAt             DateTime @default(now())
+
+  @@index([cycleType])
+  @@index([status])
+  @@index([architectureHealth])
+  @@index([optimizationScore])
+}
+
+model ArchitectureObservation {
+  id                 String   @id @default(cuid())
+  evolutionCycleId   String?
+  observationType    String
+  title              String
+  severity           String   @default("medium")
+  affectedLayer      String?
+  description        String?
+  recommendation     String?
+  metadata           Json?
+  createdAt          DateTime @default(now())
+
+  @@index([evolutionCycleId])
+  @@index([observationType])
+  @@index([severity])
+  @@index([affectedLayer])
+}
+
+model SelfOptimizationProposal {
+  id                  String   @id @default(cuid())
+  evolutionCycleId    String?
+  proposalType        String
+  title               String
+  rationale           String?
+  expectedBenefit     String?
+  implementationRisk  String   @default("medium")
+  status              String   @default("proposed")
+  targetSystem        String?
+  payload             Json?
+  executionPlan       Json?
+  result              Json?
+  error               String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([evolutionCycleId])
+  @@index([proposalType])
+  @@index([status])
+  @@index([targetSystem])
+}
+
+model InstitutionalMutation {
+  id                 String   @id @default(cuid())
+  mutationType       String
+  title              String
+  description        String?
+  targetLayer        String?
+  strategicImpact    String?
+  riskLevel          String   @default("medium")
+  status             String   @default("simulated")
+  payload            Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([mutationType])
+  @@index([targetLayer])
+  @@index([riskLevel])
+  @@index([status])
+}
+
+model EvolutionMemory {
+  id                String   @id @default(cuid())
+  memoryType        String
+  title             String
+  insight           String
+  confidence        Float    @default(0.7)
+  priority          String   @default("medium")
+  sourceCycleId     String?
+  metadata          Json?
+  createdAt         DateTime @default(now())
+
+  @@index([memoryType])
+  @@index([priority])
+  @@index([sourceCycleId])
+}
+
+model WorldModelRun {
+  id                 String   @id @default(cuid())
+  title              String
+  modelType          String
+  status             String   @default("completed")
+  horizon            String   @default("12-months")
+  confidenceScore    Float    @default(0.65)
+  stabilityIndex     Int      @default(70)
+  opportunityIndex   Int      @default(70)
+  riskIndex          Int      @default(45)
+  summary            String?
+  assumptions        Json?
+  findings           Json?
+  createdAt          DateTime @default(now())
+
+  @@index([modelType])
+  @@index([status])
+  @@index([horizon])
+  @@index([stabilityIndex])
+  @@index([riskIndex])
+}
+
+model PlanetarySignal {
+  id              String   @id @default(cuid())
+  signalType      String
+  domain          String
+  title           String
+  summary         String?
+  severity        String   @default("medium")
+  relevanceScore  Int      @default(50)
+  confidence      Float    @default(0.65)
+  source          String?
+  status          String   @default("new")
+  payload         Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([signalType])
+  @@index([domain])
+  @@index([severity])
+  @@index([relevanceScore])
+  @@index([status])
+}
+
+model CivilizationScenario {
+  id                String   @id @default(cuid())
+  worldModelRunId   String?
+  title             String
+  scenarioType      String
+  probability       Float    @default(0.5)
+  impactLevel       String   @default("medium")
+  narrative         String?
+  economicImpact    String?
+  technologyImpact  String?
+  socialImpact      String?
+  governanceImpact  String?
+  recommendations   Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([worldModelRunId])
+  @@index([scenarioType])
+  @@index([impactLevel])
+}
+
+model WorldModelRecommendation {
+  id                 String   @id @default(cuid())
+  worldModelRunId    String?
+  title              String
+  recommendationType String
+  priority           String   @default("medium")
+  rationale          String?
+  executionWindow    String?
+  expectedBenefit    String?
+  status             String   @default("proposed")
+  payload            Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([worldModelRunId])
+  @@index([recommendationType])
+  @@index([priority])
+  @@index([status])
+}
+
+model SovereignRuntimeSnapshot {
+  id                    String   @id @default(cuid())
+  title                 String
+  status                String   @default("completed")
+  overallHealth          Int     @default(75)
+  intelligenceScore      Int     @default(75)
+  governanceScore        Int     @default(75)
+  executionScore         Int     @default(75)
+  economicScore          Int     @default(75)
+  futureReadinessScore   Int     @default(75)
+  summary                String?
+  executiveState         Json?
+  createdAt              DateTime @default(now())
+
+  @@index([status])
+  @@index([overallHealth])
+  @@index([createdAt])
+}
+
+model SovereignRuntimePriority {
+  id          String   @id @default(cuid())
+  snapshotId  String?
+  title       String
+  priority    String   @default("medium")
+  area        String
+  rationale   String?
+  status      String   @default("active")
+  payload     Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([snapshotId])
+  @@index([priority])
+  @@index([area])
+  @@index([status])
+}
+
+model SovereignRuntimeAction {
+  id          String   @id @default(cuid())
+  snapshotId  String?
+  title       String
+  actionType  String
+  targetLayer String
+  priority    String   @default("medium")
+  rationale   String?
+  status      String   @default("proposed")
+  payload     Json?
+  result      Json?
+  error       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([snapshotId])
+  @@index([actionType])
+  @@index([targetLayer])
+  @@index([priority])
+  @@index([status])
+}
+
+model SovereignIntelligenceRoute {
+  id            String   @id @default(cuid())
+  snapshotId    String?
+  sourceLayer   String
+  targetLayer   String
+  routeType     String
+  title         String
+  reason        String?
+  priority      String   @default("medium")
+  status        String   @default("open")
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([sourceLayer])
+  @@index([targetLayer])
+  @@index([routeType])
+  @@index([priority])
+  @@index([status])
+}
+
+model GovernanceRole {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  permissions Json?
+  authorityLevel Int   @default(1)
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([authorityLevel])
+  @@index([status])
+}
+
+model GovernanceActor {
+  id          String   @id @default(cuid())
+  name        String
+  email       String?
+  actorType   String   @default("human")
+  roleId      String?
+  roleName    String?
+  status      String   @default("active")
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([email])
+  @@index([actorType])
+  @@index([roleName])
+  @@index([status])
+}
+
+model ConstitutionalPolicy {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  policyArea    String
+  ruleType      String
+  enforcement   String   @default("approval-required")
+  severity      String   @default("medium")
+  status        String   @default("active")
+  conditions    Json?
+  allowedRoles  Json?
+  blockedActions Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([policyArea])
+  @@index([ruleType])
+  @@index([enforcement])
+  @@index([severity])
+  @@index([status])
+}
+
+model ExecutionAuthorizationRequest {
+  id            String   @id @default(cuid())
+  title         String
+  targetType    String
+  targetId      String?
+  requestedBy   String?
+  requestedRole String?
+  actionType    String
+  targetLayer   String?
+  riskLevel     String   @default("medium")
+  status        String   @default("pending")
+  rationale     String?
+  policyMatches Json?
+  approvedBy    String?
+  rejectedBy    String?
+  decisionNotes String?
+  payload       Json?
+  result        Json?
+  error         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([targetType])
+  @@index([targetId])
+  @@index([actionType])
+  @@index([targetLayer])
+  @@index([riskLevel])
+  @@index([status])
+}
+
+model GovernanceAuditTrail {
+  id          String   @id @default(cuid())
+  eventType   String
+  actor       String?
+  actorRole   String?
+  targetType  String?
+  targetId    String?
+  action      String
+  outcome     String
+  severity    String   @default("info")
+  details     Json?
+  createdAt   DateTime @default(now())
+
+  @@index([eventType])
+  @@index([actor])
+  @@index([actorRole])
+  @@index([targetType])
+  @@index([outcome])
+  @@index([severity])
+}
+
+model InfrastructureHealthCheck {
+  id          String   @id @default(cuid())
+  systemName  String
+  systemType  String
+  status      String   @default("unknown")
+  healthScore Int      @default(75)
+  latencyMs   Int?
+  message     String?
+  metadata    Json?
+  checkedAt   DateTime @default(now())
+
+  @@index([systemName])
+  @@index([systemType])
+  @@index([status])
+  @@index([healthScore])
+  @@index([checkedAt])
+}
+
+model ResilienceIncident {
+  id          String   @id @default(cuid())
+  title       String
+  incidentType String
+  severity    String   @default("medium")
+  status      String   @default("open")
+  affectedSystem String?
+  summary     String?
+  rootCause   String?
+  recoveryPlan Json?
+  resolvedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([incidentType])
+  @@index([severity])
+  @@index([status])
+  @@index([affectedSystem])
+}
+
+model ResiliencePolicy {
+  id          String   @id @default(cuid())
+  title       String
+  policyType  String
+  targetSystem String?
+  enabled     Boolean  @default(true)
+  severity    String   @default("medium")
+  rules       Json?
+  actions     Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([policyType])
+  @@index([targetSystem])
+  @@index([enabled])
+  @@index([severity])
+}
+
+model ResilienceRetryJob {
+  id          String   @id @default(cuid())
+  source      String
+  sourceId    String?
+  title       String
+  status      String   @default("queued")
+  attempts    Int      @default(0)
+  maxAttempts Int      @default(3)
+  priority    String   @default("medium")
+  error       String?
+  payload     Json?
+  nextRunAt   DateTime?
+  lastRunAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([source])
+  @@index([status])
+  @@index([priority])
+  @@index([nextRunAt])
+}
+
+model InfrastructureEventTrace {
+  id          String   @id @default(cuid())
+  traceType   String
+  source      String
+  target      String?
+  status      String   @default("recorded")
+  durationMs  Int?
+  summary     String?
+  payload     Json?
+  createdAt   DateTime @default(now())
+
+  @@index([traceType])
+  @@index([source])
+  @@index([target])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model SovereignOrganization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  orgType     String   @default("creator")
+  status      String   @default("active")
+  plan        String   @default("starter")
+  ownerEmail  String?
+  settings    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([slug])
+  @@index([orgType])
+  @@index([status])
+  @@index([plan])
+}
+
+model OrganizationWorkspace {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  slug           String
+  workspaceType  String   @default("operations")
+  status         String   @default("active")
+  settings       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([slug])
+  @@index([workspaceType])
+  @@index([status])
+}
+
+model OrganizationMember {
+  id             String   @id @default(cuid())
+  organizationId String
+  email          String
+  name           String?
+  role           String   @default("member")
+  status         String   @default("active")
+  permissions    Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([email])
+  @@index([role])
+  @@index([status])
+}
+
+model TenantIntelligenceRecord {
+  id             String   @id @default(cuid())
+  organizationId String
+  workspaceId    String?
+  recordType     String
+  title          String
+  summary        String?
+  sourceLayer    String?
+  priority       String   @default("medium")
+  status         String   @default("active")
+  payload        Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([workspaceId])
+  @@index([recordType])
+  @@index([sourceLayer])
+  @@index([priority])
+  @@index([status])
+}
+
+model TenantGovernancePolicy {
+  id             String   @id @default(cuid())
+  organizationId String
+  title          String
+  policyType     String
+  severity       String   @default("medium")
+  enforcement    String   @default("approval-required")
+  status         String   @default("active")
+  rules          Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([policyType])
+  @@index([severity])
+  @@index([enforcement])
+  @@index([status])
+}
+
+model TenantRuntimeSnapshot {
+  id             String   @id @default(cuid())
+  organizationId String
+  workspaceId    String?
+  title          String
+  status         String   @default("completed")
+  healthScore    Int      @default(75)
+  governanceScore Int     @default(75)
+  executionScore Int      @default(75)
+  economicScore  Int      @default(75)
+  summary        String?
+  state          Json?
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([workspaceId])
+  @@index([status])
+  @@index([healthScore])
+}
+
+model IdentityUser {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String?
+  status        String   @default("active")
+  defaultOrgId  String?
+  lastLoginAt   DateTime?
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([defaultOrgId])
+}
+
+model IdentitySession {
+  id             String   @id @default(cuid())
+  userId         String
+  email          String
+  organizationId String?
+  workspaceId    String?
+  role           String?
+  status         String   @default("active")
+  expiresAt      DateTime?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId])
+  @@index([email])
+  @@index([organizationId])
+  @@index([workspaceId])
+  @@index([status])
+}
+
+model OrganizationInvitation {
+  id             String   @id @default(cuid())
+  organizationId String
+  email          String
+  role           String   @default("member")
+  invitedBy      String?
+  token          String   @unique
+  status         String   @default("pending")
+  expiresAt      DateTime?
+  acceptedAt     DateTime?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([email])
+  @@index([role])
+  @@index([status])
+}
+
+model AccessDecisionLog {
+  id             String   @id @default(cuid())
+  userId         String?
+  email          String?
+  organizationId String?
+  workspaceId    String?
+  action         String
+  resource       String
+  decision       String
+  reason         String?
+  role           String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  @@index([userId])
+  @@index([email])
+  @@index([organizationId])
+  @@index([workspaceId])
+  @@index([action])
+  @@index([decision])
+}
+
+model TenantAccessPolicy {
+  id             String   @id @default(cuid())
+  organizationId String
+  title          String
+  resource       String
+  action         String
+  allowedRoles   Json?
+  enforcement    String   @default("strict")
+  status         String   @default("active")
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([resource])
+  @@index([action])
+  @@index([status])
+}
+
+model RealtimeEventStream {
+  id          String   @id @default(cuid())
+  streamName  String
+  streamType  String
+  status      String   @default("active")
+  description String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([streamName])
+  @@index([streamType])
+  @@index([status])
+}
+
+model RealtimeEventMessage {
+  id          String   @id @default(cuid())
+  streamName  String
+  eventType   String
+  source      String
+  title       String
+  message     String?
+  priority    String   @default("medium")
+  status      String   @default("pending")
+  payload     Json?
+  processedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([streamName])
+  @@index([eventType])
+  @@index([source])
+  @@index([priority])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model DistributedWorkerNode {
+  id            String   @id @default(cuid())
+  name          String
+  workerType    String
+  status        String   @default("online")
+  capabilities  Json?
+  lastHeartbeat DateTime?
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([workerType])
+  @@index([status])
+  @@index([lastHeartbeat])
+}
+
+model DistributedExecutionJob {
+  id            String   @id @default(cuid())
+  jobType       String
+  title         String
+  targetLayer   String?
+  priority      String   @default("medium")
+  status        String   @default("queued")
+  assignedWorker String?
+  attempts      Int      @default(0)
+  maxAttempts   Int      @default(3)
+  payload       Json?
+  result        Json?
+  error         String?
+  scheduledAt   DateTime?
+  startedAt     DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([jobType])
+  @@index([targetLayer])
+  @@index([priority])
+  @@index([status])
+  @@index([assignedWorker])
+  @@index([scheduledAt])
+}
+
+model RealtimeFabricRun {
+  id              String   @id @default(cuid())
+  title           String
+  status          String   @default("completed")
+  eventHealth     Int      @default(75)
+  workerHealth    Int      @default(75)
+  queuePressure   Int      @default(30)
+  executionHealth Int      @default(75)
+  summary         String?
+  findings        Json?
+  createdAt       DateTime @default(now())
+
+  @@index([status])
+  @@index([eventHealth])
+  @@index([workerHealth])
+  @@index([queuePressure])
+  @@index([executionHealth])
+}
+
+model BillingPlan {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  priceAud    Float    @default(0)
+  billingCycle String  @default("monthly")
+  limits      Json?
+  features    Json?
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([slug])
+  @@index([status])
+}
+
+model TenantSubscription {
+  id             String   @id @default(cuid())
+  organizationId String
+  planId         String?
+  planSlug       String
+  status         String   @default("active")
+  stripeCustomerId String?
+  stripeSubscriptionId String?
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  cancelAtPeriodEnd  Boolean @default(false)
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([planSlug])
+  @@index([status])
+  @@index([stripeCustomerId])
+  @@index([stripeSubscriptionId])
+}
+
+model UsageMeterEvent {
+  id             String   @id @default(cuid())
+  organizationId String
+  workspaceId    String?
+  meterType      String
+  quantity       Float    @default(1)
+  unit           String   @default("event")
+  sourceLayer    String?
+  referenceType  String?
+  referenceId    String?
+  costAud        Float    @default(0)
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([workspaceId])
+  @@index([meterType])
+  @@index([sourceLayer])
+  @@index([referenceType])
+  @@index([createdAt])
+}
+
+model TenantQuotaState {
+  id             String   @id @default(cuid())
+  organizationId String
+  meterType      String
+  limitValue     Float    @default(0)
+  usedValue      Float    @default(0)
+  resetPeriod    String   @default("monthly")
+  resetAt        DateTime?
+  status         String   @default("within-limit")
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, meterType])
+  @@index([organizationId])
+  @@index([meterType])
+  @@index([status])
+  @@index([resetAt])
+}
+
+model BillingInvoiceRecord {
+  id             String   @id @default(cuid())
+  organizationId String
+  invoiceNumber  String?
+  status         String   @default("draft")
+  amountAud      Float    @default(0)
+  dueAt          DateTime?
+  paidAt         DateTime?
+  stripeInvoiceId String?
+  lineItems      Json?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([invoiceNumber])
+  @@index([stripeInvoiceId])
+}
+
+model BillingIntelligenceRun {
+  id              String   @id @default(cuid())
+  title           String
+  status          String   @default("completed")
+  revenueHealth   Int      @default(75)
+  usageHealth     Int      @default(75)
+  quotaRisk       Int      @default(30)
+  costRisk        Int      @default(30)
+  summary         String?
+  findings        Json?
+  createdAt       DateTime @default(now())
+
+  @@index([status])
+  @@index([revenueHealth])
+  @@index([quotaRisk])
+  @@index([costRisk])
+}
+
+model SemanticKnowledgeRecord {
+  id             String   @id @default(cuid())
+  organizationId String?
+  workspaceId    String?
+  title          String
+  content        String
+  recordType     String   @default("knowledge")
+  sourceLayer    String?
+  sourceType     String?
+  sourceId       String?
+  importance     Int      @default(50)
+  confidence     Float    @default(0.75)
+  tags           Json?
+  metadata       Json?
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([workspaceId])
+  @@index([recordType])
+  @@index([sourceLayer])
+  @@index([importance])
+  @@index([status])
+}
+
+model SemanticEmbeddingIndex {
+  id             String   @id @default(cuid())
+  knowledgeId    String
+  organizationId String?
+  workspaceId    String?
+  embeddingModel String   @default("text-embedding-3-small")
+  vectorHash      String?
+  dimensions      Int      @default(1536)
+  contentPreview  String?
+  metadata        Json?
+  status          String   @default("indexed")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([knowledgeId])
+  @@index([organizationId])
+  @@index([workspaceId])
+  @@index([embeddingModel])
+  @@index([status])
+}
+
+model KnowledgeGraphNode {
+  id             String   @id @default(cuid())
+  organizationId String?
+  workspaceId    String?
+  nodeType       String
+  name           String
+  summary        String?
+  importance     Int      @default(50)
+  sourceRecordId String?
+  metadata       Json?
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([workspaceId])
+  @@index([nodeType])
+  @@index([importance])
+  @@index([sourceRecordId])
+  @@index([status])
+}
+
+model KnowledgeGraphEdge {
+  id             String   @id @default(cuid())
+  organizationId String?
+  workspaceId    String?
+  sourceNodeId    String
+  targetNodeId    String
+  relationType    String
+  strength        Float    @default(0.5)
+  summary         String?
+  evidence        Json?
+  status          String   @default("active")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([workspaceId])
+  @@index([sourceNodeId])
+  @@index([targetNodeId])
+  @@index([relationType])
+  @@index([strength])
+  @@index([status])
+}
+
+model SemanticMemoryQuery {
+  id             String   @id @default(cuid())
+  organizationId String?
+  workspaceId    String?
+  question       String
+  answer         String?
+  confidence     Float    @default(0.7)
+  matchedRecords Json?
+  matchedNodes   Json?
+  reasoningPath  Json?
+  status         String   @default("completed")
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([workspaceId])
+  @@index([confidence])
+  @@index([status])
+}
+
+model KnowledgeGraphSynthesisRun {
+  id             String   @id @default(cuid())
+  organizationId String?
+  workspaceId    String?
+  title          String
+  status         String   @default("completed")
+  graphHealth    Int      @default(75)
+  memoryHealth   Int      @default(75)
+  retrievalHealth Int     @default(75)
+  summary        String?
+  findings       Json?
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([workspaceId])
+  @@index([status])
+  @@index([graphHealth])
+}
+
+model ReasoningSimulationRun {
+  id                String   @id @default(cuid())
+  organizationId    String?
+  workspaceId       String?
+  title             String
+  status            String   @default("completed")
+  reasoningType     String   @default("strategic-decision")
+  confidenceScore   Float    @default(0.7)
+  strategicScore    Int      @default(75)
+  riskScore         Int      @default(40)
+  opportunityScore  Int      @default(75)
+  summary           String?
+  question          String?
+  reasoningTrace    Json?
+  findings          Json?
+  createdAt         DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([workspaceId])
+  @@index([status])
+  @@index([reasoningType])
+  @@index([strategicScore])
+  @@index([riskScore])
+}
+
+model StrategicDecisionOption {
+  id             String   @id @default(cuid())
+  runId          String?
+  title          String
+  optionType     String   @default("strategy")
+  description    String?
+  upside         String?
+  downside       String?
+  riskLevel      String   @default("medium")
+  confidence     Float    @default(0.7)
+  strategicValue Int      @default(70)
+  costPressure   Int      @default(40)
+  timeHorizon    String   @default("near-term")
+  payload        Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([runId])
+  @@index([optionType])
+  @@index([riskLevel])
+  @@index([strategicValue])
+  @@index([timeHorizon])
+}
+
+model DecisionConsequenceModel {
+  id              String   @id @default(cuid())
+  runId           String?
+  optionId        String?
+  title           String
+  consequenceType String
+  probability     Float    @default(0.5)
+  impactLevel     String   @default("medium")
+  description     String?
+  mitigation      String?
+  payload         Json?
+  createdAt       DateTime @default(now())
+
+  @@index([runId])
+  @@index([optionId])
+  @@index([consequenceType])
+  @@index([impactLevel])
+}
+
+model ReasoningRecommendation {
+  id                 String   @id @default(cuid())
+  runId              String?
+  title              String
+  recommendationType String
+  priority           String   @default("medium")
+  rationale          String?
+  expectedOutcome    String?
+  requiredApproval   Boolean  @default(true)
+  status             String   @default("proposed")
+  payload            Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([runId])
+  @@index([recommendationType])
+  @@index([priority])
+  @@index([requiredApproval])
+  @@index([status])
+}
+
+model ActionMission {
+  id              String   @id @default(cuid())
+  organizationId  String?
+  workspaceId     String?
+  title           String
+  missionType     String   @default("strategic-execution")
+  status          String   @default("planned")
+  priority        String   @default("medium")
+  objective       String?
+  successCriteria Json?
+  assignedAgents  Json?
+  riskLevel       String   @default("medium")
+  progressScore   Int      @default(0)
+  result          Json?
+  error           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([workspaceId])
+  @@index([missionType])
+  @@index([status])
+  @@index([priority])
+  @@index([riskLevel])
+}
+
+model ActionExecutionStep {
+  id             String   @id @default(cuid())
+  missionId      String?
+  title          String
+  stepType       String
+  targetLayer    String?
+  assignedAgent  String?
+  sequence       Int      @default(1)
+  status         String   @default("queued")
+  priority       String   @default("medium")
+  instruction    String?
+  payload        Json?
+  result         Json?
+  error          String?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([missionId])
+  @@index([stepType])
+  @@index([targetLayer])
+  @@index([assignedAgent])
+  @@index([status])
+  @@index([priority])
+}
+
+model AgentExecutionAssignment {
+  id             String   @id @default(cuid())
+  missionId      String?
+  stepId         String?
+  agentName      String
+  agentRole      String
+  status         String   @default("assigned")
+  instruction    String?
+  output         Json?
+  confidence     Float    @default(0.7)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([missionId])
+  @@index([stepId])
+  @@index([agentName])
+  @@index([agentRole])
+  @@index([status])
+}
+
+model ActionCoordinationRun {
+  id              String   @id @default(cuid())
+  organizationId  String?
+  workspaceId     String?
+  title           String
+  status          String   @default("completed")
+  executionHealth Int      @default(75)
+  agentHealth     Int      @default(75)
+  missionPressure Int      @default(35)
+  summary         String?
+  findings        Json?
+  createdAt       DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([workspaceId])
+  @@index([status])
+  @@index([executionHealth])
+  @@index([missionPressure])
+}
+
+model ActionOutcomeRecord {
+  id             String   @id @default(cuid())
+  missionId      String?
+  stepId         String?
+  outcomeType    String
+  title          String
+  summary        String?
+  impactLevel    String   @default("medium")
+  evidence       Json?
+  createdAt      DateTime @default(now())
+
+  @@index([missionId])
+  @@index([stepId])
+  @@index([outcomeType])
+  @@index([impactLevel])
+}
+
+model EvolutionOptimizationRun {
+  id                    String   @id @default(cuid())
+  organizationId        String?
+  workspaceId           String?
+  title                 String
+  status                String   @default("completed")
+  optimizationHealth    Int      @default(75)
+  adaptationScore       Int      @default(75)
+  institutionalMaturity Int      @default(45)
+  executionEfficiency   Int      @default(60)
+  governanceAlignment   Int      @default(70)
+  summary               String?
+  findings              Json?
+  createdAt             DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([workspaceId])
+  @@index([status])
+  @@index([adaptationScore])
+  @@index([institutionalMaturity])
+}
+
+model EvolutionImprovementProposal {
+  id                String   @id @default(cuid())
+  runId             String?
+  proposalType      String
+  targetLayer       String
+  title             String
+  description       String?
+  expectedImpact    String?
+  riskLevel         String   @default("medium")
+  optimizationValue Int      @default(70)
+  implementationEffort Int   @default(45)
+  status            String   @default("proposed")
+  payload           Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([runId])
+  @@index([proposalType])
+  @@index([targetLayer])
+  @@index([riskLevel])
+  @@index([status])
+}
+
+model AgentPerformanceProfile {
+  id                 String   @id @default(cuid())
+  agentName          String
+  agentRole          String
+  coordinationScore  Int      @default(70)
+  reliabilityScore   Int      @default(70)
+  executionScore     Int      @default(70)
+  governanceScore    Int      @default(70)
+  adaptationScore    Int      @default(70)
+  strengths          Json?
+  weaknesses         Json?
+  recommendations    Json?
+  lastEvaluatedAt    DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([agentName])
+  @@index([agentRole])
+  @@index([executionScore])
+  @@index([governanceScore])
+}
+
+model WorkflowEvolutionPattern {
+  id                    String   @id @default(cuid())
+  workflowName          String
+  workflowType          String
+  bottleneckRisk        Int      @default(40)
+  efficiencyScore       Int      @default(65)
+  automationPotential   Int      @default(75)
+  governancePressure    Int      @default(35)
+  optimizationSuggestion String?
+  payload               Json?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([workflowName])
+  @@index([workflowType])
+  @@index([efficiencyScore])
+  @@index([automationPotential])
+}
+
+model InstitutionalEvolutionMemory {
+  id               String   @id @default(cuid())
+  evolutionType    String
+  title            String
+  summary          String?
+  improvementDelta Int      @default(0)
+  impactArea       String
+  payload          Json?
+  createdAt        DateTime @default(now())
+
+  @@index([evolutionType])
+  @@index([impactArea])
+  @@index([improvementDelta])
+}
+
+model FederatedMeshNode {
+  id              String   @id @default(cuid())
+  organizationId  String?
+  nodeName        String
+  nodeType        String   @default("tenant")
+  domain          String?
+  status          String   @default("active")
+  trustScore      Int      @default(70)
+  capabilities    Json?
+  policies        Json?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([nodeType])
+  @@index([status])
+  @@index([trustScore])
+}
+
+model FederatedIntelligencePacket {
+  id              String   @id @default(cuid())
+  sourceNodeId    String?
+  targetNodeId    String?
+  packetType      String
+  title           String
+  summary         String?
+  priority        String   @default("medium")
+  classification  String   @default("internal")
+  status          String   @default("queued")
+  payload         Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([sourceNodeId])
+  @@index([targetNodeId])
+  @@index([packetType])
+  @@index([priority])
+  @@index([classification])
+  @@index([status])
+}
+
+model FederationCoordinationSession {
+  id              String   @id @default(cuid())
+  title           String
+  sessionType     String   @default("coordination")
+  status          String   @default("completed")
+  participatingNodes Json?
+  coordinationGoal String?
+  decisions       Json?
+  risks           Json?
+  outcomes        Json?
+  createdAt       DateTime @default(now())
+
+  @@index([sessionType])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model FederationAllianceProtocol {
+  id              String   @id @default(cuid())
+  title           String
+  protocolType    String
+  scope           String   @default("tenant-federation")
+  status          String   @default("active")
+  trustRequired   Int      @default(70)
+  rules           Json?
+  allowedPacketTypes Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([protocolType])
+  @@index([scope])
+  @@index([status])
+  @@index([trustRequired])
+}
+
+model MeshAgentSociety {
+  id              String   @id @default(cuid())
+  societyName     String
+  societyType     String   @default("multi-agent")
+  status          String   @default("active")
+  purpose         String?
+  agents          Json?
+  coordinationRules Json?
+  performanceScore Int     @default(70)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([societyType])
+  @@index([status])
+  @@index([performanceScore])
+}
+
+model FederationMeshRun {
+  id              String   @id @default(cuid())
+  title           String
+  status          String   @default("completed")
+  meshHealth      Int      @default(75)
+  trustHealth     Int      @default(75)
+  coordinationScore Int    @default(70)
+  riskScore       Int      @default(35)
+  summary         String?
+  findings        Json?
+  createdAt       DateTime @default(now())
+
+  @@index([status])
+  @@index([meshHealth])
+  @@index([trustHealth])
+  @@index([coordinationScore])
+  @@index([riskScore])
+}
+
+model WorldModelV2Run {
+  id                String   @id @default(cuid())
+  title             String
+  status            String   @default("completed")
+  horizon           String   @default("12-months")
+  confidenceScore   Float    @default(0.7)
+  planetaryStability Int     @default(70)
+  opportunityIndex  Int      @default(75)
+  systemicRiskIndex Int      @default(40)
+  strategicReadiness Int     @default(70)
+  summary           String?
+  assumptions       Json?
+  findings          Json?
+  createdAt         DateTime @default(now())
+
+  @@index([status])
+  @@index([horizon])
+  @@index([planetaryStability])
+  @@index([systemicRiskIndex])
+}
+
+model PlanetaryDomainSignal {
+  id              String   @id @default(cuid())
+  runId           String?
+  domain          String
+  signalType      String
+  title           String
+  summary         String?
+  severity        String   @default("medium")
+  probability     Float    @default(0.5)
+  impactScore     Int      @default(50)
+  sourceLayer     String?
+  payload         Json?
+  createdAt       DateTime @default(now())
+
+  @@index([runId])
+  @@index([domain])
+  @@index([signalType])
+  @@index([severity])
+  @@index([impactScore])
+}
+
+model PlanetaryScenarioV2 {
+  id              String   @id @default(cuid())
+  runId           String?
+  title           String
+  scenarioType    String
+  probability     Float    @default(0.5)
+  impactLevel     String   @default("medium")
+  narrative       String?
+  risks           Json?
+  opportunities   Json?
+  strategicMoves  Json?
+  createdAt       DateTime @default(now())
+
+  @@index([runId])
+  @@index([scenarioType])
+  @@index([impactLevel])
+}
+
+model StrategicPostureModel {
+  id              String   @id @default(cuid())
+  runId           String?
+  title           String
+  postureType     String
+  readinessScore  Int      @default(70)
+  riskExposure    Int      @default(40)
+  upsidePotential Int      @default(75)
+  recommendation  String?
+  payload         Json?
+  createdAt       DateTime @default(now())
+
+  @@index([runId])
+  @@index([postureType])
+  @@index([readinessScore])
+  @@index([riskExposure])
+}
+
+model PlanetaryStressTest {
+  id              String   @id @default(cuid())
+  runId           String?
+  title           String
+  stressType      String
+  severity        String   @default("medium")
+  resilienceScore Int      @default(70)
+  description     String?
+  mitigation      String?
+  payload         Json?
+  createdAt       DateTime @default(now())
+
+  @@index([runId])
+  @@index([stressType])
+  @@index([severity])
+  @@index([resilienceScore])
+}
+
+model StrategicShockModel {
+  id              String   @id @default(cuid())
+  runId           String?
+  title           String
+  shockType       String
+  severity        String   @default("medium")
+  probability     Float    @default(0.5)
+  impactScore     Int      @default(50)
+  timeHorizon     String   @default("near-term")
+  narrative       String?
+  responsePlan    String?
+  payload         Json?
+  createdAt       DateTime @default(now())
+
+  @@index([runId])
+  @@index([shockType])
+  @@index([severity])
+  @@index([impactScore])
+}
+
+model PlanetaryRecommendationV2 {
+  id                        String   @id @default(cuid())
+  runId                     String?
+  title                     String
+  recommendationType        String   @default("strategy")
+  priority                  String   @default("medium")
+  rationale                 String?
+  expectedOutcome           String?
+  urgencyScore              Int      @default(50)
+  opportunityScore          Int      @default(50)
+  riskScore                 Int      @default(40)
+  costPressureScore         Int      @default(40)
+  executionDifficultyScore  Int      @default(50)
+  governanceSensitivityScore Int     @default(40)
+  confidenceScore           Float    @default(0.7)
+  compositeScore            Int      @default(60)
+  requiredApproval          Boolean  @default(true)
+  status                    String   @default("proposed")
+  payload                   Json?
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  @@index([runId])
+  @@index([recommendationType])
+  @@index([priority])
+  @@index([compositeScore])
+  @@index([requiredApproval])
+  @@index([status])
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  source    String   @default("echoesandvisions-ai")
+  status    String   @default("active")
+  tags      Json?
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([source])
+  @@index([status])
+}
+
+model ContentOperatingItem {
+  id          String   @id @default(cuid())
+  title       String
+  contentType String
+  channel     String   @default("youtube")
+  pillar      String?
+  status      String   @default("idea")
+  priority    String   @default("medium")
+  script      String?
+  hook        String?
+  description String?
+  cta         String?
+  tags        Json?
+  publishAt   DateTime?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([contentType])
+  @@index([channel])
+  @@index([pillar])
+  @@index([status])
+  @@index([priority])
+  @@index([publishAt])
+}
+
+model PublishingCadenceGoal {
+  id        String   @id @default(cuid())
+  title     String
+  channel   String   @default("youtube")
+  goalType  String
+  target    Int      @default(1)
+  period    String   @default("weekly")
+  status    String   @default("active")
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([channel])
+  @@index([goalType])
+  @@index([status])
+}
+
+model YouTubePublishingAsset {
+  id            String   @id @default(cuid())
+  contentItemId String?
+  title         String
+  assetType     String
+  status        String   @default("idea")
+  hook          String?
+  script        String?
+  description   String?
+  thumbnailIdea String?
+  cta           String?
+  publishAt     DateTime?
+  pillar        String?
+  score         Int      @default(70)
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([contentItemId])
+  @@index([assetType])
+  @@index([status])
+  @@index([pillar])
+  @@index([publishAt])
+}
+
+model YouTubeIntelligenceRun {
+  id               String   @id @default(cuid())
+  title            String
+  status           String   @default("completed")
+  cadenceScore     Int      @default(70)
+  focusScore       Int      @default(70)
+  audienceFitScore Int      @default(70)
+  funnelScore      Int      @default(70)
+  summary          String?
+  findings         Json?
+  createdAt        DateTime @default(now())
+
+  @@index([status])
+  @@index([cadenceScore])
+  @@index([focusScore])
+  @@index([funnelScore])
+}
+
+model PublishingWorkflowEvent {
+  id          String   @id @default(cuid())
+  assetId     String?
+  eventType   String
+  title       String
+  status      String   @default("open")
+  notes       String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([assetId])
+  @@index([eventType])
+  @@index([status])
+}
+
+model AudienceProfile {
+  id                 String   @id @default(cuid())
+  email              String?  @unique
+  name               String?
+  source             String?
+  audienceType       String   @default("unknown")
+  relationshipStage  String   @default("visitor")
+  trustScore         Int      @default(50)
+  engagementScore    Int      @default(50)
+  resonanceScore     Int      @default(50)
+  tags               Json?
+  interests          Json?
+  metadata           Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([email])
+  @@index([source])
+  @@index([audienceType])
+  @@index([relationshipStage])
+}
+
+model AudienceInteraction {
+  id               String   @id @default(cuid())
+  audienceProfileId String?
+  interactionType  String
+  channel          String
+  title            String?
+  content          String?
+  score            Int      @default(50)
+  metadata         Json?
+  createdAt        DateTime @default(now())
+
+  @@index([audienceProfileId])
+  @@index([interactionType])
+  @@index([channel])
+}
+
+model AudienceTopicSignal {
+  id          String   @id @default(cuid())
+  topic       String
+  pillar      String?
+  signalType  String
+  strength    Int      @default(50)
+  source      String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([topic])
+  @@index([pillar])
+  @@index([signalType])
+}
+
+model CommunityInsightRun {
+  id                String   @id @default(cuid())
+  title             String
+  summary           String?
+  audienceHealth    Int      @default(70)
+  resonanceHealth   Int      @default(70)
+  conversionHealth  Int      @default(70)
+  findings          Json?
+  recommendations   Json?
+  metadata          Json?
+  createdAt         DateTime @default(now())
+
+  @@index([audienceHealth])
+  @@index([resonanceHealth])
+}
+
+model AiActivityEvent {
+  id        String   @id @default(cuid())
+  type      String
+  title     String
+  message   String?
+  status    String   @default("info")
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+}

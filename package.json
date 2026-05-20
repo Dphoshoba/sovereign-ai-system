@@ -9,18 +9,41 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "next": "16.2.6",
+    "@mdx-js/react": "^3.1.1",
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
+    "@sentry/nextjs": "^10.52.0",
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.106.0",
+    "framer-motion": "^12.38.0",
+    "gray-matter": "^4.0.3",
+    "ioredis": "^5.8.2",
+    "lucide-react": "^1.14.0",
+    "next": "^16.2.6",
+    "openai": "^6.10.0",
+    "pg": "^8.20.0",
+    "posthog-js": "^1.308.0",
+    "prisma": "^7.8.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-email": "^6.1.5",
+    "react-hook-form": "^7.75.0",
+    "react-markdown": "^10.1.0",
+    "reading-time": "^1.5.0",
+    "remark-gfm": "^4.0.1",
+    "resend": "^6.12.3",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
