@@ -1,5 +1,4 @@
 import Link from "next/link"
-import type { Article } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 
 function estimateReadingTime(content: string | null) {
@@ -9,10 +8,10 @@ function estimateReadingTime(content: string | null) {
   return Math.max(1, Math.ceil(words / 200))
 }
 
-function getKeywordCounts(articles: Article[]) {
+function getKeywordCounts(articles: any[]) {
   const counts: Record<string, number> = {}
 
-  articles.forEach((article) => {
+  articles.forEach((article: any) => {
     if (!article.seoKeywords) return
 
     article.seoKeywords
@@ -37,13 +36,17 @@ export default async function AnalyticsDashboardPage() {
   })
 
   const total = articles.length
-  const published = articles.filter((article) => article.status === "published")
-  const drafts = articles.filter((article) => article.status === "draft")
-  const reviews = articles.filter((article) => article.status === "review")
-  const scheduled = articles.filter((article) => article.status === "scheduled")
+  const published = articles.filter(
+    (article: any) => article.status === "published"
+  )
+  const drafts = articles.filter((article: any) => article.status === "draft")
+  const reviews = articles.filter((article: any) => article.status === "review")
+  const scheduled = articles.filter(
+    (article: any) => article.status === "scheduled"
+  )
 
   const totalReadingTime = articles.reduce(
-    (sum, article) => sum + estimateReadingTime(article.content),
+    (sum: number, article: any) => sum + estimateReadingTime(article.content),
     0
   )
 
@@ -51,7 +54,7 @@ export default async function AnalyticsDashboardPage() {
     total > 0 ? Math.round(totalReadingTime / total) : 0
 
   const categoryCounts = articles.reduce<Record<string, number>>(
-    (counts, article) => {
+    (counts, article: any) => {
       counts[article.category] = (counts[article.category] || 0) + 1
       return counts
     },
