@@ -1,4 +1,5 @@
 import Link from "next/link"
+import type { Article } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 
 function estimateReadingTime(content: string | null) {
@@ -8,7 +9,7 @@ function estimateReadingTime(content: string | null) {
   return Math.max(1, Math.ceil(words / 200))
 }
 
-function getKeywordCounts(articles: any[]) {
+function getKeywordCounts(articles: Article[]) {
   const counts: Record<string, number> = {}
 
   articles.forEach((article) => {
