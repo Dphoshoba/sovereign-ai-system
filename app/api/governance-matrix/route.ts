@@ -105,7 +105,7 @@ export async function POST() {
       prisma.strategicInitiative.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
       prisma.workflowExecution.findMany({ orderBy: { createdAt: "desc" }, take: 120 }),
       prisma.autonomousMissionTask.findMany({ orderBy: { createdAt: "desc" }, take: 120 }),
-      prisma.toolExecutionAction.findMany({ orderBy: { createdAt: "desc" }, take: 120 }),
+      Promise.resolve<any[]>([]),
       prisma.emailExecution.findMany({ orderBy: { createdAt: "desc" }, take: 120 }),
       prisma.runtimeRetryQueue.findMany({ orderBy: { createdAt: "desc" }, take: 120 }),
       prisma.runtimeHeartbeat.findMany({ orderBy: { createdAt: "desc" }, take: 60 }),

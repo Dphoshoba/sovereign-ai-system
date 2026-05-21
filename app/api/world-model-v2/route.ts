@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import OpenAI from "openai"
+import { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { DAVID_WRITING_DNA } from "@/lib/ai/writing-dna"
 import {
@@ -54,7 +55,10 @@ async function persistKnowledgeFromRun(
       importance: 78,
       confidence: 0.75,
       tags: ["planetary", "strategy", "world-model-v2"],
-      metadata: { runId: run.id, findings: run.findings },
+      metadata: {
+        runId: run.id,
+        findings: run.findings ?? null,
+      } as Prisma.InputJsonValue,
       status: "active",
     },
   })
@@ -437,8 +441,8 @@ export async function POST(request: Request) {
             40
           ),
           confidenceScore:
-            typeof scores.confidenceScore === "number"
-              ? scores.confidenceScore
+            typeof item.confidenceScore === "number"
+              ? item.confidenceScore
               : 0.7,
           compositeScore,
           requiredApproval: needsApproval,

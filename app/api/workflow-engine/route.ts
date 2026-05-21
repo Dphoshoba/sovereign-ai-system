@@ -174,11 +174,12 @@ export async function POST(request: Request) {
           if (agent) {
             await prisma.agentDelegation.create({
               data: {
-                agentId: agent.id,
-                title: `${workflow.name} delegation`,
-                description:
-                  "Workflow engine assigned operational delegation.",
-                status: "assigned",
+                fromAgentId: agent.id,
+                fromAgentName: agent.name,
+                toAgentId: agent.id,
+                toAgentName: agent.name,
+                task: `${workflow.name} delegation: Workflow engine assigned operational delegation.`,
+                status: "pending",
                 priority: "high",
               },
             })
@@ -186,12 +187,16 @@ export async function POST(request: Request) {
         }
 
         if (step === "create-mission") {
+          const agent = await prisma.executiveAgent.findFirst({
+            where: { status: "active" },
+          })
+
           await prisma.autonomousMissionTask.create({
             data: {
-              title: `${workflow.name} mission`,
-              description:
-                "Workflow-generated mission task from event-driven automation.",
-              status: "queued",
+              cycleId: execution.id,
+              agentName: agent?.name || "Workflow Engine",
+              task: `${workflow.name} mission: Workflow-generated mission task from event-driven automation.`,
+              status: "pending",
               priority: "high",
             },
           })

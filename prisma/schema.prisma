@@ -721,6 +721,28 @@ model OptimizationAction {
   @@index([createdAt])
 }
 
+model ToolExecutionAction {
+  id               String   @id @default(cuid())
+  toolName         String
+  title            String
+  description      String?
+  status           String   @default("queued")
+  riskLevel        String   @default("medium")
+  requiresApproval Boolean  @default(false)
+  approved         Boolean  @default(false)
+  payload          Json?
+  result           Json?
+  error            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([toolName])
+  @@index([status])
+  @@index([riskLevel])
+  @@index([requiresApproval])
+  @@index([createdAt])
+}
+
 model ExecutiveCopilotConversation {
   id        String   @id @default(cuid())
   title     String?

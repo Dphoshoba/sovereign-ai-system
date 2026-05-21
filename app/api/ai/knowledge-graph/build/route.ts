@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client"
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
@@ -28,7 +29,7 @@ async function upsertNode({
       data: {
         label,
         summary: summary || existing.summary,
-        metadata,
+        metadata: metadata as Prisma.InputJsonValue,
       },
     })
   }
@@ -39,7 +40,7 @@ async function upsertNode({
       label,
       entityId: entityId || null,
       summary: summary || null,
-      metadata,
+      metadata: metadata as Prisma.InputJsonValue,
     },
   })
 }
@@ -70,7 +71,7 @@ async function createEdge({
       where: { id: existing.id },
       data: {
         weight,
-        metadata,
+        metadata: metadata as Prisma.InputJsonValue,
       },
     })
   }
@@ -81,7 +82,7 @@ async function createEdge({
       toNodeId,
       relation,
       weight,
-      metadata,
+      metadata: metadata as Prisma.InputJsonValue,
     },
   })
 }

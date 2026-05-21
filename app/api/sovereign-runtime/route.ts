@@ -109,7 +109,7 @@ export async function POST() {
         orderBy: { createdAt: "desc" },
         take: 40,
       }),
-      prisma.selfEvolutionCycle.findMany({
+      prisma.recursiveEvolutionCycle.findMany({
         orderBy: { createdAt: "desc" },
         take: 40,
       }),

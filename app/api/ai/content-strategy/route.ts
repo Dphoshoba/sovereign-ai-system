@@ -26,7 +26,6 @@ export async function POST() {
     const response = await openai.responses.create({
       model: "gpt-5.2",
       instructions:
-        instructions:
   "You are the Echoes & Visions AI Content Strategy Engine. " +
   DAVID_WRITING_DNA +
   " Return only valid JSON. No markdown.",

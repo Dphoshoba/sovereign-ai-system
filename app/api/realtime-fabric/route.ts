@@ -145,7 +145,7 @@ export async function POST() {
         orderBy: { createdAt: "desc" },
         take: 80,
       }),
-      prisma.infrastructureRetryJob.findMany({
+      prisma.resilienceRetryJob.findMany({
         orderBy: { createdAt: "desc" },
         take: 80,
       }),

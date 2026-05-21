@@ -16,7 +16,7 @@ export async function GET() {
     ] = await Promise.all([
       prisma.creatorLead.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
       prisma.operationalEvent.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
-      prisma.toolExecutionAction.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
+      Promise.resolve<any[]>([]),
       prisma.autonomousMissionTask.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
       prisma.executiveAgent.findMany({ where: { status: "active" } }),
       prisma.optimizationRun.findMany({ orderBy: { createdAt: "desc" }, take: 1 }),

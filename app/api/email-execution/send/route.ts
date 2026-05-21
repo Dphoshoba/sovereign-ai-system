@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client"
 import { NextResponse } from "next/server"
 import { Resend } from "resend"
 import { prisma } from "@/lib/prisma"
@@ -101,7 +102,7 @@ export async function POST(request: Request) {
         title: email.subject,
         status: "completed",
         payload: { to: email.to, subject: email.subject },
-        result: result.data || {},
+        result: (result.data ? JSON.parse(JSON.stringify(result.data)) : {}) as Prisma.InputJsonValue,
       },
     })
 

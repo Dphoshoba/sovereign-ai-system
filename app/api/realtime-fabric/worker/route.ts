@@ -24,7 +24,7 @@ async function executeJob(job: any) {
   }
 
   if (job.jobType === "process-retry") {
-    return prisma.infrastructureRetryJob.create({
+    return prisma.resilienceRetryJob.create({
       data: {
         title: payload.title || job.title,
         source: "realtime-fabric",

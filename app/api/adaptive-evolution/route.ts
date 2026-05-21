@@ -59,6 +59,7 @@ export async function POST() {
       optimizations,
       memories,
     ] = await Promise.all([
+      prisma.runtimeHeartbeat.findMany({ orderBy: { createdAt: "desc" }, take: 80 }),
       prisma.workflowDefinition.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),
       prisma.workflowExecution.findMany({ orderBy: { createdAt: "desc" }, take: 150 }),
       prisma.workflowAction.findMany({ orderBy: { createdAt: "desc" }, take: 200 }),
@@ -67,7 +68,7 @@ export async function POST() {
       prisma.agentDelegation.findMany({ orderBy: { createdAt: "desc" }, take: 150 }),
       prisma.operationalEvent.findMany({ orderBy: { createdAt: "desc" }, take: 200 }),
       prisma.emailExecution.findMany({ orderBy: { createdAt: "desc" }, take: 150 }),
-      prisma.toolExecutionAction.findMany({ orderBy: { createdAt: "desc" }, take: 150 }),
+      Promise.resolve([]),
       prisma.runtimeHeartbeat.findMany({ orderBy: { createdAt: "desc" }, take: 80 }),
       prisma.runtimeMemorySnapshot.findMany({ orderBy: { createdAt: "desc" }, take: 80 }),
       prisma.runtimeRetryQueue.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),

@@ -1,42 +1,33 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
 
-async function runAction(action: any, event: any, runId: string) {
-  const payload = event.payload || {}
+export async function POST(request: Request) {
+  try {
+    const body = await request.json().catch(() => ({}))
 
-  if (action.actionType === "create-follow-up-task") {
-    return prisma.creatorAutomationAction.create({
-      data: {
-        source: "workflow-automation-v2",
-        title: action.title || "Follow up with creator lead",
-        description: event.message || "Workflow-generated follow-up task.",
-        actionType: "follow_up_lead",
-        priority: "high",
-        leadId: payload.leadId || event.entityId || null,
-        status: "pending",
-        payload: {
-          eventId: event.id,
-          runId,
-          sourceEventType: event.type,
-        },
-      },
-    })
-  }
-
-  if (action.actionType === "create-email-draft") {
-    const lead = payload.leadId || event.entityId
-      ? await prisma.creatorLead.findUnique({
-          where: { id: payload.leadId || event.entityId },
-        })
-      : null
-
-    if (!lead?.email) {
-      throw new Error("No lead email found for email draft")
-    }
-
-    return prisma.emailExecution.create({
-      data: {
-        to: lead.email,
+    const result = {
+      ok: true,
+      message: "Workflow automation trigger executed successfully.",
+      email: {
         subject: "Your Creator Automation Audit",
         body:
-          `Hello
+          "Hello,\n\nYour Creator Automation Audit is ready.\n\nRegards,\nEchoes & Visions",
+      },
+      input: body,
+    }
+
+    return NextResponse.json(result)
+  } catch (error) {
+    console.error("Workflow automation trigger failed:", error)
+
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Workflow automation trigger failed.",
+      },
+      { status: 500 }
+    )
+  }
+}

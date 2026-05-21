@@ -199,7 +199,7 @@ export async function POST(request: Request) {
         orderBy: { createdAt: "desc" },
         take: 50,
       }),
-      prisma.infrastructureResilienceRun.findMany({
+      prisma.resilienceIncident.findMany({
         orderBy: { createdAt: "desc" },
         take: 50,
       }),

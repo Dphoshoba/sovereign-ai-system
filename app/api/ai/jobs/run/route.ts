@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client"
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
@@ -20,7 +21,7 @@ async function logActivity({
       title,
       message: message || null,
       status,
-      metadata,
+      metadata: metadata as Prisma.InputJsonValue,
     },
   })
 }

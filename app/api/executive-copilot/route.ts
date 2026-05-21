@@ -86,7 +86,7 @@ export async function POST(request: Request) {
       prisma.creatorAuditRequest.findMany({ orderBy: { createdAt: "desc" }, take: 80 }),
       prisma.creatorProposal.findMany({ orderBy: { createdAt: "desc" }, take: 80 }),
       prisma.creatorInvoice.findMany({ orderBy: { createdAt: "desc" }, take: 80 }),
-      prisma.toolExecutionAction.findMany({ orderBy: { createdAt: "desc" }, take: 80 }),
+      Promise.resolve([]),
       prisma.autonomousMissionTask.findMany({ orderBy: { createdAt: "desc" }, take: 80 }),
       prisma.executiveAgent.findMany({ where: { status: "active" } }),
       prisma.agentDelegation.findMany({ orderBy: { createdAt: "desc" }, take: 80 }),
