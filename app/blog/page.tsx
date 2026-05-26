@@ -191,6 +191,47 @@ export default async function BlogPage({
           </div>
         )}
       </section>
+
+      <section
+        className="mt-16 rounded-3xl border border-zinc-200 bg-zinc-50 p-8"
+        style={{ maxWidth: 1180, margin: "48px auto 72px", padding: "32px 40px" }}
+      >
+        <h2 className="text-2xl font-bold text-zinc-950">
+          Join the Echoes & Visions Newsletter
+        </h2>
+
+        <p className="mt-3 max-w-2xl text-zinc-600">
+          Get practical AI automation insights for creators, ministries, founders,
+          and purpose-driven builders.
+        </p>
+
+        <form
+          action="/api/newsletter"
+          method="POST"
+          className="mt-6 grid gap-4 md:grid-cols-[1fr_1fr_auto]"
+        >
+          <input
+            name="name"
+            placeholder="Your name"
+            className="rounded-xl border border-zinc-300 bg-white px-4 py-3 text-black"
+          />
+
+          <input
+            name="email"
+            type="email"
+            required
+            placeholder="Your email"
+            className="rounded-xl border border-zinc-300 bg-white px-4 py-3 text-black"
+          />
+
+          <button
+            type="submit"
+            className="rounded-xl bg-black px-6 py-3 font-semibold text-white hover:bg-zinc-800"
+          >
+            Subscribe
+          </button>
+        </form>
+      </section>
     </main>
   )
 }

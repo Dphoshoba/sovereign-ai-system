@@ -1,32 +1,42 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
-export async function POST() {
+export async function GET() {
   try {
     const now = new Date()
 
-    const result = await prisma.article.updateMany({
+    const articles = await prisma.article.findMany({
       where: {
-        status: "scheduled",
+        status: "draft",
         scheduledFor: {
           lte: now,
         },
       },
-      data: {
-        status: "published",
-        publishedAt: now,
-      },
     })
+
+    for (const article of articles) {
+      await prisma.article.update({
+        where: {
+          id: article.id,
+        },
+        data: {
+          status: "published",
+          publishedAt: new Date(),
+        },
+      })
+    }
 
     return NextResponse.json({
       ok: true,
-      published: result.count,
+      published: articles.length,
     })
   } catch (error) {
     console.error(error)
 
     return NextResponse.json(
-      { ok: false, error: "Failed to publish scheduled articles" },
+      {
+        ok: false,
+      },
       { status: 500 }
     )
   }

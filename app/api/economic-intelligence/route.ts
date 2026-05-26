@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server"
-import OpenAI from "openai"
 import { prisma } from "@/lib/prisma"
+import { getOpenAI } from "@/lib/ai/openai"
 import { DAVID_WRITING_DNA } from "@/lib/ai/writing-dna"
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
 
 export async function GET() {
   try {
@@ -83,7 +79,7 @@ export async function POST() {
       prisma.operationalEvent.findMany({ orderBy: { createdAt: "desc" }, take: 150 }),
     ])
 
-    const response = await openai.responses.create({
+    const response = await getOpenAI().responses.create({
       model: "gpt-5.2",
       instructions:
         "You are the Autonomous Economic Intelligence Layer for Echoes & Visions. " +

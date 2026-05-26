@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server"
-import OpenAI from "openai"
 import { prisma } from "@/lib/prisma"
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+import { getOpenAI } from "@/lib/ai/openai"
 
 function cosineSimilarity(a: number[], b: number[]) {
   const dot = a.reduce((sum, val, i) => sum + val * b[i], 0)
@@ -28,7 +24,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const queryEmbeddingResponse = await openai.embeddings.create({
+    const queryEmbeddingResponse = await getOpenAI().embeddings.create({
       model: "text-embedding-3-small",
       input: query,
     })

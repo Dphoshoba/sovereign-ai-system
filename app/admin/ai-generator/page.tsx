@@ -9,8 +9,9 @@ export default function AiGeneratorPage() {
   const [topic, setTopic] = useState("")
   const [category, setCategory] = useState("ai-automation")
   const [publishNow, setPublishNow] = useState(false)
+  const [scheduledFor, setScheduledFor] = useState("")
   const [loading, setLoading] = useState(false)
-
+  
   async function generateArticle(event: React.FormEvent) {
     event.preventDefault()
     setLoading(true)
@@ -24,6 +25,8 @@ export default function AiGeneratorPage() {
         topic,
         category,
         publishNow,
+        status: publishNow ? "published" : "draft",
+        scheduledFor,
       }),
     })
 
@@ -71,7 +74,18 @@ export default function AiGeneratorPage() {
           />
         </label>
 
-        <label style={checkboxRow}>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Schedule Publish Time</label>
+
+          <input
+            type="datetime-local"
+            value={scheduledFor}
+            onChange={(e) => setScheduledFor(e.target.value)}
+            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black"
+          />
+        </div>
+
+        <label style={{ display: "flex", gap: "8px", alignItems: "center", color: "#111827" }}>
           <input
             type="checkbox"
             checked={publishNow}
@@ -111,13 +125,6 @@ const inputStyle: React.CSSProperties = {
   borderRadius: 10,
   border: "1px solid #ccc",
   fontSize: 16,
-}
-
-const checkboxRow: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: 10,
-  fontWeight: "bold",
 }
 
 const buttonStyle: React.CSSProperties = {

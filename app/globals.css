@@ -51,6 +51,7 @@
 }
 
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 html,
 body {
@@ -63,4 +64,17 @@ body {
 
 * {
   box-sizing: border-box;
+}
+
+input,
+textarea,
+select {
+  color: #111827 !important;
+  background-color: #ffffff !important;
+  caret-color: #111827 !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #6b7280 !important;
 }

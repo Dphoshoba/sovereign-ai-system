@@ -1,12 +1,8 @@
 import { NextResponse } from "next/server"
-import OpenAI from "openai"
 import { writeFile } from "fs/promises"
 import path from "path"
 import { prisma } from "@/lib/prisma"
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+import { getOpenAI } from "@/lib/ai/openai"
 
 function safeFileName(value: string) {
   return value
@@ -62,7 +58,7 @@ export async function POST(request: Request) {
         ? article.featuredImage
         : `Create a cinematic blog cover image for this article: ${article.title}. Modern AI automation, warm professional lighting, human-centered technology, elegant premium SaaS feel, no text, no logos, no watermarks.`
 
-    const image = await openai.images.generate({
+    const image = await getOpenAI().images.generate({
       model: "gpt-image-2",
       prompt,
       size: "1024x1024",

@@ -410,3 +410,22 @@ const plainLink: React.CSSProperties = {
   fontWeight: "bold",
   textDecoration: "none",
 }
+
+{post.sceneTimeline && (
+  <section className="rounded-xl border border-zinc-800 bg-black/40 p-5">
+    <div className="mb-2 flex items-center justify-between gap-3">
+      <h3 className="font-semibold text-purple-300">
+        Scene Timeline + B-roll
+      </h3>
+
+      <CopyButton
+        value={JSON.stringify(post.sceneTimeline, null, 2)}
+        label="Copy"
+      />
+    </div>
+
+    <pre className="max-h-[620px] overflow-auto whitespace-pre-wrap text-sm leading-7 text-zinc-300">
+      {JSON.stringify(post.sceneTimeline, null, 2)}
+    </pre>
+  </section>
+)}

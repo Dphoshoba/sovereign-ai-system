@@ -1,12 +1,8 @@
 import { NextResponse } from "next/server"
-import OpenAI from "openai"
 import { prisma } from "@/lib/prisma"
+import { getOpenAI } from "@/lib/ai/openai"
 import { DAVID_WRITING_DNA } from "@/lib/ai/writing-dna"
 import { getMemoryContext } from "@/lib/ai/memory-context"
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
 
 function slugify(value: string) {
   return value
@@ -46,7 +42,9 @@ export async function POST(request: Request) {
 
     const topic = body.topic || "AI automation for creators"
     const category = body.category || "ai-automation"
-    const publishNow = Boolean(body.publishNow)
+    const publishNow =
+      Boolean(body.publishNow) || body.status === "published"
+    const scheduledFor = body.scheduledFor
 
     const memoryContext = await getMemoryContext({
       query: topic,
@@ -54,7 +52,7 @@ export async function POST(request: Request) {
       limit: 8,
     })
 
-    const response = await openai.responses.create({
+    const response = await getOpenAI().responses.create({
       model: "gpt-5.2",
       instructions:
         "You are the AI writing engine for Echoes & Visions. " +
@@ -91,12 +89,38 @@ export async function POST(request: Request) {
         seoDescription: parsed.seoDescription || parsed.excerpt || null,
         seoKeywords: parsed.seoKeywords || null,
         publishedAt: publishNow ? new Date() : null,
+        scheduledFor: scheduledFor ? new Date(scheduledFor) : null,
       },
     })
-
+    
+    let updatedArticle = article
+    
+    try {
+      const imageResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/ai/generate-featured-image`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            articleId: article.id,
+          }),
+        }
+      )
+    
+      const imageData = await imageResponse.json()
+    
+      if (imageData?.ok && imageData?.article) {
+        updatedArticle = imageData.article
+      }
+    } catch (imageError) {
+      console.error("Article created, but featured image generation failed:", imageError)
+    }
+    
     return NextResponse.json({
       ok: true,
-      article,
+      article: updatedArticle,
     })
   } catch (error) {
     console.error("AI article generation failed:", error)

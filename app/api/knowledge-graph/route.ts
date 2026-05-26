@@ -1,12 +1,8 @@
 import { NextResponse } from "next/server"
-import OpenAI from "openai"
 import crypto from "crypto"
 import { prisma } from "@/lib/prisma"
+import { getOpenAI } from "@/lib/ai/openai"
 import { DAVID_WRITING_DNA } from "@/lib/ai/writing-dna"
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
 
 function hashText(value: string) {
   return crypto.createHash("sha256").update(value).digest("hex")
@@ -133,7 +129,7 @@ export async function POST() {
       }),
     ])
 
-    const response = await openai.responses.create({
+    const response = await getOpenAI().responses.create({
       model: "gpt-5.2",
       instructions:
         "You are the Sovereign Knowledge Graph and Semantic Memory Fabric for Echoes & Visions. " +

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
-import OpenAI from "openai"
 import { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
+import { getOpenAI } from "@/lib/ai/openai"
 import { DAVID_WRITING_DNA } from "@/lib/ai/writing-dna"
 import {
   PLANETARY_DOMAINS,
@@ -13,10 +13,6 @@ import {
   priorityFromScores,
   requiresPlanetaryApproval,
 } from "@/lib/ai/world-model-v2"
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
 
 async function getDefaultTenant() {
   const org = await prisma.sovereignOrganization.findUnique({
@@ -247,7 +243,7 @@ export async function POST(request: Request) {
         ? focusDomains.join(", ")
         : PLANETARY_DOMAINS.join(", ")
 
-    const response = await openai.responses.create({
+    const response = await getOpenAI().responses.create({
       model: "gpt-5.2",
       instructions:
         "You are the Sovereign World Model Engine V2 for Echoes & Visions. " +

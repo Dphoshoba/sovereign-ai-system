@@ -3455,3 +3455,85 @@ model AiActivityEvent {
   @@index([status])
   @@index([createdAt])
 }
+
+model NewsletterDraft {
+  id          String   @id @default(cuid())
+  articleId   String?
+  subject     String
+  previewText String?
+  body        String
+  status      String   @default("draft")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+
+model SocialPost {
+  id          String   @id @default(cuid())
+  articleId   String?
+  platform    String
+  content     String
+  status      String   @default("draft")
+  externalId  String?
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model YouTubePost {
+  id                String   @id @default(cuid())
+  articleId         String?
+  title             String
+  description       String
+  tags              String?
+  shortsCaption     String?
+  thumbnailPrompt   String?
+  thumbnailImage    String?
+  scriptOutline     String?
+  fullScript        String?
+  shortsHooks       String?
+  retentionHooks    String?
+  chapterTimestamps String?
+  cta               String?
+  shortsIdeas       String?
+  shortsScripts     String?
+  editingNotes      String?
+  pacingSuggestions String?
+  viralAngles       String?
+  voiceoverUrl      String?
+  shortsVoiceUrl    String?
+  scenePlan         String?
+  brollSuggestions  String?
+  cameraDirections  String?
+  visualPrompts     String?
+  shortsScenes      String?
+  youtubeVideoId String?
+  youtubeUrl     String?
+  uploadStatus   String? @default("draft")
+  scheduledFor   DateTime?
+  status            String   @default("draft")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  shortsVideoUrl String?
+  shortsUploadUrl String?
+  shortsVideoId  String?
+  subtitleUrl String?
+  shortsStatus   String? @default("draft")
+  renderedVideoUrl String?
+  renderStatus     String? @default("draft")
+  sceneTimeline Json?
+  selectedMusic String?
+}
+
+model PublishingQueue {
+  id          String   @id @default(cuid())
+  articleId   String
+  platform    String
+  contentType String
+  status      String   @default("pending")
+  scheduledAt DateTime?
+  publishedAt DateTime?
+  payload     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

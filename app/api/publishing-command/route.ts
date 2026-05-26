@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server"
-import OpenAI from "openai"
 import { prisma } from "@/lib/prisma"
+import { getOpenAI } from "@/lib/ai/openai"
 import { DAVID_WRITING_DNA } from "@/lib/ai/writing-dna"
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
 
 async function seedCadenceGoals() {
   const existing = await prisma.publishingCadenceGoal.findMany()
@@ -136,7 +132,7 @@ export async function POST(request: Request) {
       body.topic ||
       "Create a YouTube-led content plan for Echoes & Visions Sovereign Intelligence Platform."
 
-    const response = await openai.responses.create({
+    const response = await getOpenAI().responses.create({
       model: "gpt-5.2",
       instructions:
         "You are the Echoes & Visions Publishing Command Center and YouTube Intelligence Runtime. " +

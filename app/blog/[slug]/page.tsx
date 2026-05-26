@@ -5,6 +5,19 @@ import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { prisma } from "@/lib/prisma"
 
+function appUrl(path: string) {
+  const base = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(
+    /\/$/,
+    ""
+  )
+
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path
+  }
+
+  return `${base}${path.startsWith("/") ? path : `/${path}`}`
+}
+
 function formatDate(date: Date) {
   return new Intl.DateTimeFormat("en-AU", {
     year: "numeric",
@@ -21,28 +34,41 @@ export async function generateMetadata({
   const { slug } = await params
 
   const article = await prisma.article.findFirst({
-    where: { slug, status: "published" },
+    where: {
+      slug,
+      status: "published",
+    },
   })
 
-  if (!article) return { title: "Article Not Found | Echoes & Visions" }
+  if (!article) {
+    return {
+      title: "Article Not Found | Echoes & Visions",
+    }
+  }
+
+  const imageUrl = article.featuredImage
+    ? appUrl(article.featuredImage)
+    : appUrl("/og-default.jpg")
 
   return {
-    title: `${article.seoTitle || article.title} | Echoes & Visions`,
-    description:
-      article.seoDescription ||
-      article.excerpt ||
-      "AI automation insights from Echoes & Visions.",
-    keywords: article.seoKeywords
-      ? article.seoKeywords.split(",").map((keyword) => keyword.trim())
-      : undefined,
+    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL!),
+    alternates: {
+      canonical: `/blog/${slug}`,
+    },
+    title: article.seoTitle || article.title,
+    description: article.seoDescription || article.excerpt || "",
+    keywords: article.seoKeywords || "",
     openGraph: {
       title: article.seoTitle || article.title,
-      description:
-        article.seoDescription ||
-        article.excerpt ||
-        "AI automation insights from Echoes & Visions.",
+      description: article.seoDescription || article.excerpt || "",
+      images: [imageUrl],
       type: "article",
-      images: article.featuredImage ? [article.featuredImage] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.seoTitle || article.title,
+      description: article.seoDescription || article.excerpt || "",
+      images: [imageUrl],
     },
   }
 }
@@ -106,7 +132,7 @@ export default async function BlogArticlePage({
         ) : null}
 
         <div style={articleBox}>
-          <div className="markdown-body">
+          <div className="prose prose-invert max-w-none">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {article.content || "No content yet."}
             </ReactMarkdown>

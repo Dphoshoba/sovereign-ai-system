@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server"
-import OpenAI from "openai"
 import { prisma } from "@/lib/prisma"
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+import { getOpenAI } from "@/lib/ai/openai"
 
 export async function POST() {
   try {
@@ -29,7 +25,7 @@ Content:
 ${article.content || ""}
 `
 
-      const embeddingResponse = await openai.embeddings.create({
+      const embeddingResponse = await getOpenAI().embeddings.create({
         model: "text-embedding-3-small",
         input: content,
       })
