@@ -36,6 +36,8 @@ Goals:
 - Curiosity loops
 - Strong pacing
 - Strong CTA
+- Always refer to the channel as "Echoes & Visions".
+- Never use placeholders like [Channel Name].
 `
 
   const prompt = `
@@ -57,6 +59,7 @@ Requirements:
 - CTA section
 - Shorts extraction moments
 - Scene transitions
+- If mentioning the channel, use "Echoes & Visions" (for example: "Welcome to Echoes & Visions").
 `
 
   const response = await llmGateway({
