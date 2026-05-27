@@ -56,5 +56,10 @@ export async function runCreatorSystem() {
     publishing,
     analytics,
     strategy,
+    memoryInsights: {
+      bestTopics: memory.getBestTopics(),
+      bestTitles: memory.getBestTitles(),
+      bestThumbnailStyles: memory.getBestThumbnailStyles(),
+    },
   }
 }
