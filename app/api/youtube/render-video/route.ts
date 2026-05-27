@@ -335,8 +335,8 @@ export async function POST(req: NextRequest) {
 
       command
         .complexFilter([
-          hasMusic
-            ? "[1:a]volume=1[a1];[2:a]volume=0.15[a2];[a1][a2]amix=inputs=2:duration=longest[aout]"
+          fs.existsSync(musicPath)
+            ? "[1:a]volume=1.0[voice];[2:a]volume=0.12[music];[voice][music]amix=inputs=2:duration=first[aout]"
             : "[1:a]volume=1[aout]",
         ])
         .outputOptions([
