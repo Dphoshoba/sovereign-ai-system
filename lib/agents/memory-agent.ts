@@ -1,3 +1,5 @@
+import { prisma } from "@/lib/prisma"
+
 type MemoryRecord = {
   topic: string
   title: string
@@ -8,32 +10,53 @@ type MemoryRecord = {
   outcome: "winning" | "average" | "poor"
 }
 
-const memoryDatabase: MemoryRecord[] = []
-
 export async function memoryAgent() {
-  function remember(record: MemoryRecord) {
-    memoryDatabase.push(record)
+  async function remember(record: MemoryRecord) {
+    const saved = await prisma.agentMemory.create({
+      data: {
+        topic: record.topic,
+        title: record.title,
+        thumbnailStyle: record.thumbnailStyle,
+        ctr: record.ctr,
+        retention: record.retention,
+        views: record.views,
+        outcome: record.outcome,
+      },
+    })
 
     return {
       stored: true,
-      totalMemories: memoryDatabase.length,
+      id: saved.id,
     }
   }
 
-  function getWinningPatterns() {
-    return memoryDatabase.filter((m) => m.outcome === "winning")
+  async function getWinningPatterns() {
+    return prisma.agentMemory.findMany({
+      where: {
+        outcome: "winning",
+      },
+      orderBy: {
+        views: "desc",
+      },
+      take: 10,
+    })
   }
 
-  function getBestTopics() {
-    const sorted = [...memoryDatabase].sort((a, b) => b.views - a.views)
-
-    return sorted.slice(0, 5)
+  async function getBestTopics() {
+    return prisma.agentMemory.findMany({
+      orderBy: {
+        views: "desc",
+      },
+      take: 5,
+    })
   }
 
-  function getBestThumbnailStyles() {
+  async function getBestThumbnailStyles() {
+    const memories = await prisma.agentMemory.findMany()
+
     const counts: Record<string, number> = {}
 
-    memoryDatabase.forEach((m) => {
+    memories.forEach((m) => {
       counts[m.thumbnailStyle] = (counts[m.thumbnailStyle] || 0) + 1
     })
 
@@ -42,14 +65,13 @@ export async function memoryAgent() {
       .map(([style]) => style)
   }
 
-  function getBestTitles() {
-    return [...memoryDatabase]
-      .sort((a, b) => b.ctr - a.ctr)
-      .slice(0, 10)
-      .map((m) => ({
-        title: m.title,
-        ctr: m.ctr,
-      }))
+  async function getBestTitles() {
+    return prisma.agentMemory.findMany({
+      orderBy: {
+        ctr: "desc",
+      },
+      take: 10,
+    })
   }
 
   return {

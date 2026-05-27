@@ -56,10 +56,11 @@ export async function runCreatorSystem() {
     publishing,
     analytics,
     strategy,
+
     memoryInsights: {
-      bestTopics: memory.getBestTopics(),
-      bestTitles: memory.getBestTitles(),
-      bestThumbnailStyles: memory.getBestThumbnailStyles(),
+      bestTopics: await memory.getBestTopics(),
+      bestTitles: await memory.getBestTitles(),
+      bestThumbnailStyles: await memory.getBestThumbnailStyles(),
     },
   }
 }
