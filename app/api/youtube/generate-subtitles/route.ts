@@ -12,6 +12,32 @@ function splitIntoLines(text: string) {
     .slice(0, 40)
 }
 
+function chunkCaption(text: string, size = 4) {
+  const words = text.split(" ")
+  const chunks: string[] = []
+
+  for (let i = 0; i < words.length; i += size) {
+    chunks.push(words.slice(i, i + size).join(" "))
+  }
+
+  return chunks
+}
+
+function formatChunkDisplay(chunk: string) {
+  const words = chunk
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word.toUpperCase())
+
+  if (words.length <= 2) {
+    return words.join(" ")
+  }
+
+  const mid = Math.ceil(words.length / 2)
+  return [words.slice(0, mid).join(" "), words.slice(mid).join(" ")].join("\n")
+}
+
 function formatTime(seconds: number) {
   const h = String(Math.floor(seconds / 3600)).padStart(2, "0")
   const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0")
@@ -46,17 +72,39 @@ export async function POST(req: Request) {
     const sourceText = post.fullScript || post.description || post.title
     const lines = splitIntoLines(sourceText)
 
-    const srt = lines
-      .map((line, index) => {
-        const start = index * 4
-        const end = start + 3.5
+    const sentences = lines.map((text, index) => {
+      const start = index * 4
+      const duration = 3.5
 
-        return `${index + 1}
+      return {
+        start,
+        end: start + duration,
+        duration,
+        text,
+      }
+    })
+
+    let cueIndex = 1
+    const srtEntries: string[] = []
+
+    for (const sentence of sentences) {
+      const chunks = chunkCaption(sentence.text, 3)
+      const chunkDuration = sentence.duration / chunks.length
+
+      chunks.forEach((chunk, index) => {
+        const start = sentence.start + index * chunkDuration
+        const end = start + chunkDuration
+
+        srtEntries.push(
+          `${cueIndex++}
 ${formatTime(start)} --> ${formatTime(end)}
-${line}
+${formatChunkDisplay(chunk)}
 `
+        )
       })
-      .join("\n")
+    }
+
+    const srt = srtEntries.join("\n")
 
     const dir = path.join(process.cwd(), "public", "subtitles")
 

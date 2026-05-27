@@ -3,6 +3,8 @@ declare module "fluent-ffmpeg" {
 
   interface FfmpegCommand extends EventEmitter {
     input(source: string | NodeJS.ReadableStream): FfmpegCommand
+    setStartTime(time: number | string): FfmpegCommand
+    setDuration(duration: number | string): FfmpegCommand
     inputOptions(options: string | string[]): FfmpegCommand
     outputOptions(options: string | string[]): FfmpegCommand
     complexFilter(filters: string | string[]): FfmpegCommand
