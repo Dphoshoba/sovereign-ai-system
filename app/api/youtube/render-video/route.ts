@@ -291,7 +291,22 @@ export async function POST(req: NextRequest) {
         ? getTransitionFilter(timeline[0]?.transition)
         : ""
 
-    const videoFilter = `scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,setsar=1,${cameraMotion.zoom},${primaryTransition},format=yuv420p`
+    const subtitlePath = post.subtitleUrl
+      ? path.join(process.cwd(), "public", post.subtitleUrl.replace("/", ""))
+      : null
+
+    const safeSubtitlePath = subtitlePath
+      ? subtitlePath.replace(/\\/g, "/").replace(/:/g, "\\:")
+      : ""
+
+    const subtitleFilter =
+      subtitlePath && fs.existsSync(subtitlePath)
+        ? `subtitles='${safeSubtitlePath}':force_style='FontName=Arial,FontSize=16,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=2,Shadow=0,Alignment=2,MarginV=60'`
+        : ""
+
+    const videoFilter = subtitleFilter
+      ? `scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,setsar=1,${cameraMotion.zoom},${primaryTransition},format=yuv420p,${subtitleFilter}`
+      : `scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,setsar=1,${cameraMotion.zoom},${primaryTransition},format=yuv420p`
 
     const selectedMusic = chooseMusic(post)
 
