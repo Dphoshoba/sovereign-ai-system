@@ -1,14 +1,19 @@
+import fs from "fs"
+import path from "path"
+import ffmpeg from "fluent-ffmpeg"
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { getOpenAI } from "@/lib/ai/openai"
 
-function toText(value: unknown) {
-  if (value === null || value === undefined) return null
+export const runtime = "nodejs"
 
-  return typeof value === "string"
-    ? value
-    : JSON.stringify(value, null, 2)
-}
+const resolvedFfmpegPath = path.join(
+  process.cwd(),
+  "node_modules",
+  "ffmpeg-static",
+  "ffmpeg.exe"
+)
+
+ffmpeg.setFfmpegPath(resolvedFfmpegPath)
 
 export async function POST(req: Request) {
   try {
@@ -16,87 +21,86 @@ export async function POST(req: Request) {
 
     if (!youtubePostId) {
       return NextResponse.json(
-        {
-          ok: false,
-          error: "Missing youtubePostId",
-        },
+        { ok: false, error: "Missing youtubePostId" },
         { status: 400 }
       )
     }
 
     const post = await prisma.youTubePost.findUnique({
-      where: {
-        id: youtubePostId,
-      },
+      where: { id: youtubePostId },
     })
 
     if (!post) {
       return NextResponse.json(
-        {
-          ok: false,
-          error: "YouTube post not found",
-        },
+        { ok: false, error: "YouTube post not found" },
         { status: 404 }
       )
     }
 
-    const completion = await getOpenAI().chat.completions.create({
-      model: "gpt-4o-mini",
-      temperature: 0.9,
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are an elite viral Shorts strategist for Echoes & Visions. Return only valid JSON.",
-        },
-        {
-          role: "user",
-          content: `
-Create viral YouTube Shorts assets.
+    if (!post.renderedVideoUrl) {
+      return NextResponse.json(
+        { ok: false, error: "Render the full video first." },
+        { status: 400 }
+      )
+    }
 
-Title:
-${post.title}
+    const inputPath = path.join(
+      process.cwd(),
+      "public",
+      post.renderedVideoUrl.replace(/^\//, "")
+    )
 
-Description:
-${post.description}
+    if (!fs.existsSync(inputPath)) {
+      return NextResponse.json(
+        { ok: false, error: "Rendered video file not found." },
+        { status: 400 }
+      )
+    }
 
-Return JSON:
-{
-  "shortsIdeas": [],
-  "shortsScripts": [],
-  "editingNotes": [],
-  "pacingSuggestions": [],
-  "viralAngles": []
-}
-          `,
-        },
-      ],
+    const shortsDir = path.join(process.cwd(), "public", "shorts")
+    if (!fs.existsSync(shortsDir)) {
+      fs.mkdirSync(shortsDir, { recursive: true })
+    }
+
+    const outputFile = `${post.id}-short.mp4`
+    const outputPath = path.join(shortsDir, outputFile)
+
+    await new Promise<void>((resolve, reject) => {
+      ffmpeg(inputPath)
+        .outputOptions([
+          "-ss",
+          "0",
+          "-t",
+          "45",
+          "-vf",
+          "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,setsar=1,format=yuv420p",
+          "-c:v",
+          "libx264",
+          "-preset",
+          "veryfast",
+          "-c:a",
+          "aac",
+          "-b:a",
+          "192k",
+        ])
+        .save(outputPath)
+        .on("end", () => resolve())
+        .on("error", (err: Error) => reject(err))
     })
 
-    const raw = completion.choices[0]?.message?.content || "{}"
-
-    const cleaned = raw
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim()
-
-    const parsed = JSON.parse(cleaned)
+    const shortsVideoUrl = `/shorts/${outputFile}`
 
     const updated = await prisma.youTubePost.update({
-      where: {
-        id: post.id,
-      },
+      where: { id: post.id },
       data: {
-        shortsIdeas: toText(parsed.shortsIdeas),
-        shortsScripts: toText(parsed.shortsScripts),
-        editingNotes: toText(parsed.editingNotes),
-        pacingSuggestions: toText(parsed.pacingSuggestions),
-        viralAngles: toText(parsed.viralAngles),
+        shortsVideoUrl,
+        shortsStatus: "rendered",
       },
     })
 
     return NextResponse.json({
       ok: true,
+      shortsVideoUrl,
       post: updated,
     })
   } catch (error) {
@@ -108,7 +112,7 @@ Return JSON:
         error:
           error instanceof Error
             ? error.message
-            : "Failed to generate Shorts assets",
+            : "Failed to generate Shorts video",
       },
       { status: 500 }
     )
