@@ -24,6 +24,8 @@
   },
   "include": [
     "next-env.d.ts",
+    "fluent-ffmpeg.d.ts",
+    "ffprobe-static.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",

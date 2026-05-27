@@ -1,6 +1,6 @@
-import fs from "fs"
+import { NextRequest, NextResponse } from "next/server"
 import path from "path"
-import { NextResponse } from "next/server"
+import fs from "fs"
 import ffmpeg from "fluent-ffmpeg"
 import { prisma } from "@/lib/prisma"
 
@@ -15,6 +15,18 @@ const resolvedFfmpegPath = path.join(
 
 ffmpeg.setFfmpegPath(resolvedFfmpegPath)
 
+const resolvedFfprobePath = path.join(
+  process.cwd(),
+  "node_modules",
+  "ffprobe-static",
+  "bin",
+  "win32",
+  "x64",
+  "ffprobe.exe"
+)
+
+ffmpeg.setFfprobePath(resolvedFfprobePath)
+
 type SceneTimelineItem = {
   start: number
   end: number
@@ -24,6 +36,53 @@ type SceneTimelineItem = {
   text?: string
   emotion?: string
   transition?: string
+}
+
+function getTransitionFilter(transition?: string) {
+  switch (transition) {
+    case "fast-cut":
+      return "fade=t=in:st=0:d=0.15"
+
+    case "crossfade":
+      return "fade=t=in:st=0:d=0.6"
+
+    case "slow-fade":
+      return "fade=t=in:st=0:d=1.2"
+
+    default:
+      return "fade=t=in:st=0:d=0.4"
+  }
+}
+
+function getCameraMotion(emotion?: string) {
+  switch (emotion) {
+    case "high":
+      return {
+        zoom:
+          "zoompan=z='min(max(zoom,pzoom)+0.0015,1.15)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1920x1080:fps=30",
+      }
+
+    case "warm":
+      return {
+        zoom:
+          "zoompan=z='min(max(zoom,pzoom)+0.0008,1.10)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1920x1080:fps=30",
+      }
+
+    default:
+      return {
+        zoom:
+          "zoompan=z='min(max(zoom,pzoom)+0.0004,1.06)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1920x1080:fps=30",
+      }
+  }
+}
+
+function getAudioDuration(filePath: string): Promise<number> {
+  return new Promise((resolve, reject) => {
+    ffmpeg.ffprobe(filePath, (err, metadata) => {
+      if (err) reject(err)
+      else resolve(Number(metadata.format.duration) || 0)
+    })
+  })
 }
 
 function chooseMusic(post: {
@@ -68,29 +127,14 @@ function chooseMusic(post: {
   return "calm-documentary.mp3"
 }
 
-function getTransitionFilter(transition?: string) {
-  switch (transition) {
-    case "fast-cut":
-      return "fade=t=in:st=0:d=0.15"
-
-    case "crossfade":
-      return "fade=t=in:st=0:d=0.6"
-
-    case "slow-fade":
-      return "fade=t=in:st=0:d=1.2"
-
-    default:
-      return "fade=t=in:st=0:d=0.4"
-  }
-}
-
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const { youtubePostId } = await req.json()
+    const body = await req.json()
+    const youtubePostId = body.youtubePostId
 
     if (!youtubePostId) {
       return NextResponse.json(
-        { ok: false, error: "Missing youtubePostId" },
+        { error: "youtubePostId required" },
         { status: 400 }
       )
     }
@@ -101,100 +145,46 @@ export async function POST(req: Request) {
 
     if (!post) {
       return NextResponse.json(
-        { ok: false, error: "YouTube post not found" },
+        { error: "Post not found" },
         { status: 404 }
       )
     }
 
     if (!post.voiceoverUrl) {
       return NextResponse.json(
-        { ok: false, error: "Generate voiceover first." },
+        { error: "Voiceover not found" },
         { status: 400 }
       )
     }
 
-    const scenesDir = path.join(
+    const outputDir = path.join(
       process.cwd(),
       "public",
-      "backgrounds",
-      "scenes"
+      "rendered-videos"
     )
-
-    const sceneFiles = fs.existsSync(scenesDir)
-      ? fs
-          .readdirSync(scenesDir)
-          .filter((file) => file.endsWith(".mp4"))
-          .map((file) => path.join(scenesDir, file))
-      : []
-
-    const fallbackBackgroundPath = path.join(
-      process.cwd(),
-      "public",
-      "backgrounds",
-      "default.mp4"
-    )
-
-    const videoInputs =
-      sceneFiles.length > 0 ? sceneFiles : [fallbackBackgroundPath]
-
-    const audioPath = path.join(
-      process.cwd(),
-      "public",
-      post.voiceoverUrl.replace("/", "")
-    )
-
-    const outputDir = path.join(process.cwd(), "public", "rendered-videos")
 
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true })
     }
 
+    const audioPath = path.join(
+      process.cwd(),
+      "public",
+      post.voiceoverUrl.replace(/^\//, "")
+    )
+
     if (!fs.existsSync(audioPath)) {
       return NextResponse.json(
-        { ok: false, error: "Voiceover file not found." },
+        { error: "Voiceover not found" },
         { status: 400 }
       )
     }
 
-    const outputFile = `${post.id}-rendered.mp4`
-    const outputPath = path.join(outputDir, outputFile)
+    const voiceoverDuration = await getAudioDuration(audioPath)
 
-    const subtitlePath = post.subtitleUrl
-      ? path.join(
-          process.cwd(),
-          "public",
-          post.subtitleUrl.replace("/", "")
-        )
-      : null
-
-    const hasSubtitles =
-      subtitlePath && fs.existsSync(subtitlePath)
-
-    const subtitleFilter = hasSubtitles
-      ? `subtitles='${subtitlePath.replace(/\\/g, "\\\\").replace(/:/g, "\\:")}':force_style='FontSize=28,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=2,Shadow=1,Alignment=2,MarginV=80'`
-      : null
-
-    const timeline = Array.isArray(post.sceneTimeline)
+    const timeline: SceneTimelineItem[] = Array.isArray(post.sceneTimeline)
       ? (post.sceneTimeline as SceneTimelineItem[])
       : []
-
-    const baseZoomPan =
-      "zoompan=z='min(zoom+0.0005,1.08)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=125"
-
-    const primaryTransition =
-      timeline.length > 0
-        ? getTransitionFilter(timeline[0]?.transition)
-        : ""
-
-    const videoFilter = [
-      "scale=1920:1080",
-      baseZoomPan,
-      primaryTransition,
-      "format=yuv420p",
-      ...(subtitleFilter ? [subtitleFilter] : []),
-    ]
-      .filter(Boolean)
-      .join(",")
 
     const timelineSceneFiles =
       timeline.length > 0
@@ -204,38 +194,104 @@ export async function POST(req: Request) {
             return path.join(
               process.cwd(),
               "public",
-              source.replace("/", "")
+              source.replace(/^\//, "")
             )
           })
         : []
 
-    const sceneFilesToUse =
-      timelineSceneFiles.length > 0
-        ? timelineSceneFiles
-        : videoInputs
-
-    const validSceneFiles = sceneFilesToUse.filter((file) =>
+    const validSceneFiles = timelineSceneFiles.filter((file) =>
       fs.existsSync(file)
     )
 
-    if (validSceneFiles.length === 0) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "No valid scene files found.",
-        },
-        { status: 400 }
-      )
+    const fallbackBackgroundPath = path.join(
+      process.cwd(),
+      "public",
+      "backgrounds",
+      "default.mp4"
+    )
+
+    const videoInputs =
+      validSceneFiles.length > 0
+        ? validSceneFiles
+        : [fallbackBackgroundPath]
+
+    const segmentDir = path.join(outputDir, `${post.id}-segments`)
+
+    if (!fs.existsSync(segmentDir)) {
+      fs.mkdirSync(segmentDir, { recursive: true })
     }
 
-    const concatListPath = path.join(outputDir, `${post.id}-concat.txt`)
+    const renderedSegments: string[] = []
+
+    for (let i = 0; i < videoInputs.length; i++) {
+      const sourceFile = videoInputs[i]
+      const segmentPath = path.join(segmentDir, `segment-${i}.mp4`)
+
+      await new Promise<void>((resolve, reject) => {
+        ffmpeg(sourceFile)
+          .inputOptions(["-stream_loop", "-1"])
+          .outputOptions([
+            "-t",
+            String(Math.max(4, Math.ceil(timeline[i]?.duration || 6))),
+            "-vf",
+            "scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,setsar=1,format=yuv420p",
+            "-c:v",
+            "libx264",
+            "-preset",
+            "veryfast",
+            "-an",
+          ])
+          .save(segmentPath)
+          .on("end", () => resolve())
+          .on("error", (err: Error) => reject(err))
+      })
+
+      renderedSegments.push(segmentPath)
+    }
+
+    let currentVisualDuration = renderedSegments.reduce(
+      (total, _, index) =>
+        total + Math.max(4, Math.ceil(timeline[index]?.duration || 6)),
+      0
+    )
+
+    while (currentVisualDuration < voiceoverDuration) {
+      for (let i = 0; i < renderedSegments.length; i++) {
+        if (currentVisualDuration >= voiceoverDuration) break
+
+        renderedSegments.push(renderedSegments[i])
+        currentVisualDuration += Math.max(
+          4,
+          Math.ceil(timeline[i]?.duration || 6)
+        )
+      }
+    }
+
+    const concatListPath = path.join(
+      outputDir,
+      `${post.id}-concat.txt`
+    )
 
     fs.writeFileSync(
       concatListPath,
-      validSceneFiles
+      renderedSegments
         .map((file) => `file '${file.replace(/\\/g, "/")}'`)
         .join("\n")
     )
+
+    const primaryEmotion =
+      timeline.length > 0
+        ? timeline[0]?.emotion
+        : "calm"
+
+    const cameraMotion = getCameraMotion(primaryEmotion)
+
+    const primaryTransition =
+      timeline.length > 0
+        ? getTransitionFilter(timeline[0]?.transition)
+        : ""
+
+    const videoFilter = `scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,setsar=1,${cameraMotion.zoom},${primaryTransition},format=yuv420p`
 
     const selectedMusic = chooseMusic(post)
 
@@ -246,14 +302,16 @@ export async function POST(req: Request) {
       selectedMusic
     )
 
-    console.log("Selected music:", selectedMusic)
+    const outputFile = `${post.id}-rendered-${Date.now()}.mp4`
+
+    const outputPath = path.join(outputDir, outputFile)
 
     const hasMusic = fs.existsSync(musicPath)
 
     await new Promise<void>((resolve, reject) => {
       const command = ffmpeg()
         .input(concatListPath)
-        .inputOptions(["-f", "concat", "-safe", "0", "-stream_loop", "-1"])
+        .inputOptions(["-f", "concat", "-safe", "0"])
         .input(audioPath)
 
       if (hasMusic) {
@@ -261,50 +319,41 @@ export async function POST(req: Request) {
       }
 
       command
-        .outputOptions(
+        .complexFilter([
           hasMusic
-            ? [
-                "-map 0:v:0",
-                "-filter_complex",
-                `[1:a]volume=1.0[voice];[2:a]volume=0.18[music];[voice][music]amix=inputs=2:duration=first:dropout_transition=2[aout]`,
-                "-map",
-                "[aout]",
-                "-shortest",
-                "-vf",
-                videoFilter,
-                "-c:v",
-                "libx264",
-                "-preset",
-                "veryfast",
-                "-c:a",
-                "aac",
-                "-b:a",
-                "192k",
-              ]
-            : [
-                "-map 0:v:0",
-                "-map 1:a:0",
-                "-shortest",
-                "-vf",
-                videoFilter,
-                "-c:v",
-                "libx264",
-                "-preset",
-                "veryfast",
-                "-c:a",
-                "aac",
-                "-b:a",
-                "192k",
-              ]
-        )
+            ? "[1:a]volume=1[a1];[2:a]volume=0.15[a2];[a1][a2]amix=inputs=2:duration=longest[aout]"
+            : "[1:a]volume=1[aout]",
+        ])
+        .outputOptions([
+          "-map",
+          "0:v",
+          "-map",
+          "[aout]",
+          "-vf",
+          videoFilter,
+          "-c:v",
+          "libx264",
+          "-preset",
+          "veryfast",
+          "-pix_fmt",
+          "yuv420p",
+          "-c:a",
+          "aac",
+          "-b:a",
+          "192k",
+          "-r",
+          "30",
+          "-t",
+          String(voiceoverDuration),
+        ])
         .save(outputPath)
         .on("end", () => resolve())
-        .on("error", (err) => reject(err))
+        .on("error", (err: Error) => reject(err))
     })
 
     const renderedVideoUrl = `/rendered-videos/${outputFile}`
 
-    const updated = await prisma.youTubePost.update({
+    await prisma.youTubePost.update({
       where: { id: post.id },
       data: {
         renderedVideoUrl,
@@ -316,15 +365,13 @@ export async function POST(req: Request) {
     return NextResponse.json({
       ok: true,
       renderedVideoUrl,
-      post: updated,
     })
   } catch (error) {
-    console.error("Video render failed:", error)
+    console.error(error)
 
     return NextResponse.json(
       {
-        ok: false,
-        error: error instanceof Error ? error.message : "Render failed",
+        error: "Render failed",
       },
       { status: 500 }
     )

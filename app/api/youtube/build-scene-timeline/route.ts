@@ -7,28 +7,41 @@ const SCENES = [
   "/backgrounds/scenes/scene-3.mp4",
 ]
 
-function chooseBroll(text: string) {
+const BROLL = {
+  ai: ["/broll/ai/ai-1.mp4", "/broll/ai/ai-2.mp4", "/broll/ai/ai-3.mp4"],
+  technology: [
+    "/broll/technology/tech-1.mp4",
+    "/broll/technology/tech-2.mp4",
+    "/broll/technology/tech-3.mp4",
+  ],
+  community: [
+    "/broll/community/community-1.mp4",
+    "/broll/community/community-2.mp4",
+  ],
+  church: ["/broll/church/church-1.mp4", "/broll/church/church-2.mp4"],
+}
+
+function pick(items: string[], index: number) {
+  return items[index % items.length]
+}
+
+function chooseBroll(text: string, index: number) {
   const lower = text.toLowerCase()
 
   if (lower.includes("ai") || lower.includes("automation")) {
-    return "/broll/ai/ai-1.mp4"
+    return pick(BROLL.ai, index)
   }
 
   if (lower.includes("community") || lower.includes("family")) {
-    return "/broll/community/community-1.mp4"
-  }
-
-  if (lower.includes("prayer") || lower.includes("spiritual")) {
-    return "/broll/prayer/prayer-1.mp4"
+    return pick(BROLL.community, index)
   }
 
   if (lower.includes("church") || lower.includes("ministry")) {
-    return "/broll/church/church-1.mp4"
+    return pick(BROLL.church, index)
   }
 
-  return "/broll/technology/tech-1.mp4"
+  return pick(BROLL.technology, index)
 }
-
 export async function POST(req: Request) {
   try {
     const { youtubePostId } = await req.json()
@@ -50,7 +63,8 @@ export async function POST(req: Request) {
       post.title
 
     const segments = script
-      .split(/[.!?]\s+/)
+      .replace(/\n+/g, " ")
+      .split(/(?<=[.!?])\s+|(?=\[)|(?=HOST:)|(?=SECTION)/)
       .map((s) => s.trim())
       .filter(Boolean)
 
@@ -80,7 +94,7 @@ export async function POST(req: Request) {
         end: currentTime + duration,
         duration,
         scene: SCENES[index % SCENES.length],
-        broll: chooseBroll(segment),
+        broll: chooseBroll(segment, index),
         text: segment,
         emotion,
         transition:
