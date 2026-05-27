@@ -49,3 +49,5 @@ next-env.d.ts
 public/rendered-videos/
 public/voiceovers/
 public/subtitles
+public/thumbnail-frames/
+public/youtube-thumbnails/
