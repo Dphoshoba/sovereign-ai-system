@@ -36,6 +36,9 @@ export async function POST(req: NextRequest) {
 
     const execution = await executionTriggerAgent({
       executionPlan: pipeline.executionPlan,
+      baseUrl:
+        process.env.NEXT_PUBLIC_BASE_URL ||
+        "http://localhost:3000",
     })
 
     return NextResponse.json({
