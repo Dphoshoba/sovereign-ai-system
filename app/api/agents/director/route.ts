@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { directorAgent } from "../../../../lib/agents/director-agent"
+import { persistentSchedulerAgent } from "../../../../lib/agents/persistent-scheduler-agent"
+
+persistentSchedulerAgent()
 
 export async function POST(req: NextRequest) {
   try {
