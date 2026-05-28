@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { youtubeAnalyticsAgent } from "../../../../lib/agents/youtube-analytics-agent"
+import { analyticsNormalizerAgent } from "../../../../lib/agents/analytics-normalizer-agent"
+import { reinforcementAgent } from "../../../../lib/agents/reinforcement-agent"
+import { savePerformanceMemory } from "../../../../lib/agents/performance-memory-agent"
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,9 +27,29 @@ export async function POST(req: NextRequest) {
       videoId: body.videoId,
     })
 
+    const normalized = analyticsNormalizerAgent(result)
+    let reinforcement = null
+
+    if (normalized.hasData) {
+      reinforcement = reinforcementAgent(normalized.reinforcementInput)
+    }
+    let savedMemory = null
+
+    if (normalized.hasData) {
+      savedMemory = await savePerformanceMemory({
+        videoId: body.videoId,
+        title: body.title || "",
+        metrics: normalized.metrics,
+        reinforcement,
+      })
+    }
+
     return NextResponse.json({
       ok: true,
       result,
+      normalized,
+      reinforcement,
+      savedMemory,
     })
   } catch (error) {
     console.error("YouTube analytics failed:", error)

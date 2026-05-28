@@ -3549,3 +3549,17 @@ model AgentMemory {
   outcome          String
   createdAt        DateTime @default(now())
 }
+
+model VideoPerformanceMemory {
+  id                      String   @id @default(cuid())
+  videoId                 String
+  title                   String?
+  views                   Int      @default(0)
+  estimatedMinutesWatched Int      @default(0)
+  averageViewDuration     Int      @default(0)
+  likes                   Int      @default(0)
+  subscribersGained       Int      @default(0)
+  rewardScore             Int      @default(0)
+  strategyNotes           Json?
+  createdAt               DateTime @default(now())
+}
