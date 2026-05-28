@@ -2,6 +2,7 @@ import { schedulingIntelligenceAgent } from "./scheduling-intelligence-agent"
 import { retentionPredictionAgent } from "./retention-prediction-agent"
 import { strategyEvolutionAgent } from "./strategy-evolution-agent"
 import { promptMutationAgent } from "./prompt-mutation-agent"
+import { swarmDistributionAgent } from "./swarm-distribution-agent"
 
 type DirectorInput = {
   memories: any[]
@@ -38,6 +39,12 @@ export function directorAgent(input: DirectorInput) {
     }
   )
 
+  const swarm = swarmDistributionAgent({
+    topic:
+      evolution.topPerformers?.[0]?.title ||
+      "The Rise of Autonomous AI Agents",
+  })
+
   return {
     directorDecision: {
       recommendedWorkflow:
@@ -62,5 +69,6 @@ export function directorAgent(input: DirectorInput) {
     mutations,
     scheduling,
     retention,
+    swarm,
   }
 }
