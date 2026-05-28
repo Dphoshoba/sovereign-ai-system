@@ -1,4 +1,6 @@
-﻿type GenerationInput = {
+﻿import { trendDiscoveryAgent } from "./trend-discovery-agent"
+
+type GenerationInput = {
   niche?: string
   audience?: string
 }
@@ -13,21 +15,13 @@ export async function contentGenerationLoopAgent(
     input.audience ||
     "faith-tech creators"
 
-  const discoveredTopics = [
-    "How AI Will Transform Churches",
-    "The Future of Autonomous Ministry Systems",
-    "Can AI Strengthen Human Creativity?",
-    "AI and the Future of Faith-Based Content",
-    "The Rise of Sovereign AI Infrastructure",
-  ]
+  const trends =
+    trendDiscoveryAgent({
+      niche,
+    })
 
   const selectedTopic =
-    discoveredTopics[
-      Math.floor(
-        Math.random() *
-          discoveredTopics.length
-      )
-    ]
+    trends.topTrend.topic
 
   const generatedScript = `
 Welcome to Echoes & Visions.
@@ -55,9 +49,10 @@ Let's begin.
     niche,
     audience,
 
-    discoveredTopics,
+    trendFusion: true,
 
-    selectedTopic,
+    selectedTrend:
+      trends.topTrend,
 
     generatedAssets: {
       script: generatedScript,
@@ -66,13 +61,16 @@ Let's begin.
         "Futuristic AI cinematic emotional human expression",
 
       shortsIdeas: [
-        "3 Signs AI Will Change Ministry Forever",
-        "The Rise of Autonomous Creator Systems",
-        "AI Content Revolution Explained",
+        `3 Reasons ${selectedTopic} Matters`,
+        `The Future of ${selectedTopic}`,
+        `${selectedTopic} Explained`,
       ],
     },
 
+    strategicRecommendation:
+      trends.strategicRecommendation,
+
     nextStage:
-      "Ready for rendering and autonomous execution.",
+      "Ready for autonomous execution pipeline.",
   }
 }
