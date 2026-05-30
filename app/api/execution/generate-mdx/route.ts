@@ -13,6 +13,10 @@ import {
 } from "../../../../lib/research/source-collector"
 import { evidenceRegistry } from "../../../../lib/research/evidence-registry"
 import { factExtractor } from "../../../../lib/research/fact-extractor"
+import { factClusterer } from "../../../../lib/research/fact-clusterer"
+import { sectionBuilder } from "../../../../lib/research/section-builder"
+import { narrativeParagraphBuilder } from "../../../../lib/research/narrative-paragraph-builder"
+import { articleComposer } from "../../../../lib/research/article-composer"
 import { outlineBuilder } from "../../../../lib/research/outline-builder"
 import { factVerifier } from "../../../../lib/research/fact-verifier"
 import { phase1Rules } from "../../../../lib/research/pipeline-registry"
@@ -59,6 +63,25 @@ export async function POST(req: NextRequest) {
       evidence.evidence
     )
 
+    const clusters = factClusterer(
+      titleOptimizer.optimizedTitle,
+      factExtraction.facts
+    )
+
+    const sections = sectionBuilder(
+      clusters.clusters
+    )
+
+    const paragraphs = narrativeParagraphBuilder(
+      sections.sections
+    )
+
+    const composedArticle = articleComposer(
+      titleOptimizer.optimizedTitle,
+      titleOptimizer.optimizedTitle,
+      paragraphs.paragraphs
+    )
+
     const outline = outlineBuilder(
       topic,
       factExtraction.facts
@@ -92,22 +115,6 @@ export async function POST(req: NextRequest) {
     )
 
     const mdxPath = path.join(mdxDir, `${slug}.mdx`)
-
-    const sections = article.sections
-      .map((section) => {
-        const linkedFacts =
-          section.linkedFactClaims && section.linkedFactClaims.length > 0
-            ? `\n\n**Linked facts:**\n${section.linkedFactClaims.map((claim) => `- ${claim}`).join("\n")}`
-            : ""
-
-        return `## ${section.heading}
-
-${section.purpose}${linkedFacts}
-
-> Verification required: ${section.verificationRequired ? "Yes" : "No"}
-`
-      })
-      .join("\n")
 
     const faq = article.faq
       .map(
@@ -244,7 +251,17 @@ ${article.introduction.purpose}
 
 > ${article.introduction.verificationNote}
 
-${sections}
+${composedArticle.sections
+  .map(
+    (section) => `## ${section.heading}
+
+${section.body}
+
+> Facts used: ${section.factCount}
+> Human review required: ${section.requiresHumanReview ? "Yes" : "No"}
+`
+  )
+  .join("\n")}
 
 ## Source Records
 
@@ -307,6 +324,10 @@ ${phase1Rules.map((rule) => `- ${rule}`).join("\n")}
       sourceCollection,
       evidence,
       factExtraction,
+      clusters,
+      sections,
+      paragraphs,
+      composedArticle,
       outline,
       article,
       factVerification,
