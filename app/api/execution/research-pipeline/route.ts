@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     const rawTitle =
       body.rawTitle ||
       "The Future of AI and Faith: Opportunities, Risks and Wisdom"
-    const writeMdx = body.writeMdx !== false
+    const writeMdx = body.writeMdx === true
 
     const manualSources: SourceRecord[] =
       Array.isArray(body.manualSources)
