@@ -25,20 +25,37 @@ function confidenceLabel(confidence: number) {
 }
 
 function buildClaim(topic: string, evidence: EvidenceRecord) {
-  const normalizedTitle = evidence.sourceTitle.toLowerCase()
+  const text = evidence.extractedText.toLowerCase()
 
   if (
-    normalizedTitle.includes("ethics") ||
-    normalizedTitle.includes("unesco")
+    text.includes("artificial intelligence") &&
+    text.includes("simulate human learning")
+  ) {
+    return `Artificial intelligence can be understood as technology that enables computers and machines to simulate aspects of human learning, comprehension, problem solving, decision making, creativity and autonomy.`
+  }
+
+  if (
+    text.includes("generative ai") &&
+    text.includes("create original text")
+  ) {
+    return `Generative AI can create original content such as text, images, video and other media.`
+  }
+
+  if (
+    text.includes("machine learning") &&
+    text.includes("deep learning")
+  ) {
+    return `Machine learning and deep learning are foundational technologies behind many generative AI systems.`
+  }
+
+  if (
+    text.includes("ethics") ||
+    text.includes("responsible use")
   ) {
     return `Ethical frameworks are important when discussing the responsible use of AI in relation to ${topic}.`
   }
 
-  if (normalizedTitle.includes("artificial intelligence")) {
-    return `Artificial intelligence is a core background concept for understanding ${topic}.`
-  }
-
-  return `This evidence may provide relevant background for ${topic}: ${evidence.sourceTitle}.`
+  return `This evidence provides relevant background for ${topic}.`
 }
 
 export function factExtractor(
