@@ -104,10 +104,24 @@ ${item.answerDraft}
         ? factExtraction.facts
             .map(
               (fact) =>
-                `- ${fact.claim}\n  - Source: [${fact.sourceTitle}](${fact.sourceUrl})\n  - Confidence: ${fact.confidence}\n  - Human review required: ${fact.requiresHumanReview ? "Yes" : "No"}`
+                `- **Claim:** ${fact.claim}\n  - **Source:** [${fact.sourceTitle}](${fact.sourceUrl})\n  - **Source type:** ${fact.sourceType}\n  - **Confidence:** ${fact.confidence}\n  - **Human review required:** ${fact.requiresHumanReview ? "Yes" : "No"}`
+            )
+            .join("\n\n")
+        : "- No facts extracted yet."
+
+    const factFrontmatter =
+      factExtraction.facts.length > 0
+        ? factExtraction.facts
+            .map(
+              (fact) => `  - claim: ${escapeYaml(fact.claim)}
+    sourceTitle: ${escapeYaml(fact.sourceTitle)}
+    sourceUrl: ${escapeYaml(fact.sourceUrl)}
+    sourceType: ${escapeYaml(fact.sourceType)}
+    confidence: ${escapeYaml(fact.confidence)}
+    requiresHumanReview: ${fact.requiresHumanReview}`
             )
             .join("\n")
-        : "- No facts extracted yet."
+        : ""
 
     const content = `---
 title: ${escapeYaml(titleOptimizer.optimizedTitle)}
@@ -141,6 +155,9 @@ internalLinks: []
 status: "draft"
 sourceCount: ${sourceCollection.sourceCount}
 factCount: ${factExtraction.factCount}
+extractionStatus: ${escapeYaml(factExtraction.extractionStatus)}
+facts:
+${factFrontmatter ? `\n${factFrontmatter}` : " []"}
 ---
 
 # ${titleOptimizer.optimizedTitle}
