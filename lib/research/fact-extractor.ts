@@ -1,4 +1,5 @@
 import type { EvidenceRecord } from "./evidence-registry"
+import { factDeduplicator } from "./fact-deduplicator"
 
 export type ExtractedFact = {
   claim: string
@@ -118,12 +119,14 @@ export function factExtractor(
     }))
   ) as ExtractedFact[]
 
+  const uniqueFacts = factDeduplicator(facts)
+
   return {
     topic,
-    facts,
-    factCount: facts.length,
+    facts: uniqueFacts,
+    factCount: uniqueFacts.length,
     extractionStatus:
-      facts.length > 0
+      uniqueFacts.length > 0
         ? "Multiple structured facts extracted from evidence records."
         : "No facts extracted because no evidence records were supplied.",
   }
