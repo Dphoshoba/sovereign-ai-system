@@ -145,7 +145,7 @@ ${item.answerDraft}
         ? factExtraction.facts
             .map(
               (fact) =>
-                `- **Claim:** ${fact.claim}\n  - **Evidence ID:** ${fact.evidenceId}\n  - **Evidence:** ${fact.extractedText}\n  - **Source:** [${fact.sourceTitle}](${fact.sourceUrl})\n  - **Source type:** ${fact.sourceType}\n  - **Confidence:** ${fact.confidence}\n  - **Human review required:** ${fact.requiresHumanReview ? "Yes" : "No"}`
+                `- **Claim:** ${fact.claim}\n  - **Evidence ID:** ${fact.evidenceId}\n  - **Evidence:** ${fact.evidenceText}\n  - **Source:** [${fact.sourceTitle}](${fact.sourceUrl})\n  - **Source type:** ${fact.sourceType}\n  - **Confidence:** ${fact.confidence}\n  - **Human review required:** ${fact.requiresHumanReview ? "Yes" : "No"}`
             )
             .join("\n\n")
         : "- No facts extracted yet."
@@ -181,7 +181,7 @@ ${item.answerDraft}
             .map(
               (fact) => `  - claim: ${escapeYaml(fact.claim)}
     evidenceId: ${escapeYaml(fact.evidenceId)}
-    extractedText: ${escapeYaml(fact.extractedText)}
+    evidenceText: ${escapeYaml(fact.evidenceText)}
     sourceTitle: ${escapeYaml(fact.sourceTitle)}
     sourceUrl: ${escapeYaml(fact.sourceUrl)}
     sourceType: ${escapeYaml(fact.sourceType)}

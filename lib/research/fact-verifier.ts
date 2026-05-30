@@ -24,7 +24,7 @@ export type FactVerificationResult = {
 
 function verifyFact(fact: ExtractedFact): FactVerificationRecord {
   const hasSource = Boolean(fact.sourceUrl && fact.sourceTitle)
-  const hasEvidence = Boolean(fact.evidenceId && fact.extractedText)
+  const hasEvidence = Boolean(fact.evidenceId && fact.evidenceText)
   const hasConfidence = fact.confidence === "high" || fact.confidence === "medium"
 
   const verified = hasSource && hasEvidence && hasConfidence

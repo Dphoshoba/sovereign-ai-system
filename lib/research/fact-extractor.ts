@@ -3,10 +3,10 @@ import type { EvidenceRecord } from "./evidence-registry"
 export type ExtractedFact = {
   claim: string
   evidenceId: string
-  extractedText: string
   sourceTitle: string
   sourceUrl: string
   sourceType: string
+  evidenceText: string
   confidence: "high" | "medium" | "low"
   requiresHumanReview: boolean
 }
@@ -18,45 +18,42 @@ export type FactExtractionResult = {
   extractionStatus: string
 }
 
+function confidenceLabel(confidence: number) {
+  if (confidence >= 90) return "high"
+  if (confidence >= 70) return "medium"
+  return "low"
+}
+
 function buildClaim(topic: string, evidence: EvidenceRecord) {
-  const normalizedText = evidence.extractedText.toLowerCase()
+  const normalizedTitle = evidence.sourceTitle.toLowerCase()
 
   if (
-    normalizedText.includes("ethical frameworks") ||
-    normalizedText.includes("recommendations for the responsible use")
+    normalizedTitle.includes("ethics") ||
+    normalizedTitle.includes("unesco")
   ) {
     return `Ethical frameworks are important when discussing the responsible use of AI in relation to ${topic}.`
   }
 
-  if (
-    normalizedText.includes("artificial intelligence concepts") ||
-    normalizedText.includes("core artificial intelligence")
-  ) {
+  if (normalizedTitle.includes("artificial intelligence")) {
     return `Artificial intelligence is a core background concept for understanding ${topic}.`
   }
 
-  return `This evidence supports background research for ${topic}: ${evidence.sourceTitle}.`
-}
-
-function mapConfidence(score: number): "high" | "medium" | "low" {
-  if (score >= 90) return "high"
-  if (score >= 70) return "medium"
-  return "low"
+  return `This evidence may provide relevant background for ${topic}: ${evidence.sourceTitle}.`
 }
 
 export function factExtractor(
   topic: string,
-  evidence: EvidenceRecord[]
+  evidenceRecords: EvidenceRecord[]
 ): FactExtractionResult {
-  const facts = evidence.map((record) => ({
-    claim: buildClaim(topic, record),
-    evidenceId: record.id,
-    extractedText: record.extractedText,
-    sourceTitle: record.sourceTitle,
-    sourceUrl: record.sourceUrl,
-    sourceType: record.sourceType,
-    confidence: mapConfidence(record.confidence),
-    requiresHumanReview: record.requiresHumanReview,
+  const facts = evidenceRecords.map((evidence) => ({
+    claim: buildClaim(topic, evidence),
+    evidenceId: evidence.id,
+    sourceTitle: evidence.sourceTitle,
+    sourceUrl: evidence.sourceUrl,
+    sourceType: evidence.sourceType,
+    evidenceText: evidence.extractedText,
+    confidence: confidenceLabel(evidence.confidence),
+    requiresHumanReview: true,
   })) as ExtractedFact[]
 
   return {
@@ -65,7 +62,7 @@ export function factExtractor(
     factCount: facts.length,
     extractionStatus:
       facts.length > 0
-        ? "Structured facts extracted from registered evidence."
-        : "No facts extracted because no evidence was registered.",
+        ? "Structured facts extracted from evidence records."
+        : "No facts extracted because no evidence records were supplied.",
   }
 }
