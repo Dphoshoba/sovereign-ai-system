@@ -5,6 +5,11 @@ import path from "path"
 import { titleOptimizerAgent } from "../../../../lib/agents/title-optimizer-agent"
 import { articleGeneratorAgent } from "../../../../lib/agents/article-generator-agent"
 import { seoAgent } from "../../../../lib/agents/seo-agent"
+import {
+  sourceCollector,
+  type SourceRecord,
+} from "../../../../lib/research/source-collector"
+import { factExtractor } from "../../../../lib/research/fact-extractor"
 
 function escapeYaml(value: string) {
   return `"${value.replace(/"/g, '\\"')}"`
@@ -18,6 +23,11 @@ export async function POST(req: NextRequest) {
     const rawTitle =
       body.rawTitle ||
       "The Future of AI and Faith: Opportunities, Risks and Wisdom"
+
+    const manualSources: SourceRecord[] =
+      Array.isArray(body.manualSources)
+        ? body.manualSources
+        : []
 
     const titleOptimizer = titleOptimizerAgent({
       rawTitle,
@@ -34,6 +44,16 @@ export async function POST(req: NextRequest) {
       niche,
       contentType: "Blog Article",
     })
+
+    const sourceCollection = await sourceCollector(
+      titleOptimizer.optimizedTitle,
+      manualSources
+    )
+
+    const factExtraction = factExtractor(
+      titleOptimizer.optimizedTitle,
+      sourceCollection.collectedSources
+    )
 
     const category = titleOptimizer.category || "ai-tools"
     const slug = titleOptimizer.slug || seo.seo.slug
@@ -69,6 +89,26 @@ ${item.answerDraft}
       )
       .join("\n")
 
+    const sourceList =
+      sourceCollection.collectedSources.length > 0
+        ? sourceCollection.collectedSources
+            .map(
+              (source) =>
+                `- [${source.title}](${source.url}) — ${source.sourceType}, relevance ${source.relevanceScore}`
+            )
+            .join("\n")
+        : "- No verified sources supplied yet."
+
+    const factList =
+      factExtraction.facts.length > 0
+        ? factExtraction.facts
+            .map(
+              (fact) =>
+                `- ${fact.claim}\n  - Source: [${fact.sourceTitle}](${fact.sourceUrl})\n  - Confidence: ${fact.confidence}\n  - Human review required: ${fact.requiresHumanReview ? "Yes" : "No"}`
+            )
+            .join("\n")
+        : "- No facts extracted yet."
+
     const content = `---
 title: ${escapeYaml(titleOptimizer.optimizedTitle)}
 slug: ${escapeYaml(slug)}
@@ -99,6 +139,8 @@ ${article.faq
   .join("\n")}
 internalLinks: []
 status: "draft"
+sourceCount: ${sourceCollection.sourceCount}
+factCount: ${factExtraction.factCount}
 ---
 
 # ${titleOptimizer.optimizedTitle}
@@ -112,6 +154,14 @@ ${article.introduction.purpose}
 > ${article.introduction.verificationNote}
 
 ${sections}
+
+## Source Records
+
+${sourceList}
+
+## Extracted Fact Records
+
+${factList}
 
 ## FAQ
 
@@ -140,11 +190,13 @@ ${article.antiHallucinationPolicy.map((rule) => `- ${rule}`).join("\n")}
       category,
       slug,
       mdxPath: `content/blog/${category}/${slug}.mdx`,
+      sourceCollection,
+      factExtraction,
       titleOptimizer,
       article,
       seo,
       message:
-        "MDX draft generated successfully using Title Optimizer, Article Generator and SEO Agent. Human review and fact-checking required before publication.",
+        "Source-grounded MDX draft generated successfully. Human review and fact-checking required before publication.",
     })
   } catch (error) {
     console.error("Generate MDX failed:", error)
