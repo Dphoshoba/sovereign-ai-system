@@ -1,3 +1,5 @@
+import { searchAdapter } from "./search-adapter"
+
 export type SourceRecord = {
   title: string
   url: string
@@ -12,17 +14,18 @@ export type SourceCollectionResult = {
   collectionStatus: string
 }
 
-export function sourceCollector(
+export async function sourceCollector(
   topic: string
-): SourceCollectionResult {
+): Promise<SourceCollectionResult> {
+  const collectedSources = await searchAdapter(topic)
+
   return {
     topic,
-
-    collectedSources: [],
-
-    sourceCount: 0,
-
+    collectedSources,
+    sourceCount: collectedSources.length,
     collectionStatus:
-      "Source collection not yet connected to live search.",
+      collectedSources.length > 0
+        ? "Sources collected successfully."
+        : "No sources collected. Search provider is not connected yet.",
   }
 }

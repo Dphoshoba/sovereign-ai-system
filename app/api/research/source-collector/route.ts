@@ -5,7 +5,7 @@ import { sourceCollector } from "../../../../lib/research/source-collector"
 export async function POST(req: NextRequest) {
   const body = await req.json()
 
-  const result = sourceCollector(
+  const result = await sourceCollector(
     body.topic || "The Future of AI and Faith"
   )
 
