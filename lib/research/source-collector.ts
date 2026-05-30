@@ -15,9 +15,15 @@ export type SourceCollectionResult = {
 }
 
 export async function sourceCollector(
-  topic: string
+  topic: string,
+  manualSources: SourceRecord[] = []
 ): Promise<SourceCollectionResult> {
-  const collectedSources = await searchAdapter(topic)
+  const searchSources = await searchAdapter(topic)
+
+  const collectedSources = [
+    ...manualSources,
+    ...searchSources,
+  ]
 
   return {
     topic,
