@@ -45,7 +45,10 @@ export async function runCreatorSystem() {
 
   const publishing = await publishingAgent()
 
-  const analytics = await analyticsAgent()
+  const analytics = analyticsAgent({
+    title: script.title,
+    status: "draft",
+  })
 
   const strategy = await strategyAgent()
 
