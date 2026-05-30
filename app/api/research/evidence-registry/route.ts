@@ -5,7 +5,6 @@ import {
   type SourceRecord,
 } from "../../../../lib/research/source-collector"
 import { evidenceRegistry } from "../../../../lib/research/evidence-registry"
-import { factExtractor } from "../../../../lib/research/fact-extractor"
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
@@ -23,17 +22,14 @@ export async function POST(req: NextRequest) {
     manualSources
   )
 
-  const evidence = evidenceRegistry(
+  const result = evidenceRegistry(
     topic,
     sourceCollection.collectedSources
   )
 
-  const result = factExtractor(topic, evidence.evidence)
-
   return NextResponse.json({
     ok: true,
     sourceCollection,
-    evidence,
     result,
   })
 }

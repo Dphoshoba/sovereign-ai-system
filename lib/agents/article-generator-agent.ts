@@ -1,17 +1,36 @@
 type ArticleGeneratorInput = {
   title: string
   niche: string
+  outline?: {
+    introduction: {
+      heading: string
+      purpose: string
+      verificationNote: string
+    }
+    sections: Array<{
+      heading: string
+      purpose: string
+      verificationRequired: boolean
+      linkedEvidenceIds?: string[]
+      linkedFactClaims?: string[]
+    }>
+    faq: Array<{
+      question: string
+      answerDraft: string
+      verificationRequired: boolean
+    }>
+    conclusion: {
+      heading: string
+      purpose: string
+      verificationNote: string
+    }
+  }
 }
 
 export function articleGeneratorAgent(
   input: ArticleGeneratorInput
 ) {
-  return {
-    autonomousArticleGeneratorAgent: true,
-    title: input.title,
-    niche: input.niche,
-    articleStatus: "source-grounded skeleton",
-
+  const defaultOutline = {
     introduction: {
       heading: "Introduction",
       purpose:
@@ -87,6 +106,31 @@ export function articleGeneratorAgent(
       verificationNote:
         "Final article must include source-supported claims before publication.",
     },
+  }
+
+  const outline = input.outline || defaultOutline
+
+  return {
+    autonomousArticleGeneratorAgent: true,
+    title: input.title,
+    niche: input.niche,
+    articleStatus: input.outline
+      ? "outline-grounded skeleton"
+      : "source-grounded skeleton",
+
+    introduction: outline.introduction,
+
+    sections: outline.sections.map((section) => ({
+      heading: section.heading,
+      purpose: section.purpose,
+      verificationRequired: section.verificationRequired,
+      linkedEvidenceIds: section.linkedEvidenceIds || [],
+      linkedFactClaims: section.linkedFactClaims || [],
+    })),
+
+    faq: outline.faq,
+
+    conclusion: outline.conclusion,
 
     antiHallucinationPolicy: [
       "Do not invent statistics.",
