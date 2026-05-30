@@ -1,4 +1,5 @@
 import type { SourceRecord } from "./source-collector"
+import { contentFetcher } from "./content-fetcher"
 
 export type EvidenceRecord = {
   id: string
@@ -21,20 +22,25 @@ function createEvidenceId(index: number) {
   return `evidence-${index + 1}`
 }
 
-export function evidenceRegistry(
+export async function evidenceRegistry(
   topic: string,
   sources: SourceRecord[]
-): EvidenceRegistryResult {
-  const evidence = sources.map((source, index) => ({
-    id: createEvidenceId(index),
-    sourceTitle: source.title,
-    sourceUrl: source.url,
-    sourceType: source.sourceType,
-    extractedText:
-      `Evidence placeholder derived from source: ${source.title}`,
-    confidence: source.relevanceScore,
-    requiresHumanReview: true,
-  }))
+): Promise<EvidenceRegistryResult> {
+  const evidence = await Promise.all(
+    sources.map(async (source, index) => {
+      const fetched = await contentFetcher(source.url, source.title)
+
+      return {
+        id: createEvidenceId(index),
+        sourceTitle: fetched.title,
+        sourceUrl: fetched.url,
+        sourceType: source.sourceType,
+        extractedText: fetched.extractedText,
+        confidence: source.relevanceScore,
+        requiresHumanReview: true,
+      }
+    })
+  )
 
   return {
     topic,
@@ -42,7 +48,7 @@ export function evidenceRegistry(
     evidenceCount: evidence.length,
     registryStatus:
       evidence.length > 0
-        ? "Evidence registry created."
+        ? "Evidence registry created from fetched source content."
         : "No evidence available.",
   }
 }

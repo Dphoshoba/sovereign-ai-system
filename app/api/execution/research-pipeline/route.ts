@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       manualSources
     )
 
-    const evidence = evidenceRegistry(
+    const evidence = await evidenceRegistry(
       topic,
       sourceCollection.collectedSources
     )
