@@ -37,7 +37,11 @@ export async function runCreatorSystem() {
 
   const shorts = await shortsAgent(script)
 
-  const seo = await seoAgent(script.title)
+  const seo = seoAgent({
+    title: script.title,
+    niche: "AI + Faith",
+    contentType: "YouTube Video",
+  })
 
   const publishing = await publishingAgent()
 
