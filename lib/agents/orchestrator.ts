@@ -17,7 +17,7 @@ export async function runCreatorSystem() {
 
   const selectedTopic = trends.trendingTopics[0]
 
-  const research = await researchAgent(selectedTopic)
+  const research = researchAgent({ niche: selectedTopic })
 
   const script = await scriptAgent(selectedTopic)
 
