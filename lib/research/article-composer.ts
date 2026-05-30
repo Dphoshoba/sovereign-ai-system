@@ -1,4 +1,4 @@
-import type { ArticleParagraph } from "./paragraph-builder"
+import type { NarrativeParagraph } from "./narrative-paragraph-builder"
 
 export type ComposedArticle = {
   title: string
@@ -8,6 +8,7 @@ export type ComposedArticle = {
     heading: string
     body: string
     factCount: number
+    factsUsed: string[]
     requiresHumanReview: boolean
   }[]
   conclusion: string
@@ -18,19 +19,20 @@ export type ComposedArticle = {
 export function articleComposer(
   topic: string,
   title: string,
-  paragraphs: ArticleParagraph[]
+  paragraphs: NarrativeParagraph[]
 ): ComposedArticle {
   return {
     title,
     topic,
 
     introduction:
-      `This article explores ${topic} using source-grounded evidence and human-reviewed claims.`,
+      `This article explores ${topic} using source-grounded evidence, verified facts and human-reviewed claims.`,
 
     sections: paragraphs.map((paragraph) => ({
       heading: paragraph.heading,
       body: paragraph.paragraph,
       factCount: paragraph.factCount,
+      factsUsed: paragraph.factsUsed,
       requiresHumanReview:
         paragraph.requiresHumanReview,
     })),
@@ -39,7 +41,7 @@ export function articleComposer(
       "AI should be approached with wisdom, careful verification and human responsibility. This draft remains subject to human review before publication.",
 
     articleStatus:
-      "evidence-based draft",
+      "evidence-based narrative draft",
 
     requiresHumanReview: true,
   }

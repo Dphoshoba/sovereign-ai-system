@@ -9,7 +9,7 @@ import { evidenceRegistry } from "../../../../lib/research/evidence-registry"
 import { factExtractor } from "../../../../lib/research/fact-extractor"
 import { factClusterer } from "../../../../lib/research/fact-clusterer"
 import { sectionBuilder } from "../../../../lib/research/section-builder"
-import { paragraphBuilder } from "../../../../lib/research/paragraph-builder"
+import { narrativeParagraphBuilder } from "../../../../lib/research/narrative-paragraph-builder"
 import { articleComposer } from "../../../../lib/research/article-composer"
 
 export async function POST(req: NextRequest) {
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     clusters.clusters
   )
 
-  const paragraphs = paragraphBuilder(
+  const paragraphs = narrativeParagraphBuilder(
     sections.sections
   )
 
