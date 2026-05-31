@@ -1,5 +1,7 @@
+import { encodingNormalizer } from "./encoding-normalizer"
+
 export function contentCleaner(text: string): string {
-  return text
+  return encodingNormalizer(text)
     .replace(/privacy statement/gi, "")
     .replace(/newsletter/gi, "")
     .replace(/subscribe/gi, "")

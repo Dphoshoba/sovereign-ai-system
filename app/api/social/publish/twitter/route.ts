@@ -42,6 +42,15 @@ export async function POST(req: Request) {
       )
     }
 
+    if (post.status === "published") {
+      return NextResponse.json({
+        ok: true,
+        alreadyPublished: true,
+        message: "This Twitter post has already been published.",
+        post,
+      })
+    }
+
     const tweet = await twitterClient.v2.tweet(post.content)
 
     const updated = await prisma.socialPost.update({
