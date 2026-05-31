@@ -51,3 +51,7 @@ public/voiceovers/
 public/subtitles
 public/thumbnail-frames/
 public/youtube-thumbnails/
+
+# scratch / dumped artifacts
+*.log
+twitter-search.txt
