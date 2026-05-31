@@ -4,12 +4,17 @@ import {
   claimsAreSimilar,
 } from "./claim-similarity"
 
+const SIMILARITY_THRESHOLD = 65
+
 export type VerifiedFact = ExtractedFact & {
   verificationCount: number
   verificationStatus:
     | "verified"
     | "partially verified"
     | "unverified"
+
+  verificationMethod: "exact" | "semantic"
+
   supportingSources: {
     sourceTitle: string
     sourceUrl: string
@@ -53,7 +58,7 @@ export function factVerificationEngine(
         claimsAreSimilar(
           representative.claim,
           fact.claim,
-          65
+          SIMILARITY_THRESHOLD
         )
       ) {
         matchedGroup = group
@@ -113,10 +118,16 @@ export function factVerificationEngine(
         ? "partially verified"
         : "unverified"
 
+    const verificationMethod =
+      similarityMatches.length > 0
+        ? "semantic"
+        : "exact"
+
     verifiedFacts.push({
       ...baseFact,
       verificationCount,
       verificationStatus,
+      verificationMethod,
       supportingSources,
       similarityMatches,
     })
