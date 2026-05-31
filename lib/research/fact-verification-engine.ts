@@ -1,4 +1,8 @@
 import type { ExtractedFact } from "./fact-extractor"
+import {
+  claimSimilarity,
+  claimsAreSimilar,
+} from "./claim-similarity"
 
 export type VerifiedFact = ExtractedFact & {
   verificationCount: number
@@ -10,6 +14,11 @@ export type VerifiedFact = ExtractedFact & {
     sourceTitle: string
     sourceUrl: string
     evidenceId: string
+  }[]
+
+  similarityMatches?: {
+    claim: string
+    score: number
   }[]
 }
 
@@ -32,22 +41,47 @@ function normalizeClaim(claim: string) {
 export function factVerificationEngine(
   facts: ExtractedFact[]
 ): FactVerificationEngineResult {
-  const grouped = new Map<string, ExtractedFact[]>()
+  const grouped: ExtractedFact[][] = []
 
   for (const fact of facts) {
-    const key = normalizeClaim(fact.claim)
+    let matchedGroup: ExtractedFact[] | null = null
 
-    if (!grouped.has(key)) {
-      grouped.set(key, [])
+    for (const group of grouped) {
+      const representative = group[0]
+
+      if (
+        claimsAreSimilar(
+          representative.claim,
+          fact.claim,
+          65
+        )
+      ) {
+        matchedGroup = group
+        break
+      }
     }
 
-    grouped.get(key)?.push(fact)
+    if (matchedGroup) {
+      matchedGroup.push(fact)
+    } else {
+      grouped.push([fact])
+    }
   }
 
   const verifiedFacts: VerifiedFact[] = []
 
-  for (const groupFacts of grouped.values()) {
+  for (const groupFacts of grouped) {
     const baseFact = groupFacts[0]
+
+    const similarityMatches = groupFacts
+      .slice(1)
+      .map((fact) => ({
+        claim: fact.claim,
+        score: claimSimilarity(
+          baseFact.claim,
+          fact.claim
+        ),
+      }))
 
     const uniqueSources = new Map<
       string,
@@ -84,6 +118,7 @@ export function factVerificationEngine(
       verificationCount,
       verificationStatus,
       supportingSources,
+      similarityMatches,
     })
   }
 
