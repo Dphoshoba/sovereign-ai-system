@@ -20,6 +20,8 @@ import { articleComposer } from "../../../../lib/research/article-composer"
 import { citationBuilder } from "../../../../lib/research/citation-builder"
 import { mdxCitationRenderer } from "../../../../lib/research/mdx-citation-renderer"
 import { factVerificationEngine } from "../../../../lib/research/fact-verification-engine"
+import { consensusEngine } from "../../../../lib/research/consensus-engine"
+import { publicationGate } from "../../../../lib/research/publication-gate"
 import { outlineBuilder } from "../../../../lib/research/outline-builder"
 import { phase1Rules } from "../../../../lib/research/pipeline-registry"
 
@@ -91,6 +93,12 @@ export async function POST(req: NextRequest) {
     const citations = citationBuilder(
       factVerification.verifiedFacts
     )
+
+    const consensus = consensusEngine(
+      factVerification.verifiedFacts
+    )
+
+    const publicationDecision = publicationGate(consensus)
 
     const citationBlock = mdxCitationRenderer(
       citations.citations
@@ -242,6 +250,10 @@ sourceCount: ${sourceCollection.sourceCount}
 evidenceCount: ${evidence.evidenceCount}
 factCount: ${factExtraction.factCount}
 verifiedCount: ${factVerification.verifiedCount}
+consensusScore: ${consensus.consensusScore}
+publicationStatus: ${escapeYaml(publicationDecision.status)}
+approvedForPublishing: ${publicationDecision.approved}
+publicationReason: ${escapeYaml(publicationDecision.reason)}
 evidence:
 ${evidenceFrontmatter ? `\n${evidenceFrontmatter}` : " []"}
 facts:
@@ -338,6 +350,8 @@ ${phase1Rules.map((rule) => `- ${rule}`).join("\n")}
       factVerification,
       citations,
       citationBlock,
+      consensus,
+      publicationDecision,
       clusters,
       sections,
       paragraphs,
