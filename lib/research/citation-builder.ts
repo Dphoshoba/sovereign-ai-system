@@ -2,15 +2,20 @@ import type { VerifiedFact } from "./fact-verification-engine"
 
 export type CitationRecord = {
   claim: string
-  verificationStatus: VerifiedFact["verificationStatus"]
+  verificationStatus: string
+  verificationMethod: string
   verificationCount: number
-  sources: string[]
+  sources: {
+    title: string
+    url: string
+    evidenceId: string
+  }[]
 }
 
 export type CitationBuilderResult = {
   citations: CitationRecord[]
   citationCount: number
-  builderStatus: string
+  citationStatus: string
 }
 
 export function citationBuilder(
@@ -19,38 +24,21 @@ export function citationBuilder(
   const citations = verifiedFacts.map((fact) => ({
     claim: fact.claim,
     verificationStatus: fact.verificationStatus,
+    verificationMethod: fact.verificationMethod,
     verificationCount: fact.verificationCount,
-    sources: fact.supportingSources.map(
-      (source) => source.sourceTitle
-    ),
+    sources: fact.supportingSources.map((source) => ({
+      title: source.sourceTitle,
+      url: source.sourceUrl,
+      evidenceId: source.evidenceId,
+    })),
   }))
 
   return {
     citations,
     citationCount: citations.length,
-    builderStatus:
+    citationStatus:
       citations.length > 0
-        ? "Citation records built from verified facts."
-        : "No citation records available.",
+        ? "Citation records created successfully."
+        : "No citations created.",
   }
-}
-
-export function formatCitationForMdx(
-  citation: CitationRecord
-): string {
-  const sourceList = citation.sources.join(", ")
-
-  return `- **Claim:** ${citation.claim}\n  - **Status:** ${citation.verificationStatus}\n  - **Sources:** ${sourceList}`
-}
-
-export function formatCitationsForMdx(
-  citations: CitationRecord[]
-): string {
-  if (citations.length === 0) {
-    return "- No verified citations available."
-  }
-
-  return citations
-    .map((citation) => formatCitationForMdx(citation))
-    .join("\n\n")
 }
