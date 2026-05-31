@@ -1,4 +1,5 @@
 import type { ArticleSection } from "./section-builder"
+import { evidenceNarrativeWriter } from "./evidence-narrative-writer"
 
 export type NarrativeParagraph = {
   heading: string
@@ -19,15 +20,7 @@ function buildNarrativeParagraph(
   heading: string,
   facts: string[]
 ): string {
-  if (facts.length === 0) {
-    return "This section requires verified facts before publication."
-  }
-
-  if (facts.length === 1) {
-    return facts[0]
-  }
-
-  return facts.join(" ")
+  return evidenceNarrativeWriter(facts)
 }
 
 export function narrativeParagraphBuilder(
