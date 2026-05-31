@@ -17,8 +17,10 @@ import { factClusterer } from "../../../../lib/research/fact-clusterer"
 import { sectionBuilder } from "../../../../lib/research/section-builder"
 import { narrativeParagraphBuilder } from "../../../../lib/research/narrative-paragraph-builder"
 import { articleComposer } from "../../../../lib/research/article-composer"
+import { citationBuilder } from "../../../../lib/research/citation-builder"
+import { mdxCitationRenderer } from "../../../../lib/research/mdx-citation-renderer"
+import { factVerificationEngine } from "../../../../lib/research/fact-verification-engine"
 import { outlineBuilder } from "../../../../lib/research/outline-builder"
-import { factVerifier } from "../../../../lib/research/fact-verifier"
 import { phase1Rules } from "../../../../lib/research/pipeline-registry"
 
 function escapeYaml(value: string) {
@@ -82,6 +84,18 @@ export async function POST(req: NextRequest) {
       paragraphs.paragraphs
     )
 
+    const factVerification = factVerificationEngine(
+      factExtraction.facts
+    )
+
+    const citations = citationBuilder(
+      factVerification.verifiedFacts
+    )
+
+    const citationBlock = mdxCitationRenderer(
+      citations.citations
+    )
+
     const outline = outlineBuilder(
       topic,
       factExtraction.facts
@@ -92,11 +106,6 @@ export async function POST(req: NextRequest) {
       niche,
       outline,
     })
-
-    const factVerification = factVerifier(
-      topic,
-      factExtraction.facts
-    )
 
     const seo = seoAgent({
       title: topic,
@@ -158,11 +167,11 @@ ${item.answerDraft}
         : "- No facts extracted yet."
 
     const verificationList =
-      factVerification.verifications.length > 0
-        ? factVerification.verifications
+      factVerification.verifiedFacts.length > 0
+        ? factVerification.verifiedFacts
             .map(
               (record) =>
-                `- **Claim:** ${record.claim}\n  - **Verified:** ${record.verified ? "Yes" : "No"}\n  - **Status:** ${record.verificationStatus}\n  - **Source:** [${record.sourceTitle}](${record.sourceUrl})\n  - **Human review required:** ${record.requiresHumanReview ? "Yes" : "No"}`
+                `- **Claim:** ${record.claim}\n  - **Status:** ${record.verificationStatus}\n  - **Method:** ${record.verificationMethod}\n  - **Sources:** ${record.supportingSources.map((source) => source.sourceTitle).join(", ")}\n  - **Human review required:** Yes`
             )
             .join("\n\n")
         : "- No facts available for verification."
@@ -289,6 +298,8 @@ ${article.conclusion.purpose}
 
 > ${article.conclusion.verificationNote}
 
+${citationBlock}
+
 ## Anti-Hallucination Policy
 
 ${article.antiHallucinationPolicy.map((rule) => `- ${rule}`).join("\n")}
@@ -324,13 +335,15 @@ ${phase1Rules.map((rule) => `- ${rule}`).join("\n")}
       sourceCollection,
       evidence,
       factExtraction,
+      factVerification,
+      citations,
+      citationBlock,
       clusters,
       sections,
       paragraphs,
       composedArticle,
       outline,
       article,
-      factVerification,
       seo,
       publisher,
       titleOptimizer,
