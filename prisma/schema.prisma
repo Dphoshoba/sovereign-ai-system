@@ -3525,6 +3525,9 @@ model YouTubePost {
   renderStatus     String? @default("draft")
   sceneTimeline Json?
   selectedMusic String?
+  generatedTitles     String?
+  generatedThumbnails String?
+  generatedShorts     String?
 }
 
 model PublishingQueue {

@@ -10,6 +10,10 @@ declare module "fluent-ffmpeg" {
     inputOptions(options: string | string[]): FfmpegCommand
     outputOptions(options: string | string[]): FfmpegCommand
     complexFilter(filters: string | string[]): FfmpegCommand
+    videoFilters(filters: string | string[]): FfmpegCommand
+    audioFilters(filters: string | string[]): FfmpegCommand
+    videoCodec(codec: string): FfmpegCommand
+    audioCodec(codec: string): FfmpegCommand
     screenshots(options: {
       timestamps?: number[]
       timemarks?: Array<number | string>

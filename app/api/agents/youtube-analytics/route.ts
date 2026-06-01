@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     const normalized = analyticsNormalizerAgent(result)
     let reinforcement = null
 
-    if (normalized.hasData) {
+    if (normalized.hasData && normalized.reinforcementInput) {
       reinforcement = reinforcementAgent(normalized.reinforcementInput)
     }
     let savedMemory = null

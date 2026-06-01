@@ -27,10 +27,12 @@ type ArticleGeneratorInput = {
   }
 }
 
+type ArticleOutline = NonNullable<ArticleGeneratorInput["outline"]>
+
 export function articleGeneratorAgent(
   input: ArticleGeneratorInput
 ) {
-  const defaultOutline = {
+  const defaultOutline: ArticleOutline = {
     introduction: {
       heading: "Introduction",
       purpose:

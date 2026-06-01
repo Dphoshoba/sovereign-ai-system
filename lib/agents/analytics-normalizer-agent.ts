@@ -1,10 +1,12 @@
 type YouTubeAnalyticsResult = {
-  columnHeaders?: {
-    name: string
-    columnType: string
-    dataType: string
-  }[]
-  rows?: any[][]
+  columnHeaders?:
+    | {
+        name?: string | null
+        columnType?: string | null
+        dataType?: string | null
+      }[]
+    | null
+  rows?: any[][] | null
 }
 
 export function analyticsNormalizerAgent(result: YouTubeAnalyticsResult) {
@@ -23,6 +25,7 @@ export function analyticsNormalizerAgent(result: YouTubeAnalyticsResult) {
         likes: 0,
         subscribersGained: 0,
       },
+      reinforcementInput: null,
     }
   }
 
