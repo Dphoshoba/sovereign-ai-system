@@ -19,9 +19,17 @@ export async function GET() {
         },
       })
 
+    const safeMemories = memories.map((m) => ({
+      title: m.title ?? "",
+      views: m.views,
+      likes: m.likes,
+      subscribersGained: m.subscribersGained,
+      averageViewDuration: m.averageViewDuration,
+    }))
+
     const clustering =
       reinforcementClusteringAgent({
-        memories,
+        memories: safeMemories,
       })
 
     const policyMutation =

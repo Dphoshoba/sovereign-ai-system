@@ -1,6 +1,6 @@
 type PerformanceMemory = {
   videoId: string
-  title?: string
+  title?: string | null
   views: number
   estimatedMinutesWatched: number
   averageViewDuration: number

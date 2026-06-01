@@ -1,5 +1,5 @@
 type Memory = {
-  title: string
+  title: string | null
   views: number
   likes: number
   subscribersGained: number
