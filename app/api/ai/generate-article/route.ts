@@ -42,8 +42,6 @@ export async function POST(request: Request) {
 
     const topic = body.topic || "AI automation for creators"
     const category = body.category || "ai-automation"
-    const publishNow =
-      Boolean(body.publishNow) || body.status === "published"
     const scheduledFor = body.scheduledFor
 
     const memoryContext = await getMemoryContext({
@@ -81,14 +79,14 @@ export async function POST(request: Request) {
         title,
         slug,
         category,
-        status: publishNow ? "published" : "draft",
+        status: "review-required",
         excerpt: parsed.excerpt || null,
         content: parsed.content || null,
         featuredImage: null,
         seoTitle: parsed.seoTitle || title,
         seoDescription: parsed.seoDescription || parsed.excerpt || null,
         seoKeywords: parsed.seoKeywords || null,
-        publishedAt: publishNow ? new Date() : null,
+        publishedAt: null,
         scheduledFor: scheduledFor ? new Date(scheduledFor) : null,
       },
     })

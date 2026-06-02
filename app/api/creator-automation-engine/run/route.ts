@@ -13,7 +13,7 @@ async function runAction(action: any) {
         body:
           payload.body ||
           "Thanks again for downloading the Creator Automation Starter Pack. The next wise step is to review your current workflow and identify where automation can help without weakening your voice.",
-        status: "draft",
+        status: "review-required",
         metadata: payload,
       },
     })
@@ -39,7 +39,7 @@ async function runAction(action: any) {
         body:
           payload.body ||
           "Your starter pack gives the blueprint. The audit helps identify which system your creator work needs first.",
-        status: "draft",
+        status: "review-required",
         metadata: payload,
       },
     })

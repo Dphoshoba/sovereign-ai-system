@@ -116,7 +116,7 @@ export async function POST(request: Request) {
           type: email.type || "nurture-email",
           subject: email.subject,
           body: email.body,
-          status: "draft",
+          status: "review-required",
           metadata: email,
         },
       })

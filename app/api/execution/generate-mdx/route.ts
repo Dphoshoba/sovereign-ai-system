@@ -244,7 +244,7 @@ ${article.faq
   )
   .join("\n")}
 internalLinks: []
-status: "draft"
+status: "review-required"
 publicationBlocked: ${factVerification.publicationBlocked}
 sourceCount: ${sourceCollection.sourceCount}
 evidenceCount: ${evidence.evidenceCount}

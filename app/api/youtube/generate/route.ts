@@ -74,7 +74,7 @@ Return JSON:
         shortsCaption: parsed.shortsCaption || null,
         thumbnailPrompt: parsed.thumbnailPrompt || null,
         scriptOutline: JSON.stringify(parsed.scriptOutline, null, 2),
-        status: "draft",
+        status: "review-required",
       },
     })
 

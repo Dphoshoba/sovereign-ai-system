@@ -25,9 +25,14 @@ export async function GET() {
         },
       })
 
+    const safeMemories = memories.map((memory) => ({
+      ...memory,
+      title: memory.title ?? "Untitled",
+    }))
+
     const clustering =
       reinforcementClusteringAgent({
-        memories,
+        memories: safeMemories,
       })
 
     const mutation =

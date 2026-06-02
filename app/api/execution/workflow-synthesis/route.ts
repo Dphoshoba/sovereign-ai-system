@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     const publisher = publisherAgent({
       title: writer.title,
       mdxPath: mdxGenerator.mdxPath,
-      status: "draft",
+      status: "review-required",
     })
 
     const analytics = analyticsAgent({

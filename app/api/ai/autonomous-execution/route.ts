@@ -161,7 +161,7 @@ export async function POST() {
           title: item.title,
           description: item.description || null,
           source: item.source || "system",
-          status: item.requiresApproval ? "proposed" : "approved",
+          status: "review-required",
           priority: item.priority || "medium",
           actionType: item.actionType,
           payload: {

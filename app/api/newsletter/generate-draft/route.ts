@@ -63,7 +63,7 @@ Return JSON:
         subject: parsed.subject,
         previewText: parsed.previewText || null,
         body: parsed.body,
-        status: "draft",
+        status: "review-required",
       },
     })
 

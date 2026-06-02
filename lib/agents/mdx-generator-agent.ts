@@ -21,7 +21,7 @@ export function mdxGeneratorAgent(
       category: input.category,
       author: "Echoes & Visions",
       ctaType: "default",
-      status: "draft",
+      status: "review-required",
     },
 
     mdxPath,

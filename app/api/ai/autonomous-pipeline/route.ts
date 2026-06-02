@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     const slug = await createUniqueSlug(slugify(title), category)
 
     const status =
-      mode === "publish" ? "published" : mode === "schedule" ? "scheduled" : "draft"
+      mode === "publish" ? "published" : mode === "schedule" ? "scheduled" : "review-required"
 
     const article = await prisma.article.create({
       data: {

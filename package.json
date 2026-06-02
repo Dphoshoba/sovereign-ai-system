@@ -7,7 +7,9 @@
     "build": "prisma generate && node --max-old-space-size=8192 ./node_modules/next/dist/bin/next build",
     "start": "next start",
     "lint": "next lint",
-    "youtube:auth": "node scripts/youtube-auth.js"
+    "youtube:auth": "node scripts/youtube-auth.js",
+    "sweep:mojibake": "tsx scripts/clean-article-mojibake.ts",
+    "sweep:mojibake:dry": "tsx scripts/clean-article-mojibake.ts --dry"
   },
   "dependencies": {
     "@mdx-js/react": "^3.1.1",

@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
 title: ${escapeYaml(topic)}
 slug: ${escapeYaml(slug)}
 category: ${escapeYaml(category)}
-status: "draft"
+status: "review-required"
 publicationBlocked: ${factVerification.publicationBlocked}
 sourceCount: ${sourceCollection.sourceCount}
 evidenceCount: ${evidence.evidenceCount}

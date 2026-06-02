@@ -169,7 +169,7 @@ export async function POST(request: Request) {
       data: {
         title: parsed.title || "Strategic Plan",
         timeHorizon,
-        status: "draft",
+        status: "review-required",
         strategicThesis: parsed.strategicThesis || null,
         priorities: parsed.priorities || [],
         initiatives: parsed.initiatives || [],

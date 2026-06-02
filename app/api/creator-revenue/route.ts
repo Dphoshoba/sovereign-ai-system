@@ -96,7 +96,7 @@ export async function POST(request: Request) {
         proposalContent: parsed.proposalContent || null,
         pricingBreakdown: parsed.pricingBreakdown || {},
         aiSummary: parsed.aiSummary || null,
-        status: "draft",
+        status: "review-required",
       },
     })
 

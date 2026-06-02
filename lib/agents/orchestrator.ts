@@ -47,7 +47,7 @@ export async function runCreatorSystem() {
 
   const analytics = analyticsAgent({
     title: script.title,
-    status: "draft",
+    status: "review-required",
   })
 
   const strategy = await strategyAgent()
