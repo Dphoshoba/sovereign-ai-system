@@ -14,6 +14,11 @@ export type ComposedArticle = {
   conclusion: string
   articleStatus: string
   requiresHumanReview: boolean
+  evidenceSummary: {
+    sectionCount: number
+    totalFacts: number
+    requiresHumanReview: boolean
+  }
 }
 
 export function articleComposer(
@@ -21,12 +26,17 @@ export function articleComposer(
   title: string,
   paragraphs: NarrativeParagraph[]
 ): ComposedArticle {
+  const totalFacts = paragraphs.reduce(
+    (sum, p) => sum + p.factCount,
+    0
+  )
+
   return {
     title,
     topic,
 
     introduction:
-      `This article explores ${topic} using source-grounded evidence, verified facts and human-reviewed claims.`,
+      `This article explores ${topic} using evidence gathered from external sources, structured fact extraction, verification checks, and human-reviewed synthesis. All conclusions remain subject to editorial review before publication.`,
 
     sections: paragraphs.map((paragraph) => ({
       heading: paragraph.heading,
@@ -38,11 +48,17 @@ export function articleComposer(
     })),
 
     conclusion:
-      "AI should be approached with wisdom, careful verification and human responsibility. This draft remains subject to human review before publication.",
+      `The evidence suggests meaningful developments in ${topic}, but responsible publishing requires ongoing verification, context, and human oversight. This article remains in review status until approved by an editor.`,
 
     articleStatus:
       "evidence-based narrative draft",
 
     requiresHumanReview: true,
+
+    evidenceSummary: {
+      sectionCount: paragraphs.length,
+      totalFacts,
+      requiresHumanReview: true,
+    },
   }
 }

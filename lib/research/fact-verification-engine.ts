@@ -112,9 +112,9 @@ export function factVerificationEngine(
     const verificationCount = supportingSources.length
 
     const verificationStatus =
-      verificationCount >= 2
+      verificationCount >= 3
         ? "verified"
-        : verificationCount === 1
+        : verificationCount === 2
         ? "partially verified"
         : "unverified"
 

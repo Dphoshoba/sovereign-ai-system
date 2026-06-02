@@ -14,43 +14,170 @@ export type FactClusterResult = {
   clusteringStatus: string
 }
 
+// Broad, topic-agnostic clusters. Keyword sets are intentionally generic so
+// they work across AI, health, history, Bible/faith, motivation, space,
+// creator-economy, and similar topics. Order matters: the first cluster whose
+// keywords match wins, so more distinctive themes are checked first.
+const CLUSTER_KEYWORDS: { name: string; keywords: string[] }[] = [
+  {
+    name: "Risks and Challenges",
+    keywords: [
+      "risk",
+      "challenge",
+      "danger",
+      "threat",
+      "harm",
+      "concern",
+      "problem",
+      "limitation",
+      "downside",
+      "caution",
+      "warning",
+      "barrier",
+      "obstacle",
+      "side effect",
+      "mistake",
+      "fail",
+      "decline",
+      "loss",
+      "negative",
+      "controversy",
+    ],
+  },
+  {
+    name: "Human Responsibility",
+    keywords: [
+      "ethic",
+      "responsib",
+      "moral",
+      "wisdom",
+      "faith",
+      "god",
+      "bible",
+      "scripture",
+      "spiritual",
+      "integrity",
+      "accountab",
+      "stewardship",
+      "trust",
+      "conscience",
+      "character",
+      "discipline",
+      "purpose",
+      "meaning",
+      "values",
+      "care",
+    ],
+  },
+  {
+    name: "Business and Revenue",
+    keywords: [
+      "business",
+      "revenue",
+      "money",
+      "profit",
+      "income",
+      "monetiz",
+      "market",
+      "customer",
+      "client",
+      "sales",
+      "pricing",
+      "cost",
+      "roi",
+      "brand",
+      "audience",
+      "subscriber",
+      "sponsor",
+      "economy",
+      "investment",
+      "growth strategy",
+    ],
+  },
+  {
+    name: "Tools and Workflows",
+    keywords: [
+      "tool",
+      "workflow",
+      "software",
+      "app",
+      "platform",
+      "automation",
+      "process",
+      "system",
+      "framework",
+      "method",
+      "technique",
+      "strategy",
+      "step",
+      "pipeline",
+      "integrat",
+      "build",
+      "setup",
+      "configure",
+      "practice",
+      "routine",
+    ],
+  },
+  {
+    name: "Benefits and Opportunities",
+    keywords: [
+      "benefit",
+      "opportunit",
+      "advantage",
+      "improve",
+      "gain",
+      "positive",
+      "potential",
+      "boost",
+      "enhance",
+      "value",
+      "help",
+      "effective",
+      "success",
+      "breakthrough",
+      "useful",
+      "save time",
+      "efficien",
+      "productiv",
+      "healthy",
+      "strength",
+    ],
+  },
+  {
+    name: "Key Trends",
+    keywords: [
+      "trend",
+      "future",
+      "emerging",
+      "growing",
+      "shift",
+      "rise",
+      "increasingly",
+      "popular",
+      "adoption",
+      "latest",
+      "evolving",
+      "prediction",
+      "forecast",
+      "momentum",
+      "history",
+      "historical",
+      "origin",
+      "discover",
+      "recent",
+      "new ",
+    ],
+  },
+]
+
 function getClusterName(claim: string) {
   const text = claim.toLowerCase()
 
-  if (
-    text.includes("understood as technology") ||
-    text.includes("simulate aspects of human learning")
-  ) {
-    return "Definitions"
-  }
-
-  if (
-    text.includes("identify objects") ||
-    text.includes("human language") ||
-    text.includes("learn from new information")
-  ) {
-    return "Capabilities"
-  }
-
-  if (
-    text.includes("generative ai") ||
-    text.includes("original content")
-  ) {
-    return "Generative AI"
-  }
-
-  if (
-    text.includes("machine learning") ||
-    text.includes("deep learning")
-  ) {
-    return "Foundations"
-  }
-
-  if (
-    text.includes("ethical") ||
-    text.includes("responsible use")
-  ) {
-    return "Ethics"
+  for (const cluster of CLUSTER_KEYWORDS) {
+    if (cluster.keywords.some((keyword) => text.includes(keyword))) {
+      return cluster.name
+    }
   }
 
   return "General Background"

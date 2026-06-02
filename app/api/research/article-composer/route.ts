@@ -7,6 +7,8 @@ import {
 
 import { evidenceRegistry } from "../../../../lib/research/evidence-registry"
 import { factExtractor } from "../../../../lib/research/fact-extractor"
+import { factVerificationEngine } from "../../../../lib/research/fact-verification-engine"
+import { consensusEngine } from "../../../../lib/research/consensus-engine"
 import { factClusterer } from "../../../../lib/research/fact-clusterer"
 import { sectionBuilder } from "../../../../lib/research/section-builder"
 import { narrativeParagraphBuilder } from "../../../../lib/research/narrative-paragraph-builder"
@@ -41,6 +43,14 @@ export async function POST(req: NextRequest) {
     evidence.evidence
   )
 
+  const factVerification = factVerificationEngine(
+    factExtraction.facts
+  )
+
+  const consensus = consensusEngine(
+    factVerification.verifiedFacts
+  )
+
   const clusters = factClusterer(
     topic,
     factExtraction.facts
@@ -65,6 +75,8 @@ export async function POST(req: NextRequest) {
     sourceCollection,
     evidence,
     factExtraction,
+    factVerification,
+    consensus,
     clusters,
     sections,
     paragraphs,

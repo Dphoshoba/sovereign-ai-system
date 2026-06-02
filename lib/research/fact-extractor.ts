@@ -25,78 +25,206 @@ function confidenceLabel(confidence: number) {
   return "low"
 }
 
+function cleanSentence(sentence: string) {
+  return sentence
+    .replace(/\s+/g, " ")
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .trim()
+}
+
+function isUsefulSentence(sentence: string) {
+  const text = sentence.toLowerCase()
+
+  if (sentence.length < 60) return false
+  if (sentence.length > 320) return false
+
+  const junkPatterns = [
+    "sign up",
+    "cookie",
+    "privacy policy",
+    "terms of service",
+    "share this",
+    "advertisement",
+    "subscribe",
+    "newsletter",
+    "main navigation",
+    "get in touch",
+    "all rights reserved",
+    "published",
+    "minutes ago",
+    "min read",
+    "minute read",
+    "hours ago",
+    "days ago",
+    "read more",
+    "author",
+    "author:",
+    "written by",
+    "by ",
+    "contact",
+    "email",
+    "phone",
+    "hello@",
+    "top stories",
+    "latest stories",
+    "latest news",
+    "breaking news",
+    "copyright",
+    "table of contents",
+    "frequently asked questions",
+    "faq",
+    "conclusion",
+    "conclusion:",
+    "trending now",
+    "view all",
+    "image by",
+    "photo by",
+    "hero image",
+    "shares",
+    "total shares",
+    "follow us",
+    "category:",
+    "tags:",
+    "comments",
+    "leave a reply",
+    "this article",
+    "the source",
+    "ai-generated",
+    "future trends",
+    "provides relevant evidence",
+    "future of digital media",
+    "potential for growth",
+    "start your journey",
+    "industry impact",
+    "key benchmarks",
+  ]
+
+  if (junkPatterns.some((pattern) => text.includes(pattern))) {
+    return false
+  }
+
+  const metadataPatterns = [
+    /\b\d{5,}\b/,
+    /\+\d{2,}/,
+    /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i,
+  ]
+
+  if (metadataPatterns.some((pattern) => pattern.test(sentence))) {
+    return false
+  }
+
+  // Reject "N min/hour/day read" style metadata.
+  if (
+    /^\d+\s*(min|minute|minutes|hour|hours|day|days)\s*read/i.test(sentence)
+  ) {
+    return false
+  }
+
+  const trimmed = sentence.trim()
+  const lowerTrimmed = trimmed.toLowerCase()
+
+  // Reject sentences that begin with known boilerplate / headline prefixes.
+  const rejectedPrefixes = [
+    "published",
+    "by ",
+    "image by",
+    "trending",
+    "view all",
+    "total",
+    "shares",
+    "the source",
+    "this article",
+    "future of",
+    "from hours to",
+    "ai revolution",
+    "how ai is",
+  ]
+
+  if (rejectedPrefixes.some((prefix) => lowerTrimmed.startsWith(prefix))) {
+    return false
+  }
+
+  const words = trimmed.split(/\s+/).filter(Boolean)
+
+  // Reject very short sentences (fewer than 8 words).
+  if (words.length < 8) {
+    return false
+  }
+
+  // Reject sentences where more than 60% of words begin with an uppercase
+  // letter (headlines, navigation, title-case fragments).
+  const capitalizedWords = words.filter((word) => /^[A-Z]/.test(word))
+  if (capitalizedWords.length / words.length > 0.6) {
+    return false
+  }
+
+  // Reject sentences that are more than 40% numbers / symbols.
+  const condensed = trimmed.replace(/\s+/g, "")
+  if (condensed.length > 0) {
+    const symbolOrNumber = condensed.replace(/[a-z]/gi, "").length
+    if (symbolOrNumber / condensed.length > 0.4) {
+      return false
+    }
+  }
+
+  // Reject sentences ending in incomplete / cut-off phrases.
+  const incompleteEndings = [
+    "to know to",
+    "need to",
+    "what professionals need",
+  ]
+
+  const endText = lowerTrimmed.replace(/[^a-z ]+$/g, "").trimEnd()
+  if (incompleteEndings.some((ending) => endText.endsWith(ending))) {
+    return false
+  }
+
+  const usefulPatterns = [
+    /\b\d+%/,
+    /\b\d{4}\b/,
+    /\bmarket\b/,
+    /\bgrowth\b/,
+    /\bcreators?\b/,
+    /\bautomation\b/,
+    /\bartificial intelligence\b/,
+    /\bgenerative ai\b/,
+    /\bworkflow\b/,
+    /\btools?\b/,
+    /\btrend\b/,
+    /\bchallenge\b/,
+    /\brisk\b/,
+    /\bopportunity\b/,
+    /\bplatform\b/,
+    /\baudience\b/,
+    /\bcontent\b/,
+    /\bbusiness\b/,
+    /\brevenue\b/,
+    /\bproductivity\b/,
+    /\bethic/,
+    /\btransparency\b/,
+    /\bhuman\b/,
+  ]
+
+  return usefulPatterns.some((pattern) => pattern.test(text))
+}
+
+function sentenceToClaim(sentence: string) {
+  return cleanSentence(sentence)
+}
+
 function buildClaims(topic: string, evidence: EvidenceRecord): string[] {
-  const text = evidence.extractedText.toLowerCase()
+  const sentences = evidence.extractedText
+    .split(/(?<=[.!?])\s+/)
+    .map(cleanSentence)
+    .filter(isUsefulSentence)
 
-  const claims: string[] = []
-
-  if (
-    text.includes("artificial intelligence") &&
-    text.includes("simulate human learning")
-  ) {
-    claims.push(
-      "Artificial intelligence can be understood as technology that enables computers and machines to simulate aspects of human learning, comprehension, problem solving, decision making, creativity and autonomy."
-    )
-  }
-
-  if (
-    text.includes("see and identify objects") ||
-    text.includes("identify objects")
-  ) {
-    claims.push(
-      "AI-enabled systems can be used to identify objects."
-    )
-  }
-
-  if (
-    text.includes("understand and respond to human language") ||
-    text.includes("human language")
-  ) {
-    claims.push(
-      "AI-enabled systems can understand and respond to human language."
-    )
-  }
-
-  if (
-    text.includes("learn from new information") ||
-    text.includes("new information and experience")
-  ) {
-    claims.push(
-      "AI systems can learn from new information and experience."
-    )
-  }
-
-  if (
-    text.includes("generative ai") &&
-    text.includes("create original text")
-  ) {
-    claims.push(
-      "Generative AI can create original content such as text, images, video and other media."
-    )
-  }
-
-  if (
-    text.includes("machine learning") &&
-    text.includes("deep learning")
-  ) {
-    claims.push(
-      "Machine learning and deep learning are foundational technologies behind many generative AI systems."
-    )
-  }
-
-  if (
-    text.includes("ethics") ||
-    text.includes("responsible use")
-  ) {
-    claims.push(
-      `Ethical frameworks are important when discussing the responsible use of AI in relation to ${topic}.`
-    )
-  }
+  const claims = sentences
+    .slice(0, 5)
+    .map(sentenceToClaim)
 
   if (claims.length === 0) {
-    claims.push(
-      `This evidence provides relevant background for ${topic}.`
-    )
+    return []
   }
 
   return claims
@@ -127,7 +255,7 @@ export function factExtractor(
     factCount: uniqueFacts.length,
     extractionStatus:
       uniqueFacts.length > 0
-        ? "Multiple structured facts extracted from evidence records."
-        : "No facts extracted because no evidence records were supplied.",
+        ? "Structured facts extracted from evidence records."
+        : "No facts extracted because no suitable evidence records were supplied.",
   }
 }

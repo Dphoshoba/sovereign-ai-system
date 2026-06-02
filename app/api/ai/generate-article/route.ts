@@ -14,6 +14,7 @@ import { evidenceRegistry } from "../../../../lib/research/evidence-registry"
 import { factExtractor } from "../../../../lib/research/fact-extractor"
 import { factVerificationEngine } from "../../../../lib/research/fact-verification-engine"
 import { consensusEngine } from "../../../../lib/research/consensus-engine"
+import { encodingNormalizer } from "../../../../lib/research/encoding-normalizer"
 
 function slugify(value: string) {
   return value
@@ -78,9 +79,31 @@ export async function POST(request: Request) {
     // 5. Score consensus / publication readiness.
     const consensus = consensusEngine(factVerification.verifiedFacts)
 
+    const consensusText =
+      consensus.consensusGroups
+        .map(
+          (group) =>
+            `Theme: ${group.theme}\n` +
+            `Sources: ${group.sourceCount}\n` +
+            `Consensus: ${group.consensusStatement}`
+        )
+        .join("\n\n")
+
+    const consensusBlock =
+      consensus.consensusGroupCount > 0
+        ? "CONSENSUS THEMES:\n\n" + consensusText
+        : "No consensus themes available."
+
     // --- Build the grounding block handed to the model ---
 
-    const verifiedFactsText = factVerification.verifiedFacts
+    const publishableFacts =
+      factVerification.verifiedFacts.filter(
+        (fact) =>
+          fact.verificationStatus === "verified" ||
+          fact.verificationStatus === "partially verified"
+      )
+
+    const verifiedFactsText = publishableFacts
       .map((fact) => {
         const sources = fact.supportingSources
           .map((source) => source.sourceUrl)
@@ -96,10 +119,10 @@ export async function POST(request: Request) {
 
     const hasVerifiedEvidence =
       evidence.evidenceCount > 0 &&
-      factVerification.verifiedFacts.length > 0
+      publishableFacts.length > 0
 
     const factsBlock = hasVerifiedEvidence
-      ? "VERIFIED FACTS (the only factual material you may use):\n" +
+      ? "EVIDENCE-SUPPORTED FACTS (the only factual material you may use):\n" +
         verifiedFactsText
       : "There are NO verified facts available for this topic. " +
         "Write a cautious, clearly-framed draft that avoids specific factual " +
@@ -126,6 +149,8 @@ export async function POST(request: Request) {
         "Relevant saved AI memory context: " +
         memoryContext +
         "\n\n" +
+        consensusBlock +
+        "\n\n" +
         factsBlock +
         "\n\n" +
         "STRICT RULES:\n" +
@@ -140,6 +165,21 @@ export async function POST(request: Request) {
 
     const parsed = JSON.parse(response.output_text)
 
+    const cleanedContent =
+      parsed.content
+        ? encodingNormalizer(parsed.content)
+        : null
+
+    const cleanedExcerpt =
+      parsed.excerpt
+        ? encodingNormalizer(parsed.excerpt)
+        : null
+
+    const cleanedSeoDescription =
+      parsed.seoDescription
+        ? encodingNormalizer(parsed.seoDescription)
+        : null
+
     const title = parsed.title || topic
     const baseSlug = slugify(title)
     const slug = await createUniqueSlug(baseSlug, category)
@@ -150,11 +190,14 @@ export async function POST(request: Request) {
         slug,
         category,
         status: "review-required",
-        excerpt: parsed.excerpt || null,
-        content: parsed.content || null,
+        excerpt: cleanedExcerpt,
+        content: cleanedContent,
         featuredImage: null,
         seoTitle: parsed.seoTitle || title,
-        seoDescription: parsed.seoDescription || parsed.excerpt || null,
+        seoDescription:
+          cleanedSeoDescription ||
+          cleanedExcerpt ||
+          null,
         seoKeywords: parsed.seoKeywords || null,
         publishedAt: null,
         scheduledFor: scheduledFor ? new Date(scheduledFor) : null,
@@ -189,6 +232,11 @@ export async function POST(request: Request) {
       )
     }
 
+    const editorialWarning =
+      consensus.publicationRecommendation === "blocked"
+        ? "Research pipeline marked this article as blocked for publication readiness because the available facts lack sufficient cross-source verification. The article was still saved as review-required for human editorial review."
+        : null
+
     return NextResponse.json({
       ok: true,
       article: updatedArticle,
@@ -201,6 +249,7 @@ export async function POST(request: Request) {
         unverifiedCount: factVerification.unverifiedCount,
         consensusScore: consensus.consensusScore,
         publicationRecommendation: consensus.publicationRecommendation,
+        editorialWarning,
       },
     })
   } catch (error) {

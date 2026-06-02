@@ -1,83 +1,48 @@
 import type { SourceRecord } from "./source-collector"
-import { getOpenAI } from "@/lib/ai/openai"
 
-type RawSource = {
-  title?: unknown
-  url?: unknown
-  sourceType?: unknown
+type BraveWebResult = {
+  title?: string
+  url?: string
 }
 
-function resolveProvider(): string {
-  const explicit = process.env.SEARCH_PROVIDER
+async function braveSearch(topic: string): Promise<SourceRecord[]> {
+  const apiKey = process.env.BRAVE_SEARCH_API_KEY
 
-  if (explicit && explicit.trim().length > 0) {
-    return explicit.trim().toLowerCase()
+  if (!apiKey) {
+    return []
   }
 
-  // Default to the OpenAI-backed source finder when a key is available,
-  // otherwise behave as before (no sources).
-  return process.env.OPENAI_API_KEY ? "openai" : "none"
-}
-
-function normalizeSources(raw: unknown): SourceRecord[] {
-  if (!Array.isArray(raw)) return []
-
-  const seen = new Set<string>()
-  const sources: SourceRecord[] = []
-
-  raw.forEach((entry, index) => {
-    const candidate = entry as RawSource
-    const url = typeof candidate.url === "string" ? candidate.url.trim() : ""
-
-    if (!/^https?:\/\//i.test(url)) return
-    if (seen.has(url)) return
-    seen.add(url)
-
-    const title =
-      typeof candidate.title === "string" && candidate.title.trim().length > 0
-        ? candidate.title.trim()
-        : url
-
-    const sourceType =
-      typeof candidate.sourceType === "string" &&
-      candidate.sourceType.trim().length > 0
-        ? candidate.sourceType.trim()
-        : "article"
-
-    sources.push({
-      title,
-      url,
-      sourceType,
-      // Earlier sources are ranked higher; downstream evidenceRegistry maps
-      // this into a confidence label. Real grounding still depends on the
-      // content actually fetched from the URL.
-      relevanceScore: Math.max(40, 90 - index * 8),
-    })
-  })
-
-  return sources
-}
-
-async function openAiSourceSearch(topic: string): Promise<SourceRecord[]> {
   try {
-    const response = await getOpenAI().responses.create({
-      model: "gpt-5.2",
-      instructions:
-        "You are a meticulous research librarian. Return only real, well-established, " +
-        "publicly accessible reference URLs from authoritative sources such as official " +
-        "documentation, reputable publications, peer-reviewed research, and established " +
-        "organizations. Never invent or guess URLs. If you are not confident a URL exists, " +
-        "omit it. Return only valid JSON. No markdown wrapper. No explanations.",
-      input:
-        `List up to 6 authoritative, currently-live web sources useful for researching: "${topic}". ` +
-        'Return JSON only in this exact format: ' +
-        '{"sources":[{"title":"...","url":"https://...","sourceType":"article|documentation|research|news|organization"}]}.',
-    })
+    const response = await fetch(
+      `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(topic)}&count=5`,
+      {
+        headers: {
+          Accept: "application/json",
+          "X-Subscription-Token": process.env.BRAVE_SEARCH_API_KEY!,
+        },
+      }
+    )
 
-    const parsed = JSON.parse(response.output_text)
-    return normalizeSources(parsed?.sources)
+    if (!response.ok) {
+      return []
+    }
+
+    const data = await response.json()
+    const results: BraveWebResult[] = Array.isArray(data?.web?.results)
+      ? data.web.results
+      : []
+
+    return results
+      .slice(0, 5)
+      .filter((result) => typeof result.url === "string" && result.url)
+      .map((result) => ({
+        title: result.title || (result.url as string),
+        url: result.url as string,
+        sourceType: "web",
+        relevanceScore: 80,
+      }))
   } catch (error) {
-    console.error("searchAdapter (openai provider) failed:", error)
+    console.error("searchAdapter (brave provider) failed:", error)
     return []
   }
 }
@@ -85,13 +50,15 @@ async function openAiSourceSearch(topic: string): Promise<SourceRecord[]> {
 export async function searchAdapter(
   topic: string
 ): Promise<SourceRecord[]> {
-  const provider = resolveProvider()
+  const provider = (process.env.SEARCH_PROVIDER || "none")
+    .trim()
+    .toLowerCase()
 
-  if (provider === "openai") {
-    return openAiSourceSearch(topic)
+  if (provider === "brave") {
+    return braveSearch(topic)
   }
 
-  // Unknown or "none" providers return nothing so the pipeline can report a
-  // clean "no sources collected" state rather than fabricating evidence.
+  // "none" and any unknown provider return nothing so the pipeline reports a
+  // clean "no sources" state rather than fabricating evidence.
   return []
 }
