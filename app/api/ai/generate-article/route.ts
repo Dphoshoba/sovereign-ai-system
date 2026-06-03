@@ -15,6 +15,8 @@ import { factExtractor } from "../../../../lib/research/fact-extractor"
 import { factVerificationEngine } from "../../../../lib/research/fact-verification-engine"
 import { consensusEngine } from "../../../../lib/research/consensus-engine"
 import { encodingNormalizer } from "../../../../lib/research/encoding-normalizer"
+import { contentSafeNormalizer } from "../../../../lib/research/content-safe-normalizer"
+import { calculateEditorialQualityScore } from "../../../../lib/editorial/quality-score"
 
 function slugify(value: string) {
   return value
@@ -167,7 +169,7 @@ export async function POST(request: Request) {
 
     const cleanedContent =
       parsed.content
-        ? encodingNormalizer(parsed.content)
+        ? contentSafeNormalizer(parsed.content)
         : null
 
     const cleanedExcerpt =
@@ -232,6 +234,25 @@ export async function POST(request: Request) {
       )
     }
 
+    const wordCount =
+      updatedArticle.content
+        ? updatedArticle.content.split(/\s+/).filter(Boolean).length
+        : 0
+
+    const editorialQuality = calculateEditorialQualityScore({
+      wordCount,
+      hasTitle: Boolean(updatedArticle.title),
+      hasExcerpt: Boolean(updatedArticle.excerpt),
+      hasSeoTitle: Boolean(updatedArticle.seoTitle),
+      hasSeoDescription: Boolean(updatedArticle.seoDescription),
+      hasFeaturedImage: Boolean(updatedArticle.featuredImage),
+      consensusScore: consensus.consensusScore,
+      verifiedCount: factVerification.verifiedCount,
+      partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
+      unverifiedCount: factVerification.unverifiedCount,
+      publicationRecommendation: consensus.publicationRecommendation,
+    })
+
     const editorialWarning =
       consensus.publicationRecommendation === "blocked"
         ? "Research pipeline marked this article as blocked for publication readiness because the available facts lack sufficient cross-source verification. The article was still saved as review-required for human editorial review."
@@ -250,6 +271,7 @@ export async function POST(request: Request) {
         consensusScore: consensus.consensusScore,
         publicationRecommendation: consensus.publicationRecommendation,
         editorialWarning,
+        editorialQuality,
       },
     })
   } catch (error) {
