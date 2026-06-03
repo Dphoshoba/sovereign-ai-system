@@ -2,6 +2,7 @@ import "dotenv/config"
 import { PrismaClient } from "@prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { encodingNormalizer } from "../lib/research/encoding-normalizer"
+import { contentSafeNormalizer } from "../lib/research/content-safe-normalizer"
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL!,
@@ -52,7 +53,10 @@ async function main() {
       const original = article[field]
       if (original == null) continue
 
-      const cleaned = encodingNormalizer(original)
+      const cleaned =
+        field === "content"
+          ? contentSafeNormalizer(original)
+          : encodingNormalizer(original)
 
       if (cleaned !== original) {
         updates[field] = cleaned

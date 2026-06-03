@@ -1,5 +1,25 @@
 function looksLikeMojibake(text: string): boolean {
-  return /â|Ã|â€/.test(text)
+  // Lone â (Letâs, donât, enterpriseâa) is handled by explicit replacements below.
+  // latin1→utf8 roundtrip on lone â bytes produces U+FFFD and breaks those fixes.
+  return /â€|Ã|\u00e2\u0080/.test(text)
+}
+
+function fixLoneAContractionMojibake(text: string): string {
+  return (
+    text
+      .replace(/([A-Za-z][A-Za-z0-9'-]*)âs\b/g, "$1's")
+      .replace(/([A-Za-z][A-Za-z0-9'-]*)ât\b/g, "$1't")
+      .replace(/([A-Za-z][A-Za-z0-9'-]*)âre\b/g, "$1're")
+      .replace(/([A-Za-z][A-Za-z0-9'-]*)âll\b/g, "$1'll")
+      .replace(/([A-Za-z][A-Za-z0-9'-]*)âve\b/g, "$1've")
+      .replace(/([A-Za-z][A-Za-z0-9'-]*)âm\b/g, "$1'm")
+      .replace(/([A-Za-z][A-Za-z0-9'-]*)âd\b/g, "$1'd")
+      .replace(/([A-Za-z][A-Za-z0-9'-]*)â.{0,1}s\b/g, "$1's")
+      .replace(/([A-Za-z][A-Za-z0-9'-]*)â.{0,1}t\b/g, "$1't")
+      .replace(/one-person enterpriseâa/gi, "one-person enterprise — a")
+      .replace(/enterpriseâa/gi, "enterprise — a")
+      .replace(/([a-z0-9])â([a-z])/gi, "$1 — $2")
+  )
 }
 
 function tryUtf8Repair(text: string): string {
@@ -19,6 +39,7 @@ function tryUtf8Repair(text: string): string {
 
 /** Character-level mojibake repair without collapsing whitespace or newlines. */
 export function repairMojibakeChars(text: string): string {
+  text = fixLoneAContractionMojibake(text)
   text = tryUtf8Repair(text)
 
   return (
@@ -174,7 +195,13 @@ export function repairMojibakeChars(text: string): string {
       .replace(/\b(voice)(instead)\b/gi, "$1 $2")
       .replace(/\b(systems)(that)\b/gi, "$1 $2")
       .replace(/\b(over)(to)\b/gi, "$1 $2")
-      .replace(/([a-z0-9])â([a-z])/gi, "$1—$2")
+      // Recover prior bad runs that turned apostrophes into em dashes (Let—s → Let's).
+      .replace(/([A-Za-z])—s\b/g, "$1's")
+      .replace(/([A-Za-z])—t\b/g, "$1't")
+      .replace(/([A-Za-z])—re\b/g, "$1're")
+      .replace(/([A-Za-z])—ll\b/g, "$1'll")
+      .replace(/([A-Za-z])—ve\b/g, "$1've")
+      .replace(/([A-Za-z])—m\b/g, "$1'm")
       .replace(/â/g, "—")
       // Undo latin1-roundtrip artifacts on valid UTF-8 punctuation.
       .replace(/\u0014/g, "—")
