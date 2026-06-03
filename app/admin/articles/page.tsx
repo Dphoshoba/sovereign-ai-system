@@ -1,13 +1,42 @@
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
+import { ArticleReviewActions } from "./ArticleReviewActions"
+import { ScheduleArticleButton } from "./ScheduleArticleButton"
 
 const STATUS_FILTERS = [
   { key: "all", label: "All", status: null },
   { key: "review-required", label: "Pending Review", status: "review-required" },
   { key: "approved", label: "Approved", status: "approved" },
+  { key: "scheduled", label: "Scheduled", status: "scheduled" },
   { key: "rejected", label: "Rejected", status: "rejected" },
   { key: "published", label: "Published", status: "published" },
 ] as const
+
+function gradeColor(grade: string | null) {
+  switch (grade) {
+    case "approval-candidate":
+      return "#15803d"
+    case "review":
+      return "#d97706"
+    case "reject":
+      return "#b91c1c"
+    default:
+      return "#666"
+  }
+}
+
+function gradeLabel(grade: string | null) {
+  switch (grade) {
+    case "approval-candidate":
+      return "🟢 Approval Candidate"
+    case "review":
+      return "🟡 Review"
+    case "reject":
+      return "🔴 Reject"
+    default:
+      return "⚪ Unscored"
+  }
+}
 
 export default async function AdminArticlesPage({
   searchParams,
@@ -112,6 +141,50 @@ export default async function AdminArticlesPage({
               <p>
                 <strong>Status:</strong> {article.status}
               </p>
+              {article.scheduledFor && (
+                <p>
+                  <strong>Scheduled For:</strong>{" "}
+                  {new Date(article.scheduledFor).toLocaleString()}
+                </p>
+              )}
+              <div
+                style={{
+                  marginTop: "8px",
+                  fontWeight: "bold",
+                  color:
+                    (article.editorialScore ?? 0) >= 80
+                      ? "#15803d"
+                      : (article.editorialScore ?? 0) >= 60
+                        ? "#d97706"
+                        : "#b91c1c",
+                }}
+              >
+                Editorial Score: {article.editorialScore ?? "Not scored"}
+              </div>
+              <div
+                style={{
+                  display: "inline-block",
+                  padding: "6px 12px",
+                  borderRadius: "999px",
+                  background: gradeColor(article.editorialGrade),
+                  color: "#fff",
+                  fontWeight: "bold",
+                  marginTop: "8px",
+                }}
+              >
+                {gradeLabel(article.editorialGrade)}
+              </div>
+              {Array.isArray(article.editorialWarnings) &&
+                article.editorialWarnings.length > 0 && (
+                  <div>
+                    <strong>Editorial Warnings:</strong>
+                    <ul>
+                      {article.editorialWarnings.map((warning, index) => (
+                        <li key={index}>{String(warning)}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               <p>
                 <strong>Slug:</strong> {article.slug}
               </p>
@@ -123,6 +196,14 @@ export default async function AdminArticlesPage({
                 >
                   Edit
                 </Link>
+
+                {article.status === "review-required" && (
+                  <ArticleReviewActions articleId={article.id} />
+                )}
+
+                {article.status === "approved" && (
+                  <ScheduleArticleButton articleId={article.id} />
+                )}
               </div>
             </div>
           ))

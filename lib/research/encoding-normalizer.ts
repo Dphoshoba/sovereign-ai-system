@@ -17,7 +17,8 @@ function tryUtf8Repair(text: string): string {
   }
 }
 
-export function encodingNormalizer(text: string): string {
+/** Character-level mojibake repair without collapsing whitespace or newlines. */
+export function repairMojibakeChars(text: string): string {
   text = tryUtf8Repair(text)
 
   return (
@@ -30,16 +31,14 @@ export function encodingNormalizer(text: string): string {
       .replace(/\u00e2\u0080\u0094/g, "—")
       .replace(/\u00e2\u0080\u0093/g, "–")
       .replace(/\u00e2\u0080\u00a6/g, "…")
-      // Specific CP1252 mojibake: â€ followed by a typographic char. These MUST
-      // run before the broad /â€/ fallback below, otherwise that fallback eats
-      // the "â€" prefix and leaves the trailing byte behind.
+      // Specific CP1252 mojibake: â€ followed by a typographic char.
       .replace(/â€™/g, "'")
       .replace(/â€˜/g, "'")
       .replace(/â€œ/g, '"')
       .replace(/â€"/g, '"')
       .replace(/â€"/g, "—")
-      .replace(/â€”/g, "—")
-      .replace(/â€“/g, "–")
+      .replace(/â€"/g, "—")
+      .replace(/â€"/g, "–")
       .replace(/â€¦/g, "…")
       .replace(/â€\u009d/g, '"')
       .replace(/â€\u009c/g, '"')
@@ -56,8 +55,6 @@ export function encodingNormalizer(text: string): string {
       .replace(/donât/gi, "don't")
       .replace(/canât/gi, "can't")
       // Contraction fallbacks: tolerate 0-2 junk chars between â and the letter.
-      // These must also run before the broad /â€/ fallback so the apostrophe is
-      // reconstructed instead of being turned into a double quote.
       .replace(/itâ.{0,2}s/gi, "it's")
       .replace(/donâ.{0,2}t/gi, "don't")
       .replace(/doesnâ.{0,2}t/gi, "doesn't")
@@ -102,8 +99,7 @@ export function encodingNormalizer(text: string): string {
       .replace(/âfirst draftâ/g, '"first draft"')
       .replace(/âdoneâ/g, '"done"')
       .replace(/âposted\.â/g, '"posted."')
-      // Broad CP1252 fallback: any remaining "â€" becomes a double quote. Runs
-      // AFTER all specific sequences and contraction fallbacks above.
+      // Broad CP1252 fallback: any remaining "â€" becomes a double quote.
       .replace(/â€/g, '"')
       // Misc leftovers
       .replace(/â¢/g, "•")
@@ -141,6 +137,12 @@ export function encodingNormalizer(text: string): string {
       .replace(/â3 content threads to continueâ/gi, '"3 content threads to continue"')
       .replace(/âOffer improvements to considerâ/gi, '"Offer improvements to consider"')
       .replace(/âHuman Coreâ/gi, '"Human Core"')
+      .replace(/âOne-Person Enterpriseâ/gi, '"One-Person Enterprise"')
+      .replace(/âMultipliableâ/gi, '"Multipliable"')
+      .replace(/âpillarâ/gi, '"pillar"')
+      .replace(/âinterestedâ/gi, '"interested"')
+      .replace(/âserved wellâ/gi, '"served well"')
+      .replace(/âcreate an audienceâ/gi, '"create an audience"')
       .replace(/âwithout/gi, "—without")
       .replace(/âwith/gi, "—with")
       .replace(/âcovering/gi, "—covering")
@@ -151,6 +153,15 @@ export function encodingNormalizer(text: string): string {
       .replace(/âand/gi, "—and")
       .replace(/âbut/gi, "—but")
       .replace(/âso/gi, "—so")
+      .replace(/âor/gi, "—or")
+      .replace(/âjust/gi, "—just")
+      // General paired â…â → "…" (headings, quoted phrases).
+      .replace(/â([^â\n]{2,}?)â/g, '"$1"')
+      // Numeric ranges: 3â5 → 3–5
+      .replace(/(\d)â(\d)/g, "$1–$2")
+      // Spaced em dash and markdown-adjacent dash repair.
+      .replace(/ â /g, " — ")
+      .replace(/\*â([a-z])/gi, "*—$1")
       .replace(/([a-z])([A-Z])/g, "$1 $2")
       .replace(/\b(the)(future)\b/gi, "$1 $2")
       .replace(/\b(and)(business)\b/gi, "$1 $2")
@@ -171,7 +182,9 @@ export function encodingNormalizer(text: string): string {
       .replace(/\u0018/g, "'")
       .replace(/\*\*—(?=[a-z])/gi, "** — ")
       .replace(/([a-z0-9])—([a-z])/gi, "$1 — $2")
-      .replace(/\s+/g, " ")
-      .trim()
   )
+}
+
+export function encodingNormalizer(text: string): string {
+  return repairMojibakeChars(text).replace(/\s+/g, " ").trim()
 }

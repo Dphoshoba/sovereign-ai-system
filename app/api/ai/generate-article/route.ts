@@ -186,6 +186,25 @@ export async function POST(request: Request) {
     const baseSlug = slugify(title)
     const slug = await createUniqueSlug(baseSlug, category)
 
+    const wordCount =
+      cleanedContent
+        ? cleanedContent.split(/\s+/).filter(Boolean).length
+        : 0
+
+    const editorialQuality = calculateEditorialQualityScore({
+      wordCount,
+      hasTitle: Boolean(title),
+      hasExcerpt: Boolean(cleanedExcerpt),
+      hasSeoTitle: Boolean(parsed.seoTitle || title),
+      hasSeoDescription: Boolean(cleanedSeoDescription || cleanedExcerpt),
+      hasFeaturedImage: false,
+      consensusScore: consensus.consensusScore,
+      verifiedCount: factVerification.verifiedCount,
+      partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
+      unverifiedCount: factVerification.unverifiedCount,
+      publicationRecommendation: consensus.publicationRecommendation,
+    })
+
     const article = await prisma.article.create({
       data: {
         title,
@@ -203,6 +222,9 @@ export async function POST(request: Request) {
         seoKeywords: parsed.seoKeywords || null,
         publishedAt: null,
         scheduledFor: scheduledFor ? new Date(scheduledFor) : null,
+        editorialScore: editorialQuality.score,
+        editorialGrade: editorialQuality.grade,
+        editorialWarnings: editorialQuality.warnings,
       },
     })
 
@@ -233,25 +255,6 @@ export async function POST(request: Request) {
         imageError
       )
     }
-
-    const wordCount =
-      updatedArticle.content
-        ? updatedArticle.content.split(/\s+/).filter(Boolean).length
-        : 0
-
-    const editorialQuality = calculateEditorialQualityScore({
-      wordCount,
-      hasTitle: Boolean(updatedArticle.title),
-      hasExcerpt: Boolean(updatedArticle.excerpt),
-      hasSeoTitle: Boolean(updatedArticle.seoTitle),
-      hasSeoDescription: Boolean(updatedArticle.seoDescription),
-      hasFeaturedImage: Boolean(updatedArticle.featuredImage),
-      consensusScore: consensus.consensusScore,
-      verifiedCount: factVerification.verifiedCount,
-      partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
-      unverifiedCount: factVerification.unverifiedCount,
-      publicationRecommendation: consensus.publicationRecommendation,
-    })
 
     const editorialWarning =
       consensus.publicationRecommendation === "blocked"

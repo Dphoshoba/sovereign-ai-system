@@ -69,6 +69,9 @@ model Article {
   scheduledFor  DateTime?
   approvedAt     DateTime?
   approvedBy     String?
+  editorialScore     Int?
+  editorialGrade     String?
+  editorialWarnings  Json?
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 

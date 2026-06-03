@@ -241,21 +241,27 @@ export function consensusEngine(
   ).length
 
   const consensusScore =
-    consensusGroupCount === 0
+    totalFacts === 0
       ? 0
       : Math.round(
-          (stronglyCorroborated * 100 +
-            moderatelyCorroborated * 60) /
-            consensusGroupCount
+          (
+            verifiedFacts * 100 +
+            partiallyVerifiedFacts * 70 +
+            stronglyCorroborated * 100 +
+            moderatelyCorroborated * 60
+          ) /
+          (
+            totalFacts +
+            Math.max(consensusGroupCount, 1)
+          )
         )
 
-  // publicationRecommendation logic unchanged.
   const publicationRecommendation =
-    unverifiedFacts > 0
-      ? "blocked"
-      : consensusScore >= 85
+    consensusScore >= 80
       ? "publish-ready"
-      : "review-required"
+      : consensusScore >= 50 || totalFacts >= 2
+        ? "review-required"
+        : "blocked"
 
   return {
     totalFacts,

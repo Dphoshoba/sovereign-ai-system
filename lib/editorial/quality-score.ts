@@ -46,14 +46,24 @@ export function calculateEditorialQualityScore(
   else if (input.consensusScore >= 50) score += 10
   else warnings.push("Low research consensus score.")
 
-  if (input.verifiedCount > 0 || input.partiallyVerifiedCount > 0) score += 15
-  else warnings.push("No verified or partially verified facts.")
-
-  if (input.unverifiedCount > 0) warnings.push("Contains unverified facts.")
+  if (input.verifiedCount > 0) {
+    score += 15
+  } else if (input.partiallyVerifiedCount > 0) {
+    score += 10
+  } else if (input.unverifiedCount > 0) {
+    score += 5
+    warnings.push("Only unverified evidence-backed facts available. Human review required.")
+  } else {
+    warnings.push("No evidence-backed facts available.")
+  }
 
   if (input.publicationRecommendation === "blocked") {
     score = Math.min(score, 59)
     warnings.push("Research recommendation blocks publishing.")
+  }
+
+  if (input.publicationRecommendation === "review-required") {
+    score = Math.max(score, 60)
   }
 
   const grade =
