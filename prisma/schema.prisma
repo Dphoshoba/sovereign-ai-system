@@ -76,6 +76,7 @@ model Article {
   updatedAt     DateTime          @updatedAt
 
   embedding      ArticleEmbedding?
+  socialPosts    SocialPost[]
 
   @@unique([category, slug])
   @@index([status])
@@ -3476,13 +3477,18 @@ model NewsletterDraft {
 model SocialPost {
   id          String   @id @default(cuid())
   articleId   String?
+  article     Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
   platform    String
   content     String
-  status      String   @default("draft")
+  status      String   @default("review-required")
   externalId  String?
   publishedAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([articleId])
+  @@index([platform])
+  @@index([status])
 }
 
 model YouTubePost {

@@ -6,9 +6,19 @@ export async function POST(req: NextRequest) {
   try {
     const { articleId, scheduledFor } = await req.json()
 
-    if (!articleId || !scheduledFor) {
+    if (!articleId) {
       return NextResponse.json(
-        { ok: false, error: "Missing articleId or scheduledFor" },
+        { ok: false, error: "Missing articleId" },
+        { status: 400 }
+      )
+    }
+
+    if (!scheduledFor) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Please choose a schedule date and time.",
+        },
         { status: 400 }
       )
     }
@@ -39,9 +49,12 @@ export async function POST(req: NextRequest) {
 
     const date = new Date(scheduledFor)
 
-    if (Number.isNaN(date.getTime())) {
+    if (isNaN(date.getTime())) {
       return NextResponse.json(
-        { ok: false, error: "Invalid scheduledFor date" },
+        {
+          ok: false,
+          error: "Invalid schedule date.",
+        },
         { status: 400 }
       )
     }

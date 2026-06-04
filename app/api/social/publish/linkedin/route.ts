@@ -14,6 +14,9 @@ export async function POST(req: NextRequest) {
 
     const post = await prisma.socialPost.findUnique({
       where: { id: postId },
+      include: {
+        article: true,
+      },
     })
 
     if (!post) {
@@ -26,6 +29,26 @@ export async function POST(req: NextRequest) {
     if (post.platform !== "linkedin") {
       return NextResponse.json(
         { ok: false, error: "Not a LinkedIn post" },
+        { status: 400 }
+      )
+    }
+
+    if (post.article && post.article.status !== "published") {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Linked article must be published before posting to LinkedIn.",
+        },
+        { status: 403 }
+      )
+    }
+
+    if (!post.content || post.content.length < 1) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "LinkedIn post content is required.",
+        },
         { status: 400 }
       )
     }

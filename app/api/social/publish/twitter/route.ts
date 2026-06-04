@@ -20,6 +20,9 @@ export async function POST(req: Request) {
       where: {
         id: postId,
       },
+      include: {
+        article: true,
+      },
     })
 
     if (!post) {
@@ -43,12 +46,43 @@ export async function POST(req: Request) {
     }
 
     if (post.status === "published") {
-      return NextResponse.json({
-        ok: true,
-        alreadyPublished: true,
-        message: "This Twitter post has already been published.",
-        post,
-      })
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "This Twitter post has already been published.",
+        },
+        { status: 400 }
+      )
+    }
+
+    if (post.article && post.article.status !== "published") {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Linked article must be published before posting to Twitter/X.",
+        },
+        { status: 403 }
+      )
+    }
+
+    if (!post.content || post.content.length > 280) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Twitter/X post must be between 1 and 280 characters.",
+        },
+        { status: 400 }
+      )
+    }
+
+    if (post.status !== "approved") {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Social post must be approved before publishing.",
+        },
+        { status: 403 }
+      )
     }
 
     const tweet = await twitterClient.v2.tweet(post.content)

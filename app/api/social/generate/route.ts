@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getOpenAI } from "@/lib/ai/openai"
+import { encodingNormalizer } from "../../../../lib/research/encoding-normalizer"
 
 export async function POST(req: Request) {
   try {
@@ -56,6 +57,8 @@ Return JSON:
   "linkedin": "...",
   "threads": "..."
 }
+
+Do not use emojis. Do not use hype. Keep the tone wise, practical, clear, and human.
           `,
         },
       ],
@@ -67,12 +70,24 @@ Return JSON:
 
     const parsed = JSON.parse(cleaned)
 
+    const twitterContent = parsed.twitter
+      ? encodingNormalizer(parsed.twitter)
+      : ""
+
+    const linkedinContent = parsed.linkedin
+      ? encodingNormalizer(parsed.linkedin)
+      : ""
+
+    const threadsContent = parsed.threads
+      ? encodingNormalizer(parsed.threads)
+      : ""
+
     const posts = await Promise.all([
       prisma.socialPost.create({
         data: {
           articleId: article.id,
           platform: "twitter",
-          content: parsed.twitter,
+          content: twitterContent,
         },
       }),
 
@@ -80,7 +95,7 @@ Return JSON:
         data: {
           articleId: article.id,
           platform: "linkedin",
-          content: parsed.linkedin,
+          content: linkedinContent,
         },
       }),
 
@@ -88,7 +103,7 @@ Return JSON:
         data: {
           articleId: article.id,
           platform: "threads",
-          content: parsed.threads,
+          content: threadsContent,
         },
       }),
     ])
