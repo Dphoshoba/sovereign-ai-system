@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { publicationGuard } from "../../../../lib/publishing/publication-guard"
+import { autoGenerateSocialPosts } from "../../../../lib/social/auto-generate-social"
 
 export async function GET() {
   try {
@@ -34,7 +35,7 @@ export async function GET() {
         continue
       }
 
-      await prisma.article.update({
+      const updatedArticle = await prisma.article.update({
         where: {
           id: article.id,
         },
@@ -43,6 +44,8 @@ export async function GET() {
           publishedAt: new Date(),
         },
       })
+
+      await autoGenerateSocialPosts(updatedArticle.id)
 
       published += 1
     }

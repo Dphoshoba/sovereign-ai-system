@@ -11,18 +11,32 @@ const STATUS_FILTERS = [
   { key: "rejected", label: "Rejected", status: "rejected" },
 ] as const
 
+const PLATFORM_FILTERS = [
+  { key: "all", label: "All Platforms", platform: null },
+  { key: "twitter", label: "Twitter", platform: "twitter" },
+  { key: "linkedin", label: "LinkedIn", platform: "linkedin" },
+  { key: "threads", label: "Threads", platform: "threads" },
+] as const
+
 export default async function AdminSocialPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>
+  searchParams: Promise<{ status?: string; platform?: string }>
 }) {
-  const { status: statusParam } = await searchParams
+  const { status: statusParam, platform: platformParam } = await searchParams
 
   const activeFilter =
     STATUS_FILTERS.find((f) => f.key === statusParam) ?? STATUS_FILTERS[0]
 
+  const activePlatform =
+    PLATFORM_FILTERS.find((f) => f.key === platformParam) ??
+    PLATFORM_FILTERS[0]
+
   const posts = await prisma.socialPost.findMany({
-    where: activeFilter.status ? { status: activeFilter.status } : undefined,
+    where: {
+      ...(activeFilter.status ? { status: activeFilter.status } : {}),
+      ...(activePlatform.platform ? { platform: activePlatform.platform } : {}),
+    },
     orderBy: { createdAt: "desc" },
     include: {
       article: true,
@@ -87,6 +101,46 @@ export default async function AdminSocialPage({
               >
                 {countForFilter(filter.status)}
               </span>
+            </Link>
+          )
+        })}
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "10px",
+          marginTop: "12px",
+        }}
+      >
+        {PLATFORM_FILTERS.map((filter) => {
+          const isActive = filter.key === activePlatform.key
+
+          const params = new URLSearchParams()
+
+          if (activeFilter.status) {
+            params.set("status", activeFilter.key)
+          }
+
+          if (filter.platform) {
+            params.set("platform", filter.key)
+          }
+
+          const query = params.toString()
+          const href = query ? `/admin/social?${query}` : "/admin/social"
+
+          return (
+            <Link
+              key={filter.key}
+              href={href}
+              style={{
+                ...tabStyle,
+                background: isActive ? "#2563eb" : "#f2f2f2",
+                color: isActive ? "#fff" : "#111",
+              }}
+            >
+              {filter.label}
             </Link>
           )
         })}
