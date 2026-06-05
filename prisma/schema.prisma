@@ -3600,3 +3600,12 @@ model VideoPerformanceMemory {
   strategyNotes           Json?
   createdAt               DateTime @default(now())
 }
+model Subscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+
+  status    String   @default("active")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

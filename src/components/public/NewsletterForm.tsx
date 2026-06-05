@@ -14,28 +14,26 @@ export default function NewsletterForm() {
     setMessage("")
 
     try {
-      const res = await fetch("/api/newsletter", {
+      const res = await fetch("/api/newsletter/subscribe", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          email,
-          source: "echoesandvisions-ai",
-          page: "/echoesandvisions-ai",
-        }),
+        body: JSON.stringify({ email }),
       })
 
       const result = await res.json()
 
-      if (!result.ok) {
-        setMessage(result.error || "Something went wrong.")
+      if (!res.ok) {
+        setMessage(result.error || `Something went wrong. Status: ${res.status}`)
         return
       }
 
       setEmail("")
       setMessage(
-        "You are now subscribed to the Sovereign Intelligence Newsletter."
+        result.alreadySubscribed
+          ? "You're already subscribed."
+          : "You are now subscribed to the Sovereign Intelligence Newsletter."
       )
     } catch {
       setMessage("Signup failed. Please try again.")
