@@ -1,105 +1,144 @@
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
-import SendNewsletterButton from "./SendNewsletterButton"
 
-export default async function AdminNewslettersPage() {
-  const drafts = await prisma.newsletterDraft.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
+const STATUS_FILTERS = [
+  { key: "all", label: "All", status: null },
+  { key: "review-required", label: "Review Required", status: "review-required" },
+  { key: "approved", label: "Approved", status: "approved" },
+  { key: "sent", label: "Sent", status: "sent" },
+] as const
+
+export default async function AdminNewslettersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>
+}) {
+  const { status: statusParam } = await searchParams
+
+  const activeFilter =
+    STATUS_FILTERS.find((f) => f.key === statusParam) ?? STATUS_FILTERS[0]
+
+  const newsletters = await prisma.newsletter.findMany({
+    where: activeFilter.status ? { status: activeFilter.status } : undefined,
+    orderBy: { createdAt: "desc" },
   })
 
+  const counts = await prisma.newsletter.groupBy({
+    by: ["status"],
+    _count: { _all: true },
+  })
+
+  const countByStatus = new Map<string, number>()
+  let total = 0
+
+  for (const row of counts) {
+    countByStatus.set(row.status, row._count._all)
+    total += row._count._all
+  }
+
+  const countForFilter = (status: string | null) =>
+    status === null ? total : countByStatus.get(status) ?? 0
+
   return (
-    <main className="min-h-screen bg-zinc-950 px-6 py-10 text-white">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-8 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm uppercase tracking-[0.25em] text-blue-400">
-              Echoes & Visions
-            </p>
-            <h1 className="mt-2 text-4xl font-bold">
-              Newsletter Drafts
-            </h1>
-            <p className="mt-3 text-zinc-400">
-              Review AI-generated newsletter drafts created from published articles.
-            </p>
-          </div>
+    <main style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
+      <h1>Newsletter Queue</h1>
+      <p>
+        {activeFilter.label}: {newsletters.length}
+      </p>
 
-          <Link
-            href="/admin/articles"
-            className="rounded-xl bg-white px-5 py-3 font-semibold text-zinc-950 hover:bg-zinc-200"
-          >
-            Back to Articles
-          </Link>
-        </div>
+      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "20px" }}>
+        {STATUS_FILTERS.map((filter) => {
+          const isActive = filter.key === activeFilter.key
+          const href =
+            filter.status === null
+              ? "/admin/newsletters"
+              : `/admin/newsletters?status=${filter.key}`
 
-        <div className="mb-6 rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-          <p className="text-zinc-300">
-            Total drafts:{" "}
-            <span className="font-bold text-white">{drafts.length}</span>
-          </p>
-        </div>
-
-        <div className="grid gap-5">
-          {drafts.length === 0 ? (
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-8 text-zinc-400">
-              No newsletter drafts yet.
-            </div>
-          ) : (
-            drafts.map((draft) => (
-              <article
-                key={draft.id}
-                className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-lg"
+          return (
+            <Link
+              key={filter.key}
+              href={href}
+              style={{
+                ...tabStyle,
+                background: isActive ? "#111" : "#f2f2f2",
+                color: isActive ? "#fff" : "#111",
+              }}
+            >
+              {filter.label}
+              <span
+                style={{
+                  ...badgeStyle,
+                  background: isActive ? "#fff" : "#111",
+                  color: isActive ? "#111" : "#fff",
+                }}
               >
-                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                  <span className="rounded-full bg-blue-500/10 px-3 py-1 text-sm font-medium text-blue-300">
-                    {draft.status}
-                  </span>
+                {countForFilter(filter.status)}
+              </span>
+            </Link>
+          )
+        })}
+      </div>
 
-                  <span className="text-sm text-zinc-500">
-                    {new Date(draft.createdAt).toLocaleString()}
-                  </span>
-                </div>
+      <div style={{ display: "grid", gap: "16px", marginTop: "24px" }}>
+        {newsletters.map((newsletter) => (
+          <div key={newsletter.id} style={cardStyle}>
+            <h2>{newsletter.subject}</h2>
 
-                <h2 className="text-2xl font-bold text-white">
-                  {draft.subject}
-                </h2>
+            <p>
+              <strong>ID:</strong> {newsletter.id}
+            </p>
 
-                {draft.previewText && (
-                  <p className="mt-3 text-zinc-300">
-                    {draft.previewText}
-                  </p>
-                )}
+            <p>
+              <strong>Status:</strong> {newsletter.status}
+            </p>
 
-                <div className="mt-5 rounded-xl border border-zinc-800 bg-black/40 p-5">
-                  <p className="whitespace-pre-wrap text-sm leading-7 text-zinc-300">
-                    {draft.body.length > 900
-                      ? `${draft.body.slice(0, 900)}...`
-                      : draft.body}
-                  </p>
-                </div>
+            {newsletter.previewText && (
+              <p>
+                <strong>Preview:</strong> {newsletter.previewText}
+              </p>
+            )}
 
-                <div className="mt-5 flex flex-wrap gap-3">
-                  <Link
-                    href={`/admin/newsletters/${draft.id}`}
-                    className="rounded-xl bg-blue-600 px-5 py-2 font-semibold text-white hover:bg-blue-500"
-                  >
-                    View Draft
-                  </Link>
+            <div style={{ whiteSpace: "pre-wrap", marginTop: "12px" }}>
+              {newsletter.content}
+            </div>
 
-                  {draft.status !== "sent" && (
-                    <SendNewsletterButton draftId={draft.id} />
-                  )}
-
-                  <span className="rounded-xl border border-zinc-700 px-5 py-2 text-sm text-zinc-400">
-                    Article ID: {draft.articleId || "None"}
-                  </span>
-                </div>
-              </article>
-            ))
-          )}
-        </div>
+            {newsletter.sentAt && (
+              <p>
+                <strong>Sent:</strong>{" "}
+                {new Date(newsletter.sentAt).toLocaleString()}
+              </p>
+            )}
+          </div>
+        ))}
       </div>
     </main>
   )
+}
+
+const cardStyle: React.CSSProperties = {
+  border: "1px solid #ddd",
+  borderRadius: "12px",
+  padding: "20px",
+}
+
+const tabStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "8px",
+  padding: "8px 14px",
+  borderRadius: "999px",
+  textDecoration: "none",
+  fontWeight: "bold",
+  border: "1px solid #ddd",
+}
+
+const badgeStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minWidth: "20px",
+  height: "20px",
+  padding: "0 6px",
+  borderRadius: "999px",
+  fontSize: "12px",
 }

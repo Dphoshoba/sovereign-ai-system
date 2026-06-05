@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { publicationGuard } from "../../../../lib/publishing/publication-guard"
 import { autoGenerateSocialPosts } from "../../../../lib/social/auto-generate-social"
+import { generateNewsletterForArticle } from "../../../../lib/newsletter/generate-newsletter"
 
 export async function GET() {
   try {
@@ -46,6 +47,7 @@ export async function GET() {
       })
 
       await autoGenerateSocialPosts(updatedArticle.id)
+      await generateNewsletterForArticle(updatedArticle.id)
 
       published += 1
     }
