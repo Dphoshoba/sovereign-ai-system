@@ -24,6 +24,31 @@ export default function ContentPlanning() {
 
   if (!data) return null
 
+  async function createDraft() {
+    if (!data) return
+
+    const response = await fetch("/api/planning/create-draft", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        title: data.plan.nextArticleTitle,
+        category: data.plan.underrepresentedCategory,
+        excerpt: data.plan.reasoning,
+      }),
+    })
+
+    const result = await response.json()
+
+    if (!response.ok) {
+      alert(result.error || "Draft creation failed")
+      return
+    }
+
+    alert("Draft created successfully.")
+  }
+
   return (
     <section style={cardStyle}>
       <h2>Content Planning AI</h2>
@@ -50,6 +75,10 @@ export default function ContentPlanning() {
         <strong>Reasoning:</strong> {data.plan.reasoning}
       </p>
 
+      <button onClick={createDraft} style={buttonStyle}>
+        Create Draft From Plan
+      </button>
+
       <h3>Category Balance</h3>
 
       <ul>
@@ -68,4 +97,15 @@ const cardStyle: React.CSSProperties = {
   borderRadius: "12px",
   padding: "20px",
   marginBottom: "20px",
+}
+
+const buttonStyle: React.CSSProperties = {
+  padding: "10px 14px",
+  borderRadius: "8px",
+  border: "none",
+  background: "#111",
+  color: "#fff",
+  fontWeight: "bold",
+  cursor: "pointer",
+  marginTop: "12px",
 }

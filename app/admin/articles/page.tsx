@@ -2,6 +2,7 @@ import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { ArticleReviewActions } from "./ArticleReviewActions"
 import { ScheduleArticleButton } from "./ScheduleArticleButton"
+import { ArticleActions } from "@/components/articles/ArticleActions"
 
 const STATUS_FILTERS = [
   { key: "all", label: "All", status: null },
@@ -186,6 +187,9 @@ export default async function AdminArticlesPage({
                   </div>
                 )}
               <p>
+                <strong>ID:</strong> {article.id}
+              </p>
+              <p>
                 <strong>Slug:</strong> {article.slug}
               </p>
 
@@ -204,6 +208,11 @@ export default async function AdminArticlesPage({
                 {article.status === "approved" && (
                   <ScheduleArticleButton articleId={article.id} />
                 )}
+
+                <ArticleActions
+                  articleId={article.id}
+                  status={article.status}
+                />
               </div>
             </div>
           ))

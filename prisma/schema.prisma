@@ -50,6 +50,14 @@ model UserRole {
   @@index([userId])
 }
 
+enum ArticleStatus {
+  draft
+  review_required @map("review-required")
+  approved
+  published
+  rejected
+  archived
+}
 
 model Article {
   id             String            @id @default(cuid())
