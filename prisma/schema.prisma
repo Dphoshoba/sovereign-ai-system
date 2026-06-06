@@ -3609,3 +3609,15 @@ model Subscriber {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+model MonthlySnapshot {
+  id                String   @id @default(cuid())
+
+  month             String   @unique
+
+  articlesPublished Int
+  socialPublished   Int
+  newslettersSent   Int
+  subscribers       Int
+
+  createdAt         DateTime @default(now())
+}
