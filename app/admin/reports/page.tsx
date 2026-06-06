@@ -88,21 +88,15 @@ export default async function ReportsPage() {
           {activeSubscribers.length}
         </p>
 
-        <a
-          href="/api/reports/csv"
-          style={{
-            display: "inline-block",
-            marginTop: "20px",
-            padding: "10px 14px",
-            borderRadius: "8px",
-            background: "#111",
-            color: "#fff",
-            textDecoration: "none",
-            fontWeight: "bold",
-          }}
-        >
-          Download CSV Report
-        </a>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "20px" }}>
+          <a href="/api/reports/csv" style={buttonStyle}>
+            Download CSV Report
+          </a>
+
+          <a href="/api/reports/pdf" style={secondaryButtonStyle}>
+            Download PDF Report
+          </a>
+        </div>
       </div>
 
       <section style={cardStyle}>
@@ -199,4 +193,19 @@ const cardStyle: React.CSSProperties = {
   borderRadius: "12px",
   padding: "20px",
   marginTop: "20px",
+}
+
+const buttonStyle: React.CSSProperties = {
+  display: "inline-block",
+  padding: "10px 14px",
+  borderRadius: "8px",
+  background: "#111",
+  color: "#fff",
+  textDecoration: "none",
+  fontWeight: "bold",
+}
+
+const secondaryButtonStyle: React.CSSProperties = {
+  ...buttonStyle,
+  background: "#333",
 }
