@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import ExecutiveIntelligence from "@/components/reports/ExecutiveIntelligence"
 
 export default async function ReportsPage() {
   const now = new Date()
@@ -34,6 +35,8 @@ export default async function ReportsPage() {
   return (
     <main style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
       <h1>Monthly Reports</h1>
+
+      <ExecutiveIntelligence />
 
       <section
         style={{
