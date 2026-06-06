@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
+import { NewsletterActions } from "@/components/newsletter/NewsletterActions"
 
 const STATUS_FILTERS = [
   { key: "all", label: "All", status: null },
@@ -149,6 +150,11 @@ export default async function AdminNewslettersPage({
             <p>
               <strong>Status:</strong> {newsletter.status}
             </p>
+
+            <NewsletterActions
+              newsletterId={newsletter.id}
+              status={newsletter.status}
+            />
 
             {newsletter.previewText && (
               <p>
