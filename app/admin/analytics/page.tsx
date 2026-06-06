@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
+import { SimpleBarChart } from "@/components/analytics/SimpleBarChart"
 
 function startOfMonth(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), 1)
@@ -50,6 +51,28 @@ export default async function AdminAnalyticsPage() {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 10)
 
+  const chartData = [
+    { label: "Articles", value: publishedArticles.length },
+    { label: "Social Posts", value: publishedSocialPosts.length },
+    { label: "Newsletters", value: sentNewsletters.length },
+    { label: "Subscribers", value: activeSubscribers.length },
+  ]
+
+  const workflowData = [
+    {
+      label: "Articles Published",
+      value: publishedArticles.length,
+    },
+    {
+      label: "Social Posts Published",
+      value: publishedSocialPosts.length,
+    },
+    {
+      label: "Newsletters Sent",
+      value: sentNewsletters.length,
+    },
+  ]
+
   return (
     <main style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
       <h1>Executive Analytics</h1>
@@ -62,6 +85,16 @@ export default async function AdminAnalyticsPage() {
         <StatCard label="Active Subscribers" value={activeSubscribers.length} />
         <StatCard label="New Subscribers This Month" value={newSubscribersThisMonth.length} />
       </div>
+
+      <SimpleBarChart
+        title="Publishing Overview"
+        data={chartData}
+      />
+
+      <SimpleBarChart
+        title="Distribution Workflow"
+        data={workflowData}
+      />
 
       <section style={{ marginTop: "32px" }}>
         <h2>Quick Links</h2>
