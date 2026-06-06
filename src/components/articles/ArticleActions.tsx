@@ -72,6 +72,21 @@ export function ArticleActions({
         </button>
       )}
 
+      {status === "review-required" && (
+        <button
+          disabled={loading}
+          onClick={() =>
+            runAction(
+              "/api/articles/publish-package",
+              "Publish article and approve related newsletter/social posts?"
+            )
+          }
+          style={publishStyle}
+        >
+          Publish Package
+        </button>
+      )}
+
       {status !== "archived" && (
         <button
           disabled={loading}
@@ -102,6 +117,16 @@ const generateStyle: React.CSSProperties = {
   borderRadius: "8px",
   border: "none",
   background: "#15803d",
+  color: "#fff",
+  fontWeight: "bold",
+  cursor: "pointer",
+}
+
+const publishStyle: React.CSSProperties = {
+  padding: "10px 14px",
+  borderRadius: "8px",
+  border: "none",
+  background: "#1d4ed8",
   color: "#fff",
   fontWeight: "bold",
   cursor: "pointer",
