@@ -4,9 +4,11 @@ import { useEffect, useState } from "react"
 
 type Intelligence = {
   growthScore: number
+  momentum?: string
   summary: string
   strengths: string[]
   risks: string[]
+  opportunities?: string[]
   recommendations: string[]
 }
 
@@ -51,6 +53,12 @@ export default function ExecutiveIntelligence() {
         Growth Score: {data.growthScore}/100
       </div>
 
+      {data.momentum && (
+        <p>
+          <strong>Momentum:</strong> {data.momentum}
+        </p>
+      )}
+
       <p>{data.summary}</p>
 
       <h3>Strengths</h3>
@@ -66,6 +74,17 @@ export default function ExecutiveIntelligence() {
           <li key={index}>{item}</li>
         ))}
       </ul>
+
+      {data.opportunities && data.opportunities.length > 0 && (
+        <>
+          <h3>Opportunities</h3>
+          <ul>
+            {data.opportunities.map((item, index) => (
+              <li key={index}>{item}</li>
+            ))}
+          </ul>
+        </>
+      )}
 
       <h3>Recommendations</h3>
       <ol>
