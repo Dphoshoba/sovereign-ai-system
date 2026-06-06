@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
-import { SimpleBarChart } from "@/components/analytics/SimpleBarChart"
+import { DashboardCharts } from "@/components/analytics/DashboardCharts"
 
 function startOfMonth(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), 1)
@@ -86,14 +86,13 @@ export default async function AdminAnalyticsPage() {
         <StatCard label="New Subscribers This Month" value={newSubscribersThisMonth.length} />
       </div>
 
-      <SimpleBarChart
-        title="Publishing Overview"
-        data={chartData}
-      />
-
-      <SimpleBarChart
-        title="Distribution Workflow"
-        data={workflowData}
+      <DashboardCharts
+        data={[
+          { label: "Articles", value: publishedArticles.length },
+          { label: "Social", value: publishedSocialPosts.length },
+          { label: "Newsletters", value: sentNewsletters.length },
+          { label: "Subscribers", value: activeSubscribers.length },
+        ]}
       />
 
       <section style={{ marginTop: "32px" }}>
