@@ -23,26 +23,77 @@ export default async function AdminNewslettersPage({
     orderBy: { createdAt: "desc" },
   })
 
-  const counts = await prisma.newsletter.groupBy({
-    by: ["status"],
-    _count: { _all: true },
-  })
+  const allNewsletters = await prisma.newsletter.findMany()
 
-  const countByStatus = new Map<string, number>()
-  let total = 0
+  const total = allNewsletters.length
+  const reviewRequired = allNewsletters.filter(
+    (newsletter) => newsletter.status === "review-required"
+  ).length
+  const approved = allNewsletters.filter(
+    (newsletter) => newsletter.status === "approved"
+  ).length
+  const sent = allNewsletters.filter(
+    (newsletter) => newsletter.status === "sent"
+  ).length
 
-  for (const row of counts) {
-    countByStatus.set(row.status, row._count._all)
-    total += row._count._all
-  }
-
-  const countForFilter = (status: string | null) =>
-    status === null ? total : countByStatus.get(status) ?? 0
+  const recentSent = allNewsletters
+    .filter((newsletter) => newsletter.status === "sent" && newsletter.sentAt)
+    .sort(
+      (a, b) =>
+        new Date(b.sentAt as Date).getTime() -
+        new Date(a.sentAt as Date).getTime()
+    )
+    .slice(0, 5)
 
   return (
     <main style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
       <h1>Newsletter Queue</h1>
-      <p>
+
+      <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginTop: "20px" }}>
+        <div style={statCardStyle}>
+          <strong>Total</strong>
+          <span>{total}</span>
+        </div>
+
+        <div style={statCardStyle}>
+          <strong>Review Required</strong>
+          <span>{reviewRequired}</span>
+        </div>
+
+        <div style={statCardStyle}>
+          <strong>Approved</strong>
+          <span>{approved}</span>
+        </div>
+
+        <div style={statCardStyle}>
+          <strong>Sent</strong>
+          <span>{sent}</span>
+        </div>
+      </div>
+
+      <section style={{ marginTop: "24px" }}>
+        <h2>Recent Sends</h2>
+
+        {recentSent.length === 0 ? (
+          <p style={{ color: "#777" }}>No newsletters sent yet.</p>
+        ) : (
+          <div style={{ display: "grid", gap: "10px" }}>
+            {recentSent.map((newsletter) => (
+              <div key={newsletter.id} style={miniCardStyle}>
+                <strong>{newsletter.subject}</strong>
+                <span>
+                  Sent:{" "}
+                  {newsletter.sentAt
+                    ? new Date(newsletter.sentAt).toLocaleString()
+                    : "Unknown"}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <p style={{ marginTop: "24px" }}>
         {activeFilter.label}: {newsletters.length}
       </p>
 
@@ -53,6 +104,13 @@ export default async function AdminNewslettersPage({
             filter.status === null
               ? "/admin/newsletters"
               : `/admin/newsletters?status=${filter.key}`
+
+          const count =
+            filter.status === null
+              ? total
+              : allNewsletters.filter(
+                  (newsletter) => newsletter.status === filter.status
+                ).length
 
           return (
             <Link
@@ -72,7 +130,7 @@ export default async function AdminNewslettersPage({
                   color: isActive ? "#111" : "#fff",
                 }}
               >
-                {countForFilter(filter.status)}
+                {count}
               </span>
             </Link>
           )
@@ -113,6 +171,23 @@ export default async function AdminNewslettersPage({
       </div>
     </main>
   )
+}
+
+const statCardStyle: React.CSSProperties = {
+  border: "1px solid #ddd",
+  borderRadius: "12px",
+  padding: "16px",
+  minWidth: "170px",
+  display: "grid",
+  gap: "8px",
+}
+
+const miniCardStyle: React.CSSProperties = {
+  border: "1px solid #ddd",
+  borderRadius: "10px",
+  padding: "12px",
+  display: "grid",
+  gap: "6px",
 }
 
 const cardStyle: React.CSSProperties = {

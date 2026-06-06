@@ -50,8 +50,10 @@ export async function POST(req: Request) {
       )
     }
 
-    const subscribers = await prisma.newsletterSubscriber.findMany({
-      where: { status: "active" },
+    const subscribers = await prisma.subscriber.findMany({
+      where: {
+        status: "active",
+      },
     })
 
     if (subscribers.length === 0) {
