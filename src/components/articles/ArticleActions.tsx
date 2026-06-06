@@ -87,6 +87,46 @@ export function ArticleActions({
         </button>
       )}
 
+      {status === "review-required" && (
+        <button
+          disabled={loading}
+          onClick={async () => {
+            const value = prompt(
+              "Enter schedule date/time, example: 2026-06-10T09:00:00"
+            )
+
+            if (!value) return
+
+            setLoading(true)
+
+            const response = await fetch("/api/articles/schedule-package", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                articleId,
+                scheduledFor: value,
+              }),
+            })
+
+            const result = await response.json()
+            setLoading(false)
+
+            if (!response.ok) {
+              alert(result.error || "Schedule failed")
+              return
+            }
+
+            alert("Package scheduled successfully.")
+            router.refresh()
+          }}
+          style={scheduleStyle}
+        >
+          Schedule Package
+        </button>
+      )}
+
       {status !== "archived" && (
         <button
           disabled={loading}
@@ -127,6 +167,16 @@ const publishStyle: React.CSSProperties = {
   borderRadius: "8px",
   border: "none",
   background: "#1d4ed8",
+  color: "#fff",
+  fontWeight: "bold",
+  cursor: "pointer",
+}
+
+const scheduleStyle: React.CSSProperties = {
+  padding: "10px 14px",
+  borderRadius: "8px",
+  border: "none",
+  background: "#7c3aed",
   color: "#fff",
   fontWeight: "bold",
   cursor: "pointer",

@@ -3,5 +3,11 @@
     "env": {
       "NODE_OPTIONS": "--max-old-space-size=6144"
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/workers/publish-scheduled",
+      "schedule": "0 * * * *"
+    }
+  ]
 }

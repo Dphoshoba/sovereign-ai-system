@@ -3496,6 +3496,7 @@ model Newsletter {
   approvedBy  String?
 
   sentAt      DateTime?
+  scheduledFor DateTime?
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -3514,6 +3515,7 @@ model SocialPost {
   status      String   @default("review-required")
   externalId  String?
   publishedAt DateTime?
+  scheduledFor DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
