@@ -35,6 +35,32 @@ export default async function ReportsPage() {
     <main style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
       <h1>Monthly Reports</h1>
 
+      <section
+        style={{
+          border: "1px solid #ddd",
+          borderRadius: "12px",
+          padding: "20px",
+          marginBottom: "20px",
+          background: "#fafafa",
+        }}
+      >
+        <h2>Executive Summary</h2>
+
+        <p>
+          During this reporting period, Echoes & Visions published{" "}
+          <strong>{publishedArticles.length}</strong> articles,
+          distributed <strong>{publishedSocialPosts.length}</strong> social posts,
+          delivered <strong>{sentNewsletters.length}</strong> newsletters,
+          and maintained <strong>{activeSubscribers.length}</strong> active subscribers.
+        </p>
+
+        <p>
+          Content production and distribution workflows are operating successfully
+          through the publishing platform with analytics, newsletter delivery,
+          social publishing, and audience management functioning end-to-end.
+        </p>
+      </section>
+
       <div style={cardStyle}>
         <h2>
           {now.toLocaleString("default", {
@@ -78,6 +104,92 @@ export default async function ReportsPage() {
           Download CSV Report
         </a>
       </div>
+
+      <section style={cardStyle}>
+        <h2>Recent Articles</h2>
+
+        {publishedArticles
+          .slice()
+          .sort(
+            (a, b) =>
+              new Date(b.publishedAt ?? b.updatedAt).getTime() -
+              new Date(a.publishedAt ?? a.updatedAt).getTime()
+          )
+          .slice(0, 5)
+          .map((article) => (
+            <div
+              key={article.id}
+              style={{
+                borderBottom: "1px solid #eee",
+                padding: "10px 0",
+              }}
+            >
+              <strong>{article.title}</strong>
+
+              <div>
+                {article.publishedAt
+                  ? new Date(article.publishedAt).toLocaleString()
+                  : "Not Published"}
+              </div>
+            </div>
+          ))}
+      </section>
+
+      <section style={cardStyle}>
+        <h2>Recent Newsletters</h2>
+
+        {sentNewsletters
+          .slice()
+          .sort(
+            (a, b) =>
+              new Date(b.sentAt ?? b.updatedAt).getTime() -
+              new Date(a.sentAt ?? a.updatedAt).getTime()
+          )
+          .slice(0, 5)
+          .map((newsletter) => (
+            <div
+              key={newsletter.id}
+              style={{
+                borderBottom: "1px solid #eee",
+                padding: "10px 0",
+              }}
+            >
+              <strong>{newsletter.subject}</strong>
+
+              <div>
+                {newsletter.sentAt
+                  ? new Date(newsletter.sentAt).toLocaleString()
+                  : "Not Sent"}
+              </div>
+            </div>
+          ))}
+      </section>
+
+      <section style={cardStyle}>
+        <h2>Recent Social Posts</h2>
+
+        {publishedSocialPosts
+          .slice()
+          .sort(
+            (a, b) =>
+              new Date(b.publishedAt ?? b.updatedAt).getTime() -
+              new Date(a.publishedAt ?? a.updatedAt).getTime()
+          )
+          .slice(0, 5)
+          .map((post) => (
+            <div
+              key={post.id}
+              style={{
+                borderBottom: "1px solid #eee",
+                padding: "10px 0",
+              }}
+            >
+              <strong>{post.platform}</strong>
+
+              <div>{post.content.slice(0, 120)}...</div>
+            </div>
+          ))}
+      </section>
     </main>
   )
 }
