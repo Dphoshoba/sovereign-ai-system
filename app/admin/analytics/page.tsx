@@ -1,221 +1,130 @@
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 
-function estimateReadingTime(content: string | null) {
-  if (!content) return 0
-
-  const words = content.trim().split(/\s+/).length
-  return Math.max(1, Math.ceil(words / 200))
+function startOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1)
 }
 
-function getKeywordCounts(articles: any[]) {
-  const counts: Record<string, number> = {}
+export default async function AdminAnalyticsPage() {
+  const now = new Date()
+  const monthStart = startOfMonth(now)
 
-  articles.forEach((article: any) => {
-    if (!article.seoKeywords) return
+  const [
+    articles,
+    socialPosts,
+    newsletters,
+    subscribers,
+  ] = await Promise.all([
+    prisma.article.findMany(),
+    prisma.socialPost.findMany(),
+    prisma.newsletter.findMany(),
+    prisma.subscriber.findMany(),
+  ])
 
-    article.seoKeywords
-      .split(",")
-      .map((keyword: string) => keyword.trim().toLowerCase())
-      .filter(Boolean)
-      .forEach((keyword: string) => {
-        counts[keyword] = (counts[keyword] || 0) + 1
-      })
-  })
+  const publishedArticles = articles.filter((a) => a.status === "published")
+  const publishedSocialPosts = socialPosts.filter((p) => p.status === "published")
+  const sentNewsletters = newsletters.filter((n) => n.status === "sent")
+  const activeSubscribers = subscribers.filter((s) => s.status === "active")
 
-  return Object.entries(counts)
-    .sort((a, b) => b[1] - a[1])
+  const newSubscribersThisMonth = subscribers.filter(
+    (s) => new Date(s.createdAt) >= monthStart
+  )
+
+  const recentActivity = [
+    ...publishedArticles.map((item) => ({
+      type: "Article Published",
+      title: item.title,
+      date: item.publishedAt || item.updatedAt,
+    })),
+    ...sentNewsletters.map((item) => ({
+      type: "Newsletter Sent",
+      title: item.subject,
+      date: item.sentAt || item.updatedAt,
+    })),
+    ...publishedSocialPosts.map((item) => ({
+      type: `Social Published: ${item.platform}`,
+      title: item.content.slice(0, 80),
+      date: item.publishedAt || item.updatedAt,
+    })),
+  ]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 10)
-}
-
-export default async function AnalyticsDashboardPage() {
-  const articles = await prisma.article.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-  })
-
-  const total = articles.length
-  const published = articles.filter(
-    (article: any) => article.status === "published"
-  )
-  const drafts = articles.filter((article: any) => article.status === "draft")
-  const reviews = articles.filter((article: any) => article.status === "review")
-  const scheduled = articles.filter(
-    (article: any) => article.status === "scheduled"
-  )
-
-  const totalReadingTime = articles.reduce(
-    (sum: number, article: any) => sum + estimateReadingTime(article.content),
-    0
-  )
-
-  const averageReadingTime =
-    total > 0 ? Math.round(totalReadingTime / total) : 0
-
-  const categoryCounts = articles.reduce<Record<string, number>>(
-    (counts, article: any) => {
-      counts[article.category] = (counts[article.category] || 0) + 1
-      return counts
-    },
-    {}
-  )
-
-  const topKeywords = getKeywordCounts(articles)
-  const recentArticles = articles.slice(0, 5)
 
   return (
     <main style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
-      <h1>Analytics Dashboard</h1>
+      <h1>Executive Analytics</h1>
+      <p>High-level publishing, audience, and distribution overview.</p>
 
-      <p style={{ color: "#555", maxWidth: 760, lineHeight: 1.7 }}>
-        Track publishing activity, content health, categories, keywords, and
-        editorial momentum for Echoes & Visions.
-      </p>
+      <div style={gridStyle}>
+        <StatCard label="Articles Published" value={publishedArticles.length} />
+        <StatCard label="Social Posts Published" value={publishedSocialPosts.length} />
+        <StatCard label="Newsletters Sent" value={sentNewsletters.length} />
+        <StatCard label="Active Subscribers" value={activeSubscribers.length} />
+        <StatCard label="New Subscribers This Month" value={newSubscribersThisMonth.length} />
+      </div>
 
-      <section style={statsGrid}>
-        <StatCard label="Total Articles" value={total} />
-        <StatCard label="Published" value={published.length} />
-        <StatCard label="Drafts" value={drafts.length} />
-        <StatCard label="Reviews" value={reviews.length} />
-        <StatCard label="Scheduled" value={scheduled.length} />
-        <StatCard label="Avg. Reading Time" value={`${averageReadingTime} min`} />
-      </section>
+      <section style={{ marginTop: "32px" }}>
+        <h2>Quick Links</h2>
 
-      <section style={gridTwo}>
-        <div style={cardStyle}>
-          <h2>Category Breakdown</h2>
-
-          {Object.entries(categoryCounts).length === 0 ? (
-            <p>No categories yet.</p>
-          ) : (
-            Object.entries(categoryCounts).map(([category, count]) => (
-              <div key={category} style={rowStyle}>
-                <span>{category}</span>
-                <strong>{count}</strong>
-              </div>
-            ))
-          )}
-        </div>
-
-        <div style={cardStyle}>
-          <h2>Top SEO Keywords</h2>
-
-          {topKeywords.length === 0 ? (
-            <p>No SEO keywords added yet.</p>
-          ) : (
-            topKeywords.map(([keyword, count]) => (
-              <div key={keyword} style={rowStyle}>
-                <span>{keyword}</span>
-                <strong>{count}</strong>
-              </div>
-            ))
-          )}
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <Link href="/admin/articles" style={buttonStyle}>Articles</Link>
+          <Link href="/admin/social" style={buttonStyle}>Social Queue</Link>
+          <Link href="/admin/newsletters" style={buttonStyle}>Newsletters</Link>
+          <Link href="/admin/subscribers" style={buttonStyle}>Subscribers</Link>
         </div>
       </section>
 
-      <section style={cardStyle}>
-        <h2>Recent Articles</h2>
+      <section style={{ marginTop: "32px" }}>
+        <h2>Recent Activity</h2>
 
-        {recentArticles.length === 0 ? (
-          <p>No articles yet.</p>
-        ) : (
-          <div style={{ display: "grid", gap: 14 }}>
-            {recentArticles.map((article) => (
-              <div key={article.id} style={articleRow}>
-                <div>
-                  <p style={statusStyle}>{article.status}</p>
-                  <h3 style={{ margin: "4px 0" }}>{article.title}</h3>
-                  <p style={{ color: "#555", margin: 0 }}>
-                    {article.category} · {estimateReadingTime(article.content)} min read
-                  </p>
-                </div>
-
-                <Link
-                  href={`/admin/articles/${article.id}/edit`}
-                  style={buttonStyle}
-                >
-                  Edit
-                </Link>
-              </div>
-            ))}
-          </div>
-        )}
+        <div style={{ display: "grid", gap: "12px" }}>
+          {recentActivity.map((activity, index) => (
+            <div key={`${activity.type}-${index}`} style={cardStyle}>
+              <strong>{activity.type}</strong>
+              <p>{activity.title}</p>
+              <small>{new Date(activity.date).toLocaleString()}</small>
+            </div>
+          ))}
+        </div>
       </section>
     </main>
   )
 }
 
-function StatCard({ label, value }: { label: string; value: number | string }) {
+function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div style={statCard}>
-      <strong style={{ fontSize: 30 }}>{value}</strong>
-      <span>{label}</span>
+    <div style={statCardStyle}>
+      <strong>{label}</strong>
+      <span style={{ fontSize: "28px", fontWeight: "bold" }}>{value}</span>
     </div>
   )
 }
 
-const statsGrid: React.CSSProperties = {
+const gridStyle: React.CSSProperties = {
   display: "grid",
   gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-  gap: 16,
-  marginTop: 28,
-  marginBottom: 28,
+  gap: "16px",
+  marginTop: "24px",
 }
 
-const statCard: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
-  borderRadius: 18,
-  padding: 22,
+const statCardStyle: React.CSSProperties = {
+  border: "1px solid #ddd",
+  borderRadius: "14px",
+  padding: "18px",
   display: "grid",
-  gap: 8,
-}
-
-const gridTwo: React.CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-  gap: 20,
-  marginBottom: 28,
+  gap: "8px",
 }
 
 const cardStyle: React.CSSProperties = {
-  background: "#fff",
   border: "1px solid #ddd",
-  borderRadius: 18,
-  padding: 24,
-  marginTop: 24,
-}
-
-const rowStyle: React.CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  gap: 16,
-  padding: "12px 0",
-  borderBottom: "1px solid #eee",
-}
-
-const articleRow: React.CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  gap: 20,
-  alignItems: "center",
-  padding: 18,
-  border: "1px solid #eee",
-  borderRadius: 14,
-}
-
-const statusStyle: React.CSSProperties = {
-  textTransform: "uppercase",
-  letterSpacing: 1,
-  color: "#777",
-  fontSize: 13,
-  margin: 0,
+  borderRadius: "12px",
+  padding: "16px",
 }
 
 const buttonStyle: React.CSSProperties = {
+  display: "inline-block",
   padding: "10px 14px",
-  borderRadius: 10,
+  borderRadius: "8px",
   background: "#111",
   color: "#fff",
   textDecoration: "none",
