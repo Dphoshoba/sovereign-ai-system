@@ -3615,6 +3615,7 @@ model Subscriber {
   email     String   @unique
 
   status    String   @default("active")
+  source    String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

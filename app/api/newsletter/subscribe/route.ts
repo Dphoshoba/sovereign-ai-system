@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma"
 
 export async function POST(req: NextRequest) {
   try {
-    const { email } = await req.json()
+    const { email, source } = await req.json()
 
     if (!email) {
       return NextResponse.json(
@@ -15,23 +15,35 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const normalizedEmail = email.toLowerCase().trim()
+
     const existing = await prisma.subscriber.findUnique({
       where: {
-        email: email.toLowerCase().trim(),
+        email: normalizedEmail,
       },
     })
 
     if (existing) {
+      const subscriber = await prisma.subscriber.update({
+        where: { email: normalizedEmail },
+        data: {
+          status: "active",
+          source: source || "newsletter",
+        },
+      })
+
       return NextResponse.json({
         ok: true,
         alreadySubscribed: true,
-        subscriber: existing,
+        subscriber,
       })
     }
 
     const subscriber = await prisma.subscriber.create({
       data: {
-        email: email.toLowerCase().trim(),
+        email: normalizedEmail,
+        status: "active",
+        source: source || "newsletter",
       },
     })
 

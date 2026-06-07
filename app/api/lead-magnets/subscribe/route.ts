@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma"
 
 export async function POST(req: Request) {
   try {
-    const { email, leadMagnetId } = await req.json()
+    const { email, leadMagnetId, source } = await req.json()
 
     if (!email || !leadMagnetId) {
       return NextResponse.json(
@@ -27,10 +27,12 @@ export async function POST(req: Request) {
       where: { email },
       update: {
         status: "active",
+        source: source || "lead-magnet",
       },
       create: {
         email,
         status: "active",
+        source: source || "lead-magnet",
       },
     })
 

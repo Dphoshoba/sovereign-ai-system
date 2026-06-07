@@ -33,6 +33,7 @@ export function LeadMagnetSubscribeForm({
       body: JSON.stringify({
         email,
         leadMagnetId,
+        source: "lead-magnet",
       }),
     })
 

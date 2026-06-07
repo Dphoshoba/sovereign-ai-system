@@ -53,6 +53,18 @@ export default async function GrowthPage() {
     (a, b) => b.subscribers - a.subscribers
   )[0]
 
+  const leadSources = await prisma.subscriber.groupBy({
+    by: ["source"],
+    _count: {
+      _all: true,
+    },
+  })
+
+  const leadSourceRows = leadSources.map((row) => ({
+    source: row.source || "unknown",
+    count: row._count._all,
+  }))
+
   return (
     <main style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
       <h1>Subscriber Growth</h1>
@@ -133,6 +145,19 @@ export default async function GrowthPage() {
                 : "None yet"
             }
           />
+        </div>
+      </section>
+
+      <section style={sectionStyle}>
+        <h2>Lead Sources</h2>
+
+        <div style={{ display: "grid", gap: "12px" }}>
+          {leadSourceRows.map((row) => (
+            <div key={row.source} style={cardStyle}>
+              <strong>{row.source}</strong>
+              <p>{row.count} subscriber(s)</p>
+            </div>
+          ))}
         </div>
       </section>
 
