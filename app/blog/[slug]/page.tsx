@@ -4,6 +4,7 @@ import type { Metadata } from "next"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { prisma } from "@/lib/prisma"
+import LeadMagnetCTA from "@/components/growth/LeadMagnetCTA"
 
 function appUrl(path: string) {
   const base = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(
@@ -138,6 +139,8 @@ export default async function BlogArticlePage({
             </ReactMarkdown>
           </div>
         </div>
+
+        <LeadMagnetCTA />
 
         {relatedArticles.length > 0 ? (
           <section style={relatedSection}>

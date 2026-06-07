@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
     const { email, leadMagnetId } = await req.json()
 
     if (!email || !leadMagnetId) {
       return NextResponse.json(
-        { ok: false, error: "Email and leadMagnetId are required" },
+        { ok: false, error: "Missing email or leadMagnetId" },
         { status: 400 }
       )
     }
@@ -23,13 +23,13 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const normalizedEmail = email.toLowerCase().trim()
-
     const subscriber = await prisma.subscriber.upsert({
-      where: { email: normalizedEmail },
-      update: { status: "active" },
+      where: { email },
+      update: {
+        status: "active",
+      },
       create: {
-        email: normalizedEmail,
+        email,
         status: "active",
       },
     })
@@ -37,8 +37,12 @@ export async function POST(req: NextRequest) {
     const updatedLeadMagnet = await prisma.leadMagnet.update({
       where: { id: leadMagnetId },
       data: {
-        subscribers: { increment: 1 },
-        downloads: { increment: 1 },
+        downloads: {
+          increment: 1,
+        },
+        subscribers: {
+          increment: 1,
+        },
       },
     })
 
