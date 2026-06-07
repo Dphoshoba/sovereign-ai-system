@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { randomUUID } from "crypto"
+import { getOpenAI } from "@/lib/ai/openai"
 
 function createSlug(title: string) {
   const base = title
@@ -42,14 +43,52 @@ export async function GET() {
       Object.entries(categoryCounts).sort((a, b) => a[1] - b[1])[0]?.[0] ||
       "ai-tools"
 
-    const title = `Weekly Content Plan: ${lowestCategory}`
+    const completion = await getOpenAI().chat.completions.create({
+      model: "gpt-4o-mini",
+      temperature: 0.2,
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a practical content strategist for Echoes & Visions. Return valid JSON only. Do not invent statistics, quotes, companies, or facts.",
+        },
+        {
+          role: "user",
+          content: `
+Create one useful article idea for this underrepresented category:
+
+Category:
+${lowestCategory}
+
+Return exactly:
+
+{
+  "title": "...",
+  "excerpt": "...",
+  "reasoning": "..."
+}
+          `,
+        },
+      ],
+    })
+
+    const raw = completion.choices[0]?.message?.content || "{}"
+
+    const idea = JSON.parse(
+      raw.replace(/```json|```/g, "").trim()
+    )
+
+    const title =
+      idea.title || `Weekly Content Plan: ${lowestCategory}`
 
     const draft = await prisma.article.create({
       data: {
         title,
         slug: createSlug(title),
         category: lowestCategory,
-        excerpt: "Automatically created by the weekly planner.",
+        excerpt:
+          idea.excerpt ||
+          "Automatically created by the weekly planner.",
         content: "",
         status: "draft",
       },
@@ -59,6 +98,7 @@ export async function GET() {
       ok: true,
       draftCreated: true,
       categoryCounts,
+      idea,
       draft,
     })
   } catch (error) {
