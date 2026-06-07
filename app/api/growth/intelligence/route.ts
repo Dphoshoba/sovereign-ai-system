@@ -142,7 +142,10 @@ For momentum use one of: Establishing Baseline, Growing, Stable, Declining, Insu
     const parsed = JSON.parse(cleaned)
 
     intelligence = {
-      growthScore: Number(parsed.growthScore ?? intelligence.growthScore),
+      growthScore: Math.max(
+        Number(parsed.growthScore ?? intelligence.growthScore),
+        metrics.totalSubscribers > 0 ? 35 : 10
+      ),
       status: typeof parsed.status === "string" ? parsed.status : intelligence.status,
       momentum:
         typeof parsed.momentum === "string"

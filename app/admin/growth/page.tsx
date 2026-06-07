@@ -24,23 +24,22 @@ async function getGrowthIntelligence() {
   })
 
   if (!response.ok) {
-    throw new Error("Failed to load growth intelligence")
+    return null
   }
 
   return response.json()
 }
 
 export default async function GrowthPage() {
-  const [data, intelligenceData, leadMagnets] = await Promise.all([
-    getGrowthData(),
-    getGrowthIntelligence(),
-    prisma.leadMagnet.findMany({
-      orderBy: { createdAt: "desc" },
-    }),
-  ])
-
+  const data = await getGrowthData()
   const metrics = data.metrics
-  const intelligence = intelligenceData.intelligence
+
+  const intelligenceData = await getGrowthIntelligence()
+  const intelligence = intelligenceData?.intelligence
+
+  const leadMagnets = await prisma.leadMagnet.findMany({
+    orderBy: { createdAt: "desc" },
+  })
 
   const totalDownloads = leadMagnets.reduce(
     (sum, magnet) => sum + magnet.downloads,
@@ -66,72 +65,55 @@ export default async function GrowthPage() {
         <StatCard label="Growth Rate" value={`${metrics.growthRate}%`} />
       </div>
 
-      <section style={intelligenceStyle}>
-        <h2>Growth Intelligence</h2>
-        <hr style={dividerStyle} />
+      {intelligence && (
+        <section style={sectionStyle}>
+          <h2>Growth Intelligence</h2>
 
-        <p style={scoreStyle}>
-          Growth Score: {intelligence.growthScore}/100
-        </p>
+          <div style={cardStyle}>
+            <p>
+              <strong>Growth Score:</strong> {intelligence.growthScore}/100
+            </p>
 
-        <p>
-          <strong>Status:</strong>
-          <br />
-          {intelligence.status}
-        </p>
+            <p>
+              <strong>Status:</strong> {intelligence.status}
+            </p>
 
-        <p>
-          <strong>Momentum:</strong>
-          <br />
-          {intelligence.momentum}
-        </p>
+            <p>
+              <strong>Momentum:</strong> {intelligence.momentum}
+            </p>
 
-        {intelligence.summary && <p>{intelligence.summary}</p>}
+            <p>{intelligence.summary}</p>
 
-        {intelligence.strengths?.length > 0 && (
-          <>
             <h3>Strengths</h3>
             <ul>
               {intelligence.strengths.map((item: string, index: number) => (
                 <li key={index}>{item}</li>
               ))}
             </ul>
-          </>
-        )}
 
-        {intelligence.risks?.length > 0 && (
-          <>
             <h3>Risks</h3>
             <ul>
               {intelligence.risks.map((item: string, index: number) => (
                 <li key={index}>{item}</li>
               ))}
             </ul>
-          </>
-        )}
 
-        {intelligence.opportunities?.length > 0 && (
-          <>
             <h3>Opportunities</h3>
             <ul>
               {intelligence.opportunities.map((item: string, index: number) => (
                 <li key={index}>{item}</li>
               ))}
             </ul>
-          </>
-        )}
 
-        {intelligence.recommendations?.length > 0 && (
-          <>
             <h3>Recommendations</h3>
             <ul>
               {intelligence.recommendations.map((item: string, index: number) => (
                 <li key={index}>{item}</li>
               ))}
             </ul>
-          </>
-        )}
-      </section>
+          </div>
+        </section>
+      )}
 
       <section style={sectionStyle}>
         <h2>Lead Magnet Performance</h2>
@@ -203,25 +185,6 @@ const statCardStyle: React.CSSProperties = {
 
 const sectionStyle: React.CSSProperties = {
   marginTop: "32px",
-}
-
-const intelligenceStyle: React.CSSProperties = {
-  marginTop: "32px",
-  border: "1px solid #ddd",
-  borderRadius: "14px",
-  padding: "24px",
-}
-
-const dividerStyle: React.CSSProperties = {
-  border: "none",
-  borderTop: "1px solid #ddd",
-  margin: "16px 0",
-}
-
-const scoreStyle: React.CSSProperties = {
-  fontSize: "24px",
-  fontWeight: "bold",
-  marginBottom: "16px",
 }
 
 const cardStyle: React.CSSProperties = {
