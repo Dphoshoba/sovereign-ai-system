@@ -3619,6 +3619,20 @@ model Subscriber {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model LeadMagnet {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String
+  fileUrl     String?
+  status      String   @default("active")
+  downloads   Int      @default(0)
+  subscribers Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model MonthlySnapshot {
   id                String   @id @default(cuid())
 

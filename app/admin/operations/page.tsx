@@ -54,6 +54,8 @@ export default async function OperationsPage() {
           <Link href="/admin/scheduled" style={buttonStyle}>Scheduled</Link>
           <Link href="/admin/reports" style={buttonStyle}>Reports</Link>
           <Link href="/admin/analytics" style={buttonStyle}>Analytics</Link>
+          <Link href="/admin/growth" style={buttonStyle}>Growth</Link>
+          <Link href="/admin/lead-magnets" style={buttonStyle}>Lead Magnets</Link>
         </div>
       </section>
 
