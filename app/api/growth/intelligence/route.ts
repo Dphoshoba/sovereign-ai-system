@@ -90,6 +90,43 @@ export async function GET() {
     orderBy: { createdAt: "asc" },
   })
 
+  const leadMagnets = await prisma.leadMagnet.findMany({
+    orderBy: {
+      subscribers: "desc",
+    },
+  })
+
+  const leadSources = await prisma.subscriber.groupBy({
+    by: ["source"],
+    _count: {
+      _all: true,
+    },
+  })
+
+  const leadMagnetSummary = {
+    totalLeadMagnets: leadMagnets.length,
+    totalDownloads: leadMagnets.reduce(
+      (sum, item) => sum + item.downloads,
+      0
+    ),
+    totalLeadMagnetSubscribers: leadMagnets.reduce(
+      (sum, item) => sum + item.subscribers,
+      0
+    ),
+    topLeadMagnet: leadMagnets[0]
+      ? {
+          title: leadMagnets[0].title,
+          subscribers: leadMagnets[0].subscribers,
+          downloads: leadMagnets[0].downloads,
+        }
+      : null,
+  }
+
+  const leadSourceSummary = leadSources.map((row) => ({
+    source: row.source || "unknown",
+    subscribers: row._count._all,
+  }))
+
   const metrics = computeMetrics(subscribers)
   let intelligence = buildFallbackIntelligence(metrics)
 
@@ -110,6 +147,12 @@ Analyze these subscriber metrics and return JSON.
 
 Metrics:
 ${JSON.stringify(metrics, null, 2)}
+
+Lead Magnet Performance:
+${JSON.stringify(leadMagnetSummary, null, 2)}
+
+Lead Sources:
+${JSON.stringify(leadSourceSummary, null, 2)}
 
 Scoring guidance:
 - 0-30 = very early audience
@@ -173,6 +216,8 @@ For momentum use one of: Establishing Baseline, Growing, Stable, Declining, Insu
   return NextResponse.json({
     ok: true,
     metrics,
+    leadMagnetSummary,
+    leadSourceSummary,
     intelligence,
   })
 }
