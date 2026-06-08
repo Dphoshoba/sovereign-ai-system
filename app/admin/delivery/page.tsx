@@ -1,3 +1,5 @@
+import Link from "next/link"
+
 async function getDeliverySummary() {
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
@@ -46,6 +48,9 @@ export default async function DeliveryPage() {
           Overview of project health, task progress, and delivery value across
           all Echoes & Visions clients.
         </p>
+        <Link href="/admin/delivery-intelligence" style={linkStyle}>
+          Delivery Intelligence
+        </Link>
       </section>
 
       <section style={metricsGrid}>
@@ -148,6 +153,13 @@ const eyebrowStyle: React.CSSProperties = {
   letterSpacing: 2,
   color: "var(--muted)",
   margin: 0,
+}
+
+const linkStyle: React.CSSProperties = {
+  display: "inline-block",
+  marginTop: 16,
+  color: "var(--button-foreground)",
+  fontWeight: 600,
 }
 
 const metricsGrid: React.CSSProperties = {
