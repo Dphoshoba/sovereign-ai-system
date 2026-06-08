@@ -39,10 +39,11 @@ const readinessLevels = [
 
 export default function CreatorLeadsDashboard() {
   const [leads, setLeads] = useState<CreatorLead[]>([])
-  const [selectedLead, setSelectedLead] = useState<CreatorLead | null>(null)
+  const [selectedLead, setSelectedLead] = useState<any | null>(null)
   const [loading, setLoading] = useState(false)
   const [statusFilter, setStatusFilter] = useState("all")
   const [search, setSearch] = useState("")
+  const [leadIntelligence, setLeadIntelligence] = useState<any[]>([])
 
   async function loadLeads() {
     const response = await fetch("/api/creator-leads")
@@ -50,6 +51,15 @@ export default function CreatorLeadsDashboard() {
 
     if (result.ok) {
       setLeads(result.leads)
+    }
+  }
+
+  async function loadLeadIntelligence() {
+    const response = await fetch("/api/creator-leads/intelligence")
+    const result = await response.json()
+
+    if (result.ok) {
+      setLeadIntelligence(result.intelligence)
     }
   }
 
@@ -76,11 +86,13 @@ export default function CreatorLeadsDashboard() {
     }
 
     await loadLeads()
+    await loadLeadIntelligence()
     setSelectedLead(result.lead)
   }
 
   useEffect(() => {
     loadLeads()
+    loadLeadIntelligence()
   }, [])
 
   const filteredLeads = useMemo(() => {
@@ -105,6 +117,10 @@ export default function CreatorLeadsDashboard() {
     (lead) => lead.leadScore >= 75 || ["ready", "urgent"].includes(lead.readiness)
   ).length
 
+  const selectedLeadIntelligence = leadIntelligence.find(
+    (item) => String(item.id) === String(selectedLead?.id)
+  )
+
   return (
     <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
       <section style={heroStyle}>
@@ -122,12 +138,47 @@ export default function CreatorLeadsDashboard() {
       </section>
 
       <section style={metricsGrid}>
-        <Metric label="Total Leads" value={leads.length.toString()} />
-        <Metric label="Hot Leads" value={hotLeads.toString()} />
-        <Metric
-          label="Projected Value"
-          value={`AUD ${totalProjected.toLocaleString("en-AU")}`}
-        />
+        <div style={metricCard}>
+          <p style={metaStyle}>Total Leads</p>
+          <div
+            style={{
+              fontSize: "48px",
+              fontWeight: 800,
+              color: "#ffffff",
+              marginTop: "12px",
+            }}
+          >
+            {leads.length}
+          </div>
+        </div>
+
+        <div style={metricCard}>
+          <p style={metaStyle}>Hot Leads</p>
+          <div
+            style={{
+              fontSize: "48px",
+              fontWeight: 800,
+              color: "#22c55e",
+              marginTop: "12px",
+            }}
+          >
+            {hotLeads}
+          </div>
+        </div>
+
+        <div style={metricCard}>
+          <p style={metaStyle}>Projected Value</p>
+          <div
+            style={{
+              fontSize: "48px",
+              fontWeight: 800,
+              color: "#60a5fa",
+              marginTop: "12px",
+            }}
+          >
+            AUD {totalProjected.toLocaleString("en-AU")}
+          </div>
+        </div>
       </section>
 
       <section style={toolbarStyle}>
@@ -151,7 +202,14 @@ export default function CreatorLeadsDashboard() {
           ))}
         </select>
 
-        <button onClick={loadLeads} style={buttonStyle}>
+        <button
+          type="button"
+          onClick={() => {
+            loadLeads()
+            loadLeadIntelligence()
+          }}
+          style={buttonStyle}
+        >
           Refresh
         </button>
       </section>
@@ -161,35 +219,44 @@ export default function CreatorLeadsDashboard() {
           <h2>Leads</h2>
 
           <div style={{ display: "grid", gap: 14 }}>
-            {filteredLeads.map((lead) => (
-              <button
-                key={lead.id}
-                onClick={() => setSelectedLead(lead)}
-                style={{
-                  ...leadCard,
-                  border:
-                    selectedLead?.id === lead.id
+            {filteredLeads.map((lead) => {
+              const isSelected = selectedLead?.id === lead.id
+
+              return (
+                <button
+                  key={lead.id}
+                  type="button"
+                  onClick={() => setSelectedLead(lead)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") setSelectedLead(lead)
+                  }}
+                  style={{
+                    ...leadCard,
+                    cursor: "pointer",
+                    border: isSelected
                       ? "2px solid #4f46e5"
                       : "1px solid #ddd",
-                }}
-              >
-                <p style={metaStyle}>
-                  {lead.status} · Score {lead.leadScore}
-                </p>
+                    background: isSelected ? "#eef2ff" : "#fff",
+                  }}
+                >
+                  <p style={metaStyle}>
+                    {lead.status} · Score {lead.leadScore}
+                  </p>
 
-                <h3>{lead.name}</h3>
-                <p>{lead.email}</p>
+                  <p style={leadNameStyle}>{lead.name}</p>
+                  <p>{lead.email}</p>
 
-                <p style={{ color: "#555" }}>
-                  {lead.creatorType || "No creator type"} ·{" "}
-                  {lead.readiness || "unknown"}
-                </p>
+                  <p style={{ color: "#555" }}>
+                    {lead.creatorType || "No creator type"} ·{" "}
+                    {lead.readiness || "unknown"}
+                  </p>
 
-                <p style={{ color: "#777" }}>
-                  {new Date(lead.createdAt).toLocaleString("en-AU")}
-                </p>
-              </button>
-            ))}
+                  <p style={{ color: "#777" }}>
+                    {new Date(lead.createdAt).toLocaleString("en-AU")}
+                  </p>
+                </button>
+              )
+            })}
           </div>
         </section>
 
@@ -197,10 +264,92 @@ export default function CreatorLeadsDashboard() {
           <h2>Lead Intelligence</h2>
 
           {selectedLead ? (
-            <div style={editorCard}>
-              <p style={metaStyle}>{selectedLead.email}</p>
+            <div key={selectedLead.id} style={editorCard}>
+              <h3 style={{ marginTop: 0 }}>{selectedLead.name}</h3>
+              <p style={{ margin: "8px 0", color: "#333" }}>{selectedLead.email}</p>
 
-              <h3>{selectedLead.name}</h3>
+              <div style={leadSummaryStyle}>
+                <LeadDetailRow label="Status" value={selectedLead.status} />
+                <LeadDetailRow
+                  label="Lead Score"
+                  value={selectedLead.leadScore}
+                />
+                <LeadDetailRow label="Readiness" value={selectedLead.readiness} />
+                <LeadDetailRow
+                  label="Creator Type"
+                  value={selectedLead.creatorType || "Not set"}
+                />
+                <LeadDetailRow
+                  label="Niche"
+                  value={selectedLead.niche || "Not set"}
+                />
+                <LeadDetailRow
+                  label="Notes"
+                  value={selectedLead.notes || "No notes yet"}
+                />
+              </div>
+
+              {selectedLeadIntelligence && (
+                <div style={intelligencePanelStyle}>
+                  <IntelligenceRow
+                    label="Priority"
+                    value={selectedLeadIntelligence.priority}
+                    valueStyle={{
+                      color:
+                        selectedLeadIntelligence.priority === "Hot"
+                          ? "#22c55e"
+                          : "#ffffff",
+                      fontWeight: 800,
+                      fontSize: "20px",
+                    }}
+                  />
+                  <IntelligenceRow
+                    label="Score"
+                    value={selectedLeadIntelligence.score}
+                    valueStyle={{
+                      color: "#ffffff",
+                      fontWeight: 800,
+                      fontSize: "20px",
+                    }}
+                  />
+                  <IntelligenceRow
+                    label="Estimated Value"
+                    value={`AUD ${selectedLeadIntelligence.estimatedValue.toLocaleString("en-AU")}`}
+                    valueStyle={{
+                      color: "#22c55e",
+                      fontWeight: 800,
+                      fontSize: "20px",
+                    }}
+                  />
+                  <IntelligenceRow
+                    label="Recommendation"
+                    value={selectedLeadIntelligence.recommendation}
+                    valueStyle={{
+                      color: "#ffffff",
+                      fontWeight: 700,
+                      fontSize: "16px",
+                    }}
+                  />
+                  <IntelligenceRow
+                    label="Readiness"
+                    value={selectedLeadIntelligence.readiness || "unknown"}
+                    valueStyle={{
+                      color: "#ffffff",
+                      fontWeight: 700,
+                      fontSize: "16px",
+                    }}
+                  />
+                  <IntelligenceRow
+                    label="Creator Type"
+                    value={selectedLeadIntelligence.creatorType || "Not set"}
+                    valueStyle={{
+                      color: "#ffffff",
+                      fontWeight: 700,
+                      fontSize: "16px",
+                    }}
+                  />
+                </div>
+              )}
 
               <label>
                 Status
@@ -319,7 +468,12 @@ export default function CreatorLeadsDashboard() {
                 />
               </label>
 
-              <button disabled={loading} onClick={updateLead} style={buttonStyle}>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={updateLead}
+                style={buttonStyle}
+              >
                 {loading ? "Saving..." : "Save Lead Intelligence"}
               </button>
             </div>
@@ -334,11 +488,34 @@ export default function CreatorLeadsDashboard() {
   )
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function LeadDetailRow({
+  label,
+  value,
+}: {
+  label: string
+  value: string | number
+}) {
   return (
-    <div style={metricCard}>
-      <p style={metaStyle}>{label}</p>
-      <h2>{value}</h2>
+    <div style={{ marginBottom: "10px" }}>
+      <p style={intelligenceLabelStyle}>{label}</p>
+      <p style={{ margin: 0, color: "#111", fontWeight: 600 }}>{value}</p>
+    </div>
+  )
+}
+
+function IntelligenceRow({
+  label,
+  value,
+  valueStyle,
+}: {
+  label: string
+  value: string | number
+  valueStyle: React.CSSProperties
+}) {
+  return (
+    <div style={{ marginBottom: "14px" }}>
+      <p style={intelligenceLabelStyle}>{label}</p>
+      <p style={{ margin: 0, ...valueStyle }}>{value}</p>
     </div>
   )
 }
@@ -365,8 +542,8 @@ const metricsGrid: React.CSSProperties = {
 }
 
 const metricCard: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "#111",
+  border: "1px solid #333",
   borderRadius: 18,
   padding: 24,
 }
@@ -406,11 +583,29 @@ const buttonStyle: React.CSSProperties = {
 }
 
 const leadCard: React.CSSProperties = {
+  display: "block",
+  width: "100%",
   textAlign: "left",
-  background: "#fff",
   borderRadius: 18,
   padding: 22,
   cursor: "pointer",
+  userSelect: "none",
+  font: "inherit",
+  color: "inherit",
+}
+
+const leadNameStyle: React.CSSProperties = {
+  fontSize: 20,
+  fontWeight: 700,
+  margin: "8px 0",
+}
+
+const leadSummaryStyle: React.CSSProperties = {
+  background: "#f8fafc",
+  border: "1px solid #e5e7eb",
+  borderRadius: 12,
+  padding: 16,
+  marginBottom: 20,
 }
 
 const editorCard: React.CSSProperties = {
@@ -420,10 +615,25 @@ const editorCard: React.CSSProperties = {
   padding: 24,
 }
 
+const intelligencePanelStyle: React.CSSProperties = {
+  background: "#111",
+  borderRadius: 14,
+  padding: "20px",
+  marginBottom: "20px",
+}
+
+const intelligenceLabelStyle: React.CSSProperties = {
+  textTransform: "uppercase",
+  letterSpacing: 1,
+  color: "#888",
+  fontSize: 12,
+  margin: "0 0 4px 0",
+}
+
 const metaStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1,
-  color: "#777",
+  color: "#aaa",
   fontSize: 13,
   margin: 0,
 }
