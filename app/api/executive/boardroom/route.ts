@@ -6,6 +6,7 @@ import {
   type BoardroomAgentReport,
   type BoardroomSession,
 } from "@/lib/executive/boardroom"
+import { saveBoardroomKeyDecisions } from "@/lib/executive/decision-memory"
 
 type StoredBoardroomDecisions = {
   agents: BoardroomAgentReport[]
@@ -106,9 +107,15 @@ export async function POST(request: Request) {
       },
     })
 
+    const decisionsCreated = await saveBoardroomKeyDecisions(
+      record.id,
+      result.keyDecisions
+    )
+
     return NextResponse.json({
       ok: true,
       session: serializeSession(record),
+      decisionsCreated,
     })
   } catch (error) {
     return NextResponse.json(

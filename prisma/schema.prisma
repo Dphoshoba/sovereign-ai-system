@@ -1269,6 +1269,23 @@ model ExecutiveBoardroomSession {
   @@index([createdAt])
 }
 
+model ExecutiveDecision {
+  id            String   @id @default(cuid())
+  boardroomId   String?
+  title         String
+  description   String?
+  category      String?
+  status        String   @default("proposed")
+  outcome       String?
+  effectiveness Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status])
+  @@index([category])
+  @@index([createdAt])
+}
+
 model StrategicDecisionLog {
   id          String   @id @default(cuid())
   title       String

@@ -170,6 +170,9 @@ export default function BoardroomPage() {
           <Link href="/admin/operations" style={secondaryLinkStyle}>
             Operations Center
           </Link>
+          <Link href="/admin/decision-memory" style={secondaryLinkStyle}>
+            Decision Memory
+          </Link>
         </div>
       </section>
 
