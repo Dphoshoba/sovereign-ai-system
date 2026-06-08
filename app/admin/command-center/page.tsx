@@ -67,6 +67,9 @@ export default function CommandCenterPage() {
           learning, and boardroom systems.
         </p>
         <div style={actionRowStyle}>
+          <Link href="/admin/runtime" style={primaryLinkStyle}>
+            Sovereign Runtime
+          </Link>
           <Link href="/admin/boardroom" style={secondaryLinkStyle}>
             Boardroom
           </Link>
@@ -387,6 +390,13 @@ const secondaryLinkStyle: React.CSSProperties = {
   color: "var(--button-foreground)",
   fontWeight: 600,
   textDecoration: "none",
+}
+
+const primaryLinkStyle: React.CSSProperties = {
+  ...secondaryLinkStyle,
+  background: "var(--button-background)",
+  border: "none",
+  fontWeight: 700,
 }
 
 const metricsGrid: React.CSSProperties = {
