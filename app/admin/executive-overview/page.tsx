@@ -107,6 +107,9 @@ export default function ExecutiveOverviewPage() {
         <Link href="/admin/daily-briefing" style={linkStyle}>
           Daily Briefing
         </Link>
+        <Link href="/admin/weekly-review" style={linkStyle}>
+          Weekly Review
+        </Link>
       </section>
 
       {loading && <p style={{ marginTop: 28 }}>Loading overview...</p>}

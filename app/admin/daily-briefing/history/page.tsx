@@ -127,9 +127,14 @@ export default function DailyBriefingHistoryPage() {
         <p style={{ color: "var(--hero-muted)", maxWidth: 820, lineHeight: 1.7 }}>
           Review archived daily briefings and track business health over time.
         </p>
-        <Link href="/admin/daily-briefing" style={linkStyle}>
-          ← Back to Daily Briefing
-        </Link>
+        <div style={linkRowStyle}>
+          <Link href="/admin/daily-briefing" style={linkStyle}>
+            ← Back to Daily Briefing
+          </Link>
+          <Link href="/admin/weekly-review" style={linkStyle}>
+            Weekly Review
+          </Link>
+        </div>
       </section>
 
       {loading && <p style={{ marginTop: 28 }}>Loading history...</p>}
@@ -283,9 +288,14 @@ const eyebrowStyle: React.CSSProperties = {
   margin: 0,
 }
 
-const linkStyle: React.CSSProperties = {
-  display: "inline-block",
+const linkRowStyle: React.CSSProperties = {
+  display: "flex",
+  gap: 20,
+  flexWrap: "wrap",
   marginTop: 16,
+}
+
+const linkStyle: React.CSSProperties = {
   color: "var(--button-foreground)",
   fontWeight: 600,
 }

@@ -138,6 +138,9 @@ export default function DailyBriefingPage() {
           <Link href="/admin/daily-briefing/history" style={secondaryLinkStyle}>
             View History
           </Link>
+          <Link href="/admin/weekly-review" style={secondaryLinkStyle}>
+            Weekly Review
+          </Link>
         </div>
       </section>
 
