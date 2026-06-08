@@ -1,337 +1,498 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import {
-  ExecutiveCard,
-  ExecutiveGrid,
-  MetricCard,
-  PageShell,
-  StatusBadge,
-} from "@/components/executive-ui"
+import { useCallback, useEffect, useState } from "react"
+import Link from "next/link"
+
+type KnowledgeNodeRecord = {
+  id: string
+  entityType: string
+  entityId: string
+  title: string
+  summary: string | null
+  category: string | null
+  createdAt: string
+}
+
+type KnowledgeEdgeRecord = {
+  id: string
+  fromNodeId: string
+  toNodeId: string
+  relation: string
+  weight: number
+  createdAt: string
+}
+
+type KnowledgeGraphSummary = {
+  totalNodes: number
+  totalEdges: number
+  nodeCountsByType: Record<string, number>
+  edgeCountsByRelation: Record<string, number>
+  recentNodes: KnowledgeNodeRecord[]
+  recentEdges: KnowledgeEdgeRecord[]
+}
+
+type KnowledgeSearchEdge = KnowledgeEdgeRecord & {
+  direction: "outgoing" | "incoming"
+  connectedNodeId: string
+  connectedNodeTitle: string
+  connectedNodeType: string
+}
+
+type KnowledgeSearchResult = {
+  node: KnowledgeNodeRecord
+  connectedEdges: KnowledgeSearchEdge[]
+}
 
 export default function KnowledgeGraphPage() {
-  const [data, setData] = useState<any>(null)
-  const [loading, setLoading] = useState(false)
-  const [question, setQuestion] = useState(
-    "What is the most important institutional memory right now?"
+  const [summary, setSummary] = useState<KnowledgeGraphSummary | null>(null)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchResults, setSearchResults] = useState<KnowledgeSearchResult[]>(
+    []
   )
-  const [queryResult, setQueryResult] = useState<any>(null)
-  const [memoryTitle, setMemoryTitle] = useState("")
-  const [memoryContent, setMemoryContent] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
+  const [searching, setSearching] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  async function loadData() {
-    const res = await fetch("/api/knowledge-graph")
-    const result = await res.json()
-
-    if (result.ok) setData(result)
-  }
-
-async function runSynthesis() {
-  setLoading(true)
-
-  try {
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 120000)
-
-    const res = await fetch("/api/knowledge-graph", {
-      method: "POST",
-      signal: controller.signal,
-    })
-
-    clearTimeout(timeout)
-
-    const result = await res.json()
-
-    if (!result.ok) {
-      alert(result.error || "Knowledge synthesis failed")
-      return
-    }
-
-    await loadData()
-  } catch (error) {
-    alert(
-      error instanceof Error
-        ? error.message
-        : "Knowledge synthesis stopped unexpectedly"
-    )
-  } finally {
-    setLoading(false)
-  }
-}
-
-  async function queryMemory() {
-    if (!question.trim()) return
-
+  const loadSummary = useCallback(async () => {
     setLoading(true)
+    setError(null)
 
-    const res = await fetch("/api/knowledge-graph/query", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ question }),
+    const response = await fetch("/api/executive/knowledge-graph", {
+      cache: "no-store",
     })
+    const result = await response.json()
 
-    const result = await res.json()
     setLoading(false)
 
     if (!result.ok) {
-      alert(result.error || "Memory query failed")
+      setError(result.error || "Failed to load knowledge graph")
       return
     }
 
-    setQueryResult(result.result)
-    await loadData()
-  }
-
-async function addMemory() {
-  if (!memoryTitle.trim() || !memoryContent.trim()) return
-
-  setLoading(true)
-
-  try {
-    const res = await fetch("/api/knowledge-graph/record", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title: memoryTitle,
-        content: memoryContent,
-        recordType: "manual-memory",
-        importance: 80,
-        tags: ["manual", "institutional-memory"],
-      }),
-    })
-
-    const result = await res.json()
-
-    if (!result.ok) {
-      alert(result.error || "Memory creation failed")
-      return
-    }
-
-    setMemoryTitle("")
-    setMemoryContent("")
-    await loadData()
-  } catch (error) {
-    alert(error instanceof Error ? error.message : "Memory creation failed")
-  } finally {
-    setLoading(false)
-  }
-}
-
-  useEffect(() => {
-    loadData()
+    setSummary(result.summary)
   }, [])
 
-  const records = data?.records || []
-  const indexes = data?.indexes || []
-  const nodes = data?.nodes || []
-  const edges = data?.edges || []
-  const queries = data?.queries || []
-  const latest = data?.runs?.[0]
+  useEffect(() => {
+    loadSummary()
+  }, [loadSummary])
+
+  async function syncGraph() {
+    setSyncing(true)
+    setError(null)
+    setMessage(null)
+
+    const response = await fetch("/api/executive/knowledge-graph", {
+      method: "POST",
+    })
+    const result = await response.json()
+
+    setSyncing(false)
+
+    if (!result.ok) {
+      setError(result.error || "Failed to sync knowledge graph")
+      return
+    }
+
+    setSummary(result.summary)
+    setMessage(
+      `Synced graph: ${result.result.nodesCreated} nodes created, ${result.result.nodesUpdated} updated, ${result.result.edgesCreated} edges created.`
+    )
+  }
+
+  async function runSearch(event?: React.FormEvent) {
+    event?.preventDefault()
+
+    const query = searchQuery.trim()
+
+    if (!query) {
+      setSearchResults([])
+      return
+    }
+
+    setSearching(true)
+    setError(null)
+
+    const response = await fetch(
+      `/api/executive/knowledge-graph/search?q=${encodeURIComponent(query)}`,
+      { cache: "no-store" }
+    )
+    const result = await response.json()
+
+    setSearching(false)
+
+    if (!result.ok) {
+      setError(result.error || "Failed to search knowledge graph")
+      return
+    }
+
+    setSearchResults(result.results ?? [])
+  }
+
+  function formatDate(value: string) {
+    return new Date(value).toLocaleDateString("en-AU", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    })
+  }
+
+  function formatCounts(counts: Record<string, number>) {
+    const entries = Object.entries(counts).sort(
+      (left, right) => right[1] - left[1] || left[0].localeCompare(right[0])
+    )
+
+    if (entries.length === 0) {
+      return null
+    }
+
+    return entries
+  }
 
   return (
-    <PageShell
-      eyebrow="Semantic Memory Fabric"
-      title="Sovereign Knowledge Graph"
-      description="Create tenant-scoped semantic memory, retrieval-ready knowledge records, graph nodes, relationships and institutional intelligence queries."
-    >
-      <ExecutiveGrid min={220}>
-        <MetricCard label="Knowledge Records" value={records.length} />
-        <MetricCard label="Vector Indexes" value={indexes.length} />
-        <MetricCard label="Graph Nodes" value={nodes.length} />
-        <MetricCard label="Graph Edges" value={edges.length} />
-        <MetricCard label="Memory Queries" value={queries.length} />
-        <MetricCard label="Graph Health" value={latest?.graphHealth || 0} />
-      </ExecutiveGrid>
-
-      <div style={{ marginTop: 24 }}>
-        <ExecutiveGrid min={360}>
-          <ExecutiveCard title="Knowledge Graph Runtime" eyebrow="Memory synthesis">
-            <button disabled={loading} onClick={runSynthesis} style={buttonStyle}>
-              {loading ? "Synthesizing..." : "Run Knowledge Graph Synthesis"}
-            </button>
-
-            {latest ? (
-              <div style={cardStyle}>
-                <StatusBadge status={latest.status} />
-                <h3>{latest.title}</h3>
-                <p>{latest.summary}</p>
-                <p style={{ color: "var(--muted)" }}>
-                  Graph {latest.graphHealth}/100 · Memory {latest.memoryHealth}
-                  /100 · Retrieval {latest.retrievalHealth}/100
-                </p>
-                <pre style={preStyle}>{JSON.stringify(latest.findings, null, 2)}</pre>
-              </div>
-            ) : null}
-          </ExecutiveCard>
-
-          <ExecutiveCard title="Add Manual Memory" eyebrow="Institutional memory">
-            <input
-              value={memoryTitle}
-              onChange={(e) => setMemoryTitle(e.target.value)}
-              placeholder="Memory title"
-              style={inputStyle}
-            />
-
-            <textarea
-              value={memoryContent}
-              onChange={(e) => setMemoryContent(e.target.value)}
-              placeholder="Memory content"
-              rows={6}
-              style={inputStyle}
-            />
-
-            <button disabled={loading} onClick={addMemory} style={buttonStyle}>
-              Store Memory
-            </button>
-          </ExecutiveCard>
-        </ExecutiveGrid>
-      </div>
-
-      <div style={{ marginTop: 24 }}>
-        <ExecutiveCard title="Query Semantic Memory" eyebrow="Institutional retrieval">
-          <textarea
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            rows={4}
-            style={inputStyle}
-          />
-
-          <button disabled={loading} onClick={queryMemory} style={buttonStyle}>
-            Query Memory
+    <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
+      <section style={heroStyle}>
+        <p style={eyebrowStyle}>Executive Command</p>
+        <h1 style={{ fontSize: 42, margin: "8px 0" }}>Executive Knowledge Graph</h1>
+        <p style={{ color: "var(--hero-muted)", maxWidth: 820, lineHeight: 1.7 }}>
+          Searchable graph connecting decisions, lessons, goals, initiatives,
+          projects, clients, revenue, and outcomes across the executive stack.
+        </p>
+        <div style={actionRowStyle}>
+          <button
+            type="button"
+            style={primaryButtonStyle}
+            disabled={syncing}
+            onClick={syncGraph}
+          >
+            {syncing ? "Syncing..." : "Sync Knowledge Graph"}
           </button>
+          <Link href="/admin/executive-learning" style={secondaryLinkStyle}>
+            Executive Learning
+          </Link>
+          <Link href="/admin/decision-memory" style={secondaryLinkStyle}>
+            Decision Memory
+          </Link>
+          <Link href="/admin/boardroom" style={secondaryLinkStyle}>
+            Executive Boardroom
+          </Link>
+          <Link href="/admin/operations" style={secondaryLinkStyle}>
+            Operations Center
+          </Link>
+        </div>
+      </section>
 
-          {queryResult ? (
-            <div style={cardStyle}>
-              <h3>Answer</h3>
-              <p style={{ lineHeight: 1.8 }}>{queryResult.answer}</p>
-              <p style={{ color: "var(--muted)" }}>
-                Confidence {Math.round((queryResult.confidence || 0) * 100)}%
-              </p>
+      <section style={{ marginTop: 28 }}>
+        <form onSubmit={runSearch} style={searchFormStyle}>
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search nodes by title, summary, category, or type..."
+            style={searchInputStyle}
+          />
+          <button type="submit" style={primaryButtonStyle} disabled={searching}>
+            {searching ? "Searching..." : "Search"}
+          </button>
+        </form>
+      </section>
 
-              <h4>Reasoning Path</h4>
-              <ul style={{ lineHeight: 1.8 }}>
-                {(queryResult.reasoningPath || []).map((item: string, index: number) => (
-                  <li key={index}>{item}</li>
-                ))}
-              </ul>
+      {message && <p style={successMessageStyle}>{message}</p>}
+      {error && <p style={{ marginTop: 28, color: "#b91c1c" }}>{error}</p>}
 
-              <h4>Matched Nodes</h4>
-              <ul style={{ lineHeight: 1.8 }}>
-                {(queryResult.matchedNodes || []).map((item: string, index: number) => (
-                  <li key={index}>{item}</li>
-                ))}
-              </ul>
+      {loading && <p style={{ marginTop: 28 }}>Loading knowledge graph...</p>}
+
+      {!loading && summary && (
+        <>
+          <section style={metricsGrid}>
+            <div style={metricCard}>
+              <p style={metaStyle}>Total Nodes</p>
+              <h2>{summary.totalNodes}</h2>
             </div>
-          ) : null}
-        </ExecutiveCard>
-      </div>
+            <div style={metricCard}>
+              <p style={metaStyle}>Total Edges</p>
+              <h2>{summary.totalEdges}</h2>
+            </div>
+            <div style={metricCard}>
+              <p style={metaStyle}>Entity Types</p>
+              <h2>{Object.keys(summary.nodeCountsByType).length}</h2>
+            </div>
+            <div style={metricCard}>
+              <p style={metaStyle}>Relation Types</p>
+              <h2>{Object.keys(summary.edgeCountsByRelation).length}</h2>
+            </div>
+          </section>
 
-      <div style={{ marginTop: 24 }}>
-        <ExecutiveGrid min={360}>
-          <ExecutiveCard title="Knowledge Records" eyebrow="Semantic memory">
-            <div style={{ display: "grid", gap: 12 }}>
-              {records.map((record: any) => (
-                <div key={record.id} style={cardStyle}>
-                  <StatusBadge status={record.recordType} />
-                  <h3>{record.title}</h3>
-                  <p>{record.content}</p>
-                  <p style={{ color: "var(--muted)" }}>
-                    {record.sourceLayer || "manual"} · Importance{" "}
-                    {record.importance}/100
-                  </p>
+          <section style={panelGridStyle}>
+            <div style={panelStyle}>
+              <h2 style={sectionHeadingStyle}>Node Counts by Type</h2>
+              {formatCounts(summary.nodeCountsByType) ? (
+                <ul style={listStyle}>
+                  {formatCounts(summary.nodeCountsByType)?.map(([type, count]) => (
+                    <li key={type}>
+                      <strong>{type}</strong> — {count}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p style={mutedText}>No nodes synced yet.</p>
+              )}
+            </div>
+
+            <div style={panelStyle}>
+              <h2 style={sectionHeadingStyle}>Edge Counts by Relation</h2>
+              {formatCounts(summary.edgeCountsByRelation) ? (
+                <ul style={listStyle}>
+                  {formatCounts(summary.edgeCountsByRelation)?.map(
+                    ([relation, count]) => (
+                      <li key={relation}>
+                        <strong>{relation}</strong> — {count}
+                      </li>
+                    )
+                  )}
+                </ul>
+              ) : (
+                <p style={mutedText}>No edges synced yet.</p>
+              )}
+            </div>
+          </section>
+
+          <section style={panelGridStyle}>
+            <div style={panelStyle}>
+              <h2 style={sectionHeadingStyle}>Recent Nodes</h2>
+              {summary.recentNodes.length === 0 ? (
+                <p style={mutedText}>No nodes yet. Run a sync to build the graph.</p>
+              ) : (
+                <ul style={listStyle}>
+                  {summary.recentNodes.map((node) => (
+                    <li key={node.id}>
+                      <strong>{node.title}</strong> ({node.entityType})
+                      {node.category && ` — ${node.category}`}
+                      <p style={itemDetailStyle}>
+                        {node.summary ?? "No summary recorded."}
+                      </p>
+                      <p style={itemMetaStyle}>{formatDate(node.createdAt)}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div style={panelStyle}>
+              <h2 style={sectionHeadingStyle}>Recent Edges</h2>
+              {summary.recentEdges.length === 0 ? (
+                <p style={mutedText}>No edges yet. Run a sync to build the graph.</p>
+              ) : (
+                <ul style={listStyle}>
+                  {summary.recentEdges.map((edge) => (
+                    <li key={edge.id}>
+                      <strong>{edge.relation}</strong>
+                      <p style={itemDetailStyle}>
+                        {edge.fromNodeId.slice(0, 8)}... →{" "}
+                        {edge.toNodeId.slice(0, 8)}...
+                      </p>
+                      <p style={itemMetaStyle}>{formatDate(edge.createdAt)}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </section>
+        </>
+      )}
+
+      {searchResults.length > 0 && (
+        <section style={{ marginTop: 28 }}>
+          <h2>Search Results</h2>
+          <div style={resultsGridStyle}>
+            {searchResults.map((result) => (
+              <article key={result.node.id} style={resultCardStyle}>
+                <h3 style={resultTitleStyle}>{result.node.title}</h3>
+                <p style={itemDetailStyle}>
+                  <strong>Entity type:</strong> {result.node.entityType}
+                </p>
+                <p style={itemDetailStyle}>
+                  <strong>Category:</strong> {result.node.category ?? "—"}
+                </p>
+                <p style={itemDetailStyle}>
+                  <strong>Summary:</strong>{" "}
+                  {result.node.summary ?? "No summary recorded."}
+                </p>
+
+                <div style={{ marginTop: 12 }}>
+                  <strong>Connected Relations</strong>
+                  {result.connectedEdges.length === 0 ? (
+                    <p style={mutedText}>No connected edges found.</p>
+                  ) : (
+                    <ul style={listStyle}>
+                      {result.connectedEdges.map((edge) => (
+                        <li key={edge.id}>
+                          {edge.direction === "outgoing" ? "→" : "←"}{" "}
+                          <strong>{edge.relation}</strong> —{" "}
+                          {edge.connectedNodeTitle} ({edge.connectedNodeType})
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
-              ))}
-            </div>
-          </ExecutiveCard>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
-          <ExecutiveCard title="Graph Nodes" eyebrow="Knowledge entities">
-            <div style={{ display: "grid", gap: 12 }}>
-              {nodes.map((node: any) => (
-                <div key={node.id} style={cardStyle}>
-                  <StatusBadge status={node.nodeType} />
-                  <h3>{node.name}</h3>
-                  <p>{node.summary}</p>
-                  <p style={{ color: "var(--muted)" }}>
-                    Importance {node.importance}/100
-                  </p>
-                </div>
-              ))}
-            </div>
-          </ExecutiveCard>
-        </ExecutiveGrid>
-      </div>
-
-      <div style={{ marginTop: 24 }}>
-        <ExecutiveGrid min={360}>
-          <ExecutiveCard title="Graph Edges" eyebrow="Knowledge relationships">
-            <div style={{ display: "grid", gap: 12 }}>
-              {edges.map((edge: any) => (
-                <div key={edge.id} style={cardStyle}>
-                  <StatusBadge status={edge.relationType} />
-                  <p>{edge.summary}</p>
-                  <p style={{ color: "var(--muted)" }}>
-                    Strength {Math.round((edge.strength || 0) * 100)}%
-                  </p>
-                </div>
-              ))}
-            </div>
-          </ExecutiveCard>
-
-          <ExecutiveCard title="Vector Indexes" eyebrow="Retrieval scaffold">
-            <div style={{ display: "grid", gap: 12 }}>
-              {indexes.map((index: any) => (
-                <div key={index.id} style={cardStyle}>
-                  <StatusBadge status={index.status} />
-                  <h3>{index.embeddingModel}</h3>
-                  <p>{index.contentPreview}</p>
-                  <p style={{ color: "var(--muted)" }}>
-                    Dimensions {index.dimensions} · Hash{" "}
-                    {index.vectorHash?.slice(0, 14)}...
-                  </p>
-                </div>
-              ))}
-            </div>
-          </ExecutiveCard>
-        </ExecutiveGrid>
-      </div>
-    </PageShell>
+      {!searching && searchQuery.trim() && searchResults.length === 0 && (
+        <p style={{ marginTop: 28, color: "var(--muted)" }}>
+          No nodes matched your search.
+        </p>
+      )}
+    </main>
   )
 }
 
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  borderRadius: 12,
-  border: "1px solid var(--border)",
-  padding: 12,
-  marginBottom: 12,
+const heroStyle: React.CSSProperties = {
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
+  borderRadius: 24,
+  padding: 34,
 }
 
-const buttonStyle: React.CSSProperties = {
+const eyebrowStyle: React.CSSProperties = {
+  textTransform: "uppercase",
+  letterSpacing: 2,
+  color: "var(--muted)",
+  margin: 0,
+}
+
+const actionRowStyle: React.CSSProperties = {
+  display: "flex",
+  gap: 12,
+  flexWrap: "wrap",
+  marginTop: 20,
+}
+
+const primaryButtonStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
   padding: "12px 18px",
-  borderRadius: 12,
+  borderRadius: 10,
   border: "none",
-  background: "var(--hero-background)",
+  background: "var(--button-background)",
   color: "var(--button-foreground)",
+  fontWeight: 600,
   cursor: "pointer",
-  fontWeight: "bold",
 }
 
-const cardStyle: React.CSSProperties = {
+const secondaryLinkStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  padding: "12px 18px",
+  borderRadius: 10,
   border: "1px solid var(--border)",
-  borderRadius: 16,
-  padding: 18,
-  background: "var(--card-background)",
+  color: "var(--button-foreground)",
+  fontWeight: 600,
+  textDecoration: "none",
 }
 
-const preStyle: React.CSSProperties = {
-  background: "var(--hero-background)",
-  color: "var(--button-foreground)",
-  padding: 14,
-  borderRadius: 14,
-  overflowX: "auto",
-  whiteSpace: "pre-wrap",
+const successMessageStyle: React.CSSProperties = {
+  marginTop: 28,
+  color: "#15803d",
+}
+
+const searchFormStyle: React.CSSProperties = {
+  display: "flex",
+  gap: 12,
+  flexWrap: "wrap",
+}
+
+const searchInputStyle: React.CSSProperties = {
+  flex: "1 1 280px",
+  padding: "12px 14px",
+  borderRadius: 10,
+  border: "1px solid var(--border)",
+  background: "var(--card-background)",
+  fontSize: 14,
+}
+
+const metricsGrid: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+  gap: 16,
+  marginTop: 28,
+}
+
+const metricCard: React.CSSProperties = {
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
+  borderRadius: 18,
+  padding: 24,
+}
+
+const metaStyle: React.CSSProperties = {
+  textTransform: "uppercase",
+  letterSpacing: 1,
+  color: "var(--muted)",
+  fontSize: 13,
+  margin: 0,
+}
+
+const panelGridStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+  gap: 16,
+  marginTop: 28,
+}
+
+const panelStyle: React.CSSProperties = {
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
+  borderRadius: 18,
+  padding: 24,
+}
+
+const sectionHeadingStyle: React.CSSProperties = {
+  margin: "0 0 12px",
+  fontSize: 18,
+}
+
+const mutedText: React.CSSProperties = {
+  color: "var(--muted)",
+  margin: "8px 0 0",
+}
+
+const listStyle: React.CSSProperties = {
+  margin: "12px 0 0",
+  paddingLeft: 20,
+  lineHeight: 1.7,
+}
+
+const itemDetailStyle: React.CSSProperties = {
+  margin: "6px 0 0",
+  color: "var(--muted)",
+}
+
+const itemMetaStyle: React.CSSProperties = {
+  margin: "4px 0 0",
+  color: "var(--muted)",
+  fontSize: 12,
+}
+
+const resultsGridStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+  gap: 16,
+  marginTop: 16,
+}
+
+const resultCardStyle: React.CSSProperties = {
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
+  borderRadius: 18,
+  padding: 20,
+}
+
+const resultTitleStyle: React.CSSProperties = {
+  margin: "0 0 8px",
+  fontSize: 18,
 }

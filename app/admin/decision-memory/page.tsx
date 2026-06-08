@@ -130,6 +130,9 @@ export default function DecisionMemoryPage() {
           <Link href="/admin/executive-learning" style={secondaryLinkStyle}>
             Executive Learning
           </Link>
+          <Link href="/admin/knowledge-graph" style={secondaryLinkStyle}>
+            Knowledge Graph
+          </Link>
           <Link href="/admin/planning-cycles" style={secondaryLinkStyle}>
             Planning Cycles
           </Link>

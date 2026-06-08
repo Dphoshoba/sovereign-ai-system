@@ -146,6 +146,9 @@ export default function ExecutiveLearningPage() {
           <Link href="/admin/boardroom" style={secondaryLinkStyle}>
             Executive Boardroom
           </Link>
+          <Link href="/admin/knowledge-graph" style={secondaryLinkStyle}>
+            Knowledge Graph
+          </Link>
           <Link href="/admin/operations" style={secondaryLinkStyle}>
             Operations Center
           </Link>
