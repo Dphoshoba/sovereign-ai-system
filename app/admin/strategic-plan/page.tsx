@@ -100,6 +100,9 @@ export default function StrategicPlanPage() {
           <Link href="/admin/scenarios" style={linkStyle}>
             Strategy Scenarios
           </Link>
+          <Link href="/admin/strategy-adjustments" style={linkStyle}>
+            Strategy Adjustments
+          </Link>
         </div>
         <div style={actionRowStyle}>
           <button

@@ -118,6 +118,9 @@ export default function QuarterlyReviewPage() {
           <Link href="/admin/operations" style={secondaryLinkStyle}>
             Operations Center
           </Link>
+          <Link href="/admin/strategy-adjustments" style={secondaryLinkStyle}>
+            Strategy Adjustments
+          </Link>
         </div>
       </section>
 

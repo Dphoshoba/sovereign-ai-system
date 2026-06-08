@@ -1371,6 +1371,25 @@ model ExecutiveQuarterlyReview {
   @@index([year])
 }
 
+model StrategyAdjustment {
+  id               String   @id @default(cuid())
+  title            String
+  description      String?
+  category         String?
+  priority         String   @default("medium")
+  recommendation   String?
+  status           String   @default("proposed")
+  sourceReviewId   String?
+  adjustmentJson   Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([status])
+  @@index([category])
+  @@index([priority])
+  @@index([createdAt])
+}
+
 model StrategicDecisionLog {
   id          String   @id @default(cuid())
   title       String
