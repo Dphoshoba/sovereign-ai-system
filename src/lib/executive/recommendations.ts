@@ -1,11 +1,15 @@
 import type { ExecutivePlatformSnapshot } from "@/lib/executive/platform-snapshot"
 
+export type ExecutiveActionPayload = Record<string, unknown>
+
 export type ExecutiveRecommendation = {
   title: string
   reason: string
   suggestedAction: string
   priority: "urgent" | "high" | "medium" | "low"
   link?: string
+  actionType?: string
+  actionPayload?: ExecutiveActionPayload
 }
 
 export type ExecutiveRecommendations = {
@@ -27,9 +31,27 @@ function item(
   reason: string,
   suggestedAction: string,
   priority: ExecutiveRecommendation["priority"],
-  link?: string
+  link?: string,
+  actionType?: string,
+  actionPayload?: ExecutiveActionPayload
 ): ExecutiveRecommendation {
-  return { title, reason, suggestedAction, priority, link }
+  const recommendation: ExecutiveRecommendation = {
+    title,
+    reason,
+    suggestedAction,
+    priority,
+    link,
+  }
+
+  if (actionType) {
+    recommendation.actionType = actionType
+    recommendation.actionPayload = actionPayload
+  } else if (link) {
+    recommendation.actionType = "open-page"
+    recommendation.actionPayload = { url: link }
+  }
+
+  return recommendation
 }
 
 export function buildExecutiveRecommendations(
@@ -108,9 +130,11 @@ export function buildExecutiveRecommendations(
       item(
         `Follow up hot lead: ${lead.name}`,
         `Lead score ${lead.leadScore} indicates high intent.`,
-        "Send a personal follow-up or book a strategy call.",
+        "Mark the lead as contacted after follow-up.",
         "high",
-        "/admin/creator-leads"
+        "/admin/creator-leads",
+        "mark-lead-contacted",
+        { leadId: lead.id }
       )
     )
   }
@@ -132,9 +156,11 @@ export function buildExecutiveRecommendations(
       item(
         `Chase invoice ${invoice.invoiceNumber}`,
         `Outstanding amount ${formatAud(invoice.amountAud)} is overdue.`,
-        "Email the client and update invoice status after follow-up.",
+        "Mark invoice overdue and follow up with the client.",
         "high",
-        "/admin/invoices"
+        "/admin/invoices",
+        "mark-invoice-overdue",
+        { invoiceId: invoice.id }
       )
     )
   }
@@ -144,9 +170,17 @@ export function buildExecutiveRecommendations(
       item(
         `Project due soon: ${project.title}`,
         `Due within 7 days at ${project.progressPercent}% complete.`,
-        "Prioritize remaining tasks or adjust the delivery timeline.",
+        "Create a follow-up task to close remaining deliverables.",
         "high",
-        "/admin/client-projects"
+        "/admin/client-projects",
+        "create-follow-up-task",
+        {
+          projectId: project.id,
+          title: `Close out: ${project.title}`,
+          description:
+            "Executive follow-up task for project due within 7 days.",
+          priority: "high",
+        }
       )
     )
   }
@@ -278,9 +312,16 @@ export function buildExecutiveRecommendations(
       item(
         `Overdue task: ${task.title}`,
         "Task due date has passed.",
-        "Complete or reschedule this deliverable.",
+        "Create a follow-up task or complete the deliverable.",
         "urgent",
-        "/admin/client-projects"
+        "/admin/client-projects",
+        "create-follow-up-task",
+        {
+          projectId: task.projectId,
+          title: `Follow up: ${task.title}`,
+          description: "Executive follow-up task for overdue deliverable.",
+          priority: "high",
+        }
       )
     )
   }
@@ -290,7 +331,7 @@ export function buildExecutiveRecommendations(
       item(
         `At-risk project: ${project.title}`,
         `Only ${project.progressPercent}% complete with deadline approaching.`,
-        "Reallocate focus to finish critical deliverables.",
+        "Review delivery intelligence and reallocate focus.",
         "high",
         "/admin/delivery-intelligence"
       )
@@ -304,7 +345,9 @@ export function buildExecutiveRecommendations(
         "All tasks are done but project status is still active.",
         "Mark the project as completed and plan follow-up engagement.",
         "medium",
-        "/admin/client-projects"
+        "/admin/client-projects",
+        "mark-project-completed",
+        { projectId: project.id }
       )
     )
   }

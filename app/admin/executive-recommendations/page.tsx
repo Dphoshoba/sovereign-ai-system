@@ -9,6 +9,8 @@ type ExecutiveRecommendation = {
   suggestedAction: string
   priority: "urgent" | "high" | "medium" | "low"
   link?: string
+  actionType?: string
+  actionPayload?: Record<string, unknown>
 }
 
 type RecommendationsPayload = {
@@ -68,29 +70,71 @@ export default function ExecutiveRecommendationsPage() {
     useState<RecommendationsPayload | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [actionLoadingKey, setActionLoadingKey] = useState<string | null>(null)
+  const [actionMessage, setActionMessage] = useState<string | null>(null)
 
-  useEffect(() => {
-    async function loadRecommendations() {
-      setLoading(true)
-      setError(null)
+  async function loadRecommendations() {
+    setLoading(true)
+    setError(null)
 
-      const response = await fetch("/api/executive/recommendations", {
-        cache: "no-store",
-      })
-      const result = await response.json()
+    const response = await fetch("/api/executive/recommendations", {
+      cache: "no-store",
+    })
+    const result = await response.json()
 
-      setLoading(false)
+    setLoading(false)
 
-      if (!result.ok) {
-        setError(result.error || "Failed to load recommendations")
-        return
-      }
-
-      setRecommendations(result.recommendations)
+    if (!result.ok) {
+      setError(result.error || "Failed to load recommendations")
+      return
     }
 
+    setRecommendations(result.recommendations)
+  }
+
+  useEffect(() => {
     loadRecommendations()
   }, [])
+
+  async function runAction(
+    item: ExecutiveRecommendation,
+    sectionKey: string
+  ) {
+    if (!item.actionType) {
+      return
+    }
+
+    const actionKey = `${sectionKey}-${item.title}`
+    setActionLoadingKey(actionKey)
+    setActionMessage(null)
+
+    const response = await fetch("/api/executive/actions/run", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        actionType: item.actionType,
+        payload: item.actionPayload || {},
+      }),
+    })
+
+    const result = await response.json()
+    setActionLoadingKey(null)
+
+    if (!result.ok) {
+      alert(result.error || "Action failed")
+      return
+    }
+
+    if (result.redirectTo) {
+      window.location.href = result.redirectTo
+      return
+    }
+
+    setActionMessage(result.message || "Action completed successfully.")
+    await loadRecommendations()
+  }
 
   return (
     <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
@@ -117,6 +161,10 @@ export default function ExecutiveRecommendationsPage() {
 
       {error && (
         <p style={{ marginTop: 28, color: "#b91c1c" }}>{error}</p>
+      )}
+
+      {actionMessage && (
+        <p style={successMessageStyle}>{actionMessage}</p>
       )}
 
       {recommendations &&
@@ -148,6 +196,19 @@ export default function ExecutiveRecommendationsPage() {
                         <Link href={item.link} style={actionLinkStyle}>
                           Open related page →
                         </Link>
+                      ) : null}
+
+                      {item.actionType ? (
+                        <button
+                          type="button"
+                          disabled={actionLoadingKey === `${section.key}-${item.title}`}
+                          onClick={() => runAction(item, section.key)}
+                          style={runActionButtonStyle}
+                        >
+                          {actionLoadingKey === `${section.key}-${item.title}`
+                            ? "Running..."
+                            : "Run Action"}
+                        </button>
                       ) : null}
                     </article>
                   ))}
@@ -236,4 +297,26 @@ const actionLinkStyle: React.CSSProperties = {
   marginTop: 12,
   fontWeight: 600,
   color: "var(--foreground)",
+}
+
+const runActionButtonStyle: React.CSSProperties = {
+  display: "inline-block",
+  marginTop: 12,
+  marginLeft: 12,
+  padding: "10px 14px",
+  borderRadius: 10,
+  border: "none",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
+  cursor: "pointer",
+  fontWeight: 600,
+}
+
+const successMessageStyle: React.CSSProperties = {
+  marginTop: 28,
+  padding: "12px 16px",
+  borderRadius: 10,
+  background: "#ecfdf5",
+  border: "1px solid #6ee7b7",
+  color: "#065f46",
 }
