@@ -127,6 +127,9 @@ export default function DecisionMemoryPage() {
           <Link href="/admin/decision-outcomes" style={secondaryLinkStyle}>
             Decision Outcomes
           </Link>
+          <Link href="/admin/executive-learning" style={secondaryLinkStyle}>
+            Executive Learning
+          </Link>
           <Link href="/admin/planning-cycles" style={secondaryLinkStyle}>
             Planning Cycles
           </Link>
@@ -370,6 +373,15 @@ export default function DecisionMemoryPage() {
                                 />
                                 Follow Up Required
                               </label>
+                              {decision.status === "completed" &&
+                                Boolean(decision.lessonLearned?.trim()) && (
+                                  <Link
+                                    href="/admin/executive-learning"
+                                    style={learningLinkStyle}
+                                  >
+                                    Executive Learning
+                                  </Link>
+                                )}
                             </div>
                           </td>
                         </tr>
@@ -529,4 +541,17 @@ const checkboxLabelStyle: React.CSSProperties = {
   fontSize: 13,
   fontWeight: 600,
   marginTop: 24,
+}
+
+const learningLinkStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  padding: "10px 14px",
+  borderRadius: 8,
+  border: "1px solid var(--border)",
+  color: "var(--button-foreground)",
+  fontWeight: 600,
+  textDecoration: "none",
+  fontSize: 13,
+  marginTop: 8,
 }

@@ -176,6 +176,9 @@ export default function BoardroomPage() {
           <Link href="/admin/decision-outcomes" style={secondaryLinkStyle}>
             Decision Outcomes
           </Link>
+          <Link href="/admin/executive-learning" style={secondaryLinkStyle}>
+            Executive Learning
+          </Link>
         </div>
       </section>
 

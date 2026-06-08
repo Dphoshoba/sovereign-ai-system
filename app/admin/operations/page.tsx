@@ -71,6 +71,7 @@ export default async function OperationsPage() {
           <Link href="/admin/boardroom" style={buttonStyle}>Executive Boardroom</Link>
           <Link href="/admin/decision-memory" style={buttonStyle}>Decision Memory</Link>
           <Link href="/admin/decision-outcomes" style={buttonStyle}>Decision Outcomes</Link>
+          <Link href="/admin/executive-learning" style={buttonStyle}>Executive Learning</Link>
         </div>
       </section>
 

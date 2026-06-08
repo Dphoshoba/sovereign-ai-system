@@ -84,6 +84,9 @@ export default function DecisionOutcomesPage() {
           <Link href="/admin/decision-memory" style={secondaryLinkStyle}>
             Decision Memory
           </Link>
+          <Link href="/admin/executive-learning" style={secondaryLinkStyle}>
+            Executive Learning
+          </Link>
           <Link href="/admin/boardroom" style={secondaryLinkStyle}>
             Executive Boardroom
           </Link>

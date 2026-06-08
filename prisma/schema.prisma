@@ -1293,6 +1293,22 @@ model ExecutiveDecision {
   @@index([followUpRequired])
 }
 
+model ExecutiveLesson {
+  id               String   @id @default(cuid())
+  title            String
+  category         String?
+  lesson           String
+  impactArea       String?
+  effectiveness    Int?
+  sourceDecisionId String?
+  createdAt        DateTime @default(now())
+
+  @@index([category])
+  @@index([impactArea])
+  @@index([createdAt])
+  @@index([sourceDecisionId])
+}
+
 model StrategicDecisionLog {
   id          String   @id @default(cuid())
   title       String
