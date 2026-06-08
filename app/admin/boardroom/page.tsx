@@ -181,6 +181,9 @@ export default function BoardroomPage() {
           <Link href="/admin/executive-overview" style={secondaryLinkStyle}>
             Executive Overview
           </Link>
+          <Link href="/admin/command-center" style={secondaryLinkStyle}>
+            Command Center
+          </Link>
           <Link href="/admin/operations" style={secondaryLinkStyle}>
             Operations Center
           </Link>

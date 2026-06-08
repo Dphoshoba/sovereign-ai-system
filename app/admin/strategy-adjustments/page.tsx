@@ -188,6 +188,9 @@ export default function StrategyAdjustmentsPage() {
           <Link href="/admin/scenarios" style={secondaryLinkStyle}>
             Strategy Scenarios
           </Link>
+          <Link href="/admin/command-center" style={secondaryLinkStyle}>
+            Command Center
+          </Link>
           <Link href="/admin/operations" style={secondaryLinkStyle}>
             Operations Center
           </Link>
