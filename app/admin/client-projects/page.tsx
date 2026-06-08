@@ -50,6 +50,7 @@ export default function ClientProjectsPage() {
   const [clients, setClients] = useState<Client[]>([])
   const [tasks, setTasks] = useState<ClientProjectTask[]>([])
   const [loading, setLoading] = useState(false)
+  const [projectMessage, setProjectMessage] = useState<string | null>(null)
   const [taskLoading, setTaskLoading] = useState(false)
   const [taskDrafts, setTaskDrafts] = useState<Record<string, TaskDraft>>({})
   const [form, setForm] = useState({
@@ -102,6 +103,7 @@ export default function ClientProjectsPage() {
   async function createProject(event: React.FormEvent) {
     event.preventDefault()
     setLoading(true)
+    setProjectMessage(null)
 
     const response = await fetch("/api/client-projects", {
       method: "POST",
@@ -119,13 +121,17 @@ export default function ClientProjectsPage() {
       return
     }
 
-    setForm({
-      clientId: form.clientId,
-      title: "",
-      description: "",
-      valueAud: "",
-      dueDate: "",
-    })
+    if (result.alreadyExists) {
+      setProjectMessage("Project already exists for this client.")
+    } else {
+      setForm({
+        clientId: form.clientId,
+        title: "",
+        description: "",
+        valueAud: "",
+        dueDate: "",
+      })
+    }
 
     await loadProjects()
   }
@@ -308,6 +314,10 @@ export default function ClientProjectsPage() {
 
       <form onSubmit={createProject} style={formStyle}>
         <h2 style={{ marginTop: 0 }}>Create Project</h2>
+
+        {projectMessage && (
+          <p style={projectMessageStyle}>{projectMessage}</p>
+        )}
 
         <label>
           Client
@@ -591,6 +601,16 @@ const formStyle: React.CSSProperties = {
   border: "1px solid #ddd",
   borderRadius: 18,
   padding: 24,
+}
+
+const projectMessageStyle: React.CSSProperties = {
+  margin: 0,
+  padding: "10px 12px",
+  borderRadius: 8,
+  background: "#fef3c7",
+  border: "1px solid #fcd34d",
+  color: "#92400e",
+  fontWeight: 600,
 }
 
 const inputStyle: React.CSSProperties = {

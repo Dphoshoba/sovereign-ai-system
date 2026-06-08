@@ -78,6 +78,24 @@ export async function POST(request: Request) {
       )
     }
 
+    const existingProject = await prisma.clientProject.findFirst({
+      where: {
+        clientId,
+        title,
+      },
+    })
+
+    if (existingProject) {
+      return NextResponse.json({
+        ok: true,
+        alreadyExists: true,
+        project: {
+          ...existingProject,
+          client,
+        },
+      })
+    }
+
     const project = await prisma.clientProject.create({
       data: {
         clientId,
