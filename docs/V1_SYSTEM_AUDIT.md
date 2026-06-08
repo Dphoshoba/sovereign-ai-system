@@ -241,3 +241,75 @@ npm run smoke:v1
 # /api/executive/health: 1261ms (improved vs duplicate command-center aggregation)
 # All 22 routes HTTP 200 — exit code 0
 ```
+
+---
+
+## Phase 17.1 — Production Launch Checklist
+
+**Date:** 2026-06-03  
+**Commit message:** Add sovereign v1 production launch runbook
+
+### Documentation complete
+
+| Document | Purpose |
+|----------|---------|
+| [`ENVIRONMENT_SETUP.md`](ENVIRONMENT_SETUP.md) | Required vs optional env vars (confirmed) |
+| [`PRODUCTION_LAUNCH_RUNBOOK.md`](PRODUCTION_LAUNCH_RUNBOOK.md) | End-to-end launch procedure |
+| [`V1_OPERATING_MANUAL.md`](V1_OPERATING_MANUAL.md) | Daily / weekly / monthly / quarterly workflows |
+| [`DEPLOYMENT_CHECKLIST.md`](DEPLOYMENT_CHECKLIST.md) | Pre-deploy checklist |
+| [`SMOKE_TESTING.md`](SMOKE_TESTING.md) | Automated smoke tests |
+
+### Production environment variables — confirmed
+
+| Variable | Status |
+|----------|--------|
+| `DATABASE_URL` | **Required** — documented |
+| `NEXT_PUBLIC_SUPABASE_URL` | **Required** — documented |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | **Required** — documented |
+| `NEXT_PUBLIC_APP_URL` | **Required (production)** — documented |
+| `OPENAI_API_KEY` | Optional — documented |
+| `RESEND_API_KEY` | Optional — documented |
+| `STRIPE_SECRET_KEY` | Optional — documented |
+| `STRIPE_PUBLISHABLE_KEY` | Optional — documented |
+
+Validated programmatically via `src/lib/startup/validate-env.ts` and `GET /api/health`.
+
+### Launch gate checklist
+
+- [ ] Required env vars set on production host
+- [ ] `npx prisma migrate deploy` applied
+- [ ] `npm run build` passes (exit 0)
+- [ ] Deploy to production (see runbook §5)
+- [ ] `GET /api/health` → `ok: true`, `database: "connected"`
+- [ ] `GET /api/executive/health` → all modules `ok: true`
+- [ ] `BASE_URL=https://YOUR_DOMAIN npm run smoke:v1` → 22/22 pass
+- [ ] Login at `/login` works
+- [ ] Operator confirms `/admin/runtime` and `/admin/command-center` load
+- [ ] First-week operating plan started (see runbook §9)
+
+### Build result (Phase 17.1)
+
+**Status:** Passed (2026-06-03)
+
+```bash
+npm run build
+# Compiled successfully in ~53s
+# TypeScript finished in ~42s
+# 539 static pages — exit code 0
+```
+
+### Smoke result (Phase 17.1)
+
+**Status:** 22/22 passed against `http://localhost:3000`
+
+```bash
+npm run smoke:v1
+# All routes HTTP 200 — exit code 0
+```
+
+### Post-launch operator entry points
+
+1. **`/admin/runtime`** — daily start
+2. **`/admin/command-center`** — executive cockpit
+3. **`/admin/operations`** — V1 hub + content ops
+4. **`V1_OPERATING_MANUAL.md`** — cadence reference

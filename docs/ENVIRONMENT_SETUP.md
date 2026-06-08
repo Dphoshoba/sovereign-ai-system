@@ -1,11 +1,30 @@
 # Environment Setup — Sovereign AI System V1
 
 **Last updated:** 2026-06-03  
-**Phase:** 16.2 — Deployment Readiness
+**Phase:** 17.1 — Production Launch Preparation
 
 This document lists environment variables used by the application, grouped by concern. Variables marked **Required** must be set for production deployment. **Optional** variables enable specific integrations.
 
 Programmatic validation lives in `src/lib/startup/validate-env.ts`.
+
+---
+
+## Production launch — required vs optional
+
+| Variable | Production | Notes |
+|----------|------------|-------|
+| `DATABASE_URL` | **Required** | PostgreSQL connection for Prisma |
+| `NEXT_PUBLIC_SUPABASE_URL` | **Required** | Admin authentication |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | **Required** | Admin authentication |
+| `NEXT_PUBLIC_APP_URL` | **Required** | Canonical HTTPS origin |
+| `OPENAI_API_KEY` | Optional | AI generation, agents, legacy sovereign runtime |
+| `RESEND_API_KEY` | Optional | Email and newsletters |
+| `STRIPE_SECRET_KEY` | Optional | Billing runtime / payments |
+| `STRIPE_PUBLISHABLE_KEY` | Optional | Client-side Stripe (if enabled later) |
+
+V1 executive stack (`/admin/runtime`, `/api/executive/*`) runs without OpenAI, Resend, or Stripe.
+
+See also: [`PRODUCTION_LAUNCH_RUNBOOK.md`](PRODUCTION_LAUNCH_RUNBOOK.md)
 
 ---
 
@@ -103,6 +122,7 @@ npm run dev
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `STRIPE_SECRET_KEY` | Optional | Stripe secret key for billing runtime and payment integrations. |
+| `STRIPE_PUBLISHABLE_KEY` | Optional | Stripe publishable key for client checkout flows (when enabled). |
 
 **Notes:**
 
