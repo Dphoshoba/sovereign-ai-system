@@ -150,7 +150,7 @@ const approveStyle: React.CSSProperties = {
   borderRadius: "8px",
   border: "none",
   background: "#15803d",
-  color: "#fff",
+  color: "var(--button-foreground)",
   fontWeight: "bold",
   cursor: "pointer",
 }
@@ -160,7 +160,7 @@ const rejectStyle: React.CSSProperties = {
   borderRadius: "8px",
   border: "none",
   background: "#b91c1c",
-  color: "#fff",
+  color: "var(--button-foreground)",
   fontWeight: "bold",
   cursor: "pointer",
 }
@@ -168,9 +168,9 @@ const rejectStyle: React.CSSProperties = {
 const neutralStyle: React.CSSProperties = {
   padding: "10px 14px",
   borderRadius: "8px",
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   background: "#f3f4f6",
-  color: "#111",
+  color: "var(--foreground)",
   fontWeight: "bold",
   cursor: "pointer",
 }
@@ -180,7 +180,7 @@ const deleteStyle: React.CSSProperties = {
   borderRadius: "8px",
   border: "none",
   background: "#444",
-  color: "#fff",
+  color: "var(--button-foreground)",
   fontWeight: "bold",
   cursor: "pointer",
 }

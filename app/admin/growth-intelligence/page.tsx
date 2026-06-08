@@ -42,7 +42,7 @@ export default function GrowthIntelligencePage() {
           AI Growth Intelligence
         </h1>
 
-        <p style={{ color: "#ddd", maxWidth: 780, lineHeight: 1.7 }}>
+        <p style={{ color: "var(--hero-muted)", maxWidth: 780, lineHeight: 1.7 }}>
           Analyze content, memory, jobs and activity to discover growth,
           monetization and audience opportunities.
         </p>
@@ -119,15 +119,15 @@ function ListPanel({
           ))}
         </ul>
       ) : (
-        <p style={{ color: "#666" }}>Nothing listed yet.</p>
+        <p style={{ color: "var(--muted)" }}>Nothing listed yet.</p>
       )}
     </Panel>
   )
 }
 
 const heroStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 24,
   padding: 34,
 }
@@ -135,7 +135,7 @@ const heroStyle: React.CSSProperties = {
 const eyebrowStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 2,
-  color: "#aaa",
+  color: "var(--muted)",
   margin: 0,
 }
 
@@ -144,8 +144,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "none",
-  background: "#fff",
-  color: "#111",
+  background: "var(--card-background)",
+  color: "var(--foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
@@ -157,13 +157,13 @@ const gridStyle: React.CSSProperties = {
 }
 
 const panelStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
 
 const paragraphStyle: React.CSSProperties = {
-  color: "#555",
+  color: "var(--muted)",
   lineHeight: 1.7,
 }

@@ -104,7 +104,7 @@ export default function OperationalEventsPage() {
           Real-Time Operational Event Bus
         </h1>
 
-        <p style={{ color: "#ddd", maxWidth: 880, lineHeight: 1.7 }}>
+        <p style={{ color: "var(--hero-muted)", maxWidth: 880, lineHeight: 1.7 }}>
           Watch live operational signals from CRM, audits, revenue,
           automations, mission cycles and agent systems.
         </p>
@@ -159,7 +159,7 @@ export default function OperationalEventsPage() {
               <h3>{event.title}</h3>
 
               {event.message ? (
-                <p style={{ lineHeight: 1.7, color: "#555" }}>
+                <p style={{ lineHeight: 1.7, color: "var(--muted)" }}>
                   {event.message}
                 </p>
               ) : null}
@@ -191,7 +191,7 @@ export default function OperationalEventsPage() {
                 </div>
               ) : null}
 
-              <p style={{ color: "#777" }}>
+              <p style={{ color: "var(--muted)" }}>
                 {new Date(event.createdAt).toLocaleString("en-AU")}
               </p>
 
@@ -222,8 +222,8 @@ function Metric({ label, value }: { label: string; value: string }) {
 }
 
 const heroStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 24,
   padding: 34,
 }
@@ -231,7 +231,7 @@ const heroStyle: React.CSSProperties = {
 const eyebrowStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 2,
-  color: "#aaa",
+  color: "var(--muted)",
   margin: 0,
 }
 
@@ -243,8 +243,8 @@ const metricsGrid: React.CSSProperties = {
 }
 
 const metricCard: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -260,7 +260,7 @@ const toolbarStyle: React.CSSProperties = {
 const inputStyle: React.CSSProperties = {
   padding: 12,
   borderRadius: 10,
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   fontSize: 15,
 }
 
@@ -275,8 +275,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
@@ -285,21 +285,21 @@ const secondaryButton: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "1px solid #111",
-  background: "#fff",
-  color: "#111",
+  background: "var(--card-background)",
+  color: "var(--foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
 
 const summaryBox: React.CSSProperties = {
-  background: "#f5f5f5",
+  background: "var(--card-background)",
   borderRadius: 12,
   padding: 16,
   marginTop: 12,
@@ -309,7 +309,7 @@ const summaryBox: React.CSSProperties = {
 const metaStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1,
-  color: "#777",
+  color: "var(--muted)",
   fontSize: 13,
   margin: 0,
 }

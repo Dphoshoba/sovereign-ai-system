@@ -81,7 +81,7 @@ export default function OperatingConsolePage() {
           AI Operating Console
         </h1>
 
-        <p style={{ color: "#ddd", maxWidth: 820, lineHeight: 1.7 }}>
+        <p style={{ color: "var(--hero-muted)", maxWidth: 820, lineHeight: 1.7 }}>
           Run specialist agents live, inject memory context and execute missions
           across strategy, publishing, ministry, CRM, growth and automation.
         </p>
@@ -126,7 +126,7 @@ export default function OperatingConsolePage() {
         <section style={agentPanel}>
           <p style={metaStyle}>Active Agent</p>
           <h2>{activeAgent.name}</h2>
-          <p style={{ color: "#555" }}>
+          <p style={{ color: "var(--muted)" }}>
             {activeAgent.department || "General"} · {activeAgent.role}
           </p>
         </section>
@@ -148,8 +148,8 @@ export default function OperatingConsolePage() {
 }
 
 const heroStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 24,
   padding: 34,
 }
@@ -157,7 +157,7 @@ const heroStyle: React.CSSProperties = {
 const eyebrowStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 2,
-  color: "#aaa",
+  color: "var(--muted)",
   margin: 0,
 }
 
@@ -166,8 +166,8 @@ const formStyle: React.CSSProperties = {
   gap: 16,
   maxWidth: 840,
   marginTop: 24,
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -178,7 +178,7 @@ const inputStyle: React.CSSProperties = {
   marginTop: 6,
   padding: 12,
   borderRadius: 10,
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   fontSize: 16,
 }
 
@@ -186,24 +186,24 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const agentPanel: React.CSSProperties = {
   marginTop: 28,
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
 
 const outputStyle: React.CSSProperties = {
   marginTop: 28,
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 28,
 }
@@ -211,7 +211,7 @@ const outputStyle: React.CSSProperties = {
 const metaStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1,
-  color: "#777",
+  color: "var(--muted)",
   fontSize: 13,
   margin: 0,
 }

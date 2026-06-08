@@ -147,7 +147,7 @@ export default function ExecutiveCopilotPage() {
               ) : null}
             </div>
           ) : (
-            <p style={{ color: "#666" }}>
+            <p style={{ color: "var(--muted)" }}>
               Ask a question to generate an executive operating response.
             </p>
           )}
@@ -173,7 +173,7 @@ export default function ExecutiveCopilotPage() {
                       <StatusBadge status={action.priority} />
                       <h3>{action.label}</h3>
                       <p>{action.description}</p>
-                      <p style={{ color: "#666" }}>
+                      <p style={{ color: "var(--muted)" }}>
                         <strong>Type:</strong> {action.type}
                       </p>
                     </div>
@@ -194,7 +194,7 @@ export default function ExecutiveCopilotPage() {
               <div key={message.id} style={messageCardStyle}>
                 <StatusBadge status={message.role} />
                 <p style={{ lineHeight: 1.7 }}>{message.content}</p>
-                <p style={{ color: "#777", fontSize: 12 }}>
+                <p style={{ color: "var(--muted)", fontSize: 12 }}>
                   {new Date(message.createdAt).toLocaleString("en-AU")}
                 </p>
               </div>
@@ -207,7 +207,7 @@ export default function ExecutiveCopilotPage() {
 }
 
 function List({ items, empty }: { items?: string[]; empty: string }) {
-  if (!items?.length) return <p style={{ color: "#666" }}>{empty}</p>
+  if (!items?.length) return <p style={{ color: "var(--muted)" }}>{empty}</p>
 
   return (
     <ul style={{ lineHeight: 1.9, paddingLeft: 20 }}>
@@ -221,7 +221,7 @@ function List({ items, empty }: { items?: string[]; empty: string }) {
 const inputStyle: React.CSSProperties = {
   width: "100%",
   borderRadius: 14,
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   padding: 14,
   fontSize: 15,
   fontFamily: "inherit",
@@ -232,8 +232,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
@@ -248,8 +248,8 @@ const suggestionButtonStyle: React.CSSProperties = {
   textAlign: "left",
   padding: 12,
   borderRadius: 12,
-  border: "1px solid #ddd",
-  background: "#f8fafc",
+  border: "1px solid var(--border)",
+  background: "var(--card-background)",
   cursor: "pointer",
 }
 
@@ -259,7 +259,7 @@ const answerStyle: React.CSSProperties = {
 }
 
 const summaryBox: React.CSSProperties = {
-  background: "#f4f4f5",
+  background: "var(--card-background)",
   borderRadius: 14,
   padding: 16,
   marginTop: 14,
@@ -273,15 +273,15 @@ const tagWrapStyle: React.CSSProperties = {
 }
 
 const actionCardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 14,
   padding: 16,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const messageCardStyle: React.CSSProperties = {
-  border: "1px solid #eee",
+  border: "1px solid var(--border)",
   borderRadius: 14,
   padding: 14,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }

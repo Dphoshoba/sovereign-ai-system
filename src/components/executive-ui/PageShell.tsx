@@ -30,8 +30,8 @@ const pageStyle: React.CSSProperties = {
 }
 
 const heroStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 24,
   padding: 34,
 }
@@ -39,7 +39,7 @@ const heroStyle: React.CSSProperties = {
 const eyebrowStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 2,
-  color: "#aaa",
+  color: "var(--muted)",
   margin: 0,
 }
 
@@ -49,7 +49,7 @@ const titleStyle: React.CSSProperties = {
 }
 
 const descriptionStyle: React.CSSProperties = {
-  color: "#ddd",
+  color: "var(--hero-muted)",
   maxWidth: 880,
   lineHeight: 1.7,
 }

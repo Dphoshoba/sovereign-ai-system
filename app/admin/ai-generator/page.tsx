@@ -46,7 +46,7 @@ export default function AiGeneratorPage() {
     <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
       <h1>AI Auto-Publishing Workflow</h1>
 
-      <p style={{ maxWidth: 760, color: "#555", lineHeight: 1.7 }}>
+      <p style={{ maxWidth: 760, color: "var(--muted)", lineHeight: 1.7 }}>
         Generate a full article with Markdown content, SEO title, SEO
         description, keywords, slug, and publishing status. Use draft mode for
         review, or publish immediately.
@@ -85,7 +85,7 @@ export default function AiGeneratorPage() {
           />
         </div>
 
-        <label style={{ display: "flex", gap: "8px", alignItems: "center", color: "#111827" }}>
+        <label style={{ display: "flex", gap: "8px", alignItems: "center", color: "var(--foreground)" }}>
           <input
             type="checkbox"
             checked={publishNow}
@@ -111,8 +111,8 @@ const formStyle: React.CSSProperties = {
   gap: 16,
   maxWidth: 760,
   marginTop: 24,
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -123,7 +123,7 @@ const inputStyle: React.CSSProperties = {
   marginTop: 6,
   padding: 12,
   borderRadius: 10,
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   fontSize: 16,
 }
 
@@ -131,8 +131,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }

@@ -39,7 +39,7 @@ export function SimpleBarChart({
 }
 
 const chartBoxStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: "14px",
   padding: "20px",
   marginTop: "28px",
@@ -54,12 +54,12 @@ const rowTopStyle: React.CSSProperties = {
 const barTrackStyle: React.CSSProperties = {
   height: "12px",
   borderRadius: "999px",
-  background: "#eee",
+  background: "var(--border)",
   overflow: "hidden",
 }
 
 const barFillStyle: React.CSSProperties = {
   height: "100%",
   borderRadius: "999px",
-  background: "#111",
+  background: "var(--hero-background)",
 }

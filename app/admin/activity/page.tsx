@@ -58,7 +58,7 @@ export default function AiActivityPage() {
     <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
       <h1>AI Activity Stream</h1>
 
-      <p style={{ maxWidth: 760, color: "#555", lineHeight: 1.7 }}>
+      <p style={{ maxWidth: 760, color: "var(--muted)", lineHeight: 1.7 }}>
         Live operational activity from jobs, agents, publishing workflows,
         memory updates, background tasks and future automations.
       </p>
@@ -82,13 +82,13 @@ export default function AiActivityPage() {
                   <h3 style={{ margin: "4px 0" }}>{event.title}</h3>
 
                   {event.message ? (
-                    <p style={{ color: "#555", lineHeight: 1.6 }}>
+                    <p style={{ color: "var(--muted)", lineHeight: 1.6 }}>
                       {event.message}
                     </p>
                   ) : null}
                 </div>
 
-                <small style={{ color: "#777" }}>
+                <small style={{ color: "var(--muted)" }}>
                   {new Date(event.createdAt).toLocaleString("en-AU")}
                 </small>
               </div>
@@ -105,15 +105,15 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 16px",
   borderRadius: 10,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 22,
 }
@@ -128,7 +128,7 @@ const rowStyle: React.CSSProperties = {
 const metaStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1,
-  color: "#777",
+  color: "var(--muted)",
   fontSize: 13,
   margin: 0,
 }

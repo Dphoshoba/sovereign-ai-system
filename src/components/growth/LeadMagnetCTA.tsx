@@ -5,8 +5,8 @@ export default function LeadMagnetCTA() {
         marginTop: "48px",
         padding: "32px",
         borderRadius: "16px",
-        border: "1px solid #ddd",
-        background: "#f8fafc",
+        border: "1px solid var(--border)",
+        background: "var(--card-background)",
         textAlign: "center",
       }}
     >
@@ -27,8 +27,8 @@ export default function LeadMagnetCTA() {
           marginTop: "16px",
           padding: "12px 20px",
           borderRadius: "8px",
-          background: "#111",
-          color: "#fff",
+          background: "var(--hero-background)",
+          color: "var(--button-foreground)",
           textDecoration: "none",
           fontWeight: "bold",
         }}

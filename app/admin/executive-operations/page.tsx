@@ -130,7 +130,7 @@ export default function ExecutiveOperationsPage() {
                   <StatusBadge status={campaign.status} />
                   <h3>{campaign.title}</h3>
                   <p>{campaign.description}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {campaign.campaignType} · Tempo{" "}
                     {campaign.executionTempo}
                   </p>
@@ -147,7 +147,7 @@ export default function ExecutiveOperationsPage() {
                   <h3>{task.title}</h3>
                   <p>{task.description}</p>
 
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {task.ownerSystem} · {task.executionMode}
                   </p>
 
@@ -176,7 +176,7 @@ export default function ExecutiveOperationsPage() {
                   <StatusBadge status={decision.impactLevel} />
                   <h3>{decision.title}</h3>
                   <p>{decision.rationale}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {decision.decisionType}
                   </p>
                 </div>
@@ -201,15 +201,15 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }

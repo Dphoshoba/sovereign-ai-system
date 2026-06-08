@@ -83,8 +83,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "10px 14px",
   borderRadius: "8px",
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   fontWeight: "bold",
   cursor: "pointer",
 }

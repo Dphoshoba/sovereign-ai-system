@@ -143,7 +143,7 @@ export default function EditArticlePage({
               maxHeight: "320px",
               objectFit: "cover",
               borderRadius: "14px",
-              border: "1px solid #ddd",
+              border: "1px solid var(--border)",
             }}
           />
         ) : null}
@@ -277,7 +277,7 @@ const inputStyle: React.CSSProperties = {
   marginTop: "6px",
   padding: "12px",
   borderRadius: "10px",
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   fontSize: "16px",
 }
 
@@ -285,8 +285,8 @@ const saveButton: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: "10px",
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--hero-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
@@ -296,7 +296,7 @@ const deleteButton: React.CSSProperties = {
   borderRadius: "10px",
   border: "none",
   background: "#cc0000",
-  color: "#fff",
+  color: "var(--hero-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }

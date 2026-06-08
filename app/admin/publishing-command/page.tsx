@@ -156,7 +156,7 @@ export default function PublishingCommandPage() {
                 <div key={goal.id} style={cardStyle}>
                   <StatusBadge status={goal.status} />
                   <h3>{goal.title}</h3>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {goal.target} / {goal.period} · {goal.channel}
                   </p>
                 </div>
@@ -179,7 +179,7 @@ export default function PublishingCommandPage() {
                 <p>
                   <strong>Thumbnail:</strong> {asset.thumbnailIdea}
                 </p>
-                <p style={{ color: "#666" }}>
+                <p style={{ color: "var(--muted)" }}>
                   {asset.assetType} · {asset.pillar} · Score {asset.score}/100
                 </p>
                 <p>
@@ -209,7 +209,7 @@ export default function PublishingCommandPage() {
 const inputStyle: React.CSSProperties = {
   width: "100%",
   borderRadius: 12,
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   padding: 12,
   marginBottom: 12,
 }
@@ -218,22 +218,22 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const preStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   padding: 14,
   borderRadius: 14,
   overflowX: "auto",

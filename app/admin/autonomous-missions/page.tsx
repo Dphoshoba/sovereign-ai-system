@@ -95,7 +95,7 @@ export default function AutonomousMissionsPage() {
           Autonomous Mission Cycles
         </h1>
 
-        <p style={{ color: "#ddd", maxWidth: 880, lineHeight: 1.7 }}>
+        <p style={{ color: "var(--hero-muted)", maxWidth: 880, lineHeight: 1.7 }}>
           Run recursive operational cycles across the executive AI organization
           and coordinate persistent autonomous missions.
         </p>
@@ -200,8 +200,8 @@ function Metric({ label, value }: { label: string; value: string }) {
 }
 
 const heroStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 24,
   padding: 34,
 }
@@ -209,7 +209,7 @@ const heroStyle: React.CSSProperties = {
 const eyebrowStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 2,
-  color: "#aaa",
+  color: "var(--muted)",
   margin: 0,
 }
 
@@ -221,8 +221,8 @@ const metricsGrid: React.CSSProperties = {
 }
 
 const metricCard: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -238,8 +238,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
@@ -248,21 +248,21 @@ const secondaryButton: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "1px solid #111",
-  background: "#fff",
-  color: "#111",
+  background: "var(--card-background)",
+  color: "var(--foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
 
 const summaryBox: React.CSSProperties = {
-  background: "#f5f5f5",
+  background: "var(--card-background)",
   borderRadius: 12,
   padding: 16,
   marginTop: 12,
@@ -272,7 +272,7 @@ const summaryBox: React.CSSProperties = {
 const metaStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1,
-  color: "#777",
+  color: "var(--muted)",
   fontSize: 13,
   margin: 0,
 }

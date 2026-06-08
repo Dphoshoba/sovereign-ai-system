@@ -146,7 +146,7 @@ export default function InfrastructureResiliencePage() {
                   <StatusBadge status={check.status} />
                   <h3>{check.serviceName}</h3>
                   <p>{check.message}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {check.serviceType} · {check.latencyMs ?? 0}ms
                   </p>
                 </div>
@@ -160,7 +160,7 @@ export default function InfrastructureResiliencePage() {
                 <div key={policy.id} style={cardStyle}>
                   <StatusBadge status={policy.severity} />
                   <h3>{policy.title}</h3>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {policy.policyType} · {policy.targetService || "all"}
                   </p>
                   <pre style={preStyle}>{JSON.stringify(policy.action, null, 2)}</pre>
@@ -180,7 +180,7 @@ export default function InfrastructureResiliencePage() {
                   <StatusBadge status={incident.status} />
                   <h3>{incident.title}</h3>
                   <p>{incident.description}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {incident.incidentType} · {incident.severity} · {incident.source}
                   </p>
 
@@ -223,7 +223,7 @@ export default function InfrastructureResiliencePage() {
                   <StatusBadge status={job.status} />
                   <h3>{job.title}</h3>
                   <p>{job.lastError}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {job.source} · Attempts {job.attempts}/{job.maxAttempts}
                   </p>
 
@@ -250,8 +250,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
@@ -260,22 +260,22 @@ const secondaryButtonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "1px solid #111",
-  background: "#fff",
-  color: "#111",
+  background: "var(--card-background)",
+  color: "var(--foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const preStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   padding: 14,
   borderRadius: 14,
   overflowX: "auto",

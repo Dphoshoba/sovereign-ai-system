@@ -35,7 +35,7 @@ export default function MultiAgentPage() {
     <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
       <h1>Multi-Agent AI Workflow</h1>
 
-      <p style={{ maxWidth: 760, color: "#555", lineHeight: 1.7 }}>
+      <p style={{ maxWidth: 760, color: "var(--muted)", lineHeight: 1.7 }}>
         Run Research, SEO, Editor, Thumbnail, and Publishing Strategy agents
         together for one Echoes & Visions content idea.
       </p>
@@ -84,8 +84,8 @@ const formStyle: React.CSSProperties = {
   gap: 16,
   maxWidth: 760,
   marginTop: 24,
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -96,7 +96,7 @@ const inputStyle: React.CSSProperties = {
   marginTop: 6,
   padding: 12,
   borderRadius: 10,
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   fontSize: 16,
 }
 
@@ -104,15 +104,15 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }

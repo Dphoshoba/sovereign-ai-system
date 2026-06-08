@@ -119,14 +119,14 @@ function pulseDot(status: string): React.CSSProperties {
 const barStyle: React.CSSProperties = {
   margin: "0 40px 18px",
   padding: "14px 16px",
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
   gap: 16,
   flexWrap: "wrap",
-  background: "#fff",
+  background: "var(--card-background)",
 }
 
 const leftStyle: React.CSSProperties = {
@@ -140,7 +140,7 @@ const eyebrowStyle: React.CSSProperties = {
   fontSize: 11,
   textTransform: "uppercase",
   letterSpacing: 1.5,
-  color: "#777",
+  color: "var(--muted)",
 }
 
 const metricsStyle: React.CSSProperties = {
@@ -150,7 +150,7 @@ const metricsStyle: React.CSSProperties = {
 }
 
 const miniStyle: React.CSSProperties = {
-  background: "#f4f4f5",
+  background: "var(--card-background)",
   borderRadius: 12,
   padding: "8px 10px",
 }
@@ -158,7 +158,7 @@ const miniStyle: React.CSSProperties = {
 const miniLabel: React.CSSProperties = {
   display: "block",
   fontSize: 11,
-  color: "#71717a",
+  color: "var(--muted)",
 }
 
 const actionsStyle: React.CSSProperties = {
@@ -168,8 +168,8 @@ const actionsStyle: React.CSSProperties = {
 
 const buttonStyle: React.CSSProperties = {
   textDecoration: "none",
-  color: "#fff",
-  background: "#111",
+  color: "var(--button-foreground)",
+  background: "var(--hero-background)",
   padding: "8px 12px",
   borderRadius: 10,
   fontSize: 13,

@@ -42,7 +42,7 @@ export default async function DeliveryPage() {
         <h1 style={{ fontSize: 42, margin: "8px 0" }}>
           Client Delivery Dashboard
         </h1>
-        <p style={{ color: "#ddd", maxWidth: 820, lineHeight: 1.7 }}>
+        <p style={{ color: "var(--hero-muted)", maxWidth: 820, lineHeight: 1.7 }}>
           Overview of project health, task progress, and delivery value across
           all Echoes & Visions clients.
         </p>
@@ -137,8 +137,8 @@ export default async function DeliveryPage() {
 }
 
 const heroStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 24,
   padding: 34,
 }
@@ -146,7 +146,7 @@ const heroStyle: React.CSSProperties = {
 const eyebrowStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 2,
-  color: "#aaa",
+  color: "var(--muted)",
   margin: 0,
 }
 
@@ -158,15 +158,15 @@ const metricsGrid: React.CSSProperties = {
 }
 
 const metricCard: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
 
 const cardStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -174,7 +174,7 @@ const cardStyle: React.CSSProperties = {
 const metaStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1,
-  color: "#777",
+  color: "var(--muted)",
   fontSize: 13,
   margin: 0,
 }
@@ -182,13 +182,13 @@ const metaStyle: React.CSSProperties = {
 const progressTrackStyle: React.CSSProperties = {
   marginTop: 12,
   height: 10,
-  background: "#eee",
+  background: "var(--border)",
   borderRadius: 999,
   overflow: "hidden",
 }
 
 const progressFillStyle: React.CSSProperties = {
   height: "100%",
-  background: "#111",
+  background: "var(--hero-background)",
   borderRadius: 999,
 }

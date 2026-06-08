@@ -159,7 +159,7 @@ async function addMemory() {
                 <StatusBadge status={latest.status} />
                 <h3>{latest.title}</h3>
                 <p>{latest.summary}</p>
-                <p style={{ color: "#666" }}>
+                <p style={{ color: "var(--muted)" }}>
                   Graph {latest.graphHealth}/100 · Memory {latest.memoryHealth}
                   /100 · Retrieval {latest.retrievalHealth}/100
                 </p>
@@ -208,7 +208,7 @@ async function addMemory() {
             <div style={cardStyle}>
               <h3>Answer</h3>
               <p style={{ lineHeight: 1.8 }}>{queryResult.answer}</p>
-              <p style={{ color: "#666" }}>
+              <p style={{ color: "var(--muted)" }}>
                 Confidence {Math.round((queryResult.confidence || 0) * 100)}%
               </p>
 
@@ -239,7 +239,7 @@ async function addMemory() {
                   <StatusBadge status={record.recordType} />
                   <h3>{record.title}</h3>
                   <p>{record.content}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {record.sourceLayer || "manual"} · Importance{" "}
                     {record.importance}/100
                   </p>
@@ -255,7 +255,7 @@ async function addMemory() {
                   <StatusBadge status={node.nodeType} />
                   <h3>{node.name}</h3>
                   <p>{node.summary}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     Importance {node.importance}/100
                   </p>
                 </div>
@@ -273,7 +273,7 @@ async function addMemory() {
                 <div key={edge.id} style={cardStyle}>
                   <StatusBadge status={edge.relationType} />
                   <p>{edge.summary}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     Strength {Math.round((edge.strength || 0) * 100)}%
                   </p>
                 </div>
@@ -288,7 +288,7 @@ async function addMemory() {
                   <StatusBadge status={index.status} />
                   <h3>{index.embeddingModel}</h3>
                   <p>{index.contentPreview}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     Dimensions {index.dimensions} · Hash{" "}
                     {index.vectorHash?.slice(0, 14)}...
                   </p>
@@ -305,7 +305,7 @@ async function addMemory() {
 const inputStyle: React.CSSProperties = {
   width: "100%",
   borderRadius: 12,
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   padding: 12,
   marginBottom: 12,
 }
@@ -314,22 +314,22 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const preStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   padding: 14,
   borderRadius: 14,
   overflowX: "auto",

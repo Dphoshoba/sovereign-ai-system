@@ -115,7 +115,7 @@ export default function WorkflowEngineV2Page() {
 
                   <p>{workflow.description}</p>
 
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     Trigger: {workflow.triggerType}
                   </p>
 
@@ -149,7 +149,7 @@ export default function WorkflowEngineV2Page() {
                     Current Step: {execution.currentStep || "Completed"}
                   </p>
 
-                  <p style={{ color: "#777", fontSize: 12 }}>
+                  <p style={{ color: "var(--muted)", fontSize: 12 }}>
                     {new Date(execution.createdAt).toLocaleString("en-AU")}
                   </p>
                 </div>
@@ -170,7 +170,7 @@ export default function WorkflowEngineV2Page() {
 
                 <p>{action.actionType}</p>
 
-                <p style={{ color: "#777", fontSize: 12 }}>
+                <p style={{ color: "var(--muted)", fontSize: 12 }}>
                   {new Date(action.createdAt).toLocaleString("en-AU")}
                 </p>
               </div>
@@ -186,15 +186,15 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }

@@ -106,7 +106,7 @@ export default function OptimizationEnginePage() {
           Autonomous Optimization Engine
         </h1>
 
-        <p style={{ color: "#ddd", maxWidth: 880, lineHeight: 1.7 }}>
+        <p style={{ color: "var(--hero-muted)", maxWidth: 880, lineHeight: 1.7 }}>
           Detect operational friction, stalled loops, failed patterns and
           optimization opportunities across the AI organization.
         </p>
@@ -166,7 +166,7 @@ export default function OptimizationEnginePage() {
               <h3>{action.title}</h3>
 
               {action.description ? (
-                <p style={{ color: "#555", lineHeight: 1.7 }}>
+                <p style={{ color: "var(--muted)", lineHeight: 1.7 }}>
                   {action.description}
                 </p>
               ) : null}
@@ -215,7 +215,7 @@ export default function OptimizationEnginePage() {
               </p>
               <h3>{run.title}</h3>
               <p>{run.summary}</p>
-              <p style={{ color: "#777" }}>
+              <p style={{ color: "var(--muted)" }}>
                 {new Date(run.createdAt).toLocaleString("en-AU")}
               </p>
             </article>
@@ -249,8 +249,8 @@ function Metric({ label, value }: { label: string; value: string }) {
 }
 
 const heroStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 24,
   padding: 34,
 }
@@ -258,7 +258,7 @@ const heroStyle: React.CSSProperties = {
 const eyebrowStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 2,
-  color: "#aaa",
+  color: "var(--muted)",
   margin: 0,
 }
 
@@ -270,8 +270,8 @@ const metricsGrid: React.CSSProperties = {
 }
 
 const metricCard: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -285,8 +285,8 @@ const toolbarStyle: React.CSSProperties = {
 }
 
 const panelStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -302,8 +302,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
@@ -312,21 +312,21 @@ const secondaryButton: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "1px solid #111",
-  background: "#fff",
-  color: "#111",
+  background: "var(--card-background)",
+  color: "var(--foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
 
 const summaryBox: React.CSSProperties = {
-  background: "#f5f5f5",
+  background: "var(--card-background)",
   borderRadius: 12,
   padding: 16,
   marginTop: 12,
@@ -336,7 +336,7 @@ const summaryBox: React.CSSProperties = {
 const metaStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1,
-  color: "#777",
+  color: "var(--muted)",
   fontSize: 13,
   margin: 0,
 }

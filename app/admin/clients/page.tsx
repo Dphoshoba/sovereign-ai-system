@@ -64,13 +64,13 @@ export default async function ClientsPage() {
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: "14px",
   padding: "20px",
 }
 
 const linkStyle: React.CSSProperties = {
-  color: "#111",
+  color: "var(--foreground)",
   fontWeight: "bold",
   textDecoration: "none",
   border: "1px solid #111",

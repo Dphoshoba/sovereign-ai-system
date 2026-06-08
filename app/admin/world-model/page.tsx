@@ -169,7 +169,7 @@ export default function WorldModelPage() {
                   <StatusBadge status={signal.severity} />
                   <h3>{signal.title}</h3>
                   <p>{signal.summary}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {signal.domain} · {signal.signalType} · Relevance{" "}
                     {signal.relevanceScore}/100 · Confidence{" "}
                     {Math.round((signal.confidence || 0) * 100)}%
@@ -186,7 +186,7 @@ export default function WorldModelPage() {
                   <StatusBadge status={scenario.impactLevel} />
                   <h3>{scenario.title}</h3>
                   <p>{scenario.narrative}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {scenario.scenarioType} · Probability{" "}
                     {Math.round((scenario.probability || 0) * 100)}%
                   </p>
@@ -205,7 +205,7 @@ export default function WorldModelPage() {
                 <StatusBadge status={item.status} />
                 <h3>{item.title}</h3>
                 <p>{item.rationale}</p>
-                <p style={{ color: "#666" }}>
+                <p style={{ color: "var(--muted)" }}>
                   {item.recommendationType} · {item.executionWindow}
                 </p>
 
@@ -231,8 +231,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
@@ -241,21 +241,21 @@ const inputStyle: React.CSSProperties = {
   width: 280,
   padding: 12,
   borderRadius: 12,
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   marginRight: 12,
   marginBottom: 12,
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const preStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   padding: 16,
   borderRadius: 14,
   overflowX: "auto",

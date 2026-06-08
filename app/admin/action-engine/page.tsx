@@ -124,7 +124,7 @@ export default function ActionEnginePage() {
               <StatusBadge status={latest.status} />
               <h3>{latest.title}</h3>
               <p>{latest.summary}</p>
-              <p style={{ color: "#666" }}>
+              <p style={{ color: "var(--muted)" }}>
                 Execution {latest.executionHealth}/100 · Agent{" "}
                 {latest.agentHealth}/100 · Mission pressure{" "}
                 {latest.missionPressure}/100
@@ -144,7 +144,7 @@ export default function ActionEnginePage() {
                   <StatusBadge status={mission.status} />
                   <h3>{mission.title}</h3>
                   <p>{mission.objective}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {mission.missionType} · {mission.priority} · Progress{" "}
                     {mission.progressScore}/100
                   </p>
@@ -160,7 +160,7 @@ export default function ActionEnginePage() {
                   <StatusBadge status={step.status} />
                   <h3>{step.title}</h3>
                   <p>{step.instruction}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {step.stepType} · {step.targetLayer} · Agent{" "}
                     {step.assignedAgent || "unassigned"}
                   </p>
@@ -194,7 +194,7 @@ export default function ActionEnginePage() {
                   <StatusBadge status={assignment.status} />
                   <h3>{assignment.agentName}</h3>
                   <p>{assignment.instruction}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {assignment.agentRole} · Confidence{" "}
                     {Math.round((assignment.confidence || 0) * 100)}%
                   </p>
@@ -210,7 +210,7 @@ export default function ActionEnginePage() {
                   <StatusBadge status={outcome.impactLevel} />
                   <h3>{outcome.title}</h3>
                   <p>{outcome.summary}</p>
-                  <p style={{ color: "#666" }}>{outcome.outcomeType}</p>
+                  <p style={{ color: "var(--muted)" }}>{outcome.outcomeType}</p>
                 </div>
               ))}
             </div>
@@ -225,22 +225,22 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const preStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   padding: 14,
   borderRadius: 14,
   overflowX: "auto",

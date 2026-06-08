@@ -177,7 +177,7 @@ export default function OrchestrationKernelPage() {
                   <StatusBadge status={run.status} />
                   <h3>{run.title}</h3>
                   <p>{run.summary}</p>
-                  <p style={{ color: "#777", fontSize: 12 }}>
+                  <p style={{ color: "var(--muted)", fontSize: 12 }}>
                     Health {run.healthScore}/100 ·{" "}
                     {new Date(run.createdAt).toLocaleString("en-AU")}
                   </p>
@@ -195,23 +195,23 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const summaryStyle: React.CSSProperties = {
   marginTop: 18,
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }

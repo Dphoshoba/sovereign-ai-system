@@ -148,7 +148,7 @@ export default function AgentCollaborationPage() {
           Multi-Agent Collaboration + Delegation
         </h1>
 
-        <p style={{ color: "#ddd", maxWidth: 880, lineHeight: 1.7 }}>
+        <p style={{ color: "var(--hero-muted)", maxWidth: 880, lineHeight: 1.7 }}>
           Let executive agents delegate tasks, respond as specialists and form
           unified operational decisions.
         </p>
@@ -235,7 +235,7 @@ export default function AgentCollaborationPage() {
               <p style={{ lineHeight: 1.7 }}>{delegation.task}</p>
 
               {delegation.context ? (
-                <p style={{ color: "#555" }}>
+                <p style={{ color: "var(--muted)" }}>
                   <strong>Context:</strong> {delegation.context}
                 </p>
               ) : null}
@@ -308,8 +308,8 @@ export default function AgentCollaborationPage() {
 }
 
 const heroStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 24,
   padding: 34,
 }
@@ -317,7 +317,7 @@ const heroStyle: React.CSSProperties = {
 const eyebrowStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 2,
-  color: "#aaa",
+  color: "var(--muted)",
   margin: 0,
 }
 
@@ -329,8 +329,8 @@ const gridTwo: React.CSSProperties = {
 }
 
 const panelStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -341,7 +341,7 @@ const inputStyle: React.CSSProperties = {
   marginBottom: 14,
   padding: 12,
   borderRadius: 10,
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   fontSize: 15,
 }
 
@@ -349,21 +349,21 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
 
 const summaryBox: React.CSSProperties = {
-  background: "#f5f5f5",
+  background: "var(--card-background)",
   borderRadius: 12,
   padding: 16,
   marginTop: 12,
@@ -373,7 +373,7 @@ const summaryBox: React.CSSProperties = {
 const metaStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1,
-  color: "#777",
+  color: "var(--muted)",
   fontSize: 13,
   margin: 0,
 }

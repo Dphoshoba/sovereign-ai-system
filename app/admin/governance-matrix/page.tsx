@@ -158,7 +158,7 @@ export default function GovernanceMatrixPage() {
                   <StatusBadge status={policy.severity} />
                   <h3>{policy.title}</h3>
                   <p>{policy.description}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {policy.policyType} · {policy.enforcement}
                   </p>
                 </div>
@@ -173,7 +173,7 @@ export default function GovernanceMatrixPage() {
                   <StatusBadge status={item.status} />
                   <h3>{item.title}</h3>
                   <p>{item.rationale}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {item.arbitrationType} · Risk {item.riskScore}/100
                   </p>
 
@@ -224,7 +224,7 @@ export default function GovernanceMatrixPage() {
                   <StatusBadge status={item.status} />
                   <h3>{item.title}</h3>
                   <p>{item.rationale}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {item.targetType} · {item.priority}
                   </p>
 
@@ -273,12 +273,12 @@ export default function GovernanceMatrixPage() {
                   <p>{item.description}</p>
 
                   {item.recommendation ? (
-                    <p style={{ color: "#666" }}>
+                    <p style={{ color: "var(--muted)" }}>
                       Recommendation: {item.recommendation}
                     </p>
                   ) : null}
 
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {item.signalType} · {item.affectedArea || "general"}
                   </p>
 
@@ -319,8 +319,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
@@ -329,15 +329,15 @@ const secondaryButtonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "1px solid #111",
-  background: "#fff",
-  color: "#111",
+  background: "var(--card-background)",
+  color: "var(--foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }

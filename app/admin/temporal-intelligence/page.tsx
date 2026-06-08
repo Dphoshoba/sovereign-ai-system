@@ -180,7 +180,7 @@ export default function TemporalIntelligencePage() {
 
                   <p>{item.narrative}</p>
 
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {item.scenarioType} · Probability{" "}
                     {Math.round((item.probability || 0) * 100)}%
                   </p>
@@ -200,7 +200,7 @@ export default function TemporalIntelligencePage() {
 
                   <h3>{item.title}</h3>
 
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {item.eventType} · {item.projectedDate}
                   </p>
 
@@ -229,7 +229,7 @@ export default function TemporalIntelligencePage() {
 
                 <p>{item.rationale}</p>
 
-                <p style={{ color: "#666" }}>
+                <p style={{ color: "var(--muted)" }}>
                   {item.recommendationType} · {item.executionWindow}
                 </p>
 
@@ -255,8 +255,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
@@ -265,20 +265,20 @@ const inputStyle: React.CSSProperties = {
   width: 320,
   padding: 12,
   borderRadius: 12,
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   marginRight: 12,
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const preStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   padding: 16,
   borderRadius: 14,
   overflowX: "auto",

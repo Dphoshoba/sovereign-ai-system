@@ -128,7 +128,7 @@ export default async function AdminArticlesPage({
 
       <div style={{ display: "grid", gap: "16px", marginTop: "24px" }}>
         {articles.length === 0 ? (
-          <p style={{ color: "#777" }}>
+          <p style={{ color: "var(--muted)" }}>
             No articles with status &ldquo;{activeFilter.label}&rdquo;.
           </p>
         ) : (
@@ -168,7 +168,7 @@ export default async function AdminArticlesPage({
                   padding: "6px 12px",
                   borderRadius: "999px",
                   background: gradeColor(article.editorialGrade),
-                  color: "#fff",
+                  color: "var(--button-foreground)",
                   fontWeight: "bold",
                   marginTop: "8px",
                 }}
@@ -223,7 +223,7 @@ export default async function AdminArticlesPage({
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: "12px",
   padding: "20px",
 }
@@ -232,8 +232,8 @@ const buttonStyle: React.CSSProperties = {
   display: "inline-block",
   padding: "10px 14px",
   borderRadius: "8px",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   textDecoration: "none",
   fontWeight: "bold",
 }
@@ -246,7 +246,7 @@ const tabStyle: React.CSSProperties = {
   borderRadius: "999px",
   textDecoration: "none",
   fontWeight: "bold",
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
 }
 
 const badgeStyle: React.CSSProperties = {

@@ -63,7 +63,7 @@ export default function SimulationPage() {
           AI Simulation + Scenario Planning
         </h1>
 
-        <p style={{ color: "#ddd", maxWidth: 850, lineHeight: 1.7 }}>
+        <p style={{ color: "var(--hero-muted)", maxWidth: 850, lineHeight: 1.7 }}>
           Simulate growth paths, revenue strategies, content moves, ministry
           expansion, product direction and operational risks before you commit.
         </p>
@@ -197,15 +197,15 @@ function ListPanel({
           ))}
         </ul>
       ) : (
-        <p style={{ color: "#666" }}>Nothing listed yet.</p>
+        <p style={{ color: "var(--muted)" }}>Nothing listed yet.</p>
       )}
     </Panel>
   )
 }
 
 const heroStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 24,
   padding: 34,
 }
@@ -213,7 +213,7 @@ const heroStyle: React.CSSProperties = {
 const eyebrowStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 2,
-  color: "#aaa",
+  color: "var(--muted)",
   margin: 0,
 }
 
@@ -222,8 +222,8 @@ const formStyle: React.CSSProperties = {
   gap: 16,
   maxWidth: 900,
   marginTop: 24,
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -234,7 +234,7 @@ const inputStyle: React.CSSProperties = {
   marginTop: 6,
   padding: 12,
   borderRadius: 10,
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   fontSize: 16,
 }
 
@@ -242,8 +242,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
@@ -255,36 +255,36 @@ const gridStyle: React.CSSProperties = {
 }
 
 const panelStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
 
 const itemCard: React.CSSProperties = {
-  background: "#f7f7f7",
-  border: "1px solid #eee",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 14,
   padding: 18,
 }
 
 const decisionBox: React.CSSProperties = {
   marginTop: 18,
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 16,
   padding: 18,
 }
 
 const paragraphStyle: React.CSSProperties = {
-  color: "#555",
+  color: "var(--muted)",
   lineHeight: 1.7,
 }
 
 const metaStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1,
-  color: "#777",
+  color: "var(--muted)",
   fontSize: 13,
   margin: 0,
 }

@@ -19,8 +19,8 @@ export default function ExecutiveCard({
 }
 
 const cardStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -28,7 +28,7 @@ const cardStyle: React.CSSProperties = {
 const eyebrowStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1.5,
-  color: "#777",
+  color: "var(--muted)",
   fontSize: 12,
   margin: 0,
 }

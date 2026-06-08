@@ -108,7 +108,7 @@ export default function CreatorLearningPage() {
           Creator Learning + Strategic Memory
         </h1>
 
-        <p style={{ color: "#ddd", maxWidth: 880, lineHeight: 1.7 }}>
+        <p style={{ color: "var(--hero-muted)", maxWidth: 880, lineHeight: 1.7 }}>
           Learn from leads, audits, proposals, revenue, automations and outcomes
           to build durable strategic memory for Echoes & Visions.
         </p>
@@ -166,11 +166,11 @@ export default function CreatorLearningPage() {
 
                 <h3>{memory.title}</h3>
 
-                <p style={{ lineHeight: 1.7, color: "#555" }}>
+                <p style={{ lineHeight: 1.7, color: "var(--muted)" }}>
                   {memory.insight}
                 </p>
 
-                <p style={{ color: "#777" }}>
+                <p style={{ color: "var(--muted)" }}>
                   Confidence: {Math.round(memory.confidence * 100)}%
                 </p>
               </button>
@@ -269,7 +269,7 @@ export default function CreatorLearningPage() {
               <article key={run.id} style={cardStyle}>
                 <p style={metaStyle}>{run.status}</p>
                 <p style={{ lineHeight: 1.7 }}>{run.summary}</p>
-                <p style={{ color: "#777" }}>
+                <p style={{ color: "var(--muted)" }}>
                   {new Date(run.createdAt).toLocaleString("en-AU")}
                 </p>
               </article>
@@ -291,8 +291,8 @@ function Metric({ label, value }: { label: string; value: string }) {
 }
 
 const heroStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 24,
   padding: 34,
 }
@@ -300,7 +300,7 @@ const heroStyle: React.CSSProperties = {
 const eyebrowStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 2,
-  color: "#aaa",
+  color: "var(--muted)",
   margin: 0,
 }
 
@@ -312,8 +312,8 @@ const metricsGrid: React.CSSProperties = {
 }
 
 const metricCard: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -338,7 +338,7 @@ const inputStyle: React.CSSProperties = {
   marginBottom: 14,
   padding: 12,
   borderRadius: 10,
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   fontSize: 15,
 }
 
@@ -346,8 +346,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
@@ -356,30 +356,30 @@ const secondaryButton: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "1px solid #111",
-  background: "#fff",
-  color: "#111",
+  background: "var(--card-background)",
+  color: "var(--foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardButton: React.CSSProperties = {
   textAlign: "left",
-  background: "#fff",
+  background: "var(--card-background)",
   borderRadius: 18,
   padding: 22,
   cursor: "pointer",
 }
 
 const editorCard: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
 
 const cardStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 22,
 }
@@ -387,7 +387,7 @@ const cardStyle: React.CSSProperties = {
 const metaStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1,
-  color: "#777",
+  color: "var(--muted)",
   fontSize: 13,
   margin: 0,
 }

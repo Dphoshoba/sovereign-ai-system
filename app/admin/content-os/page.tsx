@@ -126,7 +126,7 @@ export default function ContentOSPage() {
                 <div key={subscriber.id} style={cardStyle}>
                   <StatusBadge status={subscriber.status} />
                   <h3>{subscriber.email}</h3>
-                  <p style={{ color: "#666" }}>{subscriber.source}</p>
+                  <p style={{ color: "var(--muted)" }}>{subscriber.source}</p>
                 </div>
               ))}
             </div>
@@ -141,7 +141,7 @@ export default function ContentOSPage() {
               <div key={item.id} style={cardStyle}>
                 <StatusBadge status={item.status} />
                 <h3>{item.title}</h3>
-                <p style={{ color: "#666" }}>
+                <p style={{ color: "var(--muted)" }}>
                   {item.contentType} · {item.channel} · {item.pillar}
                 </p>
                 <p>{item.cta}</p>
@@ -157,7 +157,7 @@ export default function ContentOSPage() {
 const inputStyle: React.CSSProperties = {
   width: "100%",
   borderRadius: 12,
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   padding: 12,
   marginBottom: 12,
 }
@@ -166,15 +166,15 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }

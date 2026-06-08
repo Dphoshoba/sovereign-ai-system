@@ -98,7 +98,7 @@ export default function ToolExecutionPage() {
           AI Tool Execution Layer
         </h1>
 
-        <p style={{ color: "#ddd", maxWidth: 820, lineHeight: 1.7 }}>
+        <p style={{ color: "var(--hero-muted)", maxWidth: 820, lineHeight: 1.7 }}>
           Execute approved internal actions safely: save memory, create jobs,
           log activity and create CRM leads.
         </p>
@@ -145,8 +145,8 @@ export default function ToolExecutionPage() {
 }
 
 const heroStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 24,
   padding: 34,
 }
@@ -154,7 +154,7 @@ const heroStyle: React.CSSProperties = {
 const eyebrowStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 2,
-  color: "#aaa",
+  color: "var(--muted)",
   margin: 0,
 }
 
@@ -163,8 +163,8 @@ const formStyle: React.CSSProperties = {
   gap: 16,
   maxWidth: 900,
   marginTop: 24,
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -175,7 +175,7 @@ const inputStyle: React.CSSProperties = {
   marginTop: 6,
   padding: 12,
   borderRadius: 10,
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   fontSize: 16,
 }
 
@@ -183,24 +183,24 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const resultStyle: React.CSSProperties = {
   marginTop: 28,
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
 
 const preStyle: React.CSSProperties = {
   whiteSpace: "pre-wrap",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 12,
   padding: 16,
   overflowX: "auto",

@@ -140,7 +140,7 @@ const gridStyle: React.CSSProperties = {
 }
 
 const statCardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: "14px",
   padding: "18px",
   display: "grid",
@@ -148,7 +148,7 @@ const statCardStyle: React.CSSProperties = {
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: "12px",
   padding: "16px",
 }
@@ -157,8 +157,8 @@ const buttonStyle: React.CSSProperties = {
   display: "inline-block",
   padding: "10px 14px",
   borderRadius: "8px",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   textDecoration: "none",
   fontWeight: "bold",
 }

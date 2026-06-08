@@ -132,9 +132,9 @@ export default function CommandCenterV2Page() {
 const systemCardStyle: React.CSSProperties = {
   display: "block",
   textDecoration: "none",
-  color: "#111",
-  border: "1px solid #ddd",
-  background: "#fff",
+  color: "var(--foreground)",
+  border: "1px solid var(--border)",
+  background: "var(--card-background)",
   borderRadius: 18,
   padding: 18,
 }
@@ -145,14 +145,14 @@ const openStyle: React.CSSProperties = {
 }
 
 const aiBoxStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 18,
   padding: 22,
 }
 
 const mutedTextStyle: React.CSSProperties = {
-  color: "#666",
+  color: "var(--muted)",
   lineHeight: 1.7,
 }
 
@@ -165,8 +165,8 @@ const actionGridStyle: React.CSSProperties = {
 
 const actionButtonStyle: React.CSSProperties = {
   textDecoration: "none",
-  color: "#fff",
-  background: "#111",
+  color: "var(--button-foreground)",
+  background: "var(--hero-background)",
   borderRadius: 14,
   padding: 14,
   textAlign: "center",
@@ -174,12 +174,12 @@ const actionButtonStyle: React.CSSProperties = {
 }
 
 const layerStyle: React.CSSProperties = {
-  background: "#f4f4f5",
+  background: "var(--card-background)",
   borderRadius: 16,
   padding: 16,
 }
 
 const priorityListStyle: React.CSSProperties = {
   lineHeight: 1.9,
-  color: "#333",
+  color: "var(--foreground)",
 }

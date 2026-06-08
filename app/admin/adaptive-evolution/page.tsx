@@ -161,7 +161,7 @@ export default function AdaptiveEvolutionPage() {
                   <StatusBadge status={item.priority} />
                   <h3>{item.title}</h3>
                   <p>{item.insight}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {item.type} · {item.targetSystem || "general"} · Confidence{" "}
                     {Math.round(item.confidence * 100)}%
                   </p>
@@ -177,7 +177,7 @@ export default function AdaptiveEvolutionPage() {
                   <StatusBadge status={policy.status} />
                   <h3>{policy.title}</h3>
                   <p>{policy.recommendation}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {policy.policyArea} · {policy.priority} · Risk {policy.riskLevel}
                   </p>
 
@@ -209,7 +209,7 @@ export default function AdaptiveEvolutionPage() {
                 <StatusBadge status={run.status} />
                 <h3>{run.title}</h3>
                 <p>{run.summary}</p>
-                <p style={{ color: "#777", fontSize: 12 }}>
+                <p style={{ color: "var(--muted)", fontSize: 12 }}>
                   Maturity {run.maturityScore}/100 ·{" "}
                   {new Date(run.createdAt).toLocaleString("en-AU")}
                 </p>
@@ -239,23 +239,23 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
   marginTop: 14,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const findingStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 14,
   padding: 14,
   marginTop: 14,

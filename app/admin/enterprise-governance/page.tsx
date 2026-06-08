@@ -135,7 +135,7 @@ export default function EnterpriseGovernancePage() {
                   <StatusBadge status={item.status} />
                   <h3>{item.title}</h3>
                   <p>{item.rationale}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {item.targetType} · {item.actionType} · Risk {item.riskLevel}
                   </p>
 
@@ -176,7 +176,7 @@ export default function EnterpriseGovernancePage() {
                   <StatusBadge status={policy.severity} />
                   <h3>{policy.title}</h3>
                   <p>{policy.description}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {policy.policyArea} · {policy.ruleType} · {policy.enforcement}
                   </p>
                 </div>
@@ -194,7 +194,7 @@ export default function EnterpriseGovernancePage() {
                 <div key={actor.id} style={cardStyle}>
                   <StatusBadge status={actor.status} />
                   <h3>{actor.name}</h3>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {actor.email || "No email"} · {actor.actorType} · {actor.roleName}
                   </p>
                 </div>
@@ -228,7 +228,7 @@ export default function EnterpriseGovernancePage() {
                   <strong>Actor:</strong> {item.actor || "system"} ·{" "}
                   <strong>Role:</strong> {item.actorRole || "unknown"}
                 </p>
-                <p style={{ color: "#666" }}>
+                <p style={{ color: "var(--muted)" }}>
                   {item.action} → {item.outcome}
                 </p>
               </div>
@@ -244,8 +244,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
@@ -254,22 +254,22 @@ const secondaryButtonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "1px solid #111",
-  background: "#fff",
-  color: "#111",
+  background: "var(--card-background)",
+  color: "var(--foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const preStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   padding: 14,
   borderRadius: 14,
   overflowX: "auto",

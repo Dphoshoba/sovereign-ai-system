@@ -97,7 +97,7 @@ const formStyle: React.CSSProperties = {
 const inputStyle: React.CSSProperties = {
   padding: "12px",
   borderRadius: "8px",
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   fontSize: "16px",
 }
 
@@ -106,8 +106,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 16px",
   borderRadius: "8px",
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   fontWeight: "bold",
   cursor: "pointer",
   textDecoration: "none",
@@ -115,8 +115,8 @@ const buttonStyle: React.CSSProperties = {
 }
 
 const successBoxStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: "12px",
   padding: "18px",
-  background: "#f8fafc",
+  background: "var(--card-background)",
 }

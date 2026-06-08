@@ -114,7 +114,7 @@ const formStyle: React.CSSProperties = {
 const inputStyle: React.CSSProperties = {
   padding: "12px",
   borderRadius: "8px",
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   fontSize: "16px",
 }
 
@@ -127,8 +127,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: "8px",
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   fontWeight: "bold",
   cursor: "pointer",
 }

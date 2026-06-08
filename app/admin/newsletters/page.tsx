@@ -76,7 +76,7 @@ export default async function AdminNewslettersPage({
         <h2>Recent Sends</h2>
 
         {recentSent.length === 0 ? (
-          <p style={{ color: "#777" }}>No newsletters sent yet.</p>
+          <p style={{ color: "var(--muted)" }}>No newsletters sent yet.</p>
         ) : (
           <div style={{ display: "grid", gap: "10px" }}>
             {recentSent.map((newsletter) => (
@@ -180,7 +180,7 @@ export default async function AdminNewslettersPage({
 }
 
 const statCardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: "12px",
   padding: "16px",
   minWidth: "170px",
@@ -189,7 +189,7 @@ const statCardStyle: React.CSSProperties = {
 }
 
 const miniCardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: "10px",
   padding: "12px",
   display: "grid",
@@ -197,7 +197,7 @@ const miniCardStyle: React.CSSProperties = {
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: "12px",
   padding: "20px",
 }
@@ -210,7 +210,7 @@ const tabStyle: React.CSSProperties = {
   borderRadius: "999px",
   textDecoration: "none",
   fontWeight: "bold",
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
 }
 
 const badgeStyle: React.CSSProperties = {

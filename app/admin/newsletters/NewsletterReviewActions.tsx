@@ -79,7 +79,7 @@ const approveStyle: React.CSSProperties = {
   borderRadius: "8px",
   border: "none",
   background: "#15803d",
-  color: "#fff",
+  color: "var(--button-foreground)",
   fontWeight: "bold",
   cursor: "pointer",
 }
@@ -89,7 +89,7 @@ const rejectStyle: React.CSSProperties = {
   borderRadius: "8px",
   border: "none",
   background: "#b91c1c",
-  color: "#fff",
+  color: "var(--button-foreground)",
   fontWeight: "bold",
   cursor: "pointer",
 }

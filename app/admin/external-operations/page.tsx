@@ -122,7 +122,7 @@ export default function ExternalOperationsPage() {
                   {log.integration} · {log.operationType}
                 </p>
                 {log.error ? <p style={{ color: "#b00020" }}>{log.error}</p> : null}
-                <p style={{ color: "#777", fontSize: 12 }}>
+                <p style={{ color: "var(--muted)", fontSize: 12 }}>
                   {new Date(log.createdAt).toLocaleString("en-AU")}
                 </p>
               </div>
@@ -138,15 +138,15 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }

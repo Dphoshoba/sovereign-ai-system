@@ -150,7 +150,7 @@ export default function StrategicDirectorPage() {
               <StatusBadge status={latestPlan.status} />
               <h3>{latestPlan.title}</h3>
               <p style={{ lineHeight: 1.7 }}>{latestPlan.strategicThesis}</p>
-              <p style={{ color: "#777", fontSize: 12 }}>
+              <p style={{ color: "var(--muted)", fontSize: 12 }}>
                 {latestPlan.timeHorizon} ·{" "}
                 {new Date(latestPlan.createdAt).toLocaleString("en-AU")}
               </p>
@@ -193,7 +193,7 @@ export default function StrategicDirectorPage() {
                   <p>
                     <strong>Target:</strong> {initiative.targetOutcome || "Not set"}
                   </p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {initiative.ownerSystem || "general"} · {initiative.priority} · Risk{" "}
                     {initiative.riskLevel}
                   </p>
@@ -224,9 +224,9 @@ export default function StrategicDirectorPage() {
                   <h3>{decision.title}</h3>
                   <p>{decision.decision}</p>
                   {decision.rationale ? (
-                    <p style={{ color: "#666" }}>{decision.rationale}</p>
+                    <p style={{ color: "var(--muted)" }}>{decision.rationale}</p>
                   ) : null}
-                  <p style={{ color: "#777", fontSize: 12 }}>
+                  <p style={{ color: "var(--muted)", fontSize: 12 }}>
                     {decision.impactArea || "general"} ·{" "}
                     {new Date(decision.createdAt).toLocaleString("en-AU")}
                   </p>
@@ -242,7 +242,7 @@ export default function StrategicDirectorPage() {
 
 function ListCards({ items }: { items: any }) {
   if (!Array.isArray(items) || items.length === 0) {
-    return <p style={{ color: "#666" }}>No items yet.</p>
+    return <p style={{ color: "var(--muted)" }}>No items yet.</p>
   }
 
   return (
@@ -252,7 +252,7 @@ function ListCards({ items }: { items: any }) {
           <StatusBadge status={item.priority || "medium"} />
           <h3>{item.title}</h3>
           <p>{item.reason}</p>
-          <p style={{ color: "#666" }}>{item.targetOutcome}</p>
+          <p style={{ color: "var(--muted)" }}>{item.targetOutcome}</p>
         </div>
       ))}
     </div>
@@ -261,7 +261,7 @@ function ListCards({ items }: { items: any }) {
 
 function List({ items }: { items: any }) {
   if (!Array.isArray(items) || items.length === 0) {
-    return <p style={{ color: "#666" }}>No items yet.</p>
+    return <p style={{ color: "var(--muted)" }}>No items yet.</p>
   }
 
   return (
@@ -274,7 +274,7 @@ function List({ items }: { items: any }) {
 }
 
 function JsonSection({ data }: { data: any }) {
-  if (!data) return <p style={{ color: "#666" }}>No data yet.</p>
+  if (!data) return <p style={{ color: "var(--muted)" }}>No data yet.</p>
 
   return (
     <pre style={preStyle}>
@@ -287,7 +287,7 @@ const inputStyle: React.CSSProperties = {
   width: "100%",
   maxWidth: 260,
   borderRadius: 12,
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   padding: 12,
   marginRight: 12,
   marginBottom: 12,
@@ -298,30 +298,30 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
   marginTop: 14,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const miniCardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 14,
   padding: 14,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const preStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 14,
   padding: 14,
   overflowX: "auto",

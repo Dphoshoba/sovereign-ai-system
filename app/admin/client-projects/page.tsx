@@ -269,7 +269,7 @@ export default function ClientProjectsPage() {
       <section style={heroStyle}>
         <p style={eyebrowStyle}>Client Delivery OS</p>
         <h1 style={{ fontSize: 42, margin: "8px 0" }}>Client Projects</h1>
-        <p style={{ color: "#ddd", maxWidth: 820, lineHeight: 1.7 }}>
+        <p style={{ color: "var(--hero-muted)", maxWidth: 820, lineHeight: 1.7 }}>
           Track active delivery work connected to Echoes & Visions client
           profiles.
         </p>
@@ -434,7 +434,7 @@ export default function ClientProjectsPage() {
                   <h4 style={{ marginTop: 0 }}>Deliverables / Tasks</h4>
 
                   {projectTasks.length === 0 && (
-                    <p style={{ color: "#666" }}>No tasks yet.</p>
+                    <p style={{ color: "var(--muted)" }}>No tasks yet.</p>
                   )}
 
                   {projectTasks.map((task) => (
@@ -565,8 +565,8 @@ export default function ClientProjectsPage() {
 }
 
 const heroStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 24,
   padding: 34,
 }
@@ -574,7 +574,7 @@ const heroStyle: React.CSSProperties = {
 const eyebrowStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 2,
-  color: "#aaa",
+  color: "var(--muted)",
   margin: 0,
 }
 
@@ -586,8 +586,8 @@ const metricsGrid: React.CSSProperties = {
 }
 
 const metricCard: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -597,8 +597,8 @@ const formStyle: React.CSSProperties = {
   gap: 16,
   maxWidth: 840,
   marginTop: 28,
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -619,7 +619,7 @@ const inputStyle: React.CSSProperties = {
   marginTop: 6,
   padding: 12,
   borderRadius: 10,
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   fontSize: 16,
 }
 
@@ -627,8 +627,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
@@ -637,16 +637,16 @@ const secondaryButtonStyle: React.CSSProperties = {
   padding: "8px 12px",
   borderRadius: 8,
   border: "1px solid #111",
-  background: "#fff",
-  color: "#111",
+  background: "var(--card-background)",
+  color: "var(--foreground)",
   cursor: "pointer",
   fontWeight: 600,
   fontSize: 13,
 }
 
 const cardStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -658,8 +658,8 @@ const taskSectionStyle: React.CSSProperties = {
 }
 
 const taskCardStyle: React.CSSProperties = {
-  background: "#f8fafc",
-  border: "1px solid #e5e7eb",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 12,
   padding: 16,
   marginBottom: 12,
@@ -668,8 +668,8 @@ const taskCardStyle: React.CSSProperties = {
 const taskFormStyle: React.CSSProperties = {
   marginTop: 16,
   padding: 16,
-  background: "#f8fafc",
-  border: "1px solid #e5e7eb",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 12,
 }
 
@@ -682,7 +682,7 @@ const taskButtonsStyle: React.CSSProperties = {
 const metaStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1,
-  color: "#777",
+  color: "var(--muted)",
   fontSize: 13,
   margin: 0,
 }
@@ -690,7 +690,7 @@ const metaStyle: React.CSSProperties = {
 const taskMetaStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1,
-  color: "#888",
+  color: "var(--muted)",
   fontSize: 12,
   margin: "0 0 8px",
 }

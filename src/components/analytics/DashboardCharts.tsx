@@ -34,7 +34,7 @@ export function DashboardCharts({ data }: { data: ChartItem[] }) {
 }
 
 const boxStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: "14px",
   padding: "20px",
   marginTop: "28px",

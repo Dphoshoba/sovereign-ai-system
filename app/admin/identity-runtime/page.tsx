@@ -206,7 +206,7 @@ export default function IdentityRuntimePage() {
                 <div key={user.id} style={cardStyle}>
                   <StatusBadge status={user.status} />
                   <h3>{user.name || user.email}</h3>
-                  <p style={{ color: "#666" }}>{user.email}</p>
+                  <p style={{ color: "var(--muted)" }}>{user.email}</p>
                 </div>
               ))}
             </div>
@@ -218,7 +218,7 @@ export default function IdentityRuntimePage() {
                 <div key={session.id} style={cardStyle}>
                   <StatusBadge status={session.status} />
                   <h3>{session.email}</h3>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     Role {session.role || "none"} · Org {session.organizationId || "none"}
                   </p>
                 </div>
@@ -236,7 +236,7 @@ export default function IdentityRuntimePage() {
                 <div key={invite.id} style={cardStyle}>
                   <StatusBadge status={invite.status} />
                   <h3>{invite.email}</h3>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     Role {invite.role} · Token {invite.token}
                   </p>
                 </div>
@@ -250,7 +250,7 @@ export default function IdentityRuntimePage() {
                 <div key={policy.id} style={cardStyle}>
                   <StatusBadge status={policy.status} />
                   <h3>{policy.title}</h3>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {policy.resource} · {policy.action} · {policy.enforcement}
                   </p>
                   <pre style={preStyle}>
@@ -271,7 +271,7 @@ export default function IdentityRuntimePage() {
                 <StatusBadge status={log.decision} />
                 <h3>{log.email || "Unknown actor"}</h3>
                 <p>{log.reason}</p>
-                <p style={{ color: "#666" }}>
+                <p style={{ color: "var(--muted)" }}>
                   {log.resource} · {log.action} · Role {log.role || "none"}
                 </p>
               </div>
@@ -286,7 +286,7 @@ export default function IdentityRuntimePage() {
 const inputStyle: React.CSSProperties = {
   width: "100%",
   borderRadius: 12,
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   padding: 12,
   marginBottom: 12,
 }
@@ -295,8 +295,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
@@ -305,22 +305,22 @@ const secondaryButtonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "1px solid #111",
-  background: "#fff",
-  color: "#111",
+  background: "var(--card-background)",
+  color: "var(--foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const preStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   padding: 14,
   borderRadius: 14,
   overflowX: "auto",

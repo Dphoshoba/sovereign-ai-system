@@ -50,7 +50,7 @@ export default function ContentStrategyPage() {
     <main style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
       <h1>AI Content Strategy Engine</h1>
 
-      <p style={{ maxWidth: 760, color: "#555", lineHeight: 1.7 }}>
+      <p style={{ maxWidth: 760, color: "var(--muted)", lineHeight: 1.7 }}>
         Generate pillar topics, article ideas, keyword clusters, content gaps,
         and the next best article for Echoes & Visions.
       </p>
@@ -127,22 +127,22 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
 
 const featuredCard: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 18,
   padding: 28,
 }
@@ -156,5 +156,5 @@ const itemStyle: React.CSSProperties = {
 const labelStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 2,
-  color: "#aaa",
+  color: "var(--muted)",
 }

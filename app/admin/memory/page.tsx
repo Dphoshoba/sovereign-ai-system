@@ -72,7 +72,7 @@ export default function AiMemoryPage() {
     <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
       <h1>Persistent AI Memory</h1>
 
-      <p style={{ maxWidth: 760, color: "#555", lineHeight: 1.7 }}>
+      <p style={{ maxWidth: 760, color: "var(--muted)", lineHeight: 1.7 }}>
         Store long-term instructions, strategy notes, brand decisions, audience
         insights and publishing memory for Echoes & Visions.
       </p>
@@ -162,8 +162,8 @@ const formStyle: React.CSSProperties = {
   gap: 16,
   maxWidth: 780,
   marginTop: 24,
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -174,7 +174,7 @@ const inputStyle: React.CSSProperties = {
   marginTop: 6,
   padding: 12,
   borderRadius: 10,
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   fontSize: 16,
 }
 
@@ -182,15 +182,15 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -198,6 +198,6 @@ const cardStyle: React.CSSProperties = {
 const metaStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1,
-  color: "#777",
+  color: "var(--muted)",
   fontSize: 13,
 }

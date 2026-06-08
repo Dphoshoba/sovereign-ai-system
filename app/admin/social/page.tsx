@@ -148,7 +148,7 @@ export default async function AdminSocialPage({
 
       <div style={{ display: "grid", gap: "16px", marginTop: "24px" }}>
         {posts.length === 0 ? (
-          <p style={{ color: "#777" }}>
+          <p style={{ color: "var(--muted)" }}>
             No social posts with status &ldquo;{activeFilter.label}&rdquo;.
           </p>
         ) : (
@@ -201,7 +201,7 @@ export default async function AdminSocialPage({
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: "12px",
   padding: "20px",
 }
@@ -214,7 +214,7 @@ const tabStyle: React.CSSProperties = {
   borderRadius: "999px",
   textDecoration: "none",
   fontWeight: "bold",
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
 }
 
 const badgeStyle: React.CSSProperties = {

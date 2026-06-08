@@ -64,14 +64,14 @@ export default async function ProposalsPage() {
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: "14px",
   padding: "20px",
 }
 
 const preStyle: React.CSSProperties = {
   whiteSpace: "pre-wrap",
-  background: "#f8fafc",
+  background: "var(--card-background)",
   padding: "16px",
   borderRadius: "10px",
   overflowX: "auto",

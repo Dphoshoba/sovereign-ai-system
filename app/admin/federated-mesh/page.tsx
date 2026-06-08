@@ -127,7 +127,7 @@ export default function FederatedMeshPage() {
               <StatusBadge status={latest.status} />
               <h3>{latest.title}</h3>
               <p>{latest.summary}</p>
-              <p style={{ color: "#666" }}>
+              <p style={{ color: "var(--muted)" }}>
                 Mesh {latest.meshHealth}/100 · Trust {latest.trustHealth}/100 ·
                 Coordination {latest.coordinationScore}/100 · Risk{" "}
                 {latest.riskScore}/100
@@ -146,7 +146,7 @@ export default function FederatedMeshPage() {
                 <div key={node.id} style={cardStyle}>
                   <StatusBadge status={node.status} />
                   <h3>{node.nodeName}</h3>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {node.nodeType} · {node.domain} · Trust {node.trustScore}/100
                   </p>
                 </div>
@@ -161,7 +161,7 @@ export default function FederatedMeshPage() {
                   <StatusBadge status={society.status} />
                   <h3>{society.societyName}</h3>
                   <p>{society.purpose}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {society.societyType} · Performance {society.performanceScore}/100
                   </p>
                 </div>
@@ -180,7 +180,7 @@ export default function FederatedMeshPage() {
                   <StatusBadge status={packet.status} />
                   <h3>{packet.title}</h3>
                   <p>{packet.summary}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {packet.packetType} · {packet.priority} · {packet.classification}
                   </p>
 
@@ -204,7 +204,7 @@ export default function FederatedMeshPage() {
                 <div key={protocol.id} style={cardStyle}>
                   <StatusBadge status={protocol.status} />
                   <h3>{protocol.title}</h3>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {protocol.protocolType} · Trust Required {protocol.trustRequired}/100
                   </p>
                   <pre style={preStyle}>{JSON.stringify(protocol.rules, null, 2)}</pre>
@@ -248,22 +248,22 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const preStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   padding: 14,
   borderRadius: 14,
   overflowX: "auto",

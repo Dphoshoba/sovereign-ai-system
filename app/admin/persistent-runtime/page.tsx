@@ -136,7 +136,7 @@ export default function PersistentRuntimePage() {
               <StatusBadge status={latest.status} />
               <h3>Latest Heartbeat</h3>
               <p>{latest.summary}</p>
-              <p style={{ color: "#777", fontSize: 12 }}>
+              <p style={{ color: "var(--muted)", fontSize: 12 }}>
                 {new Date(latest.createdAt).toLocaleString("en-AU")}
               </p>
             </div>
@@ -153,7 +153,7 @@ export default function PersistentRuntimePage() {
                   <StatusBadge status={objective.priority} />
                   <h3>{objective.title}</h3>
                   <p>{objective.description}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {objective.status} · {objective.cadence}
                   </p>
                 </div>
@@ -178,7 +178,7 @@ export default function PersistentRuntimePage() {
                     </ul>
                   ) : null}
 
-                  <p style={{ color: "#777", fontSize: 12 }}>
+                  <p style={{ color: "var(--muted)", fontSize: 12 }}>
                     {new Date(snapshot.createdAt).toLocaleString("en-AU")}
                   </p>
                 </div>
@@ -196,7 +196,7 @@ export default function PersistentRuntimePage() {
                 <StatusBadge status={retry.status} />
                 <h3>{retry.title}</h3>
                 <p>{retry.error}</p>
-                <p style={{ color: "#666" }}>
+                <p style={{ color: "var(--muted)" }}>
                   {retry.source} · Attempts {retry.attempts}/{retry.maxAttempts}
                 </p>
 
@@ -222,16 +222,16 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
   marginTop: 14,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }

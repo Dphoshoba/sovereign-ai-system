@@ -137,7 +137,7 @@ export default function EvolutionEnginePage() {
               <h3>{latest.title}</h3>
               <p>{latest.summary}</p>
 
-              <p style={{ color: "#666" }}>
+              <p style={{ color: "var(--muted)" }}>
                 Optimization {latest.optimizationHealth}/100 · Adaptation{" "}
                 {latest.adaptationScore}/100 · Execution{" "}
                 {latest.executionEfficiency}/100
@@ -171,7 +171,7 @@ export default function EvolutionEnginePage() {
                     {proposal.expectedImpact}
                   </p>
 
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {proposal.targetLayer} · Optimization{" "}
                     {proposal.optimizationValue}/100 · Effort{" "}
                     {proposal.implementationEffort}/100
@@ -202,7 +202,7 @@ export default function EvolutionEnginePage() {
 
                   <h3>{agent.agentName}</h3>
 
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     Execution {agent.executionScore}/100 · Governance{" "}
                     {agent.governanceScore}/100 · Adaptation{" "}
                     {agent.adaptationScore}/100
@@ -239,7 +239,7 @@ export default function EvolutionEnginePage() {
 
                   <p>{workflow.optimizationSuggestion}</p>
 
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     Efficiency {workflow.efficiencyScore}/100 · Automation{" "}
                     {workflow.automationPotential}/100 · Bottleneck{" "}
                     {workflow.bottleneckRisk}/100
@@ -262,7 +262,7 @@ export default function EvolutionEnginePage() {
 
                   <p>{memory.summary}</p>
 
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     Impact Area: {memory.impactArea} · Delta{" "}
                     {memory.improvementDelta}
                   </p>
@@ -280,22 +280,22 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const preStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   padding: 14,
   borderRadius: 14,
   overflowX: "auto",

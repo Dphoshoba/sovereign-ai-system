@@ -56,7 +56,7 @@ export function ScheduleArticleButton({
           borderRadius: "8px",
           border: "none",
           background: "#2563eb",
-          color: "#fff",
+          color: "var(--button-foreground)",
           fontWeight: "bold",
           cursor: "pointer",
         }}
@@ -73,7 +73,7 @@ export function ScheduleArticleButton({
             style={{
               padding: "8px",
               borderRadius: "6px",
-              border: "1px solid #ccc",
+              border: "1px solid var(--border)",
             }}
           />
 
@@ -84,8 +84,8 @@ export function ScheduleArticleButton({
               padding: "8px 12px",
               borderRadius: "6px",
               border: "none",
-              background: "#111",
-              color: "#fff",
+              background: "var(--hero-background)",
+              color: "var(--button-foreground)",
               cursor: "pointer",
             }}
           >

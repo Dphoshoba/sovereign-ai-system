@@ -140,7 +140,7 @@ export default function ReasoningEnginePage() {
               <StatusBadge status={latest.status} />
               <h3>{latest.title}</h3>
               <p>{latest.summary}</p>
-              <p style={{ color: "#666" }}>
+              <p style={{ color: "var(--muted)" }}>
                 Confidence {Math.round((latest.confidenceScore || 0) * 100)}%
               </p>
 
@@ -174,7 +174,7 @@ export default function ReasoningEnginePage() {
                   <p>{item.description}</p>
                   <p><strong>Upside:</strong> {item.upside}</p>
                   <p><strong>Downside:</strong> {item.downside}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     Value {item.strategicValue}/100 · Cost pressure{" "}
                     {item.costPressure}/100 · {item.timeHorizon}
                   </p>
@@ -191,7 +191,7 @@ export default function ReasoningEnginePage() {
                   <h3>{item.title}</h3>
                   <p>{item.description}</p>
                   <p><strong>Mitigation:</strong> {item.mitigation}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {item.consequenceType} · Probability{" "}
                     {Math.round((item.probability || 0) * 100)}%
                   </p>
@@ -210,7 +210,7 @@ export default function ReasoningEnginePage() {
                 <StatusBadge status={item.status} />
                 <h3>{item.title}</h3>
                 <p>{item.rationale}</p>
-                <p style={{ color: "#666" }}>
+                <p style={{ color: "var(--muted)" }}>
                   {item.recommendationType} · {item.priority} · Approval required:{" "}
                   {String(item.requiredApproval)}
                 </p>
@@ -237,7 +237,7 @@ export default function ReasoningEnginePage() {
 const inputStyle: React.CSSProperties = {
   width: "100%",
   borderRadius: 12,
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   padding: 12,
   marginBottom: 12,
 }
@@ -246,22 +246,22 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const preStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   padding: 14,
   borderRadius: 14,
   overflowX: "auto",

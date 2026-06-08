@@ -163,7 +163,7 @@ export default function BillingRuntimePage() {
                 <StatusBadge status={latest.status} />
                 <h3>{latest.title}</h3>
                 <p>{latest.summary}</p>
-                <p style={{ color: "#666" }}>
+                <p style={{ color: "var(--muted)" }}>
                   Revenue {latest.revenueHealth}/100 · Usage{" "}
                   {latest.usageHealth}/100 · Quota Risk {latest.quotaRisk}/100 ·
                   Cost Risk {latest.costRisk}/100
@@ -218,7 +218,7 @@ export default function BillingRuntimePage() {
                 <div key={item.id} style={cardStyle}>
                   <StatusBadge status={item.status} />
                   <h3>{item.planSlug}</h3>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     Org {item.organizationId} · Cancel at period end:{" "}
                     {String(item.cancelAtPeriodEnd)}
                   </p>
@@ -236,7 +236,7 @@ export default function BillingRuntimePage() {
                   <p>
                     {quota.usedValue}/{quota.limitValue} used
                   </p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     Reset:{" "}
                     {quota.resetAt
                       ? new Date(quota.resetAt).toLocaleString("en-AU")
@@ -256,7 +256,7 @@ export default function BillingRuntimePage() {
               <div key={event.id} style={cardStyle}>
                 <StatusBadge status={event.meterType} />
                 <h3>{event.meterType}</h3>
-                <p style={{ color: "#666" }}>
+                <p style={{ color: "var(--muted)" }}>
                   Qty {event.quantity} {event.unit} · Cost AUD{" "}
                   {(event.costAud || 0).toFixed(4)} · {event.sourceLayer}
                 </p>
@@ -273,22 +273,22 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const preStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   padding: 14,
   borderRadius: 14,
   overflowX: "auto",

@@ -77,7 +77,7 @@ export default function WorkflowsPage() {
           Visual AI Workflow Builder
         </h1>
 
-        <p style={{ color: "#ddd", maxWidth: 780, lineHeight: 1.7 }}>
+        <p style={{ color: "var(--hero-muted)", maxWidth: 780, lineHeight: 1.7 }}>
           Create automation rules that connect publishing, agents, memory, CRM,
           jobs, activity and growth intelligence.
         </p>
@@ -172,7 +172,7 @@ export default function WorkflowsPage() {
               <h3>{workflow.name}</h3>
 
               {workflow.description ? (
-                <p style={{ color: "#555", lineHeight: 1.7 }}>
+                <p style={{ color: "var(--muted)", lineHeight: 1.7 }}>
                   {workflow.description}
                 </p>
               ) : null}
@@ -191,8 +191,8 @@ export default function WorkflowsPage() {
 }
 
 const heroStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 24,
   padding: 34,
 }
@@ -200,7 +200,7 @@ const heroStyle: React.CSSProperties = {
 const eyebrowStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 2,
-  color: "#aaa",
+  color: "var(--muted)",
   margin: 0,
 }
 
@@ -209,8 +209,8 @@ const formStyle: React.CSSProperties = {
   gap: 16,
   maxWidth: 780,
   marginTop: 24,
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -221,7 +221,7 @@ const inputStyle: React.CSSProperties = {
   marginTop: 6,
   padding: 12,
   borderRadius: 10,
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   fontSize: 16,
 }
 
@@ -229,15 +229,15 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -245,7 +245,7 @@ const cardStyle: React.CSSProperties = {
 const metaStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1,
-  color: "#777",
+  color: "var(--muted)",
   fontSize: 13,
   margin: 0,
 }
@@ -258,5 +258,5 @@ const workflowLine: React.CSSProperties = {
   marginTop: 12,
   padding: 14,
   borderRadius: 12,
-  background: "#f7f7f7",
+  background: "var(--card-background)",
 }

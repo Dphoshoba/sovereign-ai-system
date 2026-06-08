@@ -73,7 +73,7 @@ export default function AiJobsPage() {
     <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
       <h1>AI Automation Queue</h1>
 
-      <p style={{ maxWidth: 760, color: "#555", lineHeight: 1.7 }}>
+      <p style={{ maxWidth: 760, color: "var(--muted)", lineHeight: 1.7 }}>
         Queue and run background AI automation jobs. This is the first reliable
         backend layer for scheduled publishing, embeddings, retries and future
         autonomous workflows.
@@ -110,7 +110,7 @@ export default function AiJobsPage() {
               <div>
                 <p style={metaStyle}>{job.status}</p>
                 <h3 style={{ margin: "4px 0" }}>{job.type}</h3>
-                <p style={{ color: "#555", margin: 0 }}>
+                <p style={{ color: "var(--muted)", margin: 0 }}>
                   Attempts: {job.attempts} · Scheduled:{" "}
                   {new Date(job.scheduledAt).toLocaleString("en-AU")}
                 </p>
@@ -131,8 +131,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 16px",
   borderRadius: 10,
   border: "1px solid #111",
-  background: "#fff",
-  color: "#111",
+  background: "var(--card-background)",
+  color: "var(--foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
@@ -141,15 +141,15 @@ const darkButton: React.CSSProperties = {
   padding: "12px 16px",
   borderRadius: 10,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 22,
 }
@@ -157,7 +157,7 @@ const cardStyle: React.CSSProperties = {
 const metaStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1,
-  color: "#777",
+  color: "var(--muted)",
   fontSize: 13,
   margin: 0,
 }

@@ -260,7 +260,7 @@ export default function WorldModelV2Page() {
                 <StatusBadge status={test.severity} />
                 <h3>{test.title}</h3>
                 <p>{test.description}</p>
-                <p style={{ color: "#666" }}>
+                <p style={{ color: "var(--muted)" }}>
                   {test.stressType} · Resilience {test.resilienceScore}/100
                 </p>
                 {test.mitigation ? (
@@ -291,7 +291,7 @@ export default function WorldModelV2Page() {
                     </div>
                   ))}
                   {!signalsByDomain[domain]?.length ? (
-                    <p style={{ color: "#888", fontSize: 14 }}>No signals yet</p>
+                    <p style={{ color: "var(--muted)", fontSize: 14 }}>No signals yet</p>
                   ) : null}
                 </div>
               ))}
@@ -305,7 +305,7 @@ export default function WorldModelV2Page() {
                   <StatusBadge status={scenario.impactLevel} />
                   <h3>{scenario.title}</h3>
                   <p>{scenario.narrative}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {scenario.scenarioType} ·{" "}
                     {Math.round((scenario.probability || 0) * 100)}% probability
                   </p>
@@ -325,7 +325,7 @@ export default function WorldModelV2Page() {
                   <StatusBadge status={shock.severity} />
                   <h3>{shock.title}</h3>
                   <p>{shock.narrative}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {shock.shockType.replace(/-/g, " ")} · Impact{" "}
                     {shock.impactScore}/100 · {shock.timeHorizon}
                   </p>
@@ -345,7 +345,7 @@ export default function WorldModelV2Page() {
                 <div key={posture.id} style={cardStyle}>
                   <h3>{posture.title}</h3>
                   <p>{posture.recommendation}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {posture.postureType} · Readiness {posture.readinessScore} ·
                     Risk {posture.riskExposure} · Upside {posture.upsidePotential}
                   </p>
@@ -388,7 +388,7 @@ export default function WorldModelV2Page() {
                   />
                 </ExecutiveGrid>
 
-                <p style={{ color: "#666" }}>
+                <p style={{ color: "var(--muted)" }}>
                   {item.recommendationType} · {item.priority} ·{" "}
                   {item.requiredApproval
                     ? "Governance approval required"
@@ -425,8 +425,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
   marginRight: 12,
@@ -441,16 +441,16 @@ const inputStyle: React.CSSProperties = {
   width: 280,
   padding: 12,
   borderRadius: 12,
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   marginRight: 12,
   marginBottom: 12,
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const chipStyle: React.CSSProperties = {
@@ -464,8 +464,8 @@ const chipStyle: React.CSSProperties = {
 }
 
 const preStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   padding: 16,
   borderRadius: 14,
   overflowX: "auto",

@@ -73,7 +73,7 @@ export function NewsletterSignup() {
 }
 
 const boxStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: "16px",
   padding: "24px",
   marginTop: "32px",
@@ -89,7 +89,7 @@ const formStyle: React.CSSProperties = {
 const inputStyle: React.CSSProperties = {
   padding: "12px",
   borderRadius: "8px",
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   minWidth: "260px",
 }
 
@@ -97,8 +97,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 16px",
   borderRadius: "8px",
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   fontWeight: "bold",
   cursor: "pointer",
 }

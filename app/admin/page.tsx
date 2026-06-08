@@ -34,7 +34,7 @@ export default async function AiCommandCenterPage() {
         <h1 style={{ fontSize: 44, lineHeight: 1.08, margin: "10px 0" }}>
           AI Command Center
         </h1>
-        <p style={{ maxWidth: 780, color: "#ddd", lineHeight: 1.7 }}>
+        <p style={{ maxWidth: 780, color: "var(--hero-muted)", lineHeight: 1.7 }}>
           One operational cockpit for publishing, strategy, memory, agents,
           analytics, scheduling, semantic search and knowledge intelligence.
         </p>
@@ -146,7 +146,7 @@ export default async function AiCommandCenterPage() {
 
         <Panel title="Upcoming Scheduled Posts">
           {nextScheduled.length === 0 ? (
-            <p style={{ color: "#666" }}>No scheduled posts yet.</p>
+            <p style={{ color: "var(--muted)" }}>No scheduled posts yet.</p>
           ) : (
             nextScheduled.map((article) => (
               <Link
@@ -173,13 +173,13 @@ export default async function AiCommandCenterPage() {
       <section style={gridTwo}>
         <Panel title="Recent AI Memories">
           {memories.length === 0 ? (
-            <p style={{ color: "#666" }}>No memories saved yet.</p>
+            <p style={{ color: "var(--muted)" }}>No memories saved yet.</p>
           ) : (
             memories.map((memory) => (
               <div key={memory.id} style={memoryItem}>
                 <p style={metaStyle}>{memory.type}</p>
                 <strong>{memory.title}</strong>
-                <p style={{ color: "#555", lineHeight: 1.6 }}>
+                <p style={{ color: "var(--muted)", lineHeight: 1.6 }}>
                   {memory.content.slice(0, 180)}
                   {memory.content.length > 180 ? "..." : ""}
                 </p>
@@ -300,7 +300,7 @@ function CommandCard({
   return (
     <Link href={href} style={commandCard}>
       <strong>{title}</strong>
-      <p style={{ color: "#555", lineHeight: 1.6, marginBottom: 0 }}>
+      <p style={{ color: "var(--muted)", lineHeight: 1.6, marginBottom: 0 }}>
         {description}
       </p>
     </Link>
@@ -308,8 +308,8 @@ function CommandCard({
 }
    
 const heroStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 24,
   padding: 34,
 }
@@ -317,7 +317,7 @@ const heroStyle: React.CSSProperties = {
 const eyebrowStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 2,
-  color: "#aaa",
+  color: "var(--muted)",
   margin: 0,
 }
 
@@ -329,8 +329,8 @@ const statsGrid: React.CSSProperties = {
 }
 
 const statCard: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 22,
   display: "grid",
@@ -348,8 +348,8 @@ const quickActions: React.CSSProperties = {
 const actionButton: React.CSSProperties = {
   padding: "12px 16px",
   borderRadius: 12,
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   textDecoration: "none",
   fontWeight: "bold",
 }
@@ -362,8 +362,8 @@ const gridTwo: React.CSSProperties = {
 }
 
 const panelStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 20,
   padding: 24,
 }
@@ -372,10 +372,10 @@ const commandCard: React.CSSProperties = {
   display: "block",
   padding: 18,
   borderRadius: 14,
-  background: "#f7f7f7",
-  color: "#111",
+  background: "var(--card-background)",
+  color: "var(--foreground)",
   textDecoration: "none",
-  border: "1px solid #eee",
+  border: "1px solid var(--border)",
 }
 
 const listItem: React.CSSProperties = {
@@ -384,29 +384,29 @@ const listItem: React.CSSProperties = {
   gap: 18,
   padding: 16,
   borderRadius: 14,
-  background: "#f7f7f7",
-  color: "#111",
+  background: "var(--card-background)",
+  color: "var(--foreground)",
   textDecoration: "none",
-  border: "1px solid #eee",
+  border: "1px solid var(--border)",
 }
 
 const memoryItem: React.CSSProperties = {
   padding: 16,
   borderRadius: 14,
-  background: "#f7f7f7",
-  border: "1px solid #eee",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
 }
 
 const metaStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1,
-  color: "#777",
+  color: "var(--muted)",
   fontSize: 13,
   marginTop: 0,
 }
 
 const plainLink: React.CSSProperties = {
-  color: "#111",
+  color: "var(--foreground)",
   fontWeight: "bold",
   textDecoration: "none",
 }

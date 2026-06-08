@@ -201,7 +201,7 @@ const gridStyle: React.CSSProperties = {
 }
 
 const statCardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: "14px",
   padding: "18px",
   display: "grid",
@@ -213,7 +213,7 @@ const sectionStyle: React.CSSProperties = {
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: "12px",
   padding: "16px",
 }

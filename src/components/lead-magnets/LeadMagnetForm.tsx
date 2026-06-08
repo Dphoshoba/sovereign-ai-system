@@ -89,7 +89,7 @@ export default function LeadMagnetForm() {
 }
 
 const formStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: "12px",
   padding: "20px",
   display: "grid",
@@ -106,7 +106,7 @@ const labelStyle: React.CSSProperties = {
 const inputStyle: React.CSSProperties = {
   padding: "10px 12px",
   borderRadius: "8px",
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   fontFamily: "inherit",
 }
 
@@ -114,8 +114,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "10px 14px",
   borderRadius: "8px",
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   fontWeight: "bold",
   cursor: "pointer",
   width: "fit-content",

@@ -39,7 +39,7 @@ export default async function EditorialCalendarPage() {
     <main style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
       <h1>Editorial Calendar</h1>
 
-      <p style={{ color: "#555", maxWidth: 760, lineHeight: 1.7 }}>
+      <p style={{ color: "var(--muted)", maxWidth: 760, lineHeight: 1.7 }}>
         Track drafts, reviews, scheduled articles, and published posts for
         Echoes & Visions.
       </p>
@@ -80,7 +80,7 @@ function CalendarSection({
       <h2>{title}</h2>
 
       {articles.length === 0 ? (
-        <p style={{ color: "#777" }}>Nothing here yet.</p>
+        <p style={{ color: "var(--muted)" }}>Nothing here yet.</p>
       ) : (
         <div style={{ display: "grid", gap: 16 }}>
           {articles.map((article) => (
@@ -90,16 +90,16 @@ function CalendarSection({
 
                 <h3 style={{ margin: "6px 0" }}>{article.title}</h3>
 
-                <p style={{ color: "#555" }}>
+                <p style={{ color: "var(--muted)" }}>
                   <strong>Category:</strong> {article.category}
                 </p>
 
-                <p style={{ color: "#555" }}>
+                <p style={{ color: "var(--muted)" }}>
                   <strong>Scheduled:</strong>{" "}
                   {formatDate(article.scheduledFor)}
                 </p>
 
-                <p style={{ color: "#555" }}>
+                <p style={{ color: "var(--muted)" }}>
                   <strong>Published:</strong>{" "}
                   {formatDate(article.publishedAt)}
                 </p>
@@ -127,8 +127,8 @@ const statsGrid: React.CSSProperties = {
 }
 
 const statCard: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 18,
   padding: 22,
   display: "grid",
@@ -136,8 +136,8 @@ const statCard: React.CSSProperties = {
 }
 
 const articleCard: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 22,
   display: "flex",
@@ -149,7 +149,7 @@ const articleCard: React.CSSProperties = {
 const statusStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1,
-  color: "#777",
+  color: "var(--muted)",
   fontSize: 13,
   margin: 0,
 }
@@ -157,8 +157,8 @@ const statusStyle: React.CSSProperties = {
 const buttonStyle: React.CSSProperties = {
   padding: "10px 14px",
   borderRadius: 10,
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   textDecoration: "none",
   fontWeight: "bold",
 }

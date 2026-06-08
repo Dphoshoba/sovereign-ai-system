@@ -120,7 +120,7 @@ export default function SovereignRuntimePage() {
                   <StatusBadge status={item.priority} />
                   <h3>{item.title}</h3>
                   <p>{item.rationale}</p>
-                  <p style={{ color: "#666" }}>{item.area}</p>
+                  <p style={{ color: "var(--muted)" }}>{item.area}</p>
                 </div>
               ))}
             </div>
@@ -133,7 +133,7 @@ export default function SovereignRuntimePage() {
                   <StatusBadge status={item.priority} />
                   <h3>{item.title}</h3>
                   <p>{item.reason}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {item.sourceLayer} → {item.targetLayer} · {item.routeType}
                   </p>
                 </div>
@@ -151,7 +151,7 @@ export default function SovereignRuntimePage() {
                 <StatusBadge status={item.status} />
                 <h3>{item.title}</h3>
                 <p>{item.rationale}</p>
-                <p style={{ color: "#666" }}>
+                <p style={{ color: "var(--muted)" }}>
                   {item.actionType} · {item.targetLayer}
                 </p>
 
@@ -177,22 +177,22 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const preStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   padding: 16,
   borderRadius: 14,
   overflowX: "auto",

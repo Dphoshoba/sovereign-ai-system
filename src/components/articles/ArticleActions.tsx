@@ -157,7 +157,7 @@ const generateStyle: React.CSSProperties = {
   borderRadius: "8px",
   border: "none",
   background: "#15803d",
-  color: "#fff",
+  color: "var(--button-foreground)",
   fontWeight: "bold",
   cursor: "pointer",
 }
@@ -167,7 +167,7 @@ const publishStyle: React.CSSProperties = {
   borderRadius: "8px",
   border: "none",
   background: "#1d4ed8",
-  color: "#fff",
+  color: "var(--button-foreground)",
   fontWeight: "bold",
   cursor: "pointer",
 }
@@ -177,7 +177,7 @@ const scheduleStyle: React.CSSProperties = {
   borderRadius: "8px",
   border: "none",
   background: "#7c3aed",
-  color: "#fff",
+  color: "var(--button-foreground)",
   fontWeight: "bold",
   cursor: "pointer",
 }
@@ -187,7 +187,7 @@ const archiveStyle: React.CSSProperties = {
   borderRadius: "8px",
   border: "none",
   background: "#92400e",
-  color: "#fff",
+  color: "var(--button-foreground)",
   fontWeight: "bold",
   cursor: "pointer",
 }
@@ -197,7 +197,7 @@ const deleteStyle: React.CSSProperties = {
   borderRadius: "8px",
   border: "none",
   background: "#b91c1c",
-  color: "#fff",
+  color: "var(--button-foreground)",
   fontWeight: "bold",
   cursor: "pointer",
 }

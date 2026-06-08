@@ -227,7 +227,7 @@ export default function CreatorLeadsDashboard() {
           Creator Leads Dashboard
         </h1>
 
-        <p style={{ color: "#ddd", maxWidth: 850, lineHeight: 1.7 }}>
+        <p style={{ color: "var(--hero-muted)", maxWidth: 850, lineHeight: 1.7 }}>
           Track Starter Pack leads, score creator readiness, manage audit
           pipeline stages and prepare consultation opportunities for Echoes &
           Visions.
@@ -241,7 +241,7 @@ export default function CreatorLeadsDashboard() {
             style={{
               fontSize: "48px",
               fontWeight: 800,
-              color: "#ffffff",
+              color: "var(--hero-foreground)",
               marginTop: "12px",
             }}
           >
@@ -343,12 +343,12 @@ export default function CreatorLeadsDashboard() {
                   <p style={leadNameStyle}>{lead.name}</p>
                   <p>{lead.email}</p>
 
-                  <p style={{ color: "#555" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {lead.creatorType || "No creator type"} ·{" "}
                     {lead.readiness || "unknown"}
                   </p>
 
-                  <p style={{ color: "#777" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {new Date(lead.createdAt).toLocaleString("en-AU")}
                   </p>
                 </button>
@@ -363,7 +363,7 @@ export default function CreatorLeadsDashboard() {
           {selectedLead ? (
             <div key={selectedLead.id} style={editorCard}>
               <h3 style={{ marginTop: 0 }}>{selectedLead.name}</h3>
-              <p style={{ margin: "8px 0", color: "#333" }}>{selectedLead.email}</p>
+              <p style={{ margin: "8px 0", color: "var(--foreground)" }}>{selectedLead.email}</p>
 
               <div style={leadSummaryStyle}>
                 <LeadDetailRow label="Status" value={selectedLead.status} />
@@ -404,7 +404,7 @@ export default function CreatorLeadsDashboard() {
                     label="Score"
                     value={selectedLeadIntelligence.score}
                     valueStyle={{
-                      color: "#ffffff",
+                      color: "var(--hero-foreground)",
                       fontWeight: 800,
                       fontSize: "20px",
                     }}
@@ -422,7 +422,7 @@ export default function CreatorLeadsDashboard() {
                     label="Recommendation"
                     value={selectedLeadIntelligence.recommendation}
                     valueStyle={{
-                      color: "#ffffff",
+                      color: "var(--hero-foreground)",
                       fontWeight: 700,
                       fontSize: "16px",
                     }}
@@ -431,7 +431,7 @@ export default function CreatorLeadsDashboard() {
                     label="Readiness"
                     value={selectedLeadIntelligence.readiness || "unknown"}
                     valueStyle={{
-                      color: "#ffffff",
+                      color: "var(--hero-foreground)",
                       fontWeight: 700,
                       fontSize: "16px",
                     }}
@@ -440,7 +440,7 @@ export default function CreatorLeadsDashboard() {
                     label="Creator Type"
                     value={selectedLeadIntelligence.creatorType || "Not set"}
                     valueStyle={{
-                      color: "#ffffff",
+                      color: "var(--hero-foreground)",
                       fontWeight: 700,
                       fontSize: "16px",
                     }}
@@ -735,7 +735,7 @@ function LeadDetailRow({
   return (
     <div style={{ marginBottom: "10px" }}>
       <p style={intelligenceLabelStyle}>{label}</p>
-      <p style={{ margin: 0, color: "#111", fontWeight: 600 }}>{value}</p>
+      <p style={{ margin: 0, color: "var(--foreground)", fontWeight: 600 }}>{value}</p>
     </div>
   )
 }
@@ -769,7 +769,7 @@ function ProposalField({
   return (
     <div style={{ marginBottom: "14px" }}>
       <p style={intelligenceLabelStyle}>{label}</p>
-      <p style={{ margin: 0, color: "#111", fontWeight: 600, lineHeight: 1.6 }}>
+      <p style={{ margin: 0, color: "var(--foreground)", fontWeight: 600, lineHeight: 1.6 }}>
         {value}
       </p>
     </div>
@@ -788,7 +788,7 @@ function ProposalList({
   return (
     <div style={{ marginBottom: "14px" }}>
       <p style={intelligenceLabelStyle}>{label}</p>
-      <ul style={{ margin: "6px 0 0", paddingLeft: 20, color: "#111" }}>
+      <ul style={{ margin: "6px 0 0", paddingLeft: 20, color: "var(--foreground)" }}>
         {items.map((item, index) => (
           <li key={`${label}-${index}`} style={{ marginBottom: 6, lineHeight: 1.5 }}>
             {item}
@@ -800,8 +800,8 @@ function ProposalList({
 }
 
 const heroStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 24,
   padding: 34,
 }
@@ -809,7 +809,7 @@ const heroStyle: React.CSSProperties = {
 const eyebrowStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 2,
-  color: "#aaa",
+  color: "var(--muted)",
   margin: 0,
 }
 
@@ -821,8 +821,8 @@ const metricsGrid: React.CSSProperties = {
 }
 
 const metricCard: React.CSSProperties = {
-  background: "#111",
-  border: "1px solid #333",
+  background: "var(--hero-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -847,7 +847,7 @@ const inputStyle: React.CSSProperties = {
   marginBottom: 14,
   padding: 12,
   borderRadius: 10,
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   fontSize: 15,
 }
 
@@ -855,8 +855,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
@@ -870,7 +870,7 @@ const leadCard: React.CSSProperties = {
   cursor: "pointer",
   userSelect: "none",
   font: "inherit",
-  color: "inherit",
+  color: "var(--foreground)",
 }
 
 const leadNameStyle: React.CSSProperties = {
@@ -880,32 +880,32 @@ const leadNameStyle: React.CSSProperties = {
 }
 
 const leadSummaryStyle: React.CSSProperties = {
-  background: "#f8fafc",
-  border: "1px solid #e5e7eb",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 12,
   padding: 16,
   marginBottom: 20,
 }
 
 const generatedEmailStyle: React.CSSProperties = {
-  background: "#f8fafc",
-  border: "1px solid #e5e7eb",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 12,
   padding: 16,
   marginBottom: 20,
 }
 
 const generatedProposalStyle: React.CSSProperties = {
-  background: "#f8fafc",
-  border: "1px solid #e5e7eb",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 12,
   padding: 16,
   marginBottom: 20,
 }
 
 const pipelineActionsStyle: React.CSSProperties = {
-  background: "#f8fafc",
-  border: "1px solid #e5e7eb",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 12,
   padding: 16,
   marginBottom: 20,
@@ -915,7 +915,7 @@ const pipelineTitleStyle: React.CSSProperties = {
   margin: "0 0 12px",
   fontSize: 16,
   fontWeight: 700,
-  color: "#111",
+  color: "var(--foreground)",
 }
 
 const pipelineButtonsStyle: React.CSSProperties = {
@@ -927,9 +927,9 @@ const pipelineButtonsStyle: React.CSSProperties = {
 const pipelineButtonStyle: React.CSSProperties = {
   padding: "10px 14px",
   borderRadius: 10,
-  border: "1px solid #ccc",
-  background: "#fff",
-  color: "#111",
+  border: "1px solid var(--border)",
+  background: "var(--card-background)",
+  color: "var(--foreground)",
   cursor: "pointer",
   fontWeight: 600,
   fontSize: 14,
@@ -947,14 +947,14 @@ const pipelineMessageStyle: React.CSSProperties = {
 }
 
 const editorCard: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
 
 const intelligencePanelStyle: React.CSSProperties = {
-  background: "#111",
+  background: "var(--hero-background)",
   borderRadius: 14,
   padding: "20px",
   marginBottom: "20px",
@@ -963,7 +963,7 @@ const intelligencePanelStyle: React.CSSProperties = {
 const intelligenceLabelStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1,
-  color: "#888",
+  color: "var(--muted)",
   fontSize: 12,
   margin: "0 0 4px 0",
 }
@@ -971,7 +971,7 @@ const intelligenceLabelStyle: React.CSSProperties = {
 const metaStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1,
-  color: "#aaa",
+  color: "var(--muted)",
   fontSize: 13,
   margin: 0,
 }

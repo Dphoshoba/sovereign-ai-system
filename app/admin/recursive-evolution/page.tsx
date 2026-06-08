@@ -143,7 +143,7 @@ export default function RecursiveEvolutionPage() {
                   <h3>{item.title}</h3>
                   <p>{item.description}</p>
 
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {item.observationType} · {item.affectedLayer}
                   </p>
                 </div>
@@ -164,7 +164,7 @@ export default function RecursiveEvolutionPage() {
 
                   <p>{item.description}</p>
 
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {item.mutationType} · {item.targetLayer}
                   </p>
                 </div>
@@ -189,7 +189,7 @@ export default function RecursiveEvolutionPage() {
 
                   <p>{item.rationale}</p>
 
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {item.proposalType} · Risk{" "}
                     {item.implementationRisk}
                   </p>
@@ -221,7 +221,7 @@ export default function RecursiveEvolutionPage() {
 
                   <p>{item.insight}</p>
 
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {item.memoryType} · Confidence{" "}
                     {Math.round((item.confidence || 0) * 100)}%
                   </p>
@@ -239,22 +239,22 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const preStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   padding: 14,
   borderRadius: 14,
   overflowX: "auto",

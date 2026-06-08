@@ -79,7 +79,7 @@ export default function LiveCommandCenterPage() {
           Real-Time AI Command Center
         </h1>
 
-        <p style={{ color: "#ddd", maxWidth: 860, lineHeight: 1.7 }}>
+        <p style={{ color: "var(--hero-muted)", maxWidth: 860, lineHeight: 1.7 }}>
           Monitor agents, jobs, workflows, approvals, scheduled operations,
           activity events and system health in one live operational dashboard.
         </p>
@@ -108,7 +108,7 @@ export default function LiveCommandCenterPage() {
         </label>
 
         {data ? (
-          <span style={{ color: "#666" }}>
+          <span style={{ color: "var(--muted)" }}>
             Last update: {new Date(data.timestamp).toLocaleString("en-AU")}
           </span>
         ) : null}
@@ -158,7 +158,7 @@ export default function LiveCommandCenterPage() {
                     </p>
                     <h3>{event.title}</h3>
                     {event.message ? (
-                      <p style={{ color: "#555", lineHeight: 1.6 }}>
+                      <p style={{ color: "var(--muted)", lineHeight: 1.6 }}>
                         {event.message}
                       </p>
                     ) : null}
@@ -179,7 +179,7 @@ export default function LiveCommandCenterPage() {
                       {agent.department?.name || "General"}
                     </p>
                     <h3>{agent.name}</h3>
-                    <p style={{ color: "#555" }}>{agent.role}</p>
+                    <p style={{ color: "var(--muted)" }}>{agent.role}</p>
                   </Card>
                 ))
               )}
@@ -232,7 +232,7 @@ export default function LiveCommandCenterPage() {
                   <Card key={workflow.id}>
                     <p style={metaStyle}>{workflow.status}</p>
                     <h3>{workflow.name}</h3>
-                    <p style={{ color: "#555" }}>
+                    <p style={{ color: "var(--muted)" }}>
                       {workflow.trigger} → {workflow.action}
                     </p>
                   </Card>
@@ -284,12 +284,12 @@ function Card({ children }: { children: React.ReactNode }) {
 }
 
 function Empty() {
-  return <p style={{ color: "#666" }}>Nothing to show.</p>
+  return <p style={{ color: "var(--muted)" }}>Nothing to show.</p>
 }
 
 const heroStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 24,
   padding: 34,
 }
@@ -297,7 +297,7 @@ const heroStyle: React.CSSProperties = {
 const eyebrowStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 2,
-  color: "#aaa",
+  color: "var(--muted)",
   margin: 0,
 }
 
@@ -313,8 +313,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
@@ -323,8 +323,8 @@ const secondaryButton: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "1px solid #111",
-  background: "#fff",
-  color: "#111",
+  background: "var(--card-background)",
+  color: "var(--foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
@@ -344,8 +344,8 @@ const metricsGrid: React.CSSProperties = {
 }
 
 const metricCard: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 22,
 }
@@ -358,8 +358,8 @@ const gridTwo: React.CSSProperties = {
 }
 
 const panelStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 20,
   padding: 24,
 }
@@ -373,8 +373,8 @@ const panelHeader: React.CSSProperties = {
 }
 
 const cardStyle: React.CSSProperties = {
-  background: "#f7f7f7",
-  border: "1px solid #eee",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 14,
   padding: 18,
 }
@@ -382,13 +382,13 @@ const cardStyle: React.CSSProperties = {
 const metaStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1,
-  color: "#777",
+  color: "var(--muted)",
   fontSize: 13,
   margin: 0,
 }
 
 const plainLink: React.CSSProperties = {
-  color: "#111",
+  color: "var(--foreground)",
   fontWeight: "bold",
   textDecoration: "none",
 }

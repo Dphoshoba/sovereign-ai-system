@@ -114,7 +114,7 @@ export default function FederatedIntelligencePage() {
                 <div key={node.id} style={cardStyle}>
                   <StatusBadge status={node.status} />
                   <h3>{node.name}</h3>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {node.nodeType} · {node.domain} · Trust {node.trustLevel}/100
                   </p>
                 </div>
@@ -129,7 +129,7 @@ export default function FederatedIntelligencePage() {
                   <StatusBadge status={signal.priority} />
                   <h3>{signal.title}</h3>
                   <p>{signal.summary}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {signal.sourceNode} · {signal.signalType}
                   </p>
                 </div>
@@ -147,7 +147,7 @@ export default function FederatedIntelligencePage() {
                 <div key={item.id} style={cardStyle}>
                   <StatusBadge status={item.status} />
                   <h3>{item.title}</h3>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {item.agreementType} · Risk {item.riskLevel}
                   </p>
                   <pre style={preStyle}>{JSON.stringify(item.terms, null, 2)}</pre>
@@ -163,7 +163,7 @@ export default function FederatedIntelligencePage() {
                   <StatusBadge status={action.status} />
                   <h3>{action.title}</h3>
                   <p>{action.rationale}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {action.actionType} · Target {action.targetNode || "general"}
                   </p>
 
@@ -190,22 +190,22 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const preStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   padding: 14,
   borderRadius: 14,
   overflowX: "auto",

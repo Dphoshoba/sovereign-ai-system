@@ -133,7 +133,7 @@ export default function CreatorNurturePage() {
           Creator Nurturing + Follow-Up Engine
         </h1>
 
-        <p style={{ color: "#ddd", maxWidth: 860, lineHeight: 1.7 }}>
+        <p style={{ color: "var(--hero-muted)", maxWidth: 860, lineHeight: 1.7 }}>
           Generate creator-specific follow-up emails, lead intelligence,
           readiness scoring and recommended next actions.
         </p>
@@ -183,7 +183,7 @@ export default function CreatorNurturePage() {
 
           <div style={{ display: "grid", gap: 14 }}>
             {leadInsights.length === 0 ? (
-              <p style={{ color: "#666" }}>No insights yet.</p>
+              <p style={{ color: "var(--muted)" }}>No insights yet.</p>
             ) : (
               leadInsights.map((insight) => (
                 <article key={insight.id} style={cardStyle}>
@@ -207,7 +207,7 @@ export default function CreatorNurturePage() {
 
           <div style={{ display: "grid", gap: 14 }}>
             {leadEvents.length === 0 ? (
-              <p style={{ color: "#666" }}>No nurture emails generated yet.</p>
+              <p style={{ color: "var(--muted)" }}>No nurture emails generated yet.</p>
             ) : (
               leadEvents.map((event) => (
                 <article key={event.id} style={cardStyle}>
@@ -249,8 +249,8 @@ export default function CreatorNurturePage() {
 }
 
 const heroStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 24,
   padding: 34,
 }
@@ -258,7 +258,7 @@ const heroStyle: React.CSSProperties = {
 const eyebrowStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 2,
-  color: "#aaa",
+  color: "var(--muted)",
   margin: 0,
 }
 
@@ -273,7 +273,7 @@ const inputStyle: React.CSSProperties = {
   width: "100%",
   padding: 12,
   borderRadius: 10,
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   fontSize: 15,
 }
 
@@ -281,8 +281,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
@@ -291,16 +291,16 @@ const secondaryButton: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "1px solid #111",
-  background: "#fff",
-  color: "#111",
+  background: "var(--card-background)",
+  color: "var(--foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const summaryCard: React.CSSProperties = {
   marginTop: 28,
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -313,8 +313,8 @@ const gridTwo: React.CSSProperties = {
 }
 
 const cardStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -322,7 +322,7 @@ const cardStyle: React.CSSProperties = {
 const metaStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1,
-  color: "#777",
+  color: "var(--muted)",
   fontSize: 13,
   margin: 0,
 }

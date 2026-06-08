@@ -98,7 +98,7 @@ export default function MissionChainPage() {
           Mission Chains
         </h1>
 
-        <p style={{ color: "#ddd", maxWidth: 840, lineHeight: 1.7 }}>
+        <p style={{ color: "var(--hero-muted)", maxWidth: 840, lineHeight: 1.7 }}>
           Select multiple specialist agents, give them one mission and let them
           collaborate in sequence with handoffs and a final executive report.
         </p>
@@ -177,7 +177,7 @@ export default function MissionChainPage() {
 
               <h3>{step.agentName}</h3>
 
-              <p style={{ color: "#555" }}>{step.role}</p>
+              <p style={{ color: "var(--muted)" }}>{step.role}</p>
 
               <div className="markdown-body">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -193,8 +193,8 @@ export default function MissionChainPage() {
 }
 
 const heroStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 24,
   padding: 34,
 }
@@ -202,7 +202,7 @@ const heroStyle: React.CSSProperties = {
 const eyebrowStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 2,
-  color: "#aaa",
+  color: "var(--muted)",
   margin: 0,
 }
 
@@ -211,8 +211,8 @@ const formStyle: React.CSSProperties = {
   gap: 18,
   maxWidth: 900,
   marginTop: 24,
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -223,7 +223,7 @@ const inputStyle: React.CSSProperties = {
   marginTop: 6,
   padding: 12,
   borderRadius: 10,
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   fontSize: 16,
 }
 
@@ -234,7 +234,7 @@ const agentGrid: React.CSSProperties = {
 }
 
 const agentButton: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 14,
   padding: 16,
   textAlign: "left",
@@ -247,23 +247,23 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const outputStyle: React.CSSProperties = {
   marginTop: 28,
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 28,
 }
 
 const stepCard: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -271,7 +271,7 @@ const stepCard: React.CSSProperties = {
 const metaStyle: React.CSSProperties = {
   textTransform: "uppercase",
   letterSpacing: 1,
-  color: "#777",
+  color: "var(--muted)",
   fontSize: 13,
   margin: 0,
 }

@@ -93,7 +93,7 @@ export default function ContentPlanning() {
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: "12px",
   padding: "20px",
   marginBottom: "20px",
@@ -103,8 +103,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "10px 14px",
   borderRadius: "8px",
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   fontWeight: "bold",
   cursor: "pointer",
   marginTop: "12px",

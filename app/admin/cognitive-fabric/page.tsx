@@ -149,7 +149,7 @@ export default function CognitiveFabricPage() {
               <StatusBadge status={latestRun.status} />
               <h3>{latestRun.title}</h3>
               <p>{latestRun.summary}</p>
-              <p style={{ color: "#777", fontSize: 12 }}>
+              <p style={{ color: "var(--muted)", fontSize: 12 }}>
                 Graph Health {latestRun.graphHealth}/100 ·{" "}
                 {new Date(latestRun.createdAt).toLocaleString("en-AU")}
               </p>
@@ -195,7 +195,7 @@ export default function CognitiveFabricPage() {
                   <StatusBadge status={insight.priority} />
                   <h3>{insight.title}</h3>
                   <p>{insight.insight}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {insight.insightType} · Confidence{" "}
                     {Math.round(insight.confidence * 100)}%
                   </p>
@@ -215,7 +215,7 @@ export default function CognitiveFabricPage() {
                   <StatusBadge status={entity.entityType} />
                   <h3>{entity.name}</h3>
                   <p>{entity.summary}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     Importance {entity.importance}/100
                   </p>
                 </div>
@@ -229,7 +229,7 @@ export default function CognitiveFabricPage() {
                 <div key={relation.id} style={cardStyle}>
                   <StatusBadge status={relation.relationType} />
                   <p>{relation.summary}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     Strength {Math.round(relation.strength * 100)}%
                   </p>
                 </div>
@@ -260,7 +260,7 @@ function Section({ title, items }: { title: string; items?: string[] }) {
 const inputStyle: React.CSSProperties = {
   width: "100%",
   borderRadius: 12,
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   padding: 12,
   marginBottom: 12,
   fontFamily: "inherit",
@@ -270,16 +270,16 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
   marginTop: 14,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }

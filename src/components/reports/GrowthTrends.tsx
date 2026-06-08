@@ -55,7 +55,7 @@ export default function GrowthTrends() {
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: "12px",
   padding: "20px",
   marginBottom: "20px",

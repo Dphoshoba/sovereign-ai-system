@@ -43,7 +43,7 @@ export default function AutonomousPipelinePage() {
     <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
       <h1>Autonomous Publishing Pipeline</h1>
 
-      <p style={{ maxWidth: 780, color: "#555", lineHeight: 1.7 }}>
+      <p style={{ maxWidth: 780, color: "var(--muted)", lineHeight: 1.7 }}>
         Generate a complete publishing package: article, SEO metadata, thumbnail
         idea, social posts and newsletter copy. Keep it as a draft, publish now
         or schedule it.
@@ -156,8 +156,8 @@ const formStyle: React.CSSProperties = {
   gap: 16,
   maxWidth: 780,
   marginTop: 24,
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -168,7 +168,7 @@ const inputStyle: React.CSSProperties = {
   marginTop: 6,
   padding: 12,
   borderRadius: 10,
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   fontSize: 16,
 }
 
@@ -176,15 +176,15 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 10,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ddd",
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
   borderRadius: 18,
   padding: 24,
 }
@@ -192,7 +192,7 @@ const cardStyle: React.CSSProperties = {
 const itemStyle: React.CSSProperties = {
   padding: 16,
   borderRadius: 12,
-  background: "#f7f7f7",
+  background: "var(--card-background)",
   marginBottom: 12,
   whiteSpace: "pre-wrap",
   lineHeight: 1.7,

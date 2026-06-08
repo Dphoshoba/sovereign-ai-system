@@ -151,7 +151,7 @@ export default function GlobalIntelligencePage() {
               <StatusBadge status={latestScan.status} />
               <h3>{latestScan.title}</h3>
               <p>{latestScan.summary}</p>
-              <p style={{ color: "#777", fontSize: 12 }}>
+              <p style={{ color: "var(--muted)", fontSize: 12 }}>
                 {latestScan.scanType} ·{" "}
                 {new Date(latestScan.createdAt).toLocaleString("en-AU")}
               </p>
@@ -181,7 +181,7 @@ export default function GlobalIntelligencePage() {
                   <StatusBadge status={signal.severity} />
                   <h3>{signal.title}</h3>
                   <p>{signal.summary}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {signal.sourceName} · {signal.signalType} · Relevance{" "}
                     {signal.relevanceScore}/100
                   </p>
@@ -228,7 +228,7 @@ export default function GlobalIntelligencePage() {
                 <div key={source.id} style={cardStyle}>
                   <StatusBadge status={source.enabled ? "active" : "disabled"} />
                   <h3>{source.name}</h3>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {source.category} · {source.sourceType} · {source.scanCadence}
                   </p>
                 </div>
@@ -257,7 +257,7 @@ const inputStyle: React.CSSProperties = {
   width: "100%",
   maxWidth: 300,
   borderRadius: 12,
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   padding: 12,
   marginRight: 12,
   marginBottom: 12,
@@ -268,8 +268,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
@@ -278,16 +278,16 @@ const secondaryButtonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "1px solid #111",
-  background: "#fff",
-  color: "#111",
+  background: "var(--card-background)",
+  color: "var(--foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
   marginTop: 14,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }

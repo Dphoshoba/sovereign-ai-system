@@ -43,7 +43,7 @@ export function SendNewsletterButton({
         borderRadius: "8px",
         border: "none",
         background: "#2563eb",
-        color: "#fff",
+        color: "var(--button-foreground)",
         fontWeight: "bold",
         cursor: "pointer",
       }}

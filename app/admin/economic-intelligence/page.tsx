@@ -126,7 +126,7 @@ export default function EconomicIntelligencePage() {
                   <StatusBadge status={item.status} />
                   <h3>{item.title}</h3>
                   <p>{item.description}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {item.opportunityType} · AUD{" "}
                     {Math.round(item.estimatedValue || 0).toLocaleString("en-AU")} ·
                     Confidence {Math.round((item.confidence || 0) * 100)}%
@@ -153,7 +153,7 @@ export default function EconomicIntelligencePage() {
                   <StatusBadge status={item.status} />
                   <h3>{item.title}</h3>
                   <p>{item.description}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {item.campaignType} · Goal AUD{" "}
                     {Math.round(item.revenueGoal || 0).toLocaleString("en-AU")}
                   </p>
@@ -182,7 +182,7 @@ export default function EconomicIntelligencePage() {
                 <StatusBadge status={item.status} />
                 <h3>{item.title}</h3>
                 <p>{item.rationale}</p>
-                <p style={{ color: "#666" }}>
+                <p style={{ color: "var(--muted)" }}>
                   {item.decisionType} · {item.expectedImpact}
                 </p>
 
@@ -208,23 +208,23 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
   marginTop: 14,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const preStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   borderRadius: 14,
   padding: 14,
   overflowX: "auto",

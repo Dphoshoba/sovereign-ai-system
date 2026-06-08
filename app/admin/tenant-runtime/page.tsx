@@ -113,7 +113,7 @@ export default function TenantRuntimePage() {
                 <StatusBadge status={latest.status} />
                 <h3>{latest.title}</h3>
                 <p>{latest.summary}</p>
-                <p style={{ color: "#666" }}>
+                <p style={{ color: "var(--muted)" }}>
                   Health {latest.healthScore}/100 · Governance{" "}
                   {latest.governanceScore}/100 · Execution{" "}
                   {latest.executionScore}/100 · Economic {latest.economicScore}/100
@@ -153,7 +153,7 @@ export default function TenantRuntimePage() {
                 <div key={org.id} style={cardStyle}>
                   <StatusBadge status={org.status} />
                   <h3>{org.name}</h3>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     /{org.slug} · {org.orgType} · Plan {org.plan}
                   </p>
                   <p>Owner: {org.ownerEmail || "Not assigned"}</p>
@@ -168,10 +168,10 @@ export default function TenantRuntimePage() {
                 <div key={workspace.id} style={cardStyle}>
                   <StatusBadge status={workspace.status} />
                   <h3>{workspace.name}</h3>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     /{workspace.slug} · {workspace.workspaceType}
                   </p>
-                  <p style={{ fontSize: 12, color: "#777" }}>
+                  <p style={{ fontSize: 12, color: "var(--muted)" }}>
                     Org: {workspace.organizationId}
                   </p>
                 </div>
@@ -189,7 +189,7 @@ export default function TenantRuntimePage() {
                 <div key={member.id} style={cardStyle}>
                   <StatusBadge status={member.role} />
                   <h3>{member.name || member.email}</h3>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {member.email} · {member.status}
                   </p>
                 </div>
@@ -203,7 +203,7 @@ export default function TenantRuntimePage() {
                 <div key={policy.id} style={cardStyle}>
                   <StatusBadge status={policy.severity} />
                   <h3>{policy.title}</h3>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {policy.policyType} · {policy.enforcement}
                   </p>
                   <pre style={preStyle}>{JSON.stringify(policy.rules, null, 2)}</pre>
@@ -222,7 +222,7 @@ export default function TenantRuntimePage() {
                 <StatusBadge status={record.priority} />
                 <h3>{record.title}</h3>
                 <p>{record.summary}</p>
-                <p style={{ color: "#666" }}>
+                <p style={{ color: "var(--muted)" }}>
                   {record.recordType} · {record.sourceLayer || "unknown"}
                 </p>
               </div>
@@ -237,7 +237,7 @@ export default function TenantRuntimePage() {
 const inputStyle: React.CSSProperties = {
   width: "100%",
   borderRadius: 12,
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   padding: 12,
   marginBottom: 12,
 }
@@ -246,22 +246,22 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const preStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   padding: 14,
   borderRadius: 14,
   overflowX: "auto",

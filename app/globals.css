@@ -1,7 +1,7 @@
 .markdown-body {
   font-size: 18px;
   line-height: 1.85;
-  color: #222;
+  color: var(--foreground);
 }
 
 .markdown-body h2 {
@@ -30,21 +30,21 @@
 }
 
 .markdown-body blockquote {
-  border-left: 4px solid #111;
+  border-left: 4px solid var(--foreground);
   padding-left: 18px;
-  color: #555;
+  color: var(--muted);
   font-style: italic;
 }
 
 .markdown-body code {
-  background: #f1f1f1;
+  background: var(--card-background);
   padding: 2px 6px;
   border-radius: 6px;
 }
 
 .markdown-body pre {
-  background: #111;
-  color: #fff;
+  background: var(--hero-background);
+  color: var(--hero-foreground);
   padding: 18px;
   border-radius: 14px;
   overflow-x: auto;
@@ -53,12 +53,38 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+:root {
+  --background: #ffffff;
+  --foreground: #111827;
+  --muted: #6b7280;
+  --card-background: #ffffff;
+  --border: #d1d5db;
+  --hero-background: #111827;
+  --hero-foreground: #f8fafc;
+  --hero-muted: #cbd5e1;
+  --button-background: #111827;
+  --button-foreground: #ffffff;
+}
+
+.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --muted: #cbd5e1;
+  --card-background: #1e293b;
+  --border: #475569;
+  --hero-background: #020617;
+  --hero-foreground: #f8fafc;
+  --hero-muted: #94a3b8;
+  --button-background: #334155;
+  --button-foreground: #f8fafc;
+}
+
 html,
 body {
   margin: 0;
   padding: 0;
-  background: #000;
-  color: white;
+  background: var(--background);
+  color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -69,12 +95,78 @@ body {
 input,
 textarea,
 select {
-  color: #111827 !important;
-  background-color: #ffffff !important;
-  caret-color: #111827 !important;
+  color: var(--foreground);
+  background: var(--card-background);
+  caret-color: var(--foreground);
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: #6b7280 !important;
+  color: var(--muted);
+}
+
+.admin-shell {
+  background: var(--background);
+  color: var(--foreground);
+  min-height: 100vh;
+}
+
+.admin-shell main,
+.admin-shell section,
+.admin-shell article,
+.admin-shell aside,
+.admin-shell div,
+.admin-shell p,
+.admin-shell span,
+.admin-shell li,
+.admin-shell label,
+.admin-shell strong,
+.admin-shell h1,
+.admin-shell h2,
+.admin-shell h3,
+.admin-shell h4,
+.admin-shell h5,
+.admin-shell h6,
+.admin-shell td,
+.admin-shell th {
+  color: inherit;
+}
+
+.admin-shell input,
+.admin-shell textarea,
+.admin-shell select {
+  color: var(--foreground);
+  background: var(--card-background);
+  border-color: var(--border);
+}
+
+.admin-shell input::placeholder,
+.admin-shell textarea::placeholder {
+  color: var(--muted);
+}
+
+.admin-shell a:not([style*="background"]) {
+  color: var(--foreground);
+}
+
+.admin-shell .admin-hero,
+.admin-shell [data-admin-hero="true"] {
+  background: var(--hero-background);
+  color: var(--hero-foreground);
+}
+
+.admin-shell .admin-hero h1,
+.admin-shell .admin-hero h2,
+.admin-shell .admin-hero h3,
+.admin-shell .admin-hero p,
+.admin-shell [data-admin-hero="true"] h1,
+.admin-shell [data-admin-hero="true"] h2,
+.admin-shell [data-admin-hero="true"] h3,
+.admin-shell [data-admin-hero="true"] p {
+  color: inherit;
+}
+
+.admin-shell .admin-hero .admin-muted,
+.admin-shell [data-admin-hero="true"] .admin-muted {
+  color: var(--hero-muted);
 }

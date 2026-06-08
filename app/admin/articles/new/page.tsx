@@ -157,7 +157,7 @@ const inputStyle: React.CSSProperties = {
   marginTop: "6px",
   padding: "12px",
   borderRadius: "10px",
-  border: "1px solid #ccc",
+  border: "1px solid var(--border)",
   fontSize: "16px",
 }
 
@@ -165,8 +165,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: "10px",
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }

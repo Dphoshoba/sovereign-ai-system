@@ -176,7 +176,7 @@ export default function RealtimeFabricPage() {
                   <StatusBadge status={stream.status} />
                   <h3>{stream.streamName}</h3>
                   <p>{stream.description}</p>
-                  <p style={{ color: "#666" }}>{stream.streamType}</p>
+                  <p style={{ color: "var(--muted)" }}>{stream.streamType}</p>
                 </div>
               ))}
             </div>
@@ -188,7 +188,7 @@ export default function RealtimeFabricPage() {
                 <div key={worker.id} style={cardStyle}>
                   <StatusBadge status={worker.status} />
                   <h3>{worker.name}</h3>
-                  <p style={{ color: "#666" }}>{worker.workerType}</p>
+                  <p style={{ color: "var(--muted)" }}>{worker.workerType}</p>
 
                   <button
                     disabled={loading}
@@ -213,7 +213,7 @@ export default function RealtimeFabricPage() {
                   <StatusBadge status={message.priority} />
                   <h3>{message.title}</h3>
                   <p>{message.message}</p>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {message.streamName} · {message.eventType} · {message.status}
                   </p>
                 </div>
@@ -227,7 +227,7 @@ export default function RealtimeFabricPage() {
                 <div key={job.id} style={cardStyle}>
                   <StatusBadge status={job.status} />
                   <h3>{job.title}</h3>
-                  <p style={{ color: "#666" }}>
+                  <p style={{ color: "var(--muted)" }}>
                     {job.jobType} · {job.targetLayer} · {job.assignedWorker || "unassigned"}
                   </p>
 
@@ -257,7 +257,7 @@ export default function RealtimeFabricPage() {
 const inputStyle: React.CSSProperties = {
   width: "100%",
   borderRadius: 12,
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   padding: 12,
   marginBottom: 12,
 }
@@ -266,22 +266,22 @@ const buttonStyle: React.CSSProperties = {
   padding: "12px 18px",
   borderRadius: 12,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: 18,
-  background: "#fafafa",
+  background: "var(--card-background)",
 }
 
 const preStyle: React.CSSProperties = {
-  background: "#111",
-  color: "#fff",
+  background: "var(--hero-background)",
+  color: "var(--button-foreground)",
   padding: 14,
   borderRadius: 14,
   overflowX: "auto",

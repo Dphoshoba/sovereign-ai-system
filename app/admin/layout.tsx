@@ -31,11 +31,11 @@ export default async function AdminLayout({
   }
 
   return (
-    <div style={{ fontFamily: "Arial, sans-serif" }}>
+    <div className="admin-shell" style={{ fontFamily: "Arial, sans-serif" }}>
       <header style={headerStyle}>
         <div>
           <strong>Echoes & Visions Admin</strong>
-          <p style={{ margin: 0, fontSize: 13, color: "#666" }}>{user.email}</p>
+          <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>{user.email}</p>
         </div>
 
         <nav style={navStyle}>
@@ -268,12 +268,14 @@ export default async function AdminLayout({
 
 const headerStyle: React.CSSProperties = {
   padding: "18px 40px",
-  borderBottom: "1px solid #ddd",
+  borderBottom: "1px solid var(--border)",
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
   gap: 20,
   flexWrap: "wrap",
+  background: "var(--card-background)",
+  color: "var(--foreground)",
 }
 
 const navStyle: React.CSSProperties = {
@@ -284,7 +286,7 @@ const navStyle: React.CSSProperties = {
 }
 
 const linkStyle: React.CSSProperties = {
-  color: "#111",
+  color: "var(--foreground)",
   textDecoration: "none",
   fontWeight: "bold",
   fontSize: 14,
@@ -294,8 +296,8 @@ const logoutButton: React.CSSProperties = {
   padding: "8px 12px",
   borderRadius: 8,
   border: "none",
-  background: "#111",
-  color: "#fff",
+  background: "var(--button-background)",
+  color: "var(--button-foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }

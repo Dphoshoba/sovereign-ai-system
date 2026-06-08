@@ -19,7 +19,7 @@ export default async function LeadMagnetsPage() {
         <h2>All Lead Magnets</h2>
 
         {leadMagnets.length === 0 ? (
-          <p style={{ color: "#777" }}>No lead magnets yet.</p>
+          <p style={{ color: "var(--muted)" }}>No lead magnets yet.</p>
         ) : (
           <div style={{ display: "grid", gap: "16px", marginTop: "16px" }}>
             {leadMagnets.map((magnet) => (
@@ -57,7 +57,7 @@ export default async function LeadMagnetsPage() {
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: "12px",
   padding: "20px",
 }
