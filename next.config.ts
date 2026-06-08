@@ -1,6 +1,9 @@
 import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
+  env: {
+    BUILD_TIME: new Date().toISOString(),
+  },
   // Keep heavy server-only packages external to lower build memory use.
   serverExternalPackages: [
     "@prisma/client",
