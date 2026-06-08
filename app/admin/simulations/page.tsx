@@ -119,6 +119,9 @@ export default function SimulationsPage() {
           <Link href="/admin/knowledge-graph-intelligence" style={secondaryLinkStyle}>
             Knowledge Intelligence
           </Link>
+          <Link href="/admin/scenarios" style={secondaryLinkStyle}>
+            Strategy Scenarios
+          </Link>
           <Link href="/admin/operations" style={secondaryLinkStyle}>
             Operations Center
           </Link>

@@ -97,6 +97,9 @@ export default function StrategicPlanPage() {
           <Link href="/admin/simulations" style={linkStyle}>
             Simulations
           </Link>
+          <Link href="/admin/scenarios" style={linkStyle}>
+            Strategy Scenarios
+          </Link>
         </div>
         <div style={actionRowStyle}>
           <button

@@ -1340,6 +1340,23 @@ model ExecutiveKnowledgeEdge {
   @@index([relation])
 }
 
+model StrategicScenario {
+  id              String   @id @default(cuid())
+  scenario        String
+  title           String
+  summary         String?
+  impactScore     Int?
+  recommendation  String?
+  status          String   @default("generated")
+  simulationJson  Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([scenario])
+  @@index([status])
+  @@index([createdAt])
+}
+
 model StrategicDecisionLog {
   id          String   @id @default(cuid())
   title       String
