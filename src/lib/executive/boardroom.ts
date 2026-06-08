@@ -21,6 +21,13 @@ import {
   buildStrategicPlan,
   type StrategicPlan,
 } from "@/lib/executive/strategic-plan"
+import { serializeDecision } from "@/lib/executive/decision-memory"
+import {
+  buildLearningContext,
+  type DecisionLesson,
+  type LearningContext,
+  serializeExecutiveLesson,
+} from "@/lib/executive/learning-system"
 import { buildExecutiveWeeklyReview } from "@/lib/executive/weekly-review"
 import { prisma } from "@/lib/prisma"
 
@@ -42,6 +49,13 @@ export type BoardroomAgentReport = {
   concerns: string[]
   opportunities: string[]
   recommendations: string[]
+  learningApplied: string[]
+}
+
+export type BoardroomLearningSummary = {
+  lessonsUsed: string[]
+  strongPatternsApplied: string[]
+  weakPatternsFlagged: string[]
 }
 
 export type BoardroomSession = {
@@ -53,6 +67,7 @@ export type BoardroomSession = {
   topPriorities: string[]
   majorRisks: string[]
   majorOpportunities: string[]
+  learningSummary: BoardroomLearningSummary
 }
 
 export type BoardroomContext = {
@@ -74,6 +89,17 @@ export type BoardroomContext = {
     recommendations: string[]
     risks: string[]
   } | null
+  learningContext: LearningContext
+}
+
+const AGENT_IMPACT_KEYWORDS: Record<BoardroomAgentRole, string[]> = {
+  CEO: [],
+  COO: ["delivery", "execution", "initiative", "operations", "task", "project"],
+  CFO: ["revenue", "finance", "pipeline", "invoice", "sales"],
+  CMO: ["growth", "marketing", "lead", "acquisition", "funnel"],
+  "Content Director": ["content", "editorial", "publish", "article", "draft"],
+  "Growth Director": ["growth", "subscriber", "acquisition", "magnet"],
+  "Delivery Director": ["delivery", "project", "task", "client"],
 }
 
 function formatAud(value: number) {
@@ -133,6 +159,7 @@ function buildCeoAgent(
     concerns: uniqueStrings(concerns).slice(0, 5),
     opportunities: uniqueStrings(opportunities).slice(0, 5),
     recommendations: uniqueStrings(recommendations).slice(0, 4),
+    learningApplied: [],
   }
 }
 
@@ -186,6 +213,7 @@ function buildCooAgent(
     concerns: uniqueStrings(concerns).slice(0, 5),
     opportunities: uniqueStrings(opportunities).slice(0, 5),
     recommendations: uniqueStrings(recommendations).slice(0, 4),
+    learningApplied: [],
   }
 }
 
@@ -238,6 +266,7 @@ function buildCfoAgent(snapshot: ExecutivePlatformSnapshot): BoardroomAgentRepor
     concerns: uniqueStrings(concerns).slice(0, 5),
     opportunities: uniqueStrings(opportunities).slice(0, 5),
     recommendations: uniqueStrings(recommendations).slice(0, 4),
+    learningApplied: [],
   }
 }
 
@@ -288,6 +317,7 @@ function buildCmoAgent(snapshot: ExecutivePlatformSnapshot): BoardroomAgentRepor
     concerns: uniqueStrings(concerns).slice(0, 5),
     opportunities: uniqueStrings(opportunities).slice(0, 5),
     recommendations: uniqueStrings(recommendations).slice(0, 4),
+    learningApplied: [],
   }
 }
 
@@ -342,6 +372,7 @@ function buildContentDirectorAgent(
     concerns: uniqueStrings(concerns).slice(0, 5),
     opportunities: uniqueStrings(opportunities).slice(0, 5),
     recommendations: uniqueStrings(recommendations).slice(0, 4),
+    learningApplied: [],
   }
 }
 
@@ -396,6 +427,7 @@ function buildGrowthDirectorAgent(
     concerns: uniqueStrings(concerns).slice(0, 5),
     opportunities: uniqueStrings(opportunities).slice(0, 5),
     recommendations: uniqueStrings(recommendations).slice(0, 4),
+    learningApplied: [],
   }
 }
 
@@ -448,6 +480,201 @@ function buildDeliveryDirectorAgent(
     concerns: uniqueStrings(concerns).slice(0, 5),
     opportunities: uniqueStrings(opportunities).slice(0, 5),
     recommendations: uniqueStrings(recommendations).slice(0, 4),
+    learningApplied: [],
+  }
+}
+
+function impactAreaMatchesAgent(
+  role: BoardroomAgentRole,
+  impactArea: string | null
+) {
+  if (role === "CEO") {
+    return true
+  }
+
+  if (!impactArea) {
+    return false
+  }
+
+  const area = impactArea.toLowerCase()
+
+  return AGENT_IMPACT_KEYWORDS[role].some(
+    (keyword) => area.includes(keyword) || keyword.includes(area)
+  )
+}
+
+function recommendationRelatesToImpactArea(
+  recommendation: string,
+  impactArea: string
+) {
+  const normalized = recommendation.toLowerCase()
+  const area = impactArea.toLowerCase()
+
+  if (normalized.includes(area)) {
+    return true
+  }
+
+  return area
+    .split(/[\s/,-]+/)
+    .filter((word) => word.length > 2)
+    .some((word) => normalized.includes(word))
+}
+
+function recommendationRelatesToLesson(
+  recommendation: string,
+  lesson: DecisionLesson
+) {
+  const normalized = recommendation.toLowerCase()
+
+  if (
+    lesson.impactArea &&
+    recommendationRelatesToImpactArea(recommendation, lesson.impactArea)
+  ) {
+    return true
+  }
+
+  const titleWords = lesson.title
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((word) => word.length > 4)
+
+  return titleWords.some((word) => normalized.includes(word))
+}
+
+function getAgentLearningApplied(
+  role: BoardroomAgentRole,
+  learningContext: LearningContext
+) {
+  const applied: string[] = []
+
+  for (const lesson of learningContext.lessons) {
+    if (impactAreaMatchesAgent(role, lesson.impactArea)) {
+      applied.push(`${lesson.title}: ${lesson.lessonLearned}`)
+    }
+  }
+
+  for (const practice of learningContext.recommendedPractices) {
+    if (impactAreaMatchesAgent(role, practice.impactArea)) {
+      applied.push(
+        `Recommended practice (${practice.impactArea ?? "general"}, ${practice.effectiveness}%): ${practice.lesson}`
+      )
+    }
+  }
+
+  for (const pattern of learningContext.strongestPatterns) {
+    if (impactAreaMatchesAgent(role, pattern.impactArea)) {
+      applied.push(
+        `Strong pattern — ${pattern.impactArea}: ${pattern.averageEffectiveness}% avg effectiveness across ${pattern.decisionCount} decision${pattern.decisionCount === 1 ? "" : "s"}.`
+      )
+    }
+  }
+
+  for (const pattern of learningContext.weakestPatterns) {
+    if (impactAreaMatchesAgent(role, pattern.impactArea)) {
+      applied.push(
+        `Weak pattern — ${pattern.impactArea}: ${pattern.averageEffectiveness}% avg effectiveness across ${pattern.decisionCount} decision${pattern.decisionCount === 1 ? "" : "s"}.`
+      )
+    }
+  }
+
+  return uniqueStrings(applied).slice(0, 6)
+}
+
+function adjustAgentRecommendations(
+  role: BoardroomAgentRole,
+  recommendations: string[],
+  learningContext: LearningContext
+) {
+  const adjusted: string[] = []
+  const strongApplied: string[] = []
+  const weakFlagged: string[] = []
+  const lessonsUsed: string[] = []
+
+  for (const recommendation of recommendations) {
+    let text = recommendation
+
+    for (const pattern of learningContext.weakestPatterns) {
+      if (
+        impactAreaMatchesAgent(role, pattern.impactArea) &&
+        recommendationRelatesToImpactArea(text, pattern.impactArea)
+      ) {
+        text = `${text} — Caution: ${pattern.impactArea} has been a weak pattern (${pattern.averageEffectiveness}% avg effectiveness).`
+        weakFlagged.push(pattern.impactArea)
+      }
+    }
+
+    for (const pattern of learningContext.strongestPatterns) {
+      if (
+        impactAreaMatchesAgent(role, pattern.impactArea) &&
+        recommendationRelatesToImpactArea(text, pattern.impactArea)
+      ) {
+        text = `${text} — Proven: ${pattern.impactArea} shows strong historical effectiveness (${pattern.averageEffectiveness}% avg).`
+        strongApplied.push(pattern.impactArea)
+      }
+    }
+
+    for (const lesson of learningContext.lessons) {
+      if (
+        impactAreaMatchesAgent(role, lesson.impactArea) &&
+        recommendationRelatesToLesson(text, lesson)
+      ) {
+        lessonsUsed.push(`${lesson.title}: ${lesson.lessonLearned}`)
+      }
+    }
+
+    adjusted.push(text)
+  }
+
+  return {
+    recommendations: adjusted,
+    strongApplied: uniqueStrings(strongApplied),
+    weakFlagged: uniqueStrings(weakFlagged),
+    lessonsUsed: uniqueStrings(lessonsUsed),
+  }
+}
+
+function enrichAgentsWithLearning(
+  agents: BoardroomAgentReport[],
+  learningContext: LearningContext
+) {
+  const allLessonsUsed: string[] = []
+  const allStrong: string[] = []
+  const allWeak: string[] = []
+
+  const enrichedAgents = agents.map((agent) => {
+    const learningApplied = getAgentLearningApplied(
+      agent.role,
+      learningContext
+    )
+    const {
+      recommendations,
+      strongApplied,
+      weakFlagged,
+      lessonsUsed,
+    } = adjustAgentRecommendations(
+      agent.role,
+      agent.recommendations,
+      learningContext
+    )
+
+    allLessonsUsed.push(...lessonsUsed, ...learningApplied)
+    allStrong.push(...strongApplied)
+    allWeak.push(...weakFlagged)
+
+    return {
+      ...agent,
+      recommendations,
+      learningApplied,
+    }
+  })
+
+  return {
+    agents: enrichedAgents,
+    learningSummary: {
+      lessonsUsed: uniqueStrings(allLessonsUsed).slice(0, 20),
+      strongPatternsApplied: uniqueStrings(allStrong),
+      weakPatternsFlagged: uniqueStrings(allWeak),
+    },
   }
 }
 
@@ -513,6 +740,8 @@ export async function loadBoardroomContext(
     goals,
     initiatives,
     latestPlanningCycle,
+    executiveDecisions,
+    executiveLessons,
   ] = await Promise.all([
     getExecutivePlatformSnapshot(),
     prisma.executiveBriefing.findMany({
@@ -536,6 +765,12 @@ export async function loadBoardroomContext(
       },
     }),
     prisma.planningCycle.findFirst({
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.executiveDecision.findMany({
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.executiveLesson.findMany({
       orderBy: { createdAt: "desc" },
     }),
   ])
@@ -564,6 +799,10 @@ export async function loadBoardroomContext(
     goals
   )
   const goalScorecard = buildPerformanceScorecard(goals)
+  const learningContext = buildLearningContext(
+    executiveDecisions.map(serializeDecision),
+    executiveLessons.map(serializeExecutiveLesson)
+  )
 
   return {
     sessionType,
@@ -585,6 +824,7 @@ export async function loadBoardroomContext(
             : [],
         }
       : null,
+    learningContext,
   }
 }
 
@@ -596,6 +836,7 @@ export function runBoardroomSession(context: BoardroomContext): BoardroomSession
     strategicPlan,
     initiativePerformance,
     latestPlanningCycle,
+    learningContext,
   } = context
 
   const healthScore = Math.round(
@@ -605,7 +846,7 @@ export function runBoardroomSession(context: BoardroomContext): BoardroomSession
       3
   )
 
-  const agents: BoardroomAgentReport[] = [
+  const baseAgents: BoardroomAgentReport[] = [
     buildCeoAgent(snapshot, strategicPlan, forecast, healthScore),
     buildCooAgent(snapshot, initiativePerformance, strategicPlan),
     buildCfoAgent(snapshot),
@@ -614,6 +855,11 @@ export function runBoardroomSession(context: BoardroomContext): BoardroomSession
     buildGrowthDirectorAgent(snapshot),
     buildDeliveryDirectorAgent(snapshot),
   ]
+
+  const { agents, learningSummary } = enrichAgentsWithLearning(
+    baseAgents,
+    learningContext
+  )
 
   const majorRisks = uniqueStrings([
     ...agents.flatMap((agent) => agent.concerns),
@@ -645,5 +891,6 @@ export function runBoardroomSession(context: BoardroomContext): BoardroomSession
     topPriorities,
     majorRisks,
     majorOpportunities,
+    learningSummary,
   }
 }

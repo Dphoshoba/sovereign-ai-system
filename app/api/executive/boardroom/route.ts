@@ -4,6 +4,7 @@ import {
   loadBoardroomContext,
   runBoardroomSession,
   type BoardroomAgentReport,
+  type BoardroomLearningSummary,
   type BoardroomSession,
 } from "@/lib/executive/boardroom"
 import { saveBoardroomKeyDecisions } from "@/lib/executive/decision-memory"
@@ -14,6 +15,13 @@ type StoredBoardroomDecisions = {
   topPriorities: string[]
   majorRisks: string[]
   majorOpportunities: string[]
+  learningSummary: BoardroomLearningSummary
+}
+
+const EMPTY_LEARNING_SUMMARY: BoardroomLearningSummary = {
+  lessonsUsed: [],
+  strongPatternsApplied: [],
+  weakPatternsFlagged: [],
 }
 
 function serializeSession(session: {
@@ -43,6 +51,26 @@ function serializeSession(session: {
     majorOpportunities: Array.isArray(decisions.majorOpportunities)
       ? decisions.majorOpportunities
       : [],
+    learningSummary:
+      decisions.learningSummary &&
+      typeof decisions.learningSummary === "object" &&
+      !Array.isArray(decisions.learningSummary)
+        ? {
+            lessonsUsed: Array.isArray(decisions.learningSummary.lessonsUsed)
+              ? decisions.learningSummary.lessonsUsed
+              : [],
+            strongPatternsApplied: Array.isArray(
+              decisions.learningSummary.strongPatternsApplied
+            )
+              ? decisions.learningSummary.strongPatternsApplied
+              : [],
+            weakPatternsFlagged: Array.isArray(
+              decisions.learningSummary.weakPatternsFlagged
+            )
+              ? decisions.learningSummary.weakPatternsFlagged
+              : [],
+          }
+        : EMPTY_LEARNING_SUMMARY,
     createdAt: session.createdAt.toISOString(),
   }
 }
@@ -54,6 +82,7 @@ function toStoredDecisions(session: BoardroomSession): StoredBoardroomDecisions 
     topPriorities: session.topPriorities,
     majorRisks: session.majorRisks,
     majorOpportunities: session.majorOpportunities,
+    learningSummary: session.learningSummary,
   }
 }
 

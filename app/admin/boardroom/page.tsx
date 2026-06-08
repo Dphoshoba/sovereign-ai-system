@@ -9,6 +9,13 @@ type BoardroomAgentReport = {
   concerns: string[]
   opportunities: string[]
   recommendations: string[]
+  learningApplied?: string[]
+}
+
+type BoardroomLearningSummary = {
+  lessonsUsed: string[]
+  strongPatternsApplied: string[]
+  weakPatternsFlagged: string[]
 }
 
 type BoardroomSession = {
@@ -22,7 +29,14 @@ type BoardroomSession = {
   topPriorities: string[]
   majorRisks: string[]
   majorOpportunities: string[]
+  learningSummary?: BoardroomLearningSummary
   createdAt: string
+}
+
+const EMPTY_LEARNING_SUMMARY: BoardroomLearningSummary = {
+  lessonsUsed: [],
+  strongPatternsApplied: [],
+  weakPatternsFlagged: [],
 }
 
 const AGENT_ORDER = [
@@ -258,6 +272,69 @@ export default function BoardroomPage() {
                     </p>
                   </section>
 
+                  <section style={panelStyle}>
+                    <h3 style={sectionHeadingStyle}>Learning Summary</h3>
+                    {(() => {
+                      const learningSummary =
+                        activeSession.learningSummary ?? EMPTY_LEARNING_SUMMARY
+
+                      return (
+                        <>
+                          <div style={learningGridStyle}>
+                            <div>
+                              <strong>Lessons Used</strong>
+                              {learningSummary.lessonsUsed.length === 0 ? (
+                                <p style={mutedText}>
+                                  No executive lessons applied in this session.
+                                </p>
+                              ) : (
+                                <ul style={listStyle}>
+                                  {learningSummary.lessonsUsed.map((item) => (
+                                    <li key={item}>{item}</li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                            <div>
+                              <strong>Strong Patterns Applied</strong>
+                              {learningSummary.strongPatternsApplied.length ===
+                              0 ? (
+                                <p style={mutedText}>
+                                  No strong patterns matched recommendations.
+                                </p>
+                              ) : (
+                                <ul style={listStyle}>
+                                  {learningSummary.strongPatternsApplied.map(
+                                    (item) => (
+                                      <li key={item}>{item}</li>
+                                    )
+                                  )}
+                                </ul>
+                              )}
+                            </div>
+                            <div>
+                              <strong>Weak Patterns Flagged</strong>
+                              {learningSummary.weakPatternsFlagged.length ===
+                              0 ? (
+                                <p style={mutedText}>
+                                  No weak patterns flagged in recommendations.
+                                </p>
+                              ) : (
+                                <ul style={listStyle}>
+                                  {learningSummary.weakPatternsFlagged.map(
+                                    (item) => (
+                                      <li key={item}>{item}</li>
+                                    )
+                                  )}
+                                </ul>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )
+                    })()}
+                  </section>
+
                   <section style={{ marginTop: 28 }}>
                     <h2>Agent Panels</h2>
                     <div style={agentGridStyle}>
@@ -300,6 +377,18 @@ export default function BoardroomPage() {
                               </ul>
                             </div>
                           )}
+
+                          {agent.learningApplied &&
+                            agent.learningApplied.length > 0 && (
+                              <div style={agentSectionStyle}>
+                                <strong>Learning Applied</strong>
+                                <ul style={listStyle}>
+                                  {agent.learningApplied.map((item) => (
+                                    <li key={item}>{item}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
                         </article>
                       ))}
                     </div>
@@ -530,6 +619,12 @@ const listStyle: React.CSSProperties = {
   margin: "8px 0 0",
   paddingLeft: 20,
   lineHeight: 1.6,
+}
+
+const learningGridStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: 16,
 }
 
 const consensusGridStyle: React.CSSProperties = {

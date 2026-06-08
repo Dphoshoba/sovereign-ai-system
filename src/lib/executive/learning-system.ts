@@ -41,6 +41,27 @@ export type ExecutiveLearningSummary = {
   lessons: DecisionLesson[]
 }
 
+export type LearningContext = {
+  strongestPatterns: ImpactPattern[]
+  weakestPatterns: ImpactPattern[]
+  recommendedPractices: RecommendedPractice[]
+  lessons: DecisionLesson[]
+}
+
+export function buildLearningContext(
+  decisions: ExecutiveDecisionRecord[],
+  storedLessons: ExecutiveLessonRecord[]
+): LearningContext {
+  const summary = buildExecutiveLearning(decisions, storedLessons)
+
+  return {
+    strongestPatterns: summary.strongestPatterns,
+    weakestPatterns: summary.weakestPatterns,
+    recommendedPractices: summary.recommendedPractices,
+    lessons: summary.lessons,
+  }
+}
+
 function buildImpactPatterns(decisions: ExecutiveDecisionRecord[]) {
   const byArea = new Map<string, number[]>()
 

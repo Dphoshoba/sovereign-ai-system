@@ -134,6 +134,9 @@ export default function ExecutiveLearningPage() {
           >
             {generating ? "Generating..." : "Generate Lessons"}
           </button>
+          <Link href="/admin/boardroom" style={secondaryLinkStyle}>
+            Run Boardroom Session
+          </Link>
           <Link href="/admin/decision-memory" style={secondaryLinkStyle}>
             Decision Memory
           </Link>
