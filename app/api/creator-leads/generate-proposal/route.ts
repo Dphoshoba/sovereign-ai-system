@@ -82,6 +82,28 @@ Return exactly:
       },
     })
 
+    await prisma.creatorProposal.create({
+      data: {
+        leadId: lead.id,
+        title: proposal.proposalTitle,
+        description: proposal.summary,
+        packageType: proposal.recommendedOffer,
+        status: "draft",
+        estimatedValue:
+          typeof proposal.investmentAud === "number"
+            ? proposal.investmentAud
+            : 0,
+        implementationWeeks: 4,
+        proposalContent: JSON.stringify(proposal, null, 2),
+        aiSummary: proposal.summary,
+        pricingBreakdown: {
+          investmentAud: proposal.investmentAud,
+          timeline: proposal.timeline,
+          nextStep: proposal.nextStep,
+        },
+      },
+    })
+
     return NextResponse.json({
       ok: true,
       lead: {
