@@ -1,39 +1,12 @@
 import { NextResponse } from "next/server"
+import { computeOverallHealthScore } from "@/lib/executive/platform-snapshot"
 import { getExecutivePlatformSnapshot } from "@/lib/executive/platform-snapshot"
 
 export async function GET() {
   try {
     const snapshot = await getExecutivePlatformSnapshot()
 
-    let overallHealthScore = 100
-
-    if (snapshot.reviewRequiredCount > 0) {
-      overallHealthScore -= 10
-    }
-
-    if (snapshot.scheduledCount === 0) {
-      overallHealthScore -= 10
-    }
-
-    if (snapshot.growthRate === 0) {
-      overallHealthScore -= 10
-    }
-
-    if (snapshot.openPipeline === 0) {
-      overallHealthScore -= 15
-    }
-
-    if (snapshot.outstandingRevenue > 0) {
-      overallHealthScore -= 15
-    }
-
-    overallHealthScore -= snapshot.overdueTasks * 10
-
-    if (snapshot.deliveryHealthScore < 70) {
-      overallHealthScore -= 10
-    }
-
-    overallHealthScore = Math.max(0, overallHealthScore)
+    const overallHealthScore = computeOverallHealthScore(snapshot)
 
     const alerts: string[] = []
 

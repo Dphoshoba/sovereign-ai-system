@@ -79,6 +79,40 @@ export function computeDeliveryHealthScore(
   )
 }
 
+export function computeOverallHealthScore(
+  snapshot: ExecutivePlatformSnapshot
+): number {
+  let score = 100
+
+  if (snapshot.reviewRequiredCount > 0) {
+    score -= 10
+  }
+
+  if (snapshot.scheduledCount === 0) {
+    score -= 10
+  }
+
+  if (snapshot.growthRate === 0) {
+    score -= 10
+  }
+
+  if (snapshot.openPipeline === 0) {
+    score -= 15
+  }
+
+  if (snapshot.outstandingRevenue > 0) {
+    score -= 15
+  }
+
+  score -= snapshot.overdueTasks * 10
+
+  if (snapshot.deliveryHealthScore < 70) {
+    score -= 10
+  }
+
+  return Math.max(0, score)
+}
+
 export type ProjectWithProgress = {
   id: string
   title: string
@@ -119,6 +153,7 @@ export type ExecutivePlatformSnapshot = {
   outstandingRevenue: number
   activeClients: number
   activeProjects: number
+  completedProjects: number
   openTasks: number
   doneTasks: number
   overdueTasks: number
@@ -345,6 +380,9 @@ export async function getExecutivePlatformSnapshot(): Promise<ExecutivePlatformS
     activeClients: clients.filter((client) => client.status === "active").length,
     activeProjects: projects.filter((project) => project.status === "active")
       .length,
+    completedProjects: projects.filter(
+      (project) => project.status === "completed"
+    ).length,
     openTasks: visibleTasks.filter((task) => task.status !== "done").length,
     doneTasks: visibleTasks.filter((task) => task.status === "done").length,
     overdueTasks,

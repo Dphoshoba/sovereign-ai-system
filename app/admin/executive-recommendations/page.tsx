@@ -154,6 +154,9 @@ export default function ExecutiveRecommendationsPage() {
           <Link href="/admin/operations" style={linkStyle}>
             Operations Center
           </Link>
+          <Link href="/admin/daily-briefing" style={linkStyle}>
+            Daily Briefing
+          </Link>
         </div>
       </section>
 
