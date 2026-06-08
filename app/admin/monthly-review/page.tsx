@@ -60,6 +60,9 @@ export default function MonthlyReviewPage() {
           <Link href="/admin/weekly-review" style={secondaryLinkStyle}>
             Back to Weekly Review
           </Link>
+          <Link href="/admin/executive-forecast" style={secondaryLinkStyle}>
+            Forecast
+          </Link>
         </div>
       </section>
 

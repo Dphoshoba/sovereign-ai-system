@@ -113,6 +113,9 @@ export default function ExecutiveOverviewPage() {
         <Link href="/admin/monthly-review" style={linkStyle}>
           Monthly Review
         </Link>
+        <Link href="/admin/executive-forecast" style={linkStyle}>
+          Forecast
+        </Link>
       </section>
 
       {loading && <p style={{ marginTop: 28 }}>Loading overview...</p>}
