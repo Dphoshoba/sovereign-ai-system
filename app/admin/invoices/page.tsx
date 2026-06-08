@@ -140,6 +140,38 @@ export default function InvoicesPage() {
     await loadInvoices()
   }
 
+  async function downloadInvoicePdf(invoice: ClientInvoice) {
+    setActionLoading(true)
+
+    try {
+      const response = await fetch("/api/client-invoices/pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ invoiceId: invoice.id }),
+      })
+
+      if (!response.ok) {
+        const result = await response.json()
+        alert(result.error || "Failed to download PDF")
+        return
+      }
+
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `invoice-${invoice.invoiceNumber}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
   useEffect(() => {
     loadInvoices()
     loadClients()
@@ -320,6 +352,15 @@ export default function InvoicesPage() {
               {invoice.notes ? <p>{invoice.notes}</p> : null}
 
               <div style={actionButtonsStyle}>
+                <button
+                  type="button"
+                  disabled={actionLoading}
+                  onClick={() => downloadInvoicePdf(invoice)}
+                  style={secondaryButtonStyle}
+                >
+                  Download PDF
+                </button>
+
                 {invoice.status !== "sent" && invoice.status !== "paid" && (
                   <button
                     type="button"
