@@ -12,14 +12,23 @@ type ExecutionInitiative = {
   priority: string
   owner: string | null
   source: string | null
+  goalId: string | null
   progress: number
   actions: string[]
   createdAt: string
   updatedAt: string
 }
 
+type QuarterlyGoal = {
+  id: string
+  title: string
+  quarter: string
+  year: number
+}
+
 export default function ExecutionPage() {
   const [initiatives, setInitiatives] = useState<ExecutionInitiative[]>([])
+  const [goals, setGoals] = useState<QuarterlyGoal[]>([])
   const [executionImpact, setExecutionImpact] = useState<ExecutionImpact | null>(
     null
   )
@@ -32,10 +41,12 @@ export default function ExecutionPage() {
     setLoading(true)
     setError(null)
 
-    const response = await fetch("/api/executive/execution", {
-      cache: "no-store",
-    })
-    const result = await response.json()
+    const [executionResponse, goalsResponse] = await Promise.all([
+      fetch("/api/executive/execution", { cache: "no-store" }),
+      fetch("/api/executive/goals", { cache: "no-store" }),
+    ])
+    const result = await executionResponse.json()
+    const goalsResult = await goalsResponse.json()
 
     setLoading(false)
 
@@ -46,6 +57,10 @@ export default function ExecutionPage() {
 
     setInitiatives(result.initiatives)
     setExecutionImpact(result.executionImpact)
+
+    if (goalsResult.ok) {
+      setGoals(goalsResult.goals)
+    }
   }, [])
 
   useEffect(() => {
@@ -87,7 +102,7 @@ export default function ExecutionPage() {
 
   async function updateInitiative(
     id: string,
-    patch: { status?: string; progress?: number }
+    patch: { status?: string; progress?: number; goalId?: string | null }
   ) {
     setError(null)
 
@@ -139,6 +154,9 @@ export default function ExecutionPage() {
           </Link>
           <Link href="/admin/goals" style={secondaryLinkStyle}>
             Quarterly Goals
+          </Link>
+          <Link href="/admin/initiative-performance" style={secondaryLinkStyle}>
+            Initiative Performance
           </Link>
           <Link href="/admin/operations" style={secondaryLinkStyle}>
             Operations Center
@@ -240,6 +258,7 @@ export default function ExecutionPage() {
                       <th style={thStyle}>Status</th>
                       <th style={thStyle}>Priority</th>
                       <th style={thStyle}>Progress</th>
+                      <th style={thStyle}>Linked Goal</th>
                       <th style={thStyle}>Created Date</th>
                       <th style={thStyle}>Controls</th>
                     </tr>
@@ -278,6 +297,28 @@ export default function ExecutionPage() {
                             style={{ width: "100%" }}
                           />
                           <span>{initiative.progress}%</span>
+                        </td>
+                        <td style={tdStyle}>
+                          <label style={srOnlyStyle} htmlFor={`goal-${initiative.id}`}>
+                            Link Initiative To Goal
+                          </label>
+                          <select
+                            id={`goal-${initiative.id}`}
+                            value={initiative.goalId ?? ""}
+                            onChange={(event) =>
+                              updateInitiative(initiative.id, {
+                                goalId: event.target.value || null,
+                              })
+                            }
+                            style={selectStyle}
+                          >
+                            <option value="">No goal linked</option>
+                            {goals.map((goal) => (
+                              <option key={goal.id} value={goal.id}>
+                                {goal.title} ({goal.quarter} {goal.year})
+                              </option>
+                            ))}
+                          </select>
                         </td>
                         <td style={tdStyle}>
                           {formatDate(initiative.createdAt)}
@@ -482,4 +523,25 @@ const controlButtonStyle: React.CSSProperties = {
   background: "var(--card-background)",
   cursor: "pointer",
   fontSize: 13,
+}
+
+const selectStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "8px 10px",
+  borderRadius: 8,
+  border: "1px solid var(--border)",
+  background: "var(--card-background)",
+  fontSize: 13,
+}
+
+const srOnlyStyle: React.CSSProperties = {
+  position: "absolute",
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: "hidden",
+  clip: "rect(0, 0, 0, 0)",
+  whiteSpace: "nowrap",
+  border: 0,
 }

@@ -5,6 +5,7 @@ import {
   clampGoalProgress,
   isGoalStatus,
 } from "@/lib/executive/quarterly-goals"
+import { calculateInitiativePerformance } from "@/lib/executive/initiative-performance"
 
 function serializeGoal(goal: {
   id: string
@@ -40,17 +41,35 @@ function serializeGoal(goal: {
 
 export async function GET() {
   try {
-    const goals = await prisma.quarterlyGoal.findMany({
-      orderBy: [{ year: "desc" }, { quarter: "desc" }, { createdAt: "desc" }],
-    })
+    const [goals, initiatives] = await Promise.all([
+      prisma.quarterlyGoal.findMany({
+        orderBy: [{ year: "desc" }, { quarter: "desc" }, { createdAt: "desc" }],
+      }),
+      prisma.strategicInitiative.findMany({
+        select: {
+          id: true,
+          goalId: true,
+          status: true,
+          progress: true,
+        },
+      }),
+    ])
 
     const serialized = goals.map(serializeGoal)
     const scorecard = buildPerformanceScorecard(serialized)
+    const initiativePerformance = calculateInitiativePerformance(
+      initiatives,
+      goals
+    )
 
     return NextResponse.json({
       ok: true,
       goals: serialized,
-      scorecard,
+      scorecard: {
+        ...scorecard,
+        initiativeCompletionRate: initiativePerformance.completionRate,
+        initiativeHealth: initiativePerformance.initiativeHealth,
+      },
     })
   } catch (error) {
     return NextResponse.json(

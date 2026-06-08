@@ -23,6 +23,8 @@ type PerformanceScorecard = {
   rating: "Excellent" | "Good" | "Needs Attention"
   totalGoals: number
   completedGoals: number
+  initiativeCompletionRate?: number
+  initiativeHealth?: "Excellent" | "Good" | "Needs Attention"
 }
 
 export default function GoalsPage() {
@@ -154,6 +156,9 @@ export default function GoalsPage() {
           <Link href="/admin/execution" style={secondaryLinkStyle}>
             Execution Engine
           </Link>
+          <Link href="/admin/initiative-performance" style={secondaryLinkStyle}>
+            Initiative Performance
+          </Link>
           <Link href="/admin/strategic-plan" style={secondaryLinkStyle}>
             Strategic Plan
           </Link>
@@ -211,6 +216,30 @@ export default function GoalsPage() {
               </p>
             </section>
           )}
+
+          {scorecard &&
+            scorecard.initiativeCompletionRate !== undefined &&
+            scorecard.initiativeHealth && (
+              <section style={panelStyle}>
+                <h2 style={{ marginTop: 0 }}>Initiative Performance</h2>
+                <p style={{ margin: "0 0 8px" }}>
+                  <strong>Initiative Completion Rate:</strong>{" "}
+                  {scorecard.initiativeCompletionRate}%
+                </p>
+                <p style={{ margin: 0 }}>
+                  <strong>Initiative Health:</strong>{" "}
+                  <span
+                    style={{ color: scorecardColor(scorecard.initiativeHealth) }}
+                  >
+                    {scorecard.initiativeHealth}
+                  </span>{" "}
+                  {scorecard.initiativeHealth === "Excellent" && "(≥ 80%)"}
+                  {scorecard.initiativeHealth === "Good" && "(≥ 60%)"}
+                  {scorecard.initiativeHealth === "Needs Attention" &&
+                    "(< 60%)"}
+                </p>
+              </section>
+            )}
 
           <section style={{ marginTop: 28 }}>
             <h2>Goal Table</h2>

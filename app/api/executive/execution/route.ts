@@ -15,6 +15,7 @@ function serializeInitiative(initiative: {
   priority: string
   ownerSystem: string | null
   source: string | null
+  goalId: string | null
   progress: number
   executionPath: unknown
   createdAt: Date
@@ -28,6 +29,7 @@ function serializeInitiative(initiative: {
     priority: initiative.priority,
     owner: initiative.ownerSystem,
     source: initiative.source,
+    goalId: initiative.goalId,
     progress: initiative.progress,
     actions: Array.isArray(initiative.executionPath)
       ? initiative.executionPath
@@ -172,6 +174,7 @@ export async function PATCH(request: Request) {
       status?: string
       priority?: string
       progress?: number
+      goalId?: string | null
     } = {}
 
     if (body.status !== undefined) {
@@ -220,9 +223,35 @@ export async function PATCH(request: Request) {
       data.progress = clampProgress(progress)
     }
 
+    if (body.goalId !== undefined) {
+      const goalId =
+        body.goalId === null || body.goalId === ""
+          ? null
+          : String(body.goalId).trim()
+
+      if (goalId) {
+        const goal = await prisma.quarterlyGoal.findUnique({
+          where: { id: goalId },
+        })
+
+        if (!goal) {
+          return NextResponse.json(
+            { ok: false, error: "Goal not found" },
+            { status: 404 }
+          )
+        }
+      }
+
+      data.goalId = goalId
+    }
+
     if (Object.keys(data).length === 0) {
       return NextResponse.json(
-        { ok: false, error: "Provide status, priority, or progress to update" },
+        {
+          ok: false,
+          error:
+            "Provide status, priority, progress, or goalId to update",
+        },
         { status: 400 }
       )
     }
