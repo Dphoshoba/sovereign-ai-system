@@ -198,6 +198,25 @@ model ClientProjectTask {
   @@index([createdAt])
 }
 
+model ClientInvoice {
+  id            String    @id @default(cuid())
+  clientId      String
+  projectId     String?
+  invoiceNumber String
+  amountAud     Float
+  status        String    @default("draft")
+  dueDate       DateTime?
+  paidDate      DateTime?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([clientId])
+  @@index([projectId])
+  @@index([status])
+  @@index([createdAt])
+}
+
 model AiWorkflow {
   id          String   @id @default(cuid())
   name        String

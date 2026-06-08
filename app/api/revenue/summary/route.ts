@@ -3,7 +3,10 @@ import { prisma } from "@/lib/prisma"
 
 export async function GET() {
   try {
-    const leads = await prisma.creatorLead.findMany()
+    const [leads, invoices] = await Promise.all([
+      prisma.creatorLead.findMany(),
+      prisma.clientInvoice.findMany(),
+    ])
 
     const valueOf = (status: string) =>
       leads
@@ -34,6 +37,18 @@ export async function GET() {
         ? Math.round((wonLeads / (wonLeads + lostLeads)) * 100)
         : 0
 
+    const totalInvoiced = invoices
+      .filter((invoice) => invoice.status !== "draft")
+      .reduce((sum, invoice) => sum + invoice.amountAud, 0)
+
+    const totalPaid = invoices
+      .filter((invoice) => invoice.status === "paid")
+      .reduce((sum, invoice) => sum + invoice.amountAud, 0)
+
+    const outstandingRevenue = invoices
+      .filter((invoice) => ["sent", "overdue"].includes(invoice.status))
+      .reduce((sum, invoice) => sum + invoice.amountAud, 0)
+
     return NextResponse.json({
       ok: true,
       summary: {
@@ -48,6 +63,9 @@ export async function GET() {
         proposalSentLeads: leads.filter(
           (lead) => lead.status === "proposal-sent"
         ).length,
+        totalInvoiced,
+        totalPaid,
+        outstandingRevenue,
       },
     })
   } catch (error) {

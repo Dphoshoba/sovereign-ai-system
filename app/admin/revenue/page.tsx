@@ -186,6 +186,29 @@ export default function RevenuePage() {
         </section>
       ) : null}
 
+      {pipelineSummary ? (
+        <section style={{ marginTop: 28 }}>
+          <h2 style={{ marginBottom: 16 }}>Client Invoicing</h2>
+
+          <div style={metricsGrid}>
+            <div style={metricCard}>
+              <p style={metaStyle}>Total Invoiced</p>
+              <h2>{formatAud(pipelineSummary.totalInvoiced || 0)}</h2>
+            </div>
+
+            <div style={metricCard}>
+              <p style={metaStyle}>Total Paid</p>
+              <h2>{formatAud(pipelineSummary.totalPaid || 0)}</h2>
+            </div>
+
+            <div style={metricCard}>
+              <p style={metaStyle}>Outstanding Revenue</p>
+              <h2>{formatAud(pipelineSummary.outstandingRevenue || 0)}</h2>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       {metrics ? (
         <section style={metricsGrid}>
           <div style={metricCard}>
