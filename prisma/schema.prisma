@@ -1357,6 +1357,20 @@ model StrategicScenario {
   @@index([createdAt])
 }
 
+model ExecutiveQuarterlyReview {
+  id               String   @id @default(cuid())
+  quarter          String
+  year             Int
+  healthScore      Int?
+  executiveSummary String?
+  reviewJson       Json?
+  createdAt        DateTime @default(now())
+
+  @@unique([quarter, year])
+  @@index([quarter])
+  @@index([year])
+}
+
 model StrategicDecisionLog {
   id          String   @id @default(cuid())
   title       String

@@ -193,6 +193,9 @@ export default function BoardroomPage() {
           <Link href="/admin/executive-learning" style={secondaryLinkStyle}>
             Executive Learning
           </Link>
+          <Link href="/admin/quarterly-review" style={secondaryLinkStyle}>
+            Quarterly Review
+          </Link>
           <Link href="/admin/knowledge-graph" style={secondaryLinkStyle}>
             Knowledge Graph
           </Link>
