@@ -217,6 +217,21 @@ model ClientInvoice {
   @@index([createdAt])
 }
 
+model ExecutiveBriefing {
+  id             String   @id @default(cuid())
+  briefingDate   DateTime
+  healthScore    Int
+  openingSummary String
+  urgentCount    Int
+  todayCount     Int
+  briefingJson   Json
+  createdAt      DateTime @default(now())
+
+  @@unique([briefingDate])
+  @@index([healthScore])
+  @@index([createdAt])
+}
+
 model AiWorkflow {
   id          String   @id @default(cuid())
   name        String

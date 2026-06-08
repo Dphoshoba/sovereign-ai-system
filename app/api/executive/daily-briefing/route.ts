@@ -1,13 +1,9 @@
 import { NextResponse } from "next/server"
-import { buildDailyBriefing } from "@/lib/executive/daily-briefing"
-import { getExecutivePlatformSnapshot } from "@/lib/executive/platform-snapshot"
-import { buildExecutiveRecommendations } from "@/lib/executive/recommendations"
+import { generateDailyBriefing } from "@/lib/executive/daily-briefing"
 
 export async function GET() {
   try {
-    const snapshot = await getExecutivePlatformSnapshot()
-    const recommendations = buildExecutiveRecommendations(snapshot)
-    const briefing = buildDailyBriefing(snapshot, recommendations)
+    const briefing = await generateDailyBriefing()
 
     return NextResponse.json({
       ok: true,

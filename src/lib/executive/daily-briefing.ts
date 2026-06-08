@@ -1,9 +1,13 @@
 import type { ExecutivePlatformSnapshot } from "@/lib/executive/platform-snapshot"
-import { computeOverallHealthScore } from "@/lib/executive/platform-snapshot"
+import {
+  computeOverallHealthScore,
+  getExecutivePlatformSnapshot,
+} from "@/lib/executive/platform-snapshot"
 import type {
   ExecutiveRecommendation,
   ExecutiveRecommendations,
 } from "@/lib/executive/recommendations"
+import { buildExecutiveRecommendations } from "@/lib/executive/recommendations"
 
 export type DailyBriefing = {
   date: string
@@ -216,4 +220,14 @@ export function buildDailyBriefing(
     wins,
     recommendedActions,
   }
+}
+
+export function getBriefingDateForToday(date = new Date()) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
+export async function generateDailyBriefing(): Promise<DailyBriefing> {
+  const snapshot = await getExecutivePlatformSnapshot()
+  const recommendations = buildExecutiveRecommendations(snapshot)
+  return buildDailyBriefing(snapshot, recommendations)
 }

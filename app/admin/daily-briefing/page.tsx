@@ -51,6 +51,8 @@ export default function DailyBriefingPage() {
   const [briefing, setBriefing] = useState<DailyBriefing | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [archiveLoading, setArchiveLoading] = useState(false)
+  const [archiveMessage, setArchiveMessage] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadBriefing() {
@@ -74,6 +76,25 @@ export default function DailyBriefingPage() {
 
     loadBriefing()
   }, [])
+
+  async function archiveBriefing() {
+    setArchiveLoading(true)
+    setArchiveMessage(null)
+
+    const response = await fetch("/api/executive/daily-briefing/archive", {
+      method: "POST",
+    })
+    const result = await response.json()
+
+    setArchiveLoading(false)
+
+    if (!result.ok) {
+      alert(result.error || "Failed to archive briefing")
+      return
+    }
+
+    setArchiveMessage("Today's briefing has been archived successfully.")
+  }
 
   function formatAud(value: number) {
     return `AUD ${(value || 0).toLocaleString("en-AU")}`
@@ -104,7 +125,25 @@ export default function DailyBriefingPage() {
             Operations Center
           </Link>
         </div>
+
+        <div style={actionRowStyle}>
+          <button
+            type="button"
+            disabled={archiveLoading}
+            onClick={archiveBriefing}
+            style={primaryButtonStyle}
+          >
+            {archiveLoading ? "Archiving..." : "Archive Today's Briefing"}
+          </button>
+          <Link href="/admin/daily-briefing/history" style={secondaryLinkStyle}>
+            View History
+          </Link>
+        </div>
       </section>
+
+      {archiveMessage && (
+        <p style={successMessageStyle}>{archiveMessage}</p>
+      )}
 
       {loading && <p style={{ marginTop: 28 }}>Loading daily briefing...</p>}
 
@@ -272,6 +311,38 @@ const linkRowStyle: React.CSSProperties = {
 const linkStyle: React.CSSProperties = {
   color: "var(--button-foreground)",
   fontWeight: 600,
+}
+
+const actionRowStyle: React.CSSProperties = {
+  display: "flex",
+  gap: 16,
+  flexWrap: "wrap",
+  alignItems: "center",
+  marginTop: 20,
+}
+
+const primaryButtonStyle: React.CSSProperties = {
+  padding: "12px 18px",
+  borderRadius: 10,
+  border: "none",
+  background: "var(--card-background)",
+  color: "var(--foreground)",
+  cursor: "pointer",
+  fontWeight: 700,
+}
+
+const secondaryLinkStyle: React.CSSProperties = {
+  color: "var(--button-foreground)",
+  fontWeight: 600,
+}
+
+const successMessageStyle: React.CSSProperties = {
+  marginTop: 28,
+  padding: "12px 16px",
+  borderRadius: 10,
+  background: "#ecfdf5",
+  border: "1px solid #6ee7b7",
+  color: "#065f46",
 }
 
 const sectionStyle: React.CSSProperties = {
