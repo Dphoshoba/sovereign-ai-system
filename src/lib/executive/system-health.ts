@@ -1,11 +1,6 @@
-import { loadBoardroomContext } from "@/lib/executive/boardroom"
-import { buildExecutiveCommandCenter } from "@/lib/executive/command-center"
 import { buildExecutiveForecast } from "@/lib/executive/forecast"
+import { EXECUTIVE_LIST_LIMITS } from "@/lib/executive/list-limits"
 import { getExecutiveKnowledgeGraphSummary } from "@/lib/executive/knowledge-graph"
-import {
-  buildPlanningCycle,
-  loadPlanningCycleInputs,
-} from "@/lib/executive/planning-cycle"
 import {
   buildExecutiveMonthlyReview,
   getMonthlyReviewDateCutoff,
@@ -61,23 +56,20 @@ function failureHealth(
 }
 
 export async function buildExecutiveSystemHealth(): Promise<ExecutiveSystemHealth> {
+  const runtimeResult = await Promise.allSettled([timed(runSovereignRuntime)])
+
+  const runtimeTimed =
+    runtimeResult[0].status === "fulfilled" ? runtimeResult[0].value : null
+  const runtimeFailure =
+    runtimeResult[0].status === "rejected" ? runtimeResult[0].reason : null
+
   const [
-    runtimeResult,
-    commandCenterResult,
     boardroomResult,
     forecastResult,
     planningResult,
     knowledgeGraphResult,
   ] = await Promise.allSettled([
-    timed(runSovereignRuntime),
-    timed(buildExecutiveCommandCenter),
-    timed(async () => {
-      const [sessionCount] = await Promise.all([
-        prisma.executiveBoardroomSession.count(),
-        loadBoardroomContext("weekly"),
-      ])
-      return sessionCount
-    }),
+    timed(() => prisma.executiveBoardroomSession.count()),
     timed(async () => {
       const cutoff = getMonthlyReviewDateCutoff()
       const [snapshot, briefings] = await Promise.all([
@@ -85,6 +77,7 @@ export async function buildExecutiveSystemHealth(): Promise<ExecutiveSystemHealt
         prisma.executiveBriefing.findMany({
           where: { briefingDate: { gte: cutoff } },
           orderBy: { briefingDate: "desc" },
+          take: EXECUTIVE_LIST_LIMITS.executiveBriefings,
         }),
       ])
       const monthlyReview = buildExecutiveMonthlyReview(briefings)
@@ -94,33 +87,36 @@ export async function buildExecutiveSystemHealth(): Promise<ExecutiveSystemHealt
         monthlyReview,
       })
     }),
-    timed(async () => {
-      const inputs = await loadPlanningCycleInputs("weekly")
-      return buildPlanningCycle(inputs)
-    }),
+    timed(() =>
+      prisma.planningCycle.findFirst({
+        orderBy: { createdAt: "desc" },
+        select: {
+          cycleType: true,
+          healthScore: true,
+        },
+      })
+    ),
     timed(getExecutiveKnowledgeGraphSummary),
   ])
 
-  const runtime: ExecutiveModuleHealth =
-    runtimeResult.status === "fulfilled"
-      ? {
-          ok: true,
-          latencyMs: runtimeResult.value.latencyMs,
-          executiveStatus: runtimeResult.value.value.executiveStatus,
-          runtimeHealth: runtimeResult.value.value.runtimeHealth,
-          healthScore: runtimeResult.value.value.runtimeHealth,
-        }
-      : failureHealth(0, runtimeResult.reason)
+  const runtime: ExecutiveModuleHealth = runtimeTimed
+    ? {
+        ok: true,
+        latencyMs: runtimeTimed.latencyMs,
+        executiveStatus: runtimeTimed.value.executiveStatus,
+        runtimeHealth: runtimeTimed.value.runtimeHealth,
+        healthScore: runtimeTimed.value.runtimeHealth,
+      }
+    : failureHealth(0, runtimeFailure)
 
-  const commandCenter: ExecutiveModuleHealth =
-    commandCenterResult.status === "fulfilled"
-      ? {
-          ok: true,
-          latencyMs: commandCenterResult.value.latencyMs,
-          executiveStatus: commandCenterResult.value.value.executiveStatus,
-          healthScore: commandCenterResult.value.value.healthScore,
-        }
-      : failureHealth(0, commandCenterResult.reason)
+  const commandCenter: ExecutiveModuleHealth = runtimeTimed
+    ? {
+        ok: true,
+        latencyMs: runtimeTimed.latencyMs,
+        executiveStatus: runtimeTimed.value.executiveStatus,
+        healthScore: runtimeTimed.value.runtimeHealth,
+      }
+    : failureHealth(0, runtimeFailure)
 
   const boardroom: ExecutiveModuleHealth =
     boardroomResult.status === "fulfilled"
@@ -147,8 +143,8 @@ export async function buildExecutiveSystemHealth(): Promise<ExecutiveSystemHealt
       ? {
           ok: true,
           latencyMs: planningResult.value.latencyMs,
-          cycleType: planningResult.value.value.cycleType,
-          healthScore: planningResult.value.value.healthScore,
+          cycleType: planningResult.value.value?.cycleType ?? "weekly",
+          healthScore: planningResult.value.value?.healthScore ?? null,
         }
       : failureHealth(0, planningResult.reason)
 

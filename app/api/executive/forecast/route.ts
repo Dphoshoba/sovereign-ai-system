@@ -6,6 +6,7 @@ import {
   getMonthlyReviewDateCutoff,
 } from "@/lib/executive/monthly-review"
 import { getExecutivePlatformSnapshot } from "@/lib/executive/platform-snapshot"
+import { EXECUTIVE_LIST_LIMITS } from "@/lib/executive/list-limits"
 
 export async function GET() {
   try {
@@ -22,6 +23,7 @@ export async function GET() {
         orderBy: {
           briefingDate: "desc",
         },
+        take: EXECUTIVE_LIST_LIMITS.executiveBriefings,
       }),
     ])
 

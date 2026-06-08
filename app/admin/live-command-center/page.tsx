@@ -73,10 +73,10 @@ export default function LiveCommandCenterPage() {
   return (
     <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
       <section style={heroStyle}>
-        <p style={eyebrowStyle}>Live Operations</p>
+        <p style={eyebrowStyle}>Live Operations · Legacy</p>
 
         <h1 style={{ fontSize: 42, margin: "8px 0" }}>
-          Real-Time AI Command Center
+          Real-Time AI Command Center (Legacy)
         </h1>
 
         <p style={{ color: "var(--hero-muted)", maxWidth: 860, lineHeight: 1.7 }}>
@@ -84,6 +84,26 @@ export default function LiveCommandCenterPage() {
           activity events and system health in one live operational dashboard.
         </p>
       </section>
+
+      <div
+        style={{
+          marginBottom: 24,
+          padding: 16,
+          borderRadius: 12,
+          border: "1px solid var(--border)",
+          background: "var(--card-background)",
+        }}
+      >
+        <strong>Legacy live console.</strong> Prefer{" "}
+        <Link href="/admin/command-center" style={{ fontWeight: "bold" }}>
+          V1 Command Center
+        </Link>{" "}
+        and{" "}
+        <Link href="/admin/runtime" style={{ fontWeight: "bold" }}>
+          V1 Runtime
+        </Link>{" "}
+        for sovereign executive operations.
+      </div>
 
       <section style={toolbarStyle}>
         <button onClick={loadLiveData} disabled={loading} style={buttonStyle}>

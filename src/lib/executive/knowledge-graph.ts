@@ -634,27 +634,42 @@ export async function buildExecutiveKnowledgeGraph(): Promise<KnowledgeGraphBuil
 }
 
 export async function getExecutiveKnowledgeGraphSummary(): Promise<KnowledgeGraphSummary> {
-  const [nodes, edges, totalNodes, totalEdges] = await Promise.all([
+  const [
+    recentNodes,
+    recentEdges,
+    totalNodes,
+    totalEdges,
+    nodesByType,
+    edgesByRelation,
+  ] = await Promise.all([
     prisma.executiveKnowledgeNode.findMany({
       orderBy: { updatedAt: "desc" },
+      take: 10,
     }),
     prisma.executiveKnowledgeEdge.findMany({
       orderBy: { createdAt: "desc" },
+      take: 10,
     }),
     prisma.executiveKnowledgeNode.count(),
     prisma.executiveKnowledgeEdge.count(),
+    prisma.executiveKnowledgeNode.groupBy({
+      by: ["entityType"],
+      _count: { _all: true },
+    }),
+    prisma.executiveKnowledgeEdge.groupBy({
+      by: ["relation"],
+      _count: { _all: true },
+    }),
   ])
 
   const nodeCountsByType: Record<string, number> = {}
-  for (const node of nodes) {
-    nodeCountsByType[node.entityType] =
-      (nodeCountsByType[node.entityType] ?? 0) + 1
+  for (const row of nodesByType) {
+    nodeCountsByType[row.entityType] = row._count._all
   }
 
   const edgeCountsByRelation: Record<string, number> = {}
-  for (const edge of edges) {
-    edgeCountsByRelation[edge.relation] =
-      (edgeCountsByRelation[edge.relation] ?? 0) + 1
+  for (const row of edgesByRelation) {
+    edgeCountsByRelation[row.relation] = row._count._all
   }
 
   return {
@@ -662,8 +677,8 @@ export async function getExecutiveKnowledgeGraphSummary(): Promise<KnowledgeGrap
     totalEdges,
     nodeCountsByType,
     edgeCountsByRelation,
-    recentNodes: nodes.slice(0, 10).map(serializeKnowledgeNode),
-    recentEdges: edges.slice(0, 10).map(serializeKnowledgeEdge),
+    recentNodes: recentNodes.map(serializeKnowledgeNode),
+    recentEdges: recentEdges.map(serializeKnowledgeEdge),
   }
 }
 

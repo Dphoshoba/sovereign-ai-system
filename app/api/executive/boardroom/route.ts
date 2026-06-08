@@ -8,6 +8,7 @@ import {
   type BoardroomSession,
 } from "@/lib/executive/boardroom"
 import { saveBoardroomKeyDecisions } from "@/lib/executive/decision-memory"
+import { EXECUTIVE_LIST_LIMITS } from "@/lib/executive/list-limits"
 
 type StoredBoardroomDecisions = {
   agents: BoardroomAgentReport[]
@@ -90,7 +91,7 @@ export async function GET() {
   try {
     const sessions = await prisma.executiveBoardroomSession.findMany({
       orderBy: { createdAt: "desc" },
-      take: 25,
+      take: EXECUTIVE_LIST_LIMITS.boardroomSessions,
     })
 
     return NextResponse.json({

@@ -28,8 +28,30 @@ export default async function OperationsPage() {
 
   return (
     <main style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
+      <p style={eyebrowStyle}>V1 Primary Hub</p>
       <h1>Operations Center</h1>
-      <p>Central command for content, publishing, distribution, and reporting.</p>
+      <p>
+        Central command for content, publishing, distribution, and reporting.
+        Start with{" "}
+        <Link href="/admin/runtime" style={primaryInlineLinkStyle}>
+          V1 Runtime
+        </Link>{" "}
+        or{" "}
+        <Link href="/admin/command-center" style={primaryInlineLinkStyle}>
+          V1 Command Center
+        </Link>{" "}
+        for sovereign executive operations.
+      </p>
+
+      <section style={primaryHubStyle}>
+        <h2 style={{ marginTop: 0 }}>V1 Executive Entry Points</h2>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <Link href="/admin/runtime" style={buttonStyle}>V1 Runtime</Link>
+          <Link href="/admin/command-center" style={buttonStyle}>V1 Command Center</Link>
+          <Link href="/admin/boardroom" style={secondaryButtonStyle}>Boardroom</Link>
+          <Link href="/admin/strategic-plan" style={secondaryButtonStyle}>Strategic Plan</Link>
+        </div>
+      </section>
 
       <div style={gridStyle}>
         <StatCard label="Published Articles" value={published.length} />
@@ -165,4 +187,36 @@ const buttonStyle: React.CSSProperties = {
   color: "var(--button-foreground)",
   textDecoration: "none",
   fontWeight: "bold",
+}
+
+const secondaryButtonStyle: React.CSSProperties = {
+  display: "inline-block",
+  padding: "10px 14px",
+  borderRadius: "8px",
+  border: "1px solid var(--border)",
+  background: "var(--card-background)",
+  color: "var(--foreground)",
+  textDecoration: "none",
+  fontWeight: "bold",
+}
+
+const eyebrowStyle: React.CSSProperties = {
+  textTransform: "uppercase",
+  letterSpacing: "0.08em",
+  fontSize: "12px",
+  color: "var(--muted)",
+  marginBottom: "8px",
+}
+
+const primaryInlineLinkStyle: React.CSSProperties = {
+  color: "var(--foreground)",
+  fontWeight: "bold",
+}
+
+const primaryHubStyle: React.CSSProperties = {
+  marginTop: "24px",
+  padding: "18px",
+  borderRadius: "14px",
+  border: "1px solid var(--border)",
+  background: "var(--card-background)",
 }

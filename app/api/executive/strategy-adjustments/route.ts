@@ -4,6 +4,10 @@ import {
   buildStrategyAdjustments,
   type StrategyAdjustmentProposal,
 } from "@/lib/executive/strategy-adjustments"
+import {
+  EXECUTIVE_LIST_LIMITS,
+  summarizeStatusCounts,
+} from "@/lib/executive/list-limits"
 
 const ADJUSTMENT_STATUSES = [
   "proposed",
@@ -52,18 +56,19 @@ function serializeAdjustment(record: {
 
 export async function GET() {
   try {
-    const records = await prisma.strategyAdjustment.findMany({
-      orderBy: { createdAt: "desc" },
-    })
+    const [records, statusGroups] = await Promise.all([
+      prisma.strategyAdjustment.findMany({
+        orderBy: { createdAt: "desc" },
+        take: EXECUTIVE_LIST_LIMITS.strategyAdjustments,
+      }),
+      prisma.strategyAdjustment.groupBy({
+        by: ["status"],
+        _count: { _all: true },
+      }),
+    ])
 
     const adjustments = records.map(serializeAdjustment)
-    const summary = {
-      proposed: adjustments.filter((item) => item.status === "proposed").length,
-      approved: adjustments.filter((item) => item.status === "approved").length,
-      implemented: adjustments.filter((item) => item.status === "implemented")
-        .length,
-      rejected: adjustments.filter((item) => item.status === "rejected").length,
-    }
+    const summary = summarizeStatusCounts(statusGroups, ADJUSTMENT_STATUSES)
 
     return NextResponse.json({
       ok: true,

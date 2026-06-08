@@ -70,7 +70,7 @@ export default function RuntimePage() {
   return (
     <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
       <section style={heroStyle}>
-        <p style={eyebrowStyle}>Executive Command · V1</p>
+        <p style={eyebrowStyle}>Executive Command · V1 Primary</p>
         <h1 style={{ fontSize: 42, margin: "8px 0" }}>Sovereign Runtime</h1>
         <p style={{ color: "var(--hero-muted)", maxWidth: 820, lineHeight: 1.7 }}>
           Top-level executive orchestration layer coordinating forecast,

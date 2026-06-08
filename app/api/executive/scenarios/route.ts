@@ -6,6 +6,10 @@ import {
 } from "@/lib/executive/simulation-strategy"
 import { runStrategicSimulation } from "@/lib/executive/strategic-simulation"
 import type { StrategicSimulationResult } from "@/lib/executive/strategic-simulation"
+import {
+  EXECUTIVE_LIST_LIMITS,
+  summarizeStatusCounts,
+} from "@/lib/executive/list-limits"
 
 const SCENARIO_STATUSES = [
   "generated",
@@ -50,18 +54,19 @@ function serializeScenario(record: {
 
 export async function GET() {
   try {
-    const records = await prisma.strategicScenario.findMany({
-      orderBy: { createdAt: "desc" },
-    })
+    const [records, statusGroups] = await Promise.all([
+      prisma.strategicScenario.findMany({
+        orderBy: { createdAt: "desc" },
+        take: EXECUTIVE_LIST_LIMITS.scenarios,
+      }),
+      prisma.strategicScenario.groupBy({
+        by: ["status"],
+        _count: { _all: true },
+      }),
+    ])
 
     const scenarios = records.map(serializeScenario)
-    const summary = {
-      generated: scenarios.filter((item) => item.status === "generated").length,
-      approved: scenarios.filter((item) => item.status === "approved").length,
-      implemented: scenarios.filter((item) => item.status === "implemented")
-        .length,
-      rejected: scenarios.filter((item) => item.status === "rejected").length,
-    }
+    const summary = summarizeStatusCounts(statusGroups, SCENARIO_STATUSES)
 
     return NextResponse.json({
       ok: true,

@@ -6,15 +6,18 @@ import {
   decisionsEligibleForLessonGeneration,
   serializeExecutiveLesson,
 } from "@/lib/executive/learning-system"
+import { EXECUTIVE_LIST_LIMITS } from "@/lib/executive/list-limits"
 
 export async function GET() {
   try {
     const [decisions, storedLessons] = await Promise.all([
       prisma.executiveDecision.findMany({
         orderBy: [{ createdAt: "desc" }],
+        take: EXECUTIVE_LIST_LIMITS.decisions,
       }),
       prisma.executiveLesson.findMany({
         orderBy: [{ createdAt: "desc" }],
+        take: EXECUTIVE_LIST_LIMITS.lessons,
       }),
     ])
 
@@ -49,6 +52,7 @@ export async function POST() {
     const [decisions, existingLessons] = await Promise.all([
       prisma.executiveDecision.findMany({
         orderBy: [{ createdAt: "desc" }],
+        take: EXECUTIVE_LIST_LIMITS.decisions,
       }),
       prisma.executiveLesson.findMany({
         select: { sourceDecisionId: true },

@@ -171,3 +171,73 @@ No theme regressions identified in this audit pass.
 - `/admin/knowledge-graph`
 - `/api/executive/runtime`
 - `/api/executive/command-center`
+
+---
+
+## Phase 16.4 Performance & Cleanup Notes
+
+**Date:** 2026-06-03  
+**Commit message:** Polish sovereign v1 production readiness
+
+### Routes reviewed
+
+- **V1 primary:** `/admin/runtime`, `/admin/command-center`, `/admin/operations`
+- **Legacy labeled:** `/admin/sovereign-runtime`, `/admin/persistent-runtime`, `/admin/command-center-v2`, `/admin/live-command-center`, `/admin/executive-overview`
+- **APIs:** `/api/executive/runtime`, `/api/executive/command-center`, `/api/executive/knowledge-graph`, `/api/executive/health`
+
+### Legacy labels added
+
+| Page | Change |
+|------|--------|
+| `/admin/persistent-runtime` | Legacy banner + links to V1 Runtime and Command Center |
+| `/admin/live-command-center` | Legacy banner + V1 links |
+| `/admin/executive-overview` | Secondary/legacy label + V1 links |
+| `/admin/sovereign-runtime` | Already labeled (Phase 16.1) |
+| `/admin/command-center-v2` | Already labeled (Phase 16.1) |
+
+### Primary route clarity
+
+- `/admin/runtime` — eyebrow: **V1 Primary**
+- `/admin/command-center` — eyebrow: **V1 Primary**
+- `/admin/operations` — **V1 Primary Hub** section with executive entry points
+
+### Performance fixes
+
+- **`getExecutiveKnowledgeGraphSummary`** — no longer loads all nodes/edges; uses `take: 10` for recent items and Prisma `groupBy` for counts
+- **`buildExecutiveSystemHealth`** — removed duplicate `buildExecutiveCommandCenter` call; command center health derived from single `runSovereignRuntime` run; boardroom check uses session count only; planning uses latest cycle record; briefings capped at 31
+
+### List limits confirmed (`src/lib/executive/list-limits.ts`)
+
+| Resource | Limit |
+|----------|-------|
+| Boardroom sessions | 25 |
+| Planning cycles | 50 |
+| Knowledge graph recent nodes/edges | 10 |
+| Decisions | 100 |
+| Lessons | 100 |
+| Strategy adjustments (list) | 50 (summary via `groupBy`) |
+| Scenarios (list) | 50 (summary via `groupBy`) |
+| Quarterly reviews | 20 |
+| Executive briefings (forecast) | 31 |
+
+### Build result
+
+**Status:** Passed (2026-06-03)
+
+```bash
+npm run build
+# Compiled successfully in ~52s
+# TypeScript finished in ~52s
+# 539 static pages — exit code 0
+# No build warnings or errors
+```
+
+### Smoke result
+
+**Status:** 22/22 passed against `http://localhost:3000`
+
+```bash
+npm run smoke:v1
+# /api/executive/health: 1261ms (improved vs duplicate command-center aggregation)
+# All 22 routes HTTP 200 — exit code 0
+```

@@ -5,6 +5,7 @@ import {
   isPlanningCycleStatus,
   loadPlanningCycleInputs,
 } from "@/lib/executive/planning-cycle"
+import { EXECUTIVE_LIST_LIMITS } from "@/lib/executive/list-limits"
 
 function serializeCycle(cycle: {
   id: string
@@ -42,7 +43,7 @@ export async function GET() {
   try {
     const cycles = await prisma.planningCycle.findMany({
       orderBy: { createdAt: "desc" },
-      take: 50,
+      take: EXECUTIVE_LIST_LIMITS.planningCycles,
     })
 
     return NextResponse.json({

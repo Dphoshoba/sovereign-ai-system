@@ -59,7 +59,7 @@ export default function CommandCenterPage() {
   return (
     <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
       <section style={heroStyle}>
-        <p style={eyebrowStyle}>Executive Command</p>
+        <p style={eyebrowStyle}>Executive Command · V1 Primary</p>
         <h1 style={{ fontSize: 42, margin: "8px 0" }}>Command Center</h1>
         <p style={{ color: "var(--hero-muted)", maxWidth: 820, lineHeight: 1.7 }}>
           Unified executive cockpit for the Sovereign AI platform — health,

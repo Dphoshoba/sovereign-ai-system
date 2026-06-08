@@ -90,14 +90,34 @@ export default function ExecutiveOverviewPage() {
   return (
     <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
       <section style={heroStyle}>
-        <p style={eyebrowStyle}>Executive Command</p>
+        <p style={eyebrowStyle}>Executive Command · Legacy</p>
         <h1 style={{ fontSize: 42, margin: "8px 0" }}>
-          Executive Business Overview
+          Executive Business Overview (Legacy)
         </h1>
         <p style={{ color: "var(--hero-muted)", maxWidth: 820, lineHeight: 1.7 }}>
           One dashboard for content, growth, CRM, revenue, and client delivery
           across Echoes & Visions.
         </p>
+        <div
+          style={{
+            marginTop: 16,
+            padding: 16,
+            borderRadius: 12,
+            border: "1px solid var(--hero-muted)",
+            background: "rgba(255,255,255,0.04)",
+            maxWidth: 820,
+          }}
+        >
+          <strong>Secondary overview.</strong> Use{" "}
+          <Link href="/admin/runtime" style={{ fontWeight: "bold", color: "inherit" }}>
+            V1 Runtime
+          </Link>{" "}
+          and{" "}
+          <Link href="/admin/command-center" style={{ fontWeight: "bold", color: "inherit" }}>
+            V1 Command Center
+          </Link>{" "}
+          as primary executive destinations.
+        </div>
         <Link href="/admin/operations" style={linkStyle}>
           ← Back to Operations
         </Link>

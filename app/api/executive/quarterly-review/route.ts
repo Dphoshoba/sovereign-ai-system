@@ -5,6 +5,7 @@ import {
   getCurrentQuarter,
   type ExecutiveQuarterlyReview,
 } from "@/lib/executive/quarterly-review"
+import { EXECUTIVE_LIST_LIMITS } from "@/lib/executive/list-limits"
 
 function serializeReview(record: {
   id: string
@@ -32,6 +33,7 @@ export async function GET() {
   try {
     const records = await prisma.executiveQuarterlyReview.findMany({
       orderBy: [{ year: "desc" }, { quarter: "desc" }],
+      take: EXECUTIVE_LIST_LIMITS.quarterlyReviews,
     })
 
     return NextResponse.json({

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import {
   PageShell,
   ExecutiveCard,
@@ -114,10 +115,30 @@ export default function PersistentRuntimePage() {
 
   return (
     <PageShell
-      eyebrow="Continuous Operations"
-      title="Persistent Autonomous Runtime"
+      eyebrow="Continuous Operations · Legacy"
+      title="Persistent Autonomous Runtime (Legacy)"
       description="Maintain organizational continuity through runtime heartbeats, memory snapshots, persistent objectives and retry-aware recovery."
     >
+      <div
+        style={{
+          marginBottom: 24,
+          padding: 16,
+          borderRadius: 12,
+          border: "1px solid var(--border)",
+          background: "var(--card-background)",
+        }}
+      >
+        <strong>Legacy module.</strong> Prefer{" "}
+        <Link href="/admin/runtime" style={{ fontWeight: "bold" }}>
+          V1 Runtime
+        </Link>{" "}
+        and{" "}
+        <Link href="/admin/command-center" style={{ fontWeight: "bold" }}>
+          V1 Command Center
+        </Link>{" "}
+        for the current rule-based executive stack.
+      </div>
+
       <ExecutiveGrid min={220}>
         <MetricCard label="Runtime Health" value={latest ? `${latest.healthScore}/100` : "N/A"} />
         <MetricCard label="Runtime Status" value={latest?.status || "No heartbeat"} />
