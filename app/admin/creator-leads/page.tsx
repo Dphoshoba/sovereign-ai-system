@@ -46,6 +46,8 @@ export default function CreatorLeadsDashboard() {
   const [leadIntelligence, setLeadIntelligence] = useState<any[]>([])
   const [generatedEmail, setGeneratedEmail] = useState<any | null>(null)
   const [emailLoading, setEmailLoading] = useState(false)
+  const [generatedProposal, setGeneratedProposal] = useState<any | null>(null)
+  const [proposalLoading, setProposalLoading] = useState(false)
 
   async function loadLeads() {
     const response = await fetch("/api/creator-leads")
@@ -117,6 +119,31 @@ export default function CreatorLeadsDashboard() {
     setGeneratedEmail(result.email)
   }
 
+  async function generateProposal() {
+    if (!selectedLead) return
+
+    setProposalLoading(true)
+
+    const response = await fetch("/api/creator-leads/generate-proposal", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ leadId: selectedLead.id }),
+    })
+
+    const result = await response.json()
+
+    setProposalLoading(false)
+
+    if (!result.ok) {
+      alert(result.error || "Failed to generate proposal")
+      return
+    }
+
+    setGeneratedProposal(result.proposal)
+  }
+
   useEffect(() => {
     loadLeads()
     loadLeadIntelligence()
@@ -124,6 +151,7 @@ export default function CreatorLeadsDashboard() {
 
   useEffect(() => {
     setGeneratedEmail(null)
+    setGeneratedProposal(null)
   }, [selectedLead?.id])
 
   const filteredLeads = useMemo(() => {
@@ -424,6 +452,58 @@ export default function CreatorLeadsDashboard() {
                 </div>
               )}
 
+              <button
+                type="button"
+                disabled={proposalLoading}
+                onClick={generateProposal}
+                style={{ ...buttonStyle, marginBottom: 16 }}
+              >
+                {proposalLoading ? "Generating Proposal..." : "Generate Proposal"}
+              </button>
+
+              {generatedProposal && (
+                <div style={generatedProposalStyle}>
+                  <ProposalField
+                    label="Proposal Title"
+                    value={generatedProposal.proposalTitle}
+                  />
+                  <ProposalField
+                    label="Summary"
+                    value={generatedProposal.summary}
+                  />
+                  <ProposalField
+                    label="Recommended Offer"
+                    value={generatedProposal.recommendedOffer}
+                  />
+                  <ProposalList label="Scope" items={generatedProposal.scope} />
+                  <ProposalList
+                    label="Deliverables"
+                    items={generatedProposal.deliverables}
+                  />
+                  <ProposalField
+                    label="Timeline"
+                    value={generatedProposal.timeline}
+                  />
+                  <ProposalField
+                    label="Investment AUD"
+                    value={
+                      typeof generatedProposal.investmentAud === "number"
+                        ? `AUD ${generatedProposal.investmentAud.toLocaleString("en-AU")}`
+                        : generatedProposal.investmentAud
+                    }
+                  />
+                  <ProposalField
+                    label="Next Step"
+                    value={generatedProposal.nextStep}
+                  />
+                  <ProposalList label="Risks" items={generatedProposal.risks} />
+                  <ProposalList
+                    label="Success Outcomes"
+                    items={generatedProposal.successOutcomes}
+                  />
+                </div>
+              )}
+
               <label>
                 Status
                 <select
@@ -593,6 +673,48 @@ function IntelligenceRow({
   )
 }
 
+function ProposalField({
+  label,
+  value,
+}: {
+  label: string
+  value?: string | number | null
+}) {
+  if (!value) return null
+
+  return (
+    <div style={{ marginBottom: "14px" }}>
+      <p style={intelligenceLabelStyle}>{label}</p>
+      <p style={{ margin: 0, color: "#111", fontWeight: 600, lineHeight: 1.6 }}>
+        {value}
+      </p>
+    </div>
+  )
+}
+
+function ProposalList({
+  label,
+  items,
+}: {
+  label: string
+  items?: string[] | null
+}) {
+  if (!items?.length) return null
+
+  return (
+    <div style={{ marginBottom: "14px" }}>
+      <p style={intelligenceLabelStyle}>{label}</p>
+      <ul style={{ margin: "6px 0 0", paddingLeft: 20, color: "#111" }}>
+        {items.map((item, index) => (
+          <li key={`${label}-${index}`} style={{ marginBottom: 6, lineHeight: 1.5 }}>
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 const heroStyle: React.CSSProperties = {
   background: "#111",
   color: "#fff",
@@ -682,6 +804,14 @@ const leadSummaryStyle: React.CSSProperties = {
 }
 
 const generatedEmailStyle: React.CSSProperties = {
+  background: "#f8fafc",
+  border: "1px solid #e5e7eb",
+  borderRadius: 12,
+  padding: 16,
+  marginBottom: 20,
+}
+
+const generatedProposalStyle: React.CSSProperties = {
   background: "#f8fafc",
   border: "1px solid #e5e7eb",
   borderRadius: 12,
