@@ -11,6 +11,8 @@ import type {
 export default function StrategicPlanPage() {
   const [plan, setPlan] = useState<StrategicPlan | null>(null)
   const [loading, setLoading] = useState(true)
+  const [generating, setGenerating] = useState(false)
+  const [executionMessage, setExecutionMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -36,6 +38,28 @@ export default function StrategicPlanPage() {
     loadPlan()
   }, [])
 
+  async function generateExecutionPlan() {
+    setGenerating(true)
+    setExecutionMessage(null)
+    setError(null)
+
+    const response = await fetch("/api/executive/execution/generate", {
+      method: "POST",
+    })
+    const result = await response.json()
+
+    setGenerating(false)
+
+    if (!result.ok) {
+      setError(result.error || "Failed to generate execution plan")
+      return
+    }
+
+    setExecutionMessage(
+      `Created ${result.createdCount} execution initiative${result.createdCount === 1 ? "" : "s"}${result.skippedCount > 0 ? ` (${result.skippedCount} duplicates skipped)` : ""}.`
+    )
+  }
+
   return (
     <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
       <section style={heroStyle}>
@@ -58,8 +82,25 @@ export default function StrategicPlanPage() {
           <Link href="/admin/operations" style={linkStyle}>
             Operations Center
           </Link>
+          <Link href="/admin/execution" style={linkStyle}>
+            Execution Engine
+          </Link>
+        </div>
+        <div style={actionRowStyle}>
+          <button
+            type="button"
+            disabled={generating}
+            onClick={generateExecutionPlan}
+            style={primaryButtonStyle}
+          >
+            {generating ? "Generating..." : "Generate Execution Plan"}
+          </button>
         </div>
       </section>
+
+      {executionMessage && (
+        <p style={successMessageStyle}>{executionMessage}</p>
+      )}
 
       {loading && <p style={{ marginTop: 28 }}>Loading strategic plan...</p>}
 
@@ -228,6 +269,26 @@ const linkRowStyle: React.CSSProperties = {
 
 const linkStyle: React.CSSProperties = {
   color: "var(--button-foreground)",
+  fontWeight: 600,
+}
+
+const actionRowStyle: React.CSSProperties = {
+  marginTop: 16,
+}
+
+const primaryButtonStyle: React.CSSProperties = {
+  padding: "12px 18px",
+  borderRadius: 10,
+  border: "none",
+  background: "var(--button-background)",
+  color: "var(--button-foreground)",
+  fontWeight: 700,
+  cursor: "pointer",
+}
+
+const successMessageStyle: React.CSSProperties = {
+  marginTop: 28,
+  color: "#15803d",
   fontWeight: 600,
 }
 

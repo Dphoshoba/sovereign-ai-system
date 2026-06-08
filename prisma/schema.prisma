@@ -1204,6 +1204,8 @@ model StrategicInitiative {
   riskLevel      String   @default("medium")
   result         Json?
   error          String?
+  source         String?
+  progress       Int      @default(0)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -1212,6 +1214,7 @@ model StrategicInitiative {
   @@index([status])
   @@index([ownerSystem])
   @@index([riskLevel])
+  @@index([createdAt])
 }
 
 model StrategicDecisionLog {
