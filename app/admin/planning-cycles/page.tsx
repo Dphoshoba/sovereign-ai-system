@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 type PlanningCycleAction = {
   title: string
@@ -24,11 +25,46 @@ type PlanningCycle = {
   updatedAt: string
 }
 
+const LINK_ACTION_MAP: Record<string, string> = {
+  "/admin/delivery": "review-overdue-tasks",
+  "/admin/client-projects": "review-overdue-tasks",
+  "/admin/invoices": "review-invoices",
+  "/admin/creator-leads": "review-leads",
+  "/admin/articles": "review-content",
+  "/admin/execution": "review-initiatives",
+  "/admin/goals": "review-goals",
+  "/admin/planning-cycles": "review-planning",
+  "/admin/initiative-performance": "sync-goals",
+}
+
+function resolveActionType(action: PlanningCycleAction): string | null {
+  if (
+    action.actionType &&
+    action.actionType !== "open-page" &&
+    action.actionType !== "open_page"
+  ) {
+    return action.actionType
+  }
+
+  if (action.link && LINK_ACTION_MAP[action.link]) {
+    return LINK_ACTION_MAP[action.link]
+  }
+
+  if (action.title.toLowerCase().includes("sync goal")) {
+    return "sync-goals"
+  }
+
+  return null
+}
+
 export default function PlanningCyclesPage() {
+  const router = useRouter()
   const [cycles, setCycles] = useState<PlanningCycle[]>([])
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [actionLoadingKey, setActionLoadingKey] = useState<string | null>(null)
+  const [executedActionsCount, setExecutedActionsCount] = useState(0)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -86,6 +122,49 @@ export default function PlanningCyclesPage() {
     }
 
     setMessage("Planning cycle generated and saved as draft.")
+    await loadCycles()
+  }
+
+  async function runAction(cycleId: string, action: PlanningCycleAction) {
+    const actionType = resolveActionType(action)
+
+    if (!actionType) {
+      setError("This action cannot be run automatically.")
+      return
+    }
+
+    const actionKey = `${cycleId}-${action.title}`
+    setActionLoadingKey(actionKey)
+    setError(null)
+    setMessage(null)
+
+    const response = await fetch("/api/executive/planning-cycles/run-action", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        actionType,
+        payload: {},
+      }),
+    })
+    const result = await response.json()
+
+    setActionLoadingKey(null)
+
+    if (!result.ok) {
+      setError(result.error || "Action failed")
+      return
+    }
+
+    setExecutedActionsCount((count) => count + 1)
+    setMessage(result.message || "Action completed.")
+
+    if (result.redirectTo) {
+      router.push(result.redirectTo)
+      return
+    }
+
     await loadCycles()
   }
 
@@ -195,6 +274,10 @@ export default function PlanningCyclesPage() {
               <p style={metaStyle}>Approved</p>
               <h2>{summary.approved}</h2>
             </div>
+            <div style={metricCard}>
+              <p style={metaStyle}>Executed Actions</p>
+              <h2>{executedActionsCount}</h2>
+            </div>
           </section>
 
           <section style={{ marginTop: 28 }}>
@@ -266,19 +349,41 @@ export default function PlanningCyclesPage() {
                     {cycle.actions.length > 0 && (
                       <div style={sectionBlockStyle}>
                         <h3 style={sectionHeadingStyle}>Actions</h3>
-                        <ul style={listStyle}>
-                          {cycle.actions.map((action) => (
-                            <li key={action.title}>
-                              <strong>{action.title}</strong> —{" "}
-                              {action.description}
-                              {action.link && (
-                                <>
-                                  {" "}
-                                  <Link href={action.link}>Open</Link>
-                                </>
-                              )}
-                            </li>
-                          ))}
+                        <ul style={actionListStyle}>
+                          {cycle.actions.map((action) => {
+                            const actionType = resolveActionType(action)
+                            const actionKey = `${cycle.id}-${action.title}`
+
+                            return (
+                              <li key={action.title} style={actionItemStyle}>
+                                <div>
+                                  <strong>{action.title}</strong>
+                                  <p style={actionDescriptionStyle}>
+                                    {action.description}
+                                  </p>
+                                </div>
+                                <div style={actionControlsStyle}>
+                                  {actionType ? (
+                                    <button
+                                      type="button"
+                                      style={runActionButtonStyle}
+                                      disabled={actionLoadingKey === actionKey}
+                                      onClick={() => runAction(cycle.id, action)}
+                                    >
+                                      {actionLoadingKey === actionKey
+                                        ? "Running..."
+                                        : "Run Action"}
+                                    </button>
+                                  ) : null}
+                                  {action.link && (
+                                    <Link href={action.link} style={openLinkStyle}>
+                                      Open
+                                    </Link>
+                                  )}
+                                </div>
+                              </li>
+                            )
+                          })}
                         </ul>
                       </div>
                     )}
@@ -445,6 +550,53 @@ const listStyle: React.CSSProperties = {
   margin: 0,
   paddingLeft: 20,
   lineHeight: 1.7,
+}
+
+const actionListStyle: React.CSSProperties = {
+  margin: 0,
+  paddingLeft: 0,
+  listStyle: "none",
+  display: "grid",
+  gap: 12,
+}
+
+const actionItemStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 16,
+  flexWrap: "wrap",
+  alignItems: "flex-start",
+  padding: "12px 0",
+  borderBottom: "1px solid var(--border)",
+}
+
+const actionDescriptionStyle: React.CSSProperties = {
+  margin: "6px 0 0",
+  color: "var(--muted)",
+  lineHeight: 1.5,
+}
+
+const actionControlsStyle: React.CSSProperties = {
+  display: "flex",
+  gap: 8,
+  alignItems: "center",
+  flexWrap: "wrap",
+}
+
+const runActionButtonStyle: React.CSSProperties = {
+  padding: "8px 12px",
+  borderRadius: 8,
+  border: "1px solid var(--border)",
+  background: "var(--button-background)",
+  color: "var(--button-foreground)",
+  cursor: "pointer",
+  fontSize: 13,
+  fontWeight: 600,
+}
+
+const openLinkStyle: React.CSSProperties = {
+  fontSize: 13,
+  fontWeight: 600,
 }
 
 const controlRowStyle: React.CSSProperties = {

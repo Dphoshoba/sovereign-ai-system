@@ -206,8 +206,8 @@ function buildActions(inputs: PlanningCycleInputs): PlanningCycleAction[] {
     actions.push({
       title: "Review overdue tasks",
       description: `${snapshot.overdueTasks} client delivery task${snapshot.overdueTasks === 1 ? "" : "s"} are past due.`,
-      link: "/admin/client-projects",
-      actionType: "open-page",
+      link: "/admin/delivery",
+      actionType: "review-overdue-tasks",
     })
   }
 
@@ -221,17 +221,28 @@ function buildActions(inputs: PlanningCycleInputs): PlanningCycleAction[] {
       description:
         "Update quarterly goal progress from linked strategic initiatives.",
       link: "/admin/initiative-performance",
-      actionType: "open-page",
+      actionType: "sync-goals",
+    })
+  }
+
+  const atRiskGoals = goals.filter((goal) => goal.status === "at-risk").length
+
+  if (atRiskGoals > 0) {
+    actions.push({
+      title: "Review at-risk goals",
+      description: `${atRiskGoals} quarterly goal${atRiskGoals === 1 ? "" : "s"} marked at-risk.`,
+      link: "/admin/goals",
+      actionType: "review-goals",
     })
   }
 
   if (snapshot.atRiskProjects.length > 0 || snapshot.deliveryHealthScore < 70) {
     actions.push({
-      title: "Archive stale projects",
+      title: "Review delivery health",
       description:
         "Review delivery dashboard for stalled or at-risk client projects.",
       link: "/admin/delivery",
-      actionType: "open-page",
+      actionType: "review-overdue-tasks",
     })
   }
 
@@ -240,20 +251,7 @@ function buildActions(inputs: PlanningCycleInputs): PlanningCycleAction[] {
       title: "Follow up outstanding invoices",
       description: `Outstanding revenue and ${snapshot.overdueInvoices} overdue invoice${snapshot.overdueInvoices === 1 ? "" : "s"} need follow-up.`,
       link: "/admin/invoices",
-      actionType: "open-page",
-    })
-  }
-
-  if (
-    snapshot.growthRate === 0 ||
-    snapshot.totalSubscribers < GROWTH_WEAK_SUBSCRIBER_THRESHOLD
-  ) {
-    actions.push({
-      title: "Generate new lead magnet",
-      description:
-        "Create or refresh a lead magnet to drive subscriber acquisition.",
-      link: "/admin/lead-magnets",
-      actionType: "open-page",
+      actionType: "review-invoices",
     })
   }
 
@@ -262,7 +260,7 @@ function buildActions(inputs: PlanningCycleInputs): PlanningCycleAction[] {
       title: "Review proposal-ready leads",
       description: `${snapshot.proposalReadyLeads.length} lead${snapshot.proposalReadyLeads.length === 1 ? "" : "s"} ready for proposal follow-up.`,
       link: "/admin/creator-leads",
-      actionType: "open-page",
+      actionType: "review-leads",
     })
   }
 
@@ -271,7 +269,7 @@ function buildActions(inputs: PlanningCycleInputs): PlanningCycleAction[] {
       title: "Review blocked initiatives",
       description: `${initiativePerformance.blockedInitiatives} initiative${initiativePerformance.blockedInitiatives === 1 ? "" : "s"} blocked — assess unblock path.`,
       link: "/admin/execution",
-      actionType: "open-page",
+      actionType: "review-initiatives",
     })
   }
 
@@ -280,7 +278,7 @@ function buildActions(inputs: PlanningCycleInputs): PlanningCycleAction[] {
       title: "Clear editorial review backlog",
       description: `${snapshot.reviewRequiredCount} article${snapshot.reviewRequiredCount === 1 ? "" : "s"} waiting for editorial review.`,
       link: "/admin/articles",
-      actionType: "open-page",
+      actionType: "review-content",
     })
   }
 
