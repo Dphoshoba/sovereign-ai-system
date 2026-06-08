@@ -91,6 +91,9 @@ export default function StrategicPlanPage() {
           <Link href="/admin/planning-cycles" style={linkStyle}>
             Planning Cycles
           </Link>
+          <Link href="/admin/boardroom" style={linkStyle}>
+            Executive Boardroom
+          </Link>
         </div>
         <div style={actionRowStyle}>
           <button

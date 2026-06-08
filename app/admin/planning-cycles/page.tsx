@@ -247,6 +247,9 @@ export default function PlanningCyclesPage() {
           <Link href="/admin/operations" style={secondaryLinkStyle}>
             Operations Center
           </Link>
+          <Link href="/admin/boardroom" style={secondaryLinkStyle}>
+            Executive Boardroom
+          </Link>
         </div>
       </section>
 

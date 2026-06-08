@@ -1257,6 +1257,18 @@ model PlanningCycle {
   @@index([createdAt])
 }
 
+model ExecutiveBoardroomSession {
+  id          String   @id @default(cuid())
+  sessionType String   @default("weekly")
+  healthScore Int?
+  summary     String?
+  decisions   Json?
+  createdAt   DateTime @default(now())
+
+  @@index([sessionType])
+  @@index([createdAt])
+}
+
 model StrategicDecisionLog {
   id          String   @id @default(cuid())
   title       String
