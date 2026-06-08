@@ -1239,6 +1239,24 @@ model QuarterlyGoal {
   @@index([status])
 }
 
+model PlanningCycle {
+  id              String   @id @default(cuid())
+  cycleType       String   @default("weekly")
+  status          String   @default("draft")
+  healthScore     Int?
+  summary         String?
+  recommendations Json?
+  risks           Json?
+  opportunities   Json?
+  actions         Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([cycleType])
+  @@index([status])
+  @@index([createdAt])
+}
+
 model StrategicDecisionLog {
   id          String   @id @default(cuid())
   title       String

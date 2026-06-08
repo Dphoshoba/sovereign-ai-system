@@ -127,6 +127,9 @@ export default function InitiativePerformancePage() {
           <Link href="/admin/goals" style={secondaryLinkStyle}>
             Quarterly Goals
           </Link>
+          <Link href="/admin/planning-cycles" style={secondaryLinkStyle}>
+            Planning Cycles
+          </Link>
           <Link href="/admin/operations" style={secondaryLinkStyle}>
             Operations Center
           </Link>

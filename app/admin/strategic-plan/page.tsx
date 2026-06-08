@@ -88,6 +88,9 @@ export default function StrategicPlanPage() {
           <Link href="/admin/goals" style={linkStyle}>
             Quarterly Goals
           </Link>
+          <Link href="/admin/planning-cycles" style={linkStyle}>
+            Planning Cycles
+          </Link>
         </div>
         <div style={actionRowStyle}>
           <button

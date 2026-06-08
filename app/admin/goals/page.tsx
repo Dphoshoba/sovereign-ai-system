@@ -159,6 +159,9 @@ export default function GoalsPage() {
           <Link href="/admin/initiative-performance" style={secondaryLinkStyle}>
             Initiative Performance
           </Link>
+          <Link href="/admin/planning-cycles" style={secondaryLinkStyle}>
+            Planning Cycles
+          </Link>
           <Link href="/admin/strategic-plan" style={secondaryLinkStyle}>
             Strategic Plan
           </Link>
