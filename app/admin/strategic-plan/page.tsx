@@ -94,6 +94,9 @@ export default function StrategicPlanPage() {
           <Link href="/admin/boardroom" style={linkStyle}>
             Executive Boardroom
           </Link>
+          <Link href="/admin/simulations" style={linkStyle}>
+            Simulations
+          </Link>
         </div>
         <div style={actionRowStyle}>
           <button

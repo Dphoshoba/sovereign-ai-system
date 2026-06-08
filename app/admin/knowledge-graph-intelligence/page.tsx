@@ -89,6 +89,9 @@ export default function KnowledgeGraphIntelligencePage() {
           <Link href="/admin/operations" style={secondaryLinkStyle}>
             Operations Center
           </Link>
+          <Link href="/admin/simulations" style={secondaryLinkStyle}>
+            Simulations
+          </Link>
         </div>
       </section>
 
