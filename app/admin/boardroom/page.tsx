@@ -196,6 +196,9 @@ export default function BoardroomPage() {
           <Link href="/admin/knowledge-graph" style={secondaryLinkStyle}>
             Knowledge Graph
           </Link>
+          <Link href="/admin/knowledge-graph-intelligence" style={secondaryLinkStyle}>
+            Knowledge Intelligence
+          </Link>
         </div>
       </section>
 

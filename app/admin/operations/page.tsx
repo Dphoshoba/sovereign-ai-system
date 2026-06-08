@@ -73,6 +73,7 @@ export default async function OperationsPage() {
           <Link href="/admin/decision-outcomes" style={buttonStyle}>Decision Outcomes</Link>
           <Link href="/admin/executive-learning" style={buttonStyle}>Executive Learning</Link>
           <Link href="/admin/knowledge-graph" style={buttonStyle}>Knowledge Graph</Link>
+          <Link href="/admin/knowledge-graph-intelligence" style={buttonStyle}>Knowledge Intelligence</Link>
         </div>
       </section>
 
