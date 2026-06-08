@@ -44,10 +44,30 @@ const layers = [
 export default function CommandCenterV2Page() {
   return (
     <PageShell
-      eyebrow="Unified Executive Command Center V2"
+      eyebrow="Unified Executive Command Center V2 · Legacy"
       title="Echoes & Visions AI Operating Console"
       description="One strategic cockpit for monitoring intelligence, agents, events, revenue, missions, optimization, forecasting and execution."
     >
+      <div
+        style={{
+          marginBottom: 24,
+          padding: 16,
+          borderRadius: 12,
+          border: "1px solid var(--border)",
+          background: "var(--card-background)",
+        }}
+      >
+        <strong>Legacy console.</strong> Prefer{" "}
+        <Link href="/admin/command-center" style={{ fontWeight: "bold" }}>
+          V1 Command Center
+        </Link>{" "}
+        and{" "}
+        <Link href="/admin/runtime" style={{ fontWeight: "bold" }}>
+          V1 Runtime
+        </Link>{" "}
+        for the current executive stack.
+      </div>
+
       <ExecutiveGrid min={220}>
         <MetricCard label="Organization Health" value="87%" />
         <MetricCard label="AI Systems Online" value="12" />

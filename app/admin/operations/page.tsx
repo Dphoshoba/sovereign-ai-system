@@ -57,7 +57,11 @@ export default async function OperationsPage() {
           <Link href="/admin/growth" style={buttonStyle}>Growth</Link>
           <Link href="/admin/lead-magnets" style={buttonStyle}>Lead Magnets</Link>
           <Link href="/admin/delivery" style={buttonStyle}>Delivery</Link>
-          <Link href="/admin/runtime" style={buttonStyle}>Sovereign Runtime</Link>
+          <Link href="/admin/revenue" style={buttonStyle}>Revenue</Link>
+          <Link href="/admin/creator-leads" style={buttonStyle}>Creator Leads</Link>
+          <Link href="/admin/clients" style={buttonStyle}>Clients</Link>
+          <Link href="/admin/invoices" style={buttonStyle}>Invoices</Link>
+          <Link href="/admin/runtime" style={buttonStyle}>V1 Runtime</Link>
           <Link href="/admin/command-center" style={buttonStyle}>Command Center</Link>
           <Link href="/admin/executive-overview" style={buttonStyle}>Executive Overview</Link>
           <Link href="/admin/executive-recommendations" style={buttonStyle}>Executive Recommendations</Link>

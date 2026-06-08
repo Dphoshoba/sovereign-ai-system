@@ -141,7 +141,7 @@ export default async function AdminLayout({
 </Link>
 
 <Link href="/admin/persistent-runtime" style={linkStyle}>
-  Runtime
+  Persistent Runtime (Legacy)
 </Link>
 
 <Link href="/admin/adaptive-evolution" style={linkStyle}>
@@ -192,8 +192,12 @@ export default async function AdminLayout({
   World Model V2
 </Link>
 
+<Link href="/admin/runtime" style={linkStyle}>
+  V1 Runtime
+</Link>
+
 <Link href="/admin/sovereign-runtime" style={linkStyle}>
-  Sovereign Runtime
+  Sovereign Runtime (Legacy)
 </Link>
 
 <Link href="/admin/enterprise-governance" style={linkStyle}>

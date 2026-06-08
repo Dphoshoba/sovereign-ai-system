@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import {
   ExecutiveCard,
   ExecutiveGrid,
@@ -73,10 +74,32 @@ export default function SovereignRuntimePage() {
 
   return (
     <PageShell
-      eyebrow="Central Intelligence Orchestration Core"
-      title="Sovereign Unified Executive Runtime"
+      eyebrow="Central Intelligence Orchestration Core · Legacy"
+      title="Sovereign Unified Executive Runtime (Legacy)"
       description="Consolidate governance, cognition, economics, temporal simulation, operations, federation, recursive evolution and world modeling into one executive operating state."
     >
+      <div
+        style={{
+          marginBottom: 24,
+          padding: 16,
+          borderRadius: 12,
+          border: "1px solid var(--border)",
+          background: "var(--card-background)",
+        }}
+      >
+        <strong>Legacy module.</strong>{" "}
+        Use{" "}
+        <Link href="/admin/runtime" style={{ fontWeight: "bold" }}>
+          V1 Runtime
+        </Link>{" "}
+        and{" "}
+        <Link href="/admin/command-center" style={{ fontWeight: "bold" }}>
+          Command Center
+        </Link>{" "}
+        for the current rule-based executive stack. Governed actions on this
+        page require explicit Execute clicks.
+      </div>
+
       <ExecutiveGrid min={220}>
         <MetricCard label="Overall Health" value={latest?.overallHealth || 0} />
         <MetricCard label="Intelligence" value={latest?.intelligenceScore || 0} />
