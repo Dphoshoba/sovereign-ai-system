@@ -70,6 +70,7 @@ export default async function OperationsPage() {
           <Link href="/admin/planning-cycles" style={buttonStyle}>Planning Cycles</Link>
           <Link href="/admin/boardroom" style={buttonStyle}>Executive Boardroom</Link>
           <Link href="/admin/decision-memory" style={buttonStyle}>Decision Memory</Link>
+          <Link href="/admin/decision-outcomes" style={buttonStyle}>Decision Outcomes</Link>
         </div>
       </section>
 

@@ -104,6 +104,11 @@ export async function PATCH(request: Request) {
       status?: string
       outcome?: string | null
       effectiveness?: number | null
+      actionTaken?: string | null
+      lessonLearned?: string | null
+      reviewDate?: Date | null
+      impactArea?: string | null
+      followUpRequired?: boolean
     } = {}
 
     if (body.status !== undefined) {
@@ -146,11 +151,54 @@ export async function PATCH(request: Request) {
       }
     }
 
+    if (body.actionTaken !== undefined) {
+      data.actionTaken =
+        body.actionTaken === null || body.actionTaken === ""
+          ? null
+          : String(body.actionTaken).trim()
+    }
+
+    if (body.lessonLearned !== undefined) {
+      data.lessonLearned =
+        body.lessonLearned === null || body.lessonLearned === ""
+          ? null
+          : String(body.lessonLearned).trim()
+    }
+
+    if (body.reviewDate !== undefined) {
+      if (body.reviewDate === null || body.reviewDate === "") {
+        data.reviewDate = null
+      } else {
+        const reviewDate = new Date(String(body.reviewDate))
+
+        if (Number.isNaN(reviewDate.getTime())) {
+          return NextResponse.json(
+            { ok: false, error: "reviewDate must be a valid date" },
+            { status: 400 }
+          )
+        }
+
+        data.reviewDate = reviewDate
+      }
+    }
+
+    if (body.impactArea !== undefined) {
+      data.impactArea =
+        body.impactArea === null || body.impactArea === ""
+          ? null
+          : String(body.impactArea).trim()
+    }
+
+    if (body.followUpRequired !== undefined) {
+      data.followUpRequired = Boolean(body.followUpRequired)
+    }
+
     if (Object.keys(data).length === 0) {
       return NextResponse.json(
         {
           ok: false,
-          error: "Provide status, outcome, or effectiveness to update",
+          error:
+            "Provide status, outcome, effectiveness, actionTaken, lessonLearned, reviewDate, impactArea, or followUpRequired to update",
         },
         { status: 400 }
       )

@@ -1276,14 +1276,21 @@ model ExecutiveDecision {
   description   String?
   category      String?
   status        String   @default("proposed")
-  outcome       String?
-  effectiveness Int?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  outcome           String?
+  effectiveness     Int?
+  actionTaken       String?
+  lessonLearned     String?
+  reviewDate        DateTime?
+  impactArea        String?
+  followUpRequired  Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   @@index([status])
   @@index([category])
   @@index([createdAt])
+  @@index([impactArea])
+  @@index([followUpRequired])
 }
 
 model StrategicDecisionLog {

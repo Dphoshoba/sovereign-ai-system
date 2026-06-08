@@ -173,6 +173,9 @@ export default function BoardroomPage() {
           <Link href="/admin/decision-memory" style={secondaryLinkStyle}>
             Decision Memory
           </Link>
+          <Link href="/admin/decision-outcomes" style={secondaryLinkStyle}>
+            Decision Outcomes
+          </Link>
         </div>
       </section>
 

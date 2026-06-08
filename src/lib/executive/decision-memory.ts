@@ -18,6 +18,11 @@ export type ExecutiveDecisionRecord = {
   status: string
   outcome: string | null
   effectiveness: number | null
+  actionTaken: string | null
+  lessonLearned: string | null
+  reviewDate: string | null
+  impactArea: string | null
+  followUpRequired: boolean
   createdAt: string
   updatedAt: string
 }
@@ -59,6 +64,11 @@ export function serializeDecision(decision: {
   status: string
   outcome: string | null
   effectiveness: number | null
+  actionTaken: string | null
+  lessonLearned: string | null
+  reviewDate: Date | null
+  impactArea: string | null
+  followUpRequired: boolean
   createdAt: Date
   updatedAt: Date
 }): ExecutiveDecisionRecord {
@@ -71,6 +81,11 @@ export function serializeDecision(decision: {
     status: decision.status,
     outcome: decision.outcome,
     effectiveness: decision.effectiveness,
+    actionTaken: decision.actionTaken,
+    lessonLearned: decision.lessonLearned,
+    reviewDate: decision.reviewDate?.toISOString() ?? null,
+    impactArea: decision.impactArea,
+    followUpRequired: decision.followUpRequired,
     createdAt: decision.createdAt.toISOString(),
     updatedAt: decision.updatedAt.toISOString(),
   }

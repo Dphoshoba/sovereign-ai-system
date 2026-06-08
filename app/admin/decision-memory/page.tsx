@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { Fragment, useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 
 type ExecutiveDecision = {
@@ -12,6 +12,11 @@ type ExecutiveDecision = {
   status: string
   outcome: string | null
   effectiveness: number | null
+  actionTaken: string | null
+  lessonLearned: string | null
+  reviewDate: string | null
+  impactArea: string | null
+  followUpRequired: boolean
   createdAt: string
   updatedAt: string
 }
@@ -61,6 +66,11 @@ export default function DecisionMemoryPage() {
       status?: string
       outcome?: string | null
       effectiveness?: number | null
+      actionTaken?: string | null
+      lessonLearned?: string | null
+      reviewDate?: string | null
+      impactArea?: string | null
+      followUpRequired?: boolean
     }
   ) {
     setUpdatingId(id)
@@ -93,6 +103,14 @@ export default function DecisionMemoryPage() {
     })
   }
 
+  function toDateInputValue(value: string | null) {
+    if (!value) {
+      return ""
+    }
+
+    return value.slice(0, 10)
+  }
+
   return (
     <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
       <section style={heroStyle}>
@@ -105,6 +123,9 @@ export default function DecisionMemoryPage() {
         <div style={actionRowStyle}>
           <Link href="/admin/boardroom" style={secondaryLinkStyle}>
             Executive Boardroom
+          </Link>
+          <Link href="/admin/decision-outcomes" style={secondaryLinkStyle}>
+            Decision Outcomes
           </Link>
           <Link href="/admin/planning-cycles" style={secondaryLinkStyle}>
             Planning Cycles
@@ -167,92 +188,192 @@ export default function DecisionMemoryPage() {
                   </thead>
                   <tbody>
                     {decisions.map((decision) => (
-                      <tr key={decision.id}>
-                        <td style={tdStyle}>
-                          <strong>{decision.title}</strong>
-                          {decision.description &&
-                            decision.description !== decision.title && (
-                              <p style={descriptionStyle}>
-                                {decision.description}
-                              </p>
-                            )}
-                          <p style={dateStyle}>{formatDate(decision.createdAt)}</p>
-                        </td>
-                        <td style={tdStyle}>{decision.category ?? "—"}</td>
-                        <td style={tdStyle}>{decision.status}</td>
-                        <td style={tdStyle}>
-                          <input
-                            key={`${decision.id}-${decision.updatedAt}-outcome`}
-                            type="text"
-                            defaultValue={decision.outcome ?? ""}
-                            placeholder="Record outcome"
-                            onBlur={(event) => {
-                              const value = event.target.value.trim()
-                              if (value !== (decision.outcome ?? "")) {
+                      <Fragment key={decision.id}>
+                        <tr>
+                          <td style={tdStyle}>
+                            <strong>{decision.title}</strong>
+                            {decision.description &&
+                              decision.description !== decision.title && (
+                                <p style={descriptionStyle}>
+                                  {decision.description}
+                                </p>
+                              )}
+                            <p style={dateStyle}>
+                              {formatDate(decision.createdAt)}
+                            </p>
+                          </td>
+                          <td style={tdStyle}>{decision.category ?? "—"}</td>
+                          <td style={tdStyle}>{decision.status}</td>
+                          <td style={tdStyle}>
+                            <input
+                              key={`${decision.id}-${decision.updatedAt}-outcome`}
+                              type="text"
+                              defaultValue={decision.outcome ?? ""}
+                              placeholder="Record outcome"
+                              onBlur={(event) => {
+                                const value = event.target.value.trim()
+                                if (value !== (decision.outcome ?? "")) {
+                                  updateDecision(decision.id, {
+                                    outcome: value || null,
+                                  })
+                                }
+                              }}
+                              style={inputStyle}
+                            />
+                          </td>
+                          <td style={tdStyle}>
+                            <input
+                              type="range"
+                              min={0}
+                              max={100}
+                              value={decision.effectiveness ?? 0}
+                              onChange={(event) =>
                                 updateDecision(decision.id, {
-                                  outcome: value || null,
+                                  effectiveness: Number(event.target.value),
                                 })
                               }
-                            }}
-                            style={inputStyle}
-                          />
-                        </td>
-                        <td style={tdStyle}>
-                          <input
-                            type="range"
-                            min={0}
-                            max={100}
-                            value={decision.effectiveness ?? 0}
-                            onChange={(event) =>
-                              updateDecision(decision.id, {
-                                effectiveness: Number(event.target.value),
-                              })
-                            }
-                            style={{ width: "100%" }}
-                          />
-                          <span>{decision.effectiveness ?? 0}%</span>
-                        </td>
-                        <td style={tdStyle}>
-                          <div style={controlRowStyle}>
-                            <button
-                              type="button"
-                              style={controlButtonStyle}
-                              disabled={updatingId === decision.id}
-                              onClick={() =>
-                                updateDecision(decision.id, {
-                                  status: "approved",
-                                })
-                              }
-                            >
-                              Approve
-                            </button>
-                            <button
-                              type="button"
-                              style={controlButtonStyle}
-                              disabled={updatingId === decision.id}
-                              onClick={() =>
-                                updateDecision(decision.id, {
-                                  status: "rejected",
-                                })
-                              }
-                            >
-                              Reject
-                            </button>
-                            <button
-                              type="button"
-                              style={controlButtonStyle}
-                              disabled={updatingId === decision.id}
-                              onClick={() =>
-                                updateDecision(decision.id, {
-                                  status: "completed",
-                                })
-                              }
-                            >
-                              Complete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
+                              style={{ width: "100%" }}
+                            />
+                            <span>{decision.effectiveness ?? 0}%</span>
+                          </td>
+                          <td style={tdStyle}>
+                            <div style={controlRowStyle}>
+                              <button
+                                type="button"
+                                style={controlButtonStyle}
+                                disabled={updatingId === decision.id}
+                                onClick={() =>
+                                  updateDecision(decision.id, {
+                                    status: "approved",
+                                  })
+                                }
+                              >
+                                Approve
+                              </button>
+                              <button
+                                type="button"
+                                style={controlButtonStyle}
+                                disabled={updatingId === decision.id}
+                                onClick={() =>
+                                  updateDecision(decision.id, {
+                                    status: "rejected",
+                                  })
+                                }
+                              >
+                                Reject
+                              </button>
+                              <button
+                                type="button"
+                                style={controlButtonStyle}
+                                disabled={updatingId === decision.id}
+                                onClick={() =>
+                                  updateDecision(decision.id, {
+                                    status: "completed",
+                                  })
+                                }
+                              >
+                                Complete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colSpan={6} style={outcomeRowStyle}>
+                            <div style={outcomeGridStyle}>
+                              <label style={fieldLabelStyle}>
+                                Action Taken
+                                <input
+                                  key={`${decision.id}-${decision.updatedAt}-action`}
+                                  type="text"
+                                  defaultValue={decision.actionTaken ?? ""}
+                                  placeholder="What action was taken?"
+                                  onBlur={(event) => {
+                                    const value = event.target.value.trim()
+                                    if (value !== (decision.actionTaken ?? "")) {
+                                      updateDecision(decision.id, {
+                                        actionTaken: value || null,
+                                      })
+                                    }
+                                  }}
+                                  style={inputStyle}
+                                />
+                              </label>
+                              <label style={fieldLabelStyle}>
+                                Lesson Learned
+                                <input
+                                  key={`${decision.id}-${decision.updatedAt}-lesson`}
+                                  type="text"
+                                  defaultValue={decision.lessonLearned ?? ""}
+                                  placeholder="What was learned?"
+                                  onBlur={(event) => {
+                                    const value = event.target.value.trim()
+                                    if (
+                                      value !== (decision.lessonLearned ?? "")
+                                    ) {
+                                      updateDecision(decision.id, {
+                                        lessonLearned: value || null,
+                                      })
+                                    }
+                                  }}
+                                  style={inputStyle}
+                                />
+                              </label>
+                              <label style={fieldLabelStyle}>
+                                Impact Area
+                                <input
+                                  key={`${decision.id}-${decision.updatedAt}-impact`}
+                                  type="text"
+                                  defaultValue={decision.impactArea ?? ""}
+                                  placeholder="e.g. revenue, delivery"
+                                  onBlur={(event) => {
+                                    const value = event.target.value.trim()
+                                    if (value !== (decision.impactArea ?? "")) {
+                                      updateDecision(decision.id, {
+                                        impactArea: value || null,
+                                      })
+                                    }
+                                  }}
+                                  style={inputStyle}
+                                />
+                              </label>
+                              <label style={fieldLabelStyle}>
+                                Review Date
+                                <input
+                                  key={`${decision.id}-${decision.updatedAt}-review`}
+                                  type="date"
+                                  defaultValue={toDateInputValue(
+                                    decision.reviewDate
+                                  )}
+                                  onBlur={(event) => {
+                                    const value = event.target.value
+                                    const current = toDateInputValue(
+                                      decision.reviewDate
+                                    )
+                                    if (value !== current) {
+                                      updateDecision(decision.id, {
+                                        reviewDate: value || null,
+                                      })
+                                    }
+                                  }}
+                                  style={inputStyle}
+                                />
+                              </label>
+                              <label style={checkboxLabelStyle}>
+                                <input
+                                  type="checkbox"
+                                  checked={decision.followUpRequired}
+                                  onChange={(event) =>
+                                    updateDecision(decision.id, {
+                                      followUpRequired: event.target.checked,
+                                    })
+                                  }
+                                />
+                                Follow Up Required
+                              </label>
+                            </div>
+                          </td>
+                        </tr>
+                      </Fragment>
                     ))}
                   </tbody>
                 </table>
@@ -380,4 +501,32 @@ const controlButtonStyle: React.CSSProperties = {
   background: "var(--card-background)",
   cursor: "pointer",
   fontSize: 13,
+}
+
+const outcomeRowStyle: React.CSSProperties = {
+  padding: "12px 10px 18px",
+  background: "var(--card-background)",
+  borderBottom: "1px solid var(--border)",
+}
+
+const outcomeGridStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: 12,
+}
+
+const fieldLabelStyle: React.CSSProperties = {
+  display: "grid",
+  gap: 6,
+  fontSize: 13,
+  fontWeight: 600,
+}
+
+const checkboxLabelStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  fontSize: 13,
+  fontWeight: 600,
+  marginTop: 24,
 }
