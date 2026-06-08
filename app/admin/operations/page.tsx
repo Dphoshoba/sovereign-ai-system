@@ -63,6 +63,7 @@ export default async function OperationsPage() {
           <Link href="/admin/weekly-review" style={buttonStyle}>Weekly Review</Link>
           <Link href="/admin/monthly-review" style={buttonStyle}>Monthly Review</Link>
           <Link href="/admin/executive-forecast" style={buttonStyle}>Forecast</Link>
+          <Link href="/admin/strategic-plan" style={buttonStyle}>Strategic Plan</Link>
         </div>
       </section>
 

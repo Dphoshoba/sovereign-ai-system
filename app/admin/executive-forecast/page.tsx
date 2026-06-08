@@ -63,6 +63,9 @@ export default function ExecutiveForecastPage() {
           <Link href="/admin/operations" style={linkStyle}>
             Operations Center
           </Link>
+          <Link href="/admin/strategic-plan" style={linkStyle}>
+            Strategic Plan
+          </Link>
         </div>
       </section>
 

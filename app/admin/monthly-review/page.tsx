@@ -63,6 +63,9 @@ export default function MonthlyReviewPage() {
           <Link href="/admin/executive-forecast" style={secondaryLinkStyle}>
             Forecast
           </Link>
+          <Link href="/admin/strategic-plan" style={secondaryLinkStyle}>
+            Strategic Plan
+          </Link>
         </div>
       </section>
 
