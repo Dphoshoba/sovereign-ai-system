@@ -1,235 +1,35 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-
-const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
-
-function isOverdueTask(task: {
-  dueDate: Date | null
-  status: string
-}) {
-  if (!task.dueDate || task.status === "done") {
-    return false
-  }
-
-  return task.dueDate.getTime() < Date.now()
-}
-
-function getProjectProgress(
-  projectId: string,
-  tasks: { projectId: string; status: string }[]
-) {
-  const projectTasks = tasks.filter((task) => task.projectId === projectId)
-
-  if (projectTasks.length === 0) {
-    return 0
-  }
-
-  const doneCount = projectTasks.filter((task) => task.status === "done").length
-  return Math.round((doneCount / projectTasks.length) * 100)
-}
-
-function isAtRiskProject(project: {
-  status: string
-  dueDate: Date | null
-  progressPercent: number
-}) {
-  if (project.status !== "active" || !project.dueDate) {
-    return false
-  }
-
-  const dueWithinSevenDays =
-    project.dueDate.getTime() <= Date.now() + SEVEN_DAYS_MS
-
-  return dueWithinSevenDays && project.progressPercent < 50
-}
-
-function computeDeliveryHealthScore(
-  overdueTasks: number,
-  overdueInvoices: number,
-  atRiskProjects: number
-) {
-  return Math.max(
-    0,
-    100 - overdueTasks * 10 - overdueInvoices * 15 - atRiskProjects * 20
-  )
-}
-
-function isOverdueInvoice(invoice: {
-  dueDate: Date | null
-  status: string
-}) {
-  if (invoice.status === "overdue") {
-    return true
-  }
-
-  if (invoice.status !== "sent" || !invoice.dueDate) {
-    return false
-  }
-
-  return invoice.dueDate.getTime() < Date.now()
-}
+import { getExecutivePlatformSnapshot } from "@/lib/executive/platform-snapshot"
 
 export async function GET() {
   try {
-    const [
-      articles,
-      subscribers,
-      leadMagnets,
-      leads,
-      invoices,
-      clients,
-      projects,
-      tasks,
-    ] = await Promise.all([
-      prisma.article.findMany(),
-      prisma.subscriber.findMany(),
-      prisma.leadMagnet.findMany(),
-      prisma.creatorLead.findMany(),
-      prisma.clientInvoice.findMany(),
-      prisma.clientProfile.findMany({ where: { type: "client" } }),
-      prisma.clientProject.findMany({
-        where: { status: { not: "archived" } },
-      }),
-      prisma.clientProjectTask.findMany(),
-    ])
-
-    const publishedArticles = articles.filter(
-      (article) => article.status === "published"
-    ).length
-    const drafts = articles.filter((article) => article.status === "draft").length
-    const reviewRequired = articles.filter(
-      (article) => article.status === "review-required"
-    ).length
-    const scheduled = articles.filter(
-      (article) => article.status === "scheduled"
-    ).length
-
-    const totalSubscribers = subscribers.length
-    const activeSubscribers = subscribers.filter(
-      (subscriber) => subscriber.status === "active"
-    ).length
-    const currentDate = new Date()
-    const monthlySubscribers = subscribers.filter((subscriber) => {
-      const createdAt = new Date(subscriber.createdAt)
-      return (
-        createdAt.getMonth() === currentDate.getMonth() &&
-        createdAt.getFullYear() === currentDate.getFullYear()
-      )
-    }).length
-    const growthRate =
-      totalSubscribers > 0
-        ? Math.round((monthlySubscribers / totalSubscribers) * 100)
-        : 0
-
-    const leadMagnetSubscribers = leadMagnets.reduce(
-      (sum, magnet) => sum + magnet.subscribers,
-      0
-    )
-    const topLeadMagnet =
-      leadMagnets.length === 0
-        ? null
-        : leadMagnets.reduce((top, magnet) =>
-            magnet.subscribers > top.subscribers ? magnet : top
-          ).title
-
-    const totalLeads = leads.length
-    const hotLeads = leads.filter(
-      (lead) =>
-        lead.leadScore >= 75 || ["ready", "urgent"].includes(lead.readiness)
-    ).length
-    const wonLeads = leads.filter((lead) => lead.status === "won").length
-    const proposalReadyLeads = leads.filter(
-      (lead) => lead.status === "proposal-ready"
-    ).length
-
-    const totalPipelineValue = leads.reduce(
-      (sum, lead) => sum + (lead.projectedValue || 0),
-      0
-    )
-    const wonRevenue = leads
-      .filter((lead) => lead.status === "won")
-      .reduce((sum, lead) => sum + (lead.projectedValue || 0), 0)
-    const openPipeline = leads
-      .filter((lead) =>
-        ["new", "contacted", "proposal-ready", "proposal-sent"].includes(
-          lead.status || ""
-        )
-      )
-      .reduce((sum, lead) => sum + (lead.projectedValue || 0), 0)
-
-    const totalInvoiced = invoices
-      .filter((invoice) => invoice.status !== "draft")
-      .reduce((sum, invoice) => sum + invoice.amountAud, 0)
-    const totalPaid = invoices
-      .filter((invoice) => invoice.status === "paid")
-      .reduce((sum, invoice) => sum + invoice.amountAud, 0)
-    const outstandingRevenue = invoices
-      .filter((invoice) => ["sent", "overdue"].includes(invoice.status))
-      .reduce((sum, invoice) => sum + invoice.amountAud, 0)
-
-    const visibleProjectIds = new Set(projects.map((project) => project.id))
-    const visibleTasks = tasks.filter((task) =>
-      visibleProjectIds.has(task.projectId)
-    )
-
-    const activeClients = clients.filter(
-      (client) => client.status === "active"
-    ).length
-    const activeProjects = projects.filter(
-      (project) => project.status === "active"
-    ).length
-    const openTasks = visibleTasks.filter((task) => task.status !== "done").length
-    const doneTasks = visibleTasks.filter((task) => task.status === "done").length
-    const overdueTasks = visibleTasks.filter((task) => isOverdueTask(task)).length
-    const totalProjectValue = projects.reduce(
-      (sum, project) => sum + (project.valueAud || 0),
-      0
-    )
-
-    const overdueInvoiceCount = invoices.filter((invoice) =>
-      isOverdueInvoice(invoice)
-    ).length
-
-    const projectsWithProgress = projects.map((project) => ({
-      ...project,
-      progressPercent: getProjectProgress(project.id, visibleTasks),
-    }))
-
-    const atRiskProjects = projectsWithProgress.filter((project) =>
-      isAtRiskProject(project)
-    ).length
-
-    const deliveryHealthScore = computeDeliveryHealthScore(
-      overdueTasks,
-      overdueInvoiceCount,
-      atRiskProjects
-    )
+    const snapshot = await getExecutivePlatformSnapshot()
 
     let overallHealthScore = 100
 
-    if (reviewRequired > 0) {
+    if (snapshot.reviewRequiredCount > 0) {
       overallHealthScore -= 10
     }
 
-    if (scheduled === 0) {
+    if (snapshot.scheduledCount === 0) {
       overallHealthScore -= 10
     }
 
-    if (growthRate === 0) {
+    if (snapshot.growthRate === 0) {
       overallHealthScore -= 10
     }
 
-    if (openPipeline === 0) {
+    if (snapshot.openPipeline === 0) {
       overallHealthScore -= 15
     }
 
-    if (outstandingRevenue > 0) {
+    if (snapshot.outstandingRevenue > 0) {
       overallHealthScore -= 15
     }
 
-    overallHealthScore -= overdueTasks * 10
+    overallHealthScore -= snapshot.overdueTasks * 10
 
-    if (deliveryHealthScore < 70) {
+    if (snapshot.deliveryHealthScore < 70) {
       overallHealthScore -= 10
     }
 
@@ -237,92 +37,87 @@ export async function GET() {
 
     const alerts: string[] = []
 
-    if (reviewRequired > 0) {
+    if (snapshot.reviewRequiredCount > 0) {
       alerts.push(
-        `${reviewRequired} article${reviewRequired === 1 ? "" : "s"} require editorial review`
+        `${snapshot.reviewRequiredCount} article${snapshot.reviewRequiredCount === 1 ? "" : "s"} require editorial review`
       )
     }
 
-    if (outstandingRevenue > 0) {
+    if (snapshot.outstandingRevenue > 0) {
       alerts.push(
-        `Outstanding client revenue: AUD ${outstandingRevenue.toLocaleString("en-AU")}`
+        `Outstanding client revenue: AUD ${snapshot.outstandingRevenue.toLocaleString("en-AU")}`
       )
     }
 
-    if (overdueTasks > 0) {
+    if (snapshot.overdueTasks > 0) {
       alerts.push(
-        `${overdueTasks} client delivery task${overdueTasks === 1 ? "" : "s"} overdue`
+        `${snapshot.overdueTasks} client delivery task${snapshot.overdueTasks === 1 ? "" : "s"} overdue`
       )
     }
 
-    if (deliveryHealthScore < 70) {
+    if (snapshot.deliveryHealthScore < 70) {
       alerts.push(
-        `Delivery health score is ${deliveryHealthScore} — client delivery needs attention`
+        `Delivery health score is ${snapshot.deliveryHealthScore} — client delivery needs attention`
       )
     }
 
     const priorities: string[] = []
 
-    if (reviewRequired > 0) {
+    if (snapshot.reviewRequiredCount > 0) {
       priorities.push("Clear the editorial review queue")
     }
 
-    if (scheduled === 0) {
+    if (snapshot.scheduledCount === 0) {
       priorities.push("Schedule upcoming content to maintain publishing momentum")
     }
 
-    if (proposalReadyLeads > 0) {
+    if (snapshot.proposalReadyLeads.length > 0) {
       priorities.push(
-        `Send proposals to ${proposalReadyLeads} proposal-ready lead${proposalReadyLeads === 1 ? "" : "s"}`
+        `Send proposals to ${snapshot.proposalReadyLeads.length} proposal-ready lead${snapshot.proposalReadyLeads.length === 1 ? "" : "s"}`
       )
     }
 
-    if (hotLeads > 0) {
-      priorities.push(`Follow up with ${hotLeads} hot CRM lead${hotLeads === 1 ? "" : "s"}`)
+    if (snapshot.hotLeads.length > 0) {
+      priorities.push(
+        `Follow up with ${snapshot.hotLeads.length} hot CRM lead${snapshot.hotLeads.length === 1 ? "" : "s"}`
+      )
     }
 
-    if (atRiskProjects > 0) {
+    if (snapshot.atRiskProjects.length > 0) {
       priorities.push(
-        `Review ${atRiskProjects} at-risk client project${atRiskProjects === 1 ? "" : "s"}`
+        `Review ${snapshot.atRiskProjects.length} at-risk client project${snapshot.atRiskProjects.length === 1 ? "" : "s"}`
       )
     }
 
     const opportunities: string[] = []
 
-    if (growthRate > 0) {
+    if (snapshot.growthRate > 0) {
       opportunities.push(
-        `Subscriber growth rate is ${growthRate}% this month — promote lead magnets`
+        `Subscriber growth rate is ${snapshot.growthRate}% this month — promote lead magnets`
       )
     }
 
-    if (topLeadMagnet) {
-      opportunities.push(`Top lead magnet "${topLeadMagnet}" is performing — create similar offers`)
-    }
-
-    if (wonLeads > 0) {
+    if (snapshot.topLeadMagnet) {
       opportunities.push(
-        `${wonLeads} won lead${wonLeads === 1 ? "" : "s"} — convert into client delivery projects`
+        `Top lead magnet "${snapshot.topLeadMagnet}" is performing — create similar offers`
       )
     }
 
-    if (openPipeline > 0) {
+    if (snapshot.wonLeads > 0) {
       opportunities.push(
-        `Open pipeline value AUD ${openPipeline.toLocaleString("en-AU")} — advance active deals`
+        `${snapshot.wonLeads} won lead${snapshot.wonLeads === 1 ? "" : "s"} — convert into client delivery projects`
       )
     }
 
-    const recentlyPaidInvoices = invoices.filter((invoice) => {
-      if (invoice.status !== "paid" || !invoice.paidDate) {
-        return false
-      }
-
-      const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000
-      return invoice.paidDate.getTime() >= thirtyDaysAgo
-    })
-
-    if (recentlyPaidInvoices.length > 0) {
+    if (snapshot.openPipeline > 0) {
       opportunities.push(
-        `${recentlyPaidInvoices.length} recent paid invoice${recentlyPaidInvoices.length === 1 ? "" : "s"} — consider upsell proposals`
+        `Open pipeline value AUD ${snapshot.openPipeline.toLocaleString("en-AU")} — advance active deals`
+      )
+    }
+
+    if (snapshot.recentlyPaidInvoiceCount > 0) {
+      opportunities.push(
+        `${snapshot.recentlyPaidInvoiceCount} recent paid invoice${snapshot.recentlyPaidInvoiceCount === 1 ? "" : "s"} — consider upsell proposals`
       )
     }
 
@@ -336,41 +131,41 @@ export async function GET() {
       ok: true,
       overview: {
         content: {
-          publishedArticles,
-          drafts,
-          reviewRequired,
-          scheduled,
+          publishedArticles: snapshot.publishedArticles,
+          drafts: snapshot.draftCount,
+          reviewRequired: snapshot.reviewRequiredCount,
+          scheduled: snapshot.scheduledCount,
         },
         growth: {
-          totalSubscribers,
-          activeSubscribers,
-          monthlySubscribers,
-          growthRate,
-          leadMagnetSubscribers,
-          topLeadMagnet,
+          totalSubscribers: snapshot.totalSubscribers,
+          activeSubscribers: snapshot.activeSubscribers,
+          monthlySubscribers: snapshot.monthlySubscribers,
+          growthRate: snapshot.growthRate,
+          leadMagnetSubscribers: snapshot.leadMagnetSubscribers,
+          topLeadMagnet: snapshot.topLeadMagnet,
         },
         crm: {
-          totalLeads,
-          hotLeads,
-          wonLeads,
-          proposalReadyLeads,
+          totalLeads: snapshot.totalLeads,
+          hotLeads: snapshot.hotLeads.length,
+          wonLeads: snapshot.wonLeads,
+          proposalReadyLeads: snapshot.proposalReadyLeads.length,
         },
         revenue: {
-          totalPipelineValue,
-          wonRevenue,
-          openPipeline,
-          totalInvoiced,
-          totalPaid,
-          outstandingRevenue,
+          totalPipelineValue: snapshot.totalPipelineValue,
+          wonRevenue: snapshot.wonRevenue,
+          openPipeline: snapshot.openPipeline,
+          totalInvoiced: snapshot.totalInvoiced,
+          totalPaid: snapshot.totalPaid,
+          outstandingRevenue: snapshot.outstandingRevenue,
         },
         delivery: {
-          activeClients,
-          activeProjects,
-          openTasks,
-          doneTasks,
-          overdueTasks,
-          totalProjectValue,
-          deliveryHealthScore,
+          activeClients: snapshot.activeClients,
+          activeProjects: snapshot.activeProjects,
+          openTasks: snapshot.openTasks,
+          doneTasks: snapshot.doneTasks,
+          overdueTasks: snapshot.overdueTasks,
+          totalProjectValue: snapshot.totalProjectValue,
+          deliveryHealthScore: snapshot.deliveryHealthScore,
         },
         executiveSummary: {
           overallHealthScore,

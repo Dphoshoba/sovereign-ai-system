@@ -101,6 +101,9 @@ export default function ExecutiveOverviewPage() {
         <Link href="/admin/operations" style={linkStyle}>
           ← Back to Operations
         </Link>
+        <Link href="/admin/executive-recommendations" style={linkStyle}>
+          Executive Recommendations
+        </Link>
       </section>
 
       {loading && <p style={{ marginTop: 28 }}>Loading overview...</p>}
@@ -259,6 +262,7 @@ const eyebrowStyle: React.CSSProperties = {
 const linkStyle: React.CSSProperties = {
   display: "inline-block",
   marginTop: 16,
+  marginRight: 20,
   color: "var(--button-foreground)",
   fontWeight: 600,
 }
