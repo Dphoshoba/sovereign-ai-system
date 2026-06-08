@@ -1217,6 +1217,26 @@ model StrategicInitiative {
   @@index([createdAt])
 }
 
+model QuarterlyGoal {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  quarter      String
+  year         Int
+  category     String?
+  status       String   @default("planned")
+  targetValue  Float?
+  currentValue Float?   @default(0)
+  progress     Int      @default(0)
+  owner        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([quarter])
+  @@index([year])
+  @@index([status])
+}
+
 model StrategicDecisionLog {
   id          String   @id @default(cuid())
   title       String

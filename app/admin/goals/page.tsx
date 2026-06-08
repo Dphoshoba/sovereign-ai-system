@@ -2,37 +2,42 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import type { ExecutionImpact } from "@/lib/executive/execution-impact"
 
-type ExecutionInitiative = {
+type QuarterlyGoal = {
   id: string
   title: string
   description: string | null
+  quarter: string
+  year: number
+  category: string | null
   status: string
-  priority: string
-  owner: string | null
-  source: string | null
+  targetValue: number | null
+  currentValue: number | null
   progress: number
-  actions: string[]
+  owner: string | null
   createdAt: string
-  updatedAt: string
 }
 
-export default function ExecutionPage() {
-  const [initiatives, setInitiatives] = useState<ExecutionInitiative[]>([])
-  const [executionImpact, setExecutionImpact] = useState<ExecutionImpact | null>(
-    null
-  )
+type PerformanceScorecard = {
+  completionRate: number
+  rating: "Excellent" | "Good" | "Needs Attention"
+  totalGoals: number
+  completedGoals: number
+}
+
+export default function GoalsPage() {
+  const [goals, setGoals] = useState<QuarterlyGoal[]>([])
+  const [scorecard, setScorecard] = useState<PerformanceScorecard | null>(null)
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const loadExecution = useCallback(async () => {
+  const loadGoals = useCallback(async () => {
     setLoading(true)
     setError(null)
 
-    const response = await fetch("/api/executive/execution", {
+    const response = await fetch("/api/executive/goals", {
       cache: "no-store",
     })
     const result = await response.json()
@@ -40,33 +45,33 @@ export default function ExecutionPage() {
     setLoading(false)
 
     if (!result.ok) {
-      setError(result.error || "Failed to load execution initiatives")
+      setError(result.error || "Failed to load quarterly goals")
       return
     }
 
-    setInitiatives(result.initiatives)
-    setExecutionImpact(result.executionImpact)
+    setGoals(result.goals)
+    setScorecard(result.scorecard)
   }, [])
 
   useEffect(() => {
-    loadExecution()
-  }, [loadExecution])
+    loadGoals()
+  }, [loadGoals])
 
   const summary = useMemo(() => {
     return {
-      total: initiatives.length,
-      active: initiatives.filter((item) => item.status === "active").length,
-      blocked: initiatives.filter((item) => item.status === "blocked").length,
-      completed: initiatives.filter((item) => item.status === "completed").length,
+      total: goals.length,
+      active: goals.filter((goal) => goal.status === "active").length,
+      atRisk: goals.filter((goal) => goal.status === "at-risk").length,
+      completed: goals.filter((goal) => goal.status === "completed").length,
     }
-  }, [initiatives])
+  }, [goals])
 
-  async function generateFromStrategicPlan() {
+  async function generateGoals() {
     setGenerating(true)
     setMessage(null)
     setError(null)
 
-    const response = await fetch("/api/executive/execution/generate", {
+    const response = await fetch("/api/executive/goals/generate", {
       method: "POST",
     })
     const result = await response.json()
@@ -74,24 +79,24 @@ export default function ExecutionPage() {
     setGenerating(false)
 
     if (!result.ok) {
-      setError(result.error || "Failed to generate execution plan")
+      setError(result.error || "Failed to generate quarterly goals")
       return
     }
 
     setMessage(
-      `Created ${result.createdCount} initiative${result.createdCount === 1 ? "" : "s"}${result.skippedCount > 0 ? ` (${result.skippedCount} skipped as duplicates)` : ""}.`
+      `Created ${result.created} goal${result.created === 1 ? "" : "s"} for ${result.quarter} ${result.year}${result.skipped > 0 ? ` (${result.skipped} duplicates skipped)` : ""}.`
     )
 
-    await loadExecution()
+    await loadGoals()
   }
 
-  async function updateInitiative(
+  async function updateGoal(
     id: string,
-    patch: { status?: string; progress?: number }
+    patch: { status?: string; progress?: number; currentValue?: number }
   ) {
     setError(null)
 
-    const response = await fetch("/api/executive/execution", {
+    const response = await fetch("/api/executive/goals", {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -101,44 +106,56 @@ export default function ExecutionPage() {
     const result = await response.json()
 
     if (!result.ok) {
-      setError(result.error || "Failed to update initiative")
+      setError(result.error || "Failed to update goal")
       return
     }
 
-    await loadExecution()
+    await loadGoals()
   }
 
-  function formatDate(value: string) {
-    return new Date(value).toLocaleDateString("en-AU", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    })
+  function scorecardColor(rating: PerformanceScorecard["rating"]) {
+    if (rating === "Excellent") {
+      return "#15803d"
+    }
+
+    if (rating === "Good") {
+      return "var(--foreground)"
+    }
+
+    return "#b91c1c"
+  }
+
+  function formatValue(value: number | null) {
+    if (value === null) {
+      return "Not set"
+    }
+
+    return value.toLocaleString("en-AU")
   }
 
   return (
     <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
       <section style={heroStyle}>
         <p style={eyebrowStyle}>Executive Command</p>
-        <h1 style={{ fontSize: 42, margin: "8px 0" }}>Execution Engine</h1>
+        <h1 style={{ fontSize: 42, margin: "8px 0" }}>Quarterly Goals</h1>
         <p style={{ color: "var(--hero-muted)", maxWidth: 820, lineHeight: 1.7 }}>
-          Convert strategic initiatives into executable records aligned with
-          delivery projects and tasks.
+          Quarterly goals and scorecard generated from strategic plan, forecast,
+          and execution data.
         </p>
         <div style={actionRowStyle}>
           <button
             type="button"
             disabled={generating}
-            onClick={generateFromStrategicPlan}
+            onClick={generateGoals}
             style={primaryButtonStyle}
           >
-            {generating ? "Generating..." : "Generate From Strategic Plan"}
+            {generating ? "Generating..." : "Generate Goals"}
           </button>
+          <Link href="/admin/execution" style={secondaryLinkStyle}>
+            Execution Engine
+          </Link>
           <Link href="/admin/strategic-plan" style={secondaryLinkStyle}>
             Strategic Plan
-          </Link>
-          <Link href="/admin/goals" style={secondaryLinkStyle}>
-            Quarterly Goals
           </Link>
           <Link href="/admin/operations" style={secondaryLinkStyle}>
             Operations Center
@@ -149,87 +166,59 @@ export default function ExecutionPage() {
       {message && <p style={successMessageStyle}>{message}</p>}
       {error && <p style={{ marginTop: 28, color: "#b91c1c" }}>{error}</p>}
 
-      {loading && <p style={{ marginTop: 28 }}>Loading execution engine...</p>}
+      {loading && <p style={{ marginTop: 28 }}>Loading quarterly goals...</p>}
 
       {!loading && (
         <>
           <section style={metricsGrid}>
             <div style={metricCard}>
-              <p style={metaStyle}>Total Initiatives</p>
+              <p style={metaStyle}>Total Goals</p>
               <h2>{summary.total}</h2>
             </div>
             <div style={metricCard}>
-              <p style={metaStyle}>Active</p>
+              <p style={metaStyle}>Active Goals</p>
               <h2>{summary.active}</h2>
             </div>
             <div style={metricCard}>
-              <p style={metaStyle}>Blocked</p>
-              <h2>{summary.blocked}</h2>
+              <p style={metaStyle}>At Risk Goals</p>
+              <h2>{summary.atRisk}</h2>
             </div>
             <div style={metricCard}>
-              <p style={metaStyle}>Completed</p>
+              <p style={metaStyle}>Completed Goals</p>
               <h2>{summary.completed}</h2>
             </div>
           </section>
 
-          {executionImpact && (
+          {scorecard && (
             <section style={panelStyle}>
-              <h2 style={{ marginTop: 0 }}>Execution Impact</h2>
-              <div style={impactGrid}>
-                <div>
-                  <h3 style={impactHeading}>Related Projects</h3>
-                  {executionImpact.relatedProjects.length === 0 ? (
-                    <p style={mutedText}>No related active projects detected.</p>
-                  ) : (
-                    <ul style={listStyle}>
-                      {executionImpact.relatedProjects.map((project) => (
-                        <li key={project.id}>
-                          {project.title} ({project.status})
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-                <div>
-                  <h3 style={impactHeading}>Related Tasks</h3>
-                  {executionImpact.relatedTasks.length === 0 ? (
-                    <p style={mutedText}>No related open tasks detected.</p>
-                  ) : (
-                    <ul style={listStyle}>
-                      {executionImpact.relatedTasks.map((task) => (
-                        <li key={task.id}>
-                          {task.title} ({task.status})
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-                <div>
-                  <h3 style={impactHeading}>Active Initiatives</h3>
-                  {executionImpact.activeInitiatives.length === 0 ? (
-                    <p style={mutedText}>No planned or active initiatives.</p>
-                  ) : (
-                    <ul style={listStyle}>
-                      {executionImpact.activeInitiatives.map((initiative) => (
-                        <li key={initiative.id}>
-                          {initiative.title} ({initiative.status},{" "}
-                          {initiative.progress}%)
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
+              <h2 style={{ marginTop: 0 }}>Performance Scorecard</h2>
+              <p style={{ margin: "0 0 8px" }}>
+                <strong>Goal Completion Rate:</strong> {scorecard.completionRate}
+                %
+              </p>
+              <p style={{ margin: "0 0 8px" }}>
+                <strong>Completed:</strong> {scorecard.completedGoals} of{" "}
+                {scorecard.totalGoals}
+              </p>
+              <p style={{ margin: 0 }}>
+                <strong>Rating:</strong>{" "}
+                <span style={{ color: scorecardColor(scorecard.rating) }}>
+                  {scorecard.rating}
+                </span>{" "}
+                {scorecard.rating === "Excellent" && "(≥ 80%)"}
+                {scorecard.rating === "Good" && "(≥ 60%)"}
+                {scorecard.rating === "Needs Attention" && "(< 60%)"}
+              </p>
             </section>
           )}
 
           <section style={{ marginTop: 28 }}>
-            <h2>Initiatives</h2>
+            <h2>Goal Table</h2>
 
-            {initiatives.length === 0 ? (
+            {goals.length === 0 ? (
               <p style={mutedText}>
-                No execution initiatives yet. Generate from the strategic plan to
-                get started.
+                No quarterly goals yet. Generate goals from the strategic plan to
+                begin tracking.
               </p>
             ) : (
               <div style={{ overflowX: "auto" }}>
@@ -237,50 +226,54 @@ export default function ExecutionPage() {
                   <thead>
                     <tr>
                       <th style={thStyle}>Title</th>
+                      <th style={thStyle}>Quarter</th>
                       <th style={thStyle}>Status</th>
-                      <th style={thStyle}>Priority</th>
                       <th style={thStyle}>Progress</th>
-                      <th style={thStyle}>Created Date</th>
+                      <th style={thStyle}>Target Value</th>
+                      <th style={thStyle}>Current Value</th>
                       <th style={thStyle}>Controls</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {initiatives.map((initiative) => (
-                      <tr key={initiative.id}>
+                    {goals.map((goal) => (
+                      <tr key={goal.id}>
                         <td style={tdStyle}>
-                          <strong>{initiative.title}</strong>
-                          {initiative.description && (
-                            <p style={descriptionStyle}>
-                              {initiative.description}
-                            </p>
-                          )}
-                          {initiative.actions.length > 0 && (
-                            <ul style={compactListStyle}>
-                              {initiative.actions.map((action) => (
-                                <li key={action}>{action}</li>
-                              ))}
-                            </ul>
+                          <strong>{goal.title}</strong>
+                          {goal.description && (
+                            <p style={descriptionStyle}>{goal.description}</p>
                           )}
                         </td>
-                        <td style={tdStyle}>{initiative.status}</td>
-                        <td style={tdStyle}>{initiative.priority}</td>
+                        <td style={tdStyle}>
+                          {goal.quarter} {goal.year}
+                        </td>
+                        <td style={tdStyle}>{goal.status}</td>
                         <td style={tdStyle}>
                           <input
                             type="range"
                             min={0}
                             max={100}
-                            value={initiative.progress}
+                            value={goal.progress}
                             onChange={(event) =>
-                              updateInitiative(initiative.id, {
+                              updateGoal(goal.id, {
                                 progress: Number(event.target.value),
                               })
                             }
                             style={{ width: "100%" }}
                           />
-                          <span>{initiative.progress}%</span>
+                          <span>{goal.progress}%</span>
                         </td>
+                        <td style={tdStyle}>{formatValue(goal.targetValue)}</td>
                         <td style={tdStyle}>
-                          {formatDate(initiative.createdAt)}
+                          <input
+                            type="number"
+                            value={goal.currentValue ?? 0}
+                            onChange={(event) =>
+                              updateGoal(goal.id, {
+                                currentValue: Number(event.target.value),
+                              })
+                            }
+                            style={{ width: "100%" }}
+                          />
                         </td>
                         <td style={tdStyle}>
                           <div style={controlRowStyle}>
@@ -288,9 +281,7 @@ export default function ExecutionPage() {
                               type="button"
                               style={controlButtonStyle}
                               onClick={() =>
-                                updateInitiative(initiative.id, {
-                                  status: "active",
-                                })
+                                updateGoal(goal.id, { status: "active" })
                               }
                             >
                               Mark Active
@@ -299,18 +290,16 @@ export default function ExecutionPage() {
                               type="button"
                               style={controlButtonStyle}
                               onClick={() =>
-                                updateInitiative(initiative.id, {
-                                  status: "blocked",
-                                })
+                                updateGoal(goal.id, { status: "at-risk" })
                               }
                             >
-                              Mark Blocked
+                              Mark At Risk
                             </button>
                             <button
                               type="button"
                               style={controlButtonStyle}
                               onClick={() =>
-                                updateInitiative(initiative.id, {
+                                updateGoal(goal.id, {
                                   status: "completed",
                                   progress: 100,
                                 })
@@ -411,33 +400,7 @@ const panelStyle: React.CSSProperties = {
   marginTop: 28,
 }
 
-const impactGrid: React.CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-  gap: 20,
-}
-
-const impactHeading: React.CSSProperties = {
-  marginTop: 0,
-  fontSize: 16,
-}
-
 const mutedText: React.CSSProperties = {
-  color: "var(--muted)",
-  margin: 0,
-}
-
-const listStyle: React.CSSProperties = {
-  margin: 0,
-  paddingLeft: 20,
-  lineHeight: 1.7,
-}
-
-const compactListStyle: React.CSSProperties = {
-  margin: "8px 0 0",
-  paddingLeft: 18,
-  lineHeight: 1.5,
-  fontSize: 14,
   color: "var(--muted)",
 }
 
@@ -467,6 +430,7 @@ const descriptionStyle: React.CSSProperties = {
   margin: "6px 0 0",
   color: "var(--muted)",
   lineHeight: 1.5,
+  fontSize: 14,
 }
 
 const controlRowStyle: React.CSSProperties = {

@@ -65,6 +65,7 @@ export default async function OperationsPage() {
           <Link href="/admin/executive-forecast" style={buttonStyle}>Forecast</Link>
           <Link href="/admin/strategic-plan" style={buttonStyle}>Strategic Plan</Link>
           <Link href="/admin/execution" style={buttonStyle}>Execution Engine</Link>
+          <Link href="/admin/goals" style={buttonStyle}>Quarterly Goals</Link>
         </div>
       </section>
 

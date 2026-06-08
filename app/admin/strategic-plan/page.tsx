@@ -85,6 +85,9 @@ export default function StrategicPlanPage() {
           <Link href="/admin/execution" style={linkStyle}>
             Execution Engine
           </Link>
+          <Link href="/admin/goals" style={linkStyle}>
+            Quarterly Goals
+          </Link>
         </div>
         <div style={actionRowStyle}>
           <button
