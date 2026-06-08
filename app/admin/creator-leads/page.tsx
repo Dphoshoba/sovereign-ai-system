@@ -44,6 +44,8 @@ export default function CreatorLeadsDashboard() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [search, setSearch] = useState("")
   const [leadIntelligence, setLeadIntelligence] = useState<any[]>([])
+  const [generatedEmail, setGeneratedEmail] = useState<any | null>(null)
+  const [emailLoading, setEmailLoading] = useState(false)
 
   async function loadLeads() {
     const response = await fetch("/api/creator-leads")
@@ -90,10 +92,39 @@ export default function CreatorLeadsDashboard() {
     setSelectedLead(result.lead)
   }
 
+  async function generateNurtureEmail() {
+    if (!selectedLead) return
+
+    setEmailLoading(true)
+
+    const response = await fetch("/api/creator-leads/generate-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ leadId: selectedLead.id }),
+    })
+
+    const result = await response.json()
+
+    setEmailLoading(false)
+
+    if (!result.ok) {
+      alert(result.error || "Failed to generate nurture email")
+      return
+    }
+
+    setGeneratedEmail(result.email)
+  }
+
   useEffect(() => {
     loadLeads()
     loadLeadIntelligence()
   }, [])
+
+  useEffect(() => {
+    setGeneratedEmail(null)
+  }, [selectedLead?.id])
 
   const filteredLeads = useMemo(() => {
     return leads.filter((lead) => {
@@ -351,6 +382,48 @@ export default function CreatorLeadsDashboard() {
                 </div>
               )}
 
+              <button
+                type="button"
+                disabled={emailLoading}
+                onClick={generateNurtureEmail}
+                style={{ ...buttonStyle, marginBottom: 16 }}
+              >
+                {emailLoading ? "Generating..." : "Generate Nurture Email"}
+              </button>
+
+              {generatedEmail && (
+                <div style={generatedEmailStyle}>
+                  <label>
+                    Subject
+                    <input
+                      value={generatedEmail.subject || ""}
+                      onChange={(e) =>
+                        setGeneratedEmail({
+                          ...generatedEmail,
+                          subject: e.target.value,
+                        })
+                      }
+                      style={inputStyle}
+                    />
+                  </label>
+
+                  <label>
+                    Body
+                    <textarea
+                      rows={12}
+                      value={generatedEmail.body || ""}
+                      onChange={(e) =>
+                        setGeneratedEmail({
+                          ...generatedEmail,
+                          body: e.target.value,
+                        })
+                      }
+                      style={inputStyle}
+                    />
+                  </label>
+                </div>
+              )}
+
               <label>
                 Status
                 <select
@@ -601,6 +674,14 @@ const leadNameStyle: React.CSSProperties = {
 }
 
 const leadSummaryStyle: React.CSSProperties = {
+  background: "#f8fafc",
+  border: "1px solid #e5e7eb",
+  borderRadius: 12,
+  padding: 16,
+  marginBottom: 20,
+}
+
+const generatedEmailStyle: React.CSSProperties = {
   background: "#f8fafc",
   border: "1px solid #e5e7eb",
   borderRadius: 12,
