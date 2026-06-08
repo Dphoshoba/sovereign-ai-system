@@ -22,6 +22,12 @@ export default async function ClientsPage() {
       <h1>Clients</h1>
       <p>Active Echoes & Visions clients converted from won leads.</p>
 
+      <p style={{ marginTop: 16 }}>
+        <a href="/admin/client-projects" style={linkStyle}>
+          View Projects
+        </a>
+      </p>
+
       <section style={{ display: "grid", gap: "16px", marginTop: "24px" }}>
         {clients.length === 0 && <p>No clients yet.</p>}
 
@@ -61,4 +67,14 @@ const cardStyle: React.CSSProperties = {
   border: "1px solid #ddd",
   borderRadius: "14px",
   padding: "20px",
+}
+
+const linkStyle: React.CSSProperties = {
+  color: "#111",
+  fontWeight: "bold",
+  textDecoration: "none",
+  border: "1px solid #111",
+  borderRadius: 10,
+  padding: "10px 14px",
+  display: "inline-block",
 }
