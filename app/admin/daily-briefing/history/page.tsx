@@ -134,6 +134,9 @@ export default function DailyBriefingHistoryPage() {
           <Link href="/admin/weekly-review" style={linkStyle}>
             Weekly Review
           </Link>
+          <Link href="/admin/monthly-review" style={linkStyle}>
+            Monthly Review
+          </Link>
         </div>
       </section>
 

@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import type { ExecutiveWeeklyReview } from "@/lib/executive/weekly-review"
+import type { ExecutiveMonthlyReview } from "@/lib/executive/monthly-review"
 
-export default function WeeklyReviewPage() {
-  const [review, setReview] = useState<ExecutiveWeeklyReview | null>(null)
+export default function MonthlyReviewPage() {
+  const [review, setReview] = useState<ExecutiveMonthlyReview | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -14,7 +14,7 @@ export default function WeeklyReviewPage() {
       setLoading(true)
       setError(null)
 
-      const response = await fetch("/api/executive/weekly-review", {
+      const response = await fetch("/api/executive/monthly-review", {
         cache: "no-store",
       })
       const result = await response.json()
@@ -22,7 +22,7 @@ export default function WeeklyReviewPage() {
       setLoading(false)
 
       if (!result.ok) {
-        setError(result.error || "Failed to load weekly review")
+        setError(result.error || "Failed to load monthly review")
         return
       }
 
@@ -32,7 +32,7 @@ export default function WeeklyReviewPage() {
     loadReview()
   }, [])
 
-  function trendColor(trend: ExecutiveWeeklyReview["healthTrend"]) {
+  function trendColor(trend: ExecutiveMonthlyReview["healthTrend"]) {
     if (trend === "Improving") {
       return "#15803d"
     }
@@ -48,31 +48,22 @@ export default function WeeklyReviewPage() {
     <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
       <section style={heroStyle}>
         <p style={eyebrowStyle}>Executive Command</p>
-        <h1 style={{ fontSize: 42, margin: "8px 0" }}>Weekly Review</h1>
+        <h1 style={{ fontSize: 42, margin: "8px 0" }}>Monthly Executive Review</h1>
         <p style={{ color: "var(--hero-muted)", maxWidth: 820, lineHeight: 1.7 }}>
-          Board-style weekly review synthesized from archived daily executive
-          briefings.
+          Board-level monthly review synthesized from archived daily executive
+          briefings over the last 30 days.
         </p>
-        <div style={linkRowStyle}>
-          <Link href="/admin/daily-briefing" style={linkStyle}>
-            Daily Briefing
-          </Link>
-          <Link href="/admin/daily-briefing/history" style={linkStyle}>
-            Briefing History
-          </Link>
-          <Link href="/admin/executive-overview" style={linkStyle}>
-            Executive Overview
-          </Link>
-          <Link href="/admin/operations" style={linkStyle}>
-            Operations Center
-          </Link>
-          <Link href="/admin/monthly-review" style={linkStyle}>
-            Monthly Review
+        <div style={actionRowStyle}>
+          <a href="/api/executive/monthly-review/pdf" style={primaryButtonStyle}>
+            Download PDF
+          </a>
+          <Link href="/admin/weekly-review" style={secondaryLinkStyle}>
+            Back to Weekly Review
           </Link>
         </div>
       </section>
 
-      {loading && <p style={{ marginTop: 28 }}>Loading weekly review...</p>}
+      {loading && <p style={{ marginTop: 28 }}>Loading monthly review...</p>}
 
       {error && <p style={{ marginTop: 28, color: "#b91c1c" }}>{error}</p>}
 
@@ -116,8 +107,8 @@ export default function WeeklyReviewPage() {
           </section>
 
           <section style={panelStyle}>
-            <h2 style={{ marginTop: 0 }}>Weekly Summary</h2>
-            <p style={{ margin: 0, lineHeight: 1.7 }}>{review.weeklySummary}</p>
+            <h2 style={{ marginTop: 0 }}>Monthly Summary</h2>
+            <p style={{ margin: 0, lineHeight: 1.7 }}>{review.monthlySummary}</p>
           </section>
 
           <section style={twoColumnGrid}>
@@ -189,14 +180,14 @@ export default function WeeklyReviewPage() {
           </section>
 
           <section style={panelStyle}>
-            <h2 style={{ marginTop: 0 }}>Next Week Priorities</h2>
-            {review.nextWeekPriorities.length === 0 ? (
+            <h2 style={{ marginTop: 0 }}>Next Month Priorities</h2>
+            {review.nextMonthPriorities.length === 0 ? (
               <p style={{ color: "var(--muted)", margin: 0 }}>
                 No priorities available from archived briefings.
               </p>
             ) : (
               <ul style={listStyle}>
-                {review.nextWeekPriorities.map((item) => (
+                {review.nextMonthPriorities.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
@@ -222,16 +213,32 @@ const eyebrowStyle: React.CSSProperties = {
   margin: 0,
 }
 
-const linkRowStyle: React.CSSProperties = {
+const actionRowStyle: React.CSSProperties = {
   display: "flex",
-  gap: 20,
+  gap: 12,
   flexWrap: "wrap",
-  marginTop: 16,
+  marginTop: 20,
 }
 
-const linkStyle: React.CSSProperties = {
+const primaryButtonStyle: React.CSSProperties = {
+  display: "inline-block",
+  padding: "12px 18px",
+  borderRadius: 10,
+  background: "var(--button-background)",
+  color: "var(--button-foreground)",
+  fontWeight: 700,
+  textDecoration: "none",
+}
+
+const secondaryLinkStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  padding: "12px 18px",
+  borderRadius: 10,
+  border: "1px solid var(--border)",
   color: "var(--button-foreground)",
   fontWeight: 600,
+  textDecoration: "none",
 }
 
 const metricsGrid: React.CSSProperties = {

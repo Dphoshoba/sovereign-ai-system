@@ -7,7 +7,7 @@ import {
 
 export type { ArchivedBriefingRecord } from "@/lib/executive/review-shared"
 
-export type ExecutiveWeeklyReview = {
+export type ExecutiveMonthlyReview = {
   startDate: string
   endDate: string
   briefingCount: number
@@ -16,17 +16,24 @@ export type ExecutiveWeeklyReview = {
   worstHealthScore: number
   healthTrend: HealthTrend
   healthScoreChange: number
-  weeklySummary: string
+  monthlySummary: string
   wins: string[]
   risks: string[]
   recurringIssues: string[]
   revenueMovement: string
   growthMovement: string
   deliveryMovement: string
-  nextWeekPriorities: string[]
+  nextMonthPriorities: string[]
 }
 
-function buildWeeklySummary(params: {
+export function getMonthlyReviewDateCutoff(date = new Date()) {
+  const cutoff = new Date(date)
+  cutoff.setDate(cutoff.getDate() - 30)
+  cutoff.setHours(0, 0, 0, 0)
+  return cutoff
+}
+
+function buildMonthlySummary(params: {
   sorted: ArchivedBriefingRecord[]
   averageHealthScore: number
   healthTrend: HealthTrend
@@ -36,7 +43,7 @@ function buildWeeklySummary(params: {
 
   if (sorted.length === 1) {
     const only = sorted[0]
-    return `Limited data — only one archived briefing is available (${formatReviewDate(only.briefingDate)}). Health score is ${only.healthScore}/100. ${only.openingSummary} Archive more daily briefings to unlock full weekly trend analysis.`
+    return `Limited data — only one archived briefing is available in the last 30 days (${formatReviewDate(only.briefingDate)}). Health score is ${only.healthScore}/100. ${only.openingSummary} Archive more daily briefings to unlock full monthly trend analysis.`
   }
 
   const startDate = formatReviewDate(sorted[0].briefingDate)
@@ -48,28 +55,29 @@ function buildWeeklySummary(params: {
 
   const trendPhrase =
     healthTrend === "Improving"
-      ? "Health improved over the period"
+      ? "Health improved over the month"
       : healthTrend === "Declining"
-        ? "Health declined over the period"
+        ? "Health declined over the month"
         : "Health remained relatively stable"
 
-  return `Weekly board review covering ${sorted.length} archived briefings from ${startDate} to ${endDate}. Average health score was ${averageHealthScore}/100. ${trendPhrase} (${healthScoreChange > 0 ? "+" : ""}${healthScoreChange} points). ${totalUrgent} total urgent item${totalUrgent === 1 ? "" : "s"} flagged across the week.`
+  return `Monthly executive review covering ${sorted.length} archived briefings from ${startDate} to ${endDate}. Average health score was ${averageHealthScore}/100. ${trendPhrase} (${healthScoreChange > 0 ? "+" : ""}${healthScoreChange} points). ${totalUrgent} total urgent item${totalUrgent === 1 ? "" : "s"} flagged across the period.`
 }
 
-export function buildExecutiveWeeklyReview(
+export function buildExecutiveMonthlyReview(
   records: ArchivedBriefingRecord[]
-): ExecutiveWeeklyReview {
+): ExecutiveMonthlyReview {
   const core = buildExecutiveArchiveReview(records, {
-    periodLabel: "Weekly",
+    periodLabel: "Monthly",
     emptySummary:
-      "No archived daily briefings yet. Archive briefings throughout the week to generate a weekly board review.",
+      "No archived daily briefings in the last 30 days. Archive briefings throughout the month to generate a monthly executive review.",
     emptyRevenueMovement: "No archived briefing data available.",
     emptyGrowthMovement: "No archived briefing data available.",
     emptyDeliveryMovement: "No archived briefing data available.",
     emptyPriorities: [
-      "Archive daily briefings consistently to enable weekly trend analysis",
+      "Archive daily briefings consistently to enable monthly trend analysis",
     ],
-    buildSummary: buildWeeklySummary,
+    buildSummary: buildMonthlySummary,
+    maxPriorities: 12,
   })
 
   return {
@@ -81,13 +89,13 @@ export function buildExecutiveWeeklyReview(
     worstHealthScore: core.worstHealthScore,
     healthTrend: core.healthTrend,
     healthScoreChange: core.healthScoreChange,
-    weeklySummary: core.summary,
+    monthlySummary: core.summary,
     wins: core.wins,
     risks: core.risks,
     recurringIssues: core.recurringIssues,
     revenueMovement: core.revenueMovement,
     growthMovement: core.growthMovement,
     deliveryMovement: core.deliveryMovement,
-    nextWeekPriorities: core.priorities,
+    nextMonthPriorities: core.priorities,
   }
 }
