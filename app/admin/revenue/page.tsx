@@ -26,6 +26,7 @@ export default function RevenuePage() {
   const [records, setRecords] = useState<RevenueRecord[]>([])
   const [insights, setInsights] = useState<RevenueInsight[]>([])
   const [metrics, setMetrics] = useState<any>(null)
+  const [pipelineSummary, setPipelineSummary] = useState<any>(null)
   const [loading, setLoading] = useState(false)
 
   const [form, setForm] = useState({
@@ -47,6 +48,17 @@ export default function RevenuePage() {
       setRecords(result.records)
       setInsights(result.insights)
       setMetrics(result.metrics)
+    }
+  }
+
+  async function loadPipelineSummary() {
+    const response = await fetch("/api/revenue/summary", {
+      cache: "no-store",
+    })
+    const result = await response.json()
+
+    if (result.ok) {
+      setPipelineSummary(result.summary)
     }
   }
 
@@ -104,7 +116,12 @@ export default function RevenuePage() {
 
   useEffect(() => {
     loadRevenue()
+    loadPipelineSummary()
   }, [])
+
+  function formatAud(value: number) {
+    return `AUD ${value.toLocaleString("en-AU")}`
+  }
 
   return (
     <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
@@ -120,6 +137,54 @@ export default function RevenuePage() {
           AI-generated strategic business insights.
         </p>
       </section>
+
+      {pipelineSummary ? (
+        <section style={{ marginTop: 28 }}>
+          <h2 style={{ marginBottom: 16 }}>Pipeline Summary</h2>
+
+          <div style={metricsGrid}>
+            <div style={metricCard}>
+              <p style={metaStyle}>Total Pipeline Value</p>
+              <h2>{formatAud(pipelineSummary.totalPipelineValue || 0)}</h2>
+            </div>
+
+            <div style={metricCard}>
+              <p style={metaStyle}>Won Revenue</p>
+              <h2>{formatAud(pipelineSummary.wonRevenue || 0)}</h2>
+            </div>
+
+            <div style={metricCard}>
+              <p style={metaStyle}>Open Pipeline</p>
+              <h2>{formatAud(pipelineSummary.openPipeline || 0)}</h2>
+            </div>
+
+            <div style={metricCard}>
+              <p style={metaStyle}>Lost Revenue</p>
+              <h2>{formatAud(pipelineSummary.lostRevenue || 0)}</h2>
+            </div>
+
+            <div style={metricCard}>
+              <p style={metaStyle}>Close Rate</p>
+              <h2>{pipelineSummary.closeRate || 0}%</h2>
+            </div>
+
+            <div style={metricCard}>
+              <p style={metaStyle}>Total Leads</p>
+              <h2>{pipelineSummary.totalLeads || 0}</h2>
+            </div>
+
+            <div style={metricCard}>
+              <p style={metaStyle}>Won Leads</p>
+              <h2>{pipelineSummary.wonLeads || 0}</h2>
+            </div>
+
+            <div style={metricCard}>
+              <p style={metaStyle}>Proposal Sent Leads</p>
+              <h2>{pipelineSummary.proposalSentLeads || 0}</h2>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {metrics ? (
         <section style={metricsGrid}>

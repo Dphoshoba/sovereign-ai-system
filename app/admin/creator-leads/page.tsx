@@ -48,6 +48,8 @@ export default function CreatorLeadsDashboard() {
   const [emailLoading, setEmailLoading] = useState(false)
   const [generatedProposal, setGeneratedProposal] = useState<any | null>(null)
   const [proposalLoading, setProposalLoading] = useState(false)
+  const [pipelineLoading, setPipelineLoading] = useState(false)
+  const [pipelineMessage, setPipelineMessage] = useState<string | null>(null)
 
   async function loadLeads() {
     const response = await fetch("/api/creator-leads")
@@ -144,6 +146,41 @@ export default function CreatorLeadsDashboard() {
     setGeneratedProposal(result.proposal)
   }
 
+  async function updatePipelineStatus(status: string) {
+    if (!selectedLead) return
+
+    setPipelineLoading(true)
+    setPipelineMessage(null)
+
+    const response = await fetch("/api/creator-leads/update", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: selectedLead.id,
+        status,
+      }),
+    })
+
+    const result = await response.json()
+
+    setPipelineLoading(false)
+
+    if (!result.ok) {
+      alert(result.error || "Failed to update pipeline status")
+      return
+    }
+
+    await loadLeads()
+    setSelectedLead(result.lead)
+    setPipelineMessage(`Status updated to "${status}".`)
+
+    window.setTimeout(() => {
+      setPipelineMessage(null)
+    }, 3000)
+  }
+
   useEffect(() => {
     loadLeads()
     loadLeadIntelligence()
@@ -152,6 +189,7 @@ export default function CreatorLeadsDashboard() {
   useEffect(() => {
     setGeneratedEmail(null)
     setGeneratedProposal(null)
+    setPipelineMessage(null)
   }, [selectedLead?.id])
 
   const filteredLeads = useMemo(() => {
@@ -409,6 +447,52 @@ export default function CreatorLeadsDashboard() {
                   />
                 </div>
               )}
+
+              <div style={pipelineActionsStyle}>
+                <h4 style={pipelineTitleStyle}>Pipeline Actions</h4>
+
+                <div style={pipelineButtonsStyle}>
+                  <button
+                    type="button"
+                    disabled={pipelineLoading}
+                    onClick={() => updatePipelineStatus("contacted")}
+                    style={pipelineButtonStyle}
+                  >
+                    Mark Contacted
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={pipelineLoading}
+                    onClick={() => updatePipelineStatus("proposal-sent")}
+                    style={pipelineButtonStyle}
+                  >
+                    Mark Proposal Sent
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={pipelineLoading}
+                    onClick={() => updatePipelineStatus("won")}
+                    style={pipelineButtonStyle}
+                  >
+                    Mark Won
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={pipelineLoading}
+                    onClick={() => updatePipelineStatus("lost")}
+                    style={pipelineButtonStyle}
+                  >
+                    Mark Lost
+                  </button>
+                </div>
+
+                {pipelineMessage && (
+                  <p style={pipelineMessageStyle}>{pipelineMessage}</p>
+                )}
+              </div>
 
               <button
                 type="button"
@@ -817,6 +901,49 @@ const generatedProposalStyle: React.CSSProperties = {
   borderRadius: 12,
   padding: 16,
   marginBottom: 20,
+}
+
+const pipelineActionsStyle: React.CSSProperties = {
+  background: "#f8fafc",
+  border: "1px solid #e5e7eb",
+  borderRadius: 12,
+  padding: 16,
+  marginBottom: 20,
+}
+
+const pipelineTitleStyle: React.CSSProperties = {
+  margin: "0 0 12px",
+  fontSize: 16,
+  fontWeight: 700,
+  color: "#111",
+}
+
+const pipelineButtonsStyle: React.CSSProperties = {
+  display: "flex",
+  flexWrap: "wrap",
+  gap: 10,
+}
+
+const pipelineButtonStyle: React.CSSProperties = {
+  padding: "10px 14px",
+  borderRadius: 10,
+  border: "1px solid #ccc",
+  background: "#fff",
+  color: "#111",
+  cursor: "pointer",
+  fontWeight: 600,
+  fontSize: 14,
+}
+
+const pipelineMessageStyle: React.CSSProperties = {
+  margin: "12px 0 0",
+  padding: "10px 12px",
+  borderRadius: 8,
+  background: "#ecfdf5",
+  border: "1px solid #86efac",
+  color: "#166534",
+  fontSize: 14,
+  fontWeight: 600,
 }
 
 const editorCard: React.CSSProperties = {
