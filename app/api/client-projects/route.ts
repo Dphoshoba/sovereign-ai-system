@@ -1,9 +1,35 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
-export async function GET() {
+const PROJECT_STATUSES = ["active", "completed", "archived"] as const
+
+async function attachClient(project: {
+  clientId: string
+  [key: string]: unknown
+}) {
+  const client = await prisma.clientProfile.findUnique({
+    where: { id: project.clientId },
+  })
+
+  return {
+    ...project,
+    client,
+  }
+}
+
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const includeArchived = searchParams.get("includeArchived") === "true"
+
     const projects = await prisma.clientProject.findMany({
+      where: includeArchived
+        ? undefined
+        : {
+            status: {
+              not: "archived",
+            },
+          },
       orderBy: {
         createdAt: "desc",
       },
@@ -82,6 +108,9 @@ export async function POST(request: Request) {
       where: {
         clientId,
         title,
+        status: {
+          not: "archived",
+        },
       },
     })
 
@@ -122,6 +151,63 @@ export async function POST(request: Request) {
           error instanceof Error
             ? error.message
             : "Failed to create client project",
+      },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json()
+    const id = body.id?.trim()
+    const status = body.status?.trim()
+
+    if (!id || !status) {
+      return NextResponse.json(
+        { ok: false, error: "id and status are required" },
+        { status: 400 }
+      )
+    }
+
+    if (!PROJECT_STATUSES.includes(status as (typeof PROJECT_STATUSES)[number])) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "status must be active, completed, or archived",
+        },
+        { status: 400 }
+      )
+    }
+
+    const existing = await prisma.clientProject.findUnique({
+      where: { id },
+    })
+
+    if (!existing) {
+      return NextResponse.json(
+        { ok: false, error: "Project not found" },
+        { status: 404 }
+      )
+    }
+
+    const project = await prisma.clientProject.update({
+      where: { id },
+      data: { status },
+    })
+
+    return NextResponse.json({
+      ok: true,
+      project: await attachClient(project),
+    })
+  } catch (error) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to update client project",
       },
       { status: 500 }
     )

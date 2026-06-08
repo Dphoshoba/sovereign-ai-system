@@ -51,6 +51,7 @@ export default function ClientProjectsPage() {
   const [tasks, setTasks] = useState<ClientProjectTask[]>([])
   const [loading, setLoading] = useState(false)
   const [projectMessage, setProjectMessage] = useState<string | null>(null)
+  const [projectActionLoading, setProjectActionLoading] = useState(false)
   const [taskLoading, setTaskLoading] = useState(false)
   const [taskDrafts, setTaskDrafts] = useState<Record<string, TaskDraft>>({})
   const [form, setForm] = useState({
@@ -134,6 +135,29 @@ export default function ClientProjectsPage() {
     }
 
     await loadProjects()
+  }
+
+  async function updateProjectStatus(projectId: string, status: string) {
+    setProjectActionLoading(true)
+
+    const response = await fetch("/api/client-projects", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id: projectId, status }),
+    })
+
+    const result = await response.json()
+    setProjectActionLoading(false)
+
+    if (!result.ok) {
+      alert(result.error || "Failed to update project")
+      return
+    }
+
+    await loadProjects()
+    await loadTasks()
   }
 
   async function createTask(event: React.FormEvent, projectId: string) {
@@ -430,6 +454,34 @@ export default function ClientProjectsPage() {
 
                 {project.description ? <p>{project.description}</p> : null}
 
+                <div style={projectButtonsStyle}>
+                  {project.status !== "completed" && (
+                    <button
+                      type="button"
+                      disabled={projectActionLoading}
+                      onClick={() =>
+                        updateProjectStatus(project.id, "completed")
+                      }
+                      style={secondaryButtonStyle}
+                    >
+                      Mark Completed
+                    </button>
+                  )}
+
+                  {project.status !== "archived" && (
+                    <button
+                      type="button"
+                      disabled={projectActionLoading}
+                      onClick={() =>
+                        updateProjectStatus(project.id, "archived")
+                      }
+                      style={secondaryButtonStyle}
+                    >
+                      Archive Project
+                    </button>
+                  )}
+                </div>
+
                 <div style={taskSectionStyle}>
                   <h4 style={{ marginTop: 0 }}>Deliverables / Tasks</h4>
 
@@ -677,6 +729,13 @@ const taskButtonsStyle: React.CSSProperties = {
   display: "flex",
   flexWrap: "wrap",
   gap: 8,
+}
+
+const projectButtonsStyle: React.CSSProperties = {
+  display: "flex",
+  flexWrap: "wrap",
+  gap: 10,
+  marginBottom: 16,
 }
 
 const metaStyle: React.CSSProperties = {

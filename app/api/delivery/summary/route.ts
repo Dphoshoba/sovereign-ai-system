@@ -21,6 +21,11 @@ export async function GET() {
         },
       }),
       prisma.clientProject.findMany({
+        where: {
+          status: {
+            not: "archived",
+          },
+        },
         orderBy: {
           createdAt: "desc",
         },
@@ -28,11 +33,16 @@ export async function GET() {
       prisma.clientProjectTask.findMany(),
     ])
 
+    const visibleProjectIds = new Set(projects.map((project) => project.id))
+    const visibleTasks = tasks.filter((task) =>
+      visibleProjectIds.has(task.projectId)
+    )
+
     const clientMap = Object.fromEntries(
       clients.map((client) => [client.id, client])
     )
 
-    const tasksByProject = tasks.reduce<
+    const tasksByProject = visibleTasks.reduce<
       Record<
         string,
         {
@@ -100,10 +110,10 @@ export async function GET() {
     const completedProjects = projects.filter(
       (project) => project.status === "completed"
     ).length
-    const totalTasks = tasks.length
-    const doneTasks = tasks.filter((task) => task.status === "done").length
-    const openTasks = tasks.filter((task) => task.status !== "done").length
-    const overdueTasks = tasks.filter((task) => isOverdueTask(task)).length
+    const totalTasks = visibleTasks.length
+    const doneTasks = visibleTasks.filter((task) => task.status === "done").length
+    const openTasks = visibleTasks.filter((task) => task.status !== "done").length
+    const overdueTasks = visibleTasks.filter((task) => isOverdueTask(task)).length
     const totalProjectValue = projects.reduce(
       (sum, project) => sum + (project.valueAud || 0),
       0
