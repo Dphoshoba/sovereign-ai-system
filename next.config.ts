@@ -30,6 +30,7 @@ const vercelDisabledHeavyRoutes = [
   "/api/youtube/generate-shorts",
   "/api/youtube/generate-thumbnail",
   "/api/youtube/upload-shorts",
+  "/api/youtube/upload",
 ] as const
 
 const outputFileTracingExcludes = Object.fromEntries(
