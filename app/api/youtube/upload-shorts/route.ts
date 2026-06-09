@@ -4,19 +4,33 @@ import path from "path"
 import { NextResponse } from "next/server"
 
 import { prisma } from "@/lib/prisma"
-import { youtube } from "@/lib/youtube"
+import {
+  getYouTubeClient,
+  isYouTubeOAuthConfigured,
+} from "@/lib/youtube"
+
+export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
 
 export async function POST(req: Request) {
   try {
-    const { youtubePostId } =
-      await req.json()
-
-    const post =
-      await prisma.youTubePost.findUnique({
-        where: {
-          id: youtubePostId,
+    if (!isYouTubeOAuthConfigured()) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "YouTube OAuth credentials are not configured",
         },
-      })
+        { status: 500 }
+      )
+    }
+
+    const { youtubePostId } = await req.json()
+
+    const post = await prisma.youTubePost.findUnique({
+      where: {
+        id: youtubePostId,
+      },
+    })
 
     if (!post) {
       return NextResponse.json(
@@ -32,8 +46,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           ok: false,
-          error:
-            "Shorts video not rendered",
+          error: "Shorts video not rendered",
         },
         { status: 400 }
       )
@@ -42,53 +55,54 @@ export async function POST(req: Request) {
     const localPath = path.join(
       process.cwd(),
       "public",
-      post.shortsVideoUrl.replace(
-        "/",
-        ""
-      )
+      post.shortsVideoUrl.replace("/", "")
     )
 
-    const response =
-      await youtube.videos.insert({
-        part: ["snippet", "status"],
+    if (!fs.existsSync(localPath)) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Shorts video file not found",
+        },
+        { status: 400 }
+      )
+    }
 
-        requestBody: {
-          snippet: {
-            title:
-              `${post.title} #Shorts`,
-            description:
-              post.shortsCaption || "",
-          },
+    const youtube = getYouTubeClient()
 
-          status: {
-            privacyStatus: "private",
-          },
+    const response = await youtube.videos.insert({
+      part: ["snippet", "status"],
+
+      requestBody: {
+        snippet: {
+          title: `${post.title} #Shorts`,
+          description: post.shortsCaption || "",
         },
 
-        media: {
-          body: fs.createReadStream(
-            localPath
-          ),
+        status: {
+          privacyStatus: "private",
         },
-      })
+      },
+
+      media: {
+        body: fs.createReadStream(localPath),
+      },
+    })
 
     const videoId = response.data.id
 
-    const youtubeUrl =
-      `https://youtube.com/watch?v=${videoId}`
+    const youtubeUrl = `https://youtube.com/watch?v=${videoId}`
 
-    const updated =
-      await prisma.youTubePost.update({
-        where: {
-          id: post.id,
-        },
-        data: {
-          shortsVideoId: videoId,
-          shortsUploadUrl:
-            youtubeUrl,
-          shortsStatus: "uploaded",
-        },
-      })
+    const updated = await prisma.youTubePost.update({
+      where: {
+        id: post.id,
+      },
+      data: {
+        shortsVideoId: videoId,
+        shortsUploadUrl: youtubeUrl,
+        shortsStatus: "uploaded",
+      },
+    })
 
     return NextResponse.json({
       ok: true,
@@ -96,18 +110,25 @@ export async function POST(req: Request) {
       post: updated,
     })
   } catch (error) {
-    console.error(
-      "Shorts upload failed:",
-      error
-    )
+    console.error("Shorts upload failed:", error)
+
+    if (
+      error instanceof Error &&
+      error.message === "YouTube OAuth credentials are not configured"
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "YouTube OAuth credentials are not configured",
+        },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json(
       {
         ok: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Upload failed",
+        error: "YouTube upload failed",
       },
       { status: 500 }
     )

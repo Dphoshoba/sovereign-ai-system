@@ -2,10 +2,26 @@ import fs from "fs"
 import path from "path"
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { youtube } from "@/lib/youtube"
+import {
+  getYouTubeClient,
+  isYouTubeOAuthConfigured,
+} from "@/lib/youtube"
+
+export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
 
 export async function POST(req: Request) {
   try {
+    if (!isYouTubeOAuthConfigured()) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "YouTube OAuth credentials are not configured",
+        },
+        { status: 500 }
+      )
+    }
+
     const { youtubePostId } = await req.json()
 
     if (!youtubePostId) {
@@ -40,11 +56,7 @@ export async function POST(req: Request) {
           "public",
           post.renderedVideoUrl.replace("/", "")
         )
-      : path.join(
-          process.cwd(),
-          "public",
-          "test-video.mp4"
-        )
+      : path.join(process.cwd(), "public", "test-video.mp4")
 
     if (!fs.existsSync(videoPath)) {
       return NextResponse.json(
@@ -56,6 +68,8 @@ export async function POST(req: Request) {
         { status: 400 }
       )
     }
+
+    const youtube = getYouTubeClient()
 
     const response = await youtube.videos.insert({
       part: ["snippet", "status"],
@@ -85,10 +99,6 @@ export async function POST(req: Request) {
     const videoId = response.data.id
 
     const youtubeUrl = `https://youtube.com/watch?v=${videoId}`
-
-    /*
-      Upload thumbnail if it exists
-    */
 
     if (post.thumbnailImage) {
       try {
@@ -132,11 +142,23 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("Real YouTube upload failed:", error)
 
+    if (
+      error instanceof Error &&
+      error.message === "YouTube OAuth credentials are not configured"
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "YouTube OAuth credentials are not configured",
+        },
+        { status: 500 }
+      )
+    }
+
     return NextResponse.json(
       {
         ok: false,
-        error:
-          error instanceof Error ? error.message : "Upload failed",
+        error: "YouTube upload failed",
       },
       { status: 500 }
     )
