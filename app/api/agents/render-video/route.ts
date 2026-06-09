@@ -1,48 +1,19 @@
-import { NextRequest, NextResponse } from "next/server"
-import path from "path"
-import { renderEngineAgent } from "../../../../lib/agents/render-engine-agent"
+import { NextResponse } from "next/server"
 
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json()
+export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
 
-    if (!body.audioFile) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "audioFile required",
-        },
-        {
-          status: 400,
-        }
-      )
-    }
+const DISABLED_RESPONSE = {
+  ok: false,
+  disabled: true,
+  error:
+    "Video rendering is disabled on Vercel because this route exceeds the serverless function size limit. Use a dedicated worker or external render service.",
+}
 
-    const audioPath = path.join(
-      process.cwd(),
-      "public",
-      body.audioFile
-    )
+export async function GET() {
+  return NextResponse.json(DISABLED_RESPONSE, { status: 501 })
+}
 
-    const result = await renderEngineAgent({
-      audioPath,
-    })
-
-    return NextResponse.json({
-      ok: true,
-      result,
-    })
-  } catch (error) {
-    console.error("Render engine failed:", error)
-
-    return NextResponse.json(
-      {
-        ok: false,
-        error: "Render engine failed",
-      },
-      {
-        status: 500,
-      }
-    )
-  }
+export async function POST() {
+  return NextResponse.json(DISABLED_RESPONSE, { status: 501 })
 }
