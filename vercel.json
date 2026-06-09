@@ -7,7 +7,7 @@
   "crons": [
     {
       "path": "/api/workers/publish-scheduled",
-      "schedule": "0 * * * *"
+      "schedule": "0 9 * * *"
     },
     {
       "path": "/api/workers/weekly-planner",
