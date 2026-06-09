@@ -1,1 +1,1 @@
-export { renderVideoLocal as renderEngineAgent } from "@/lib/video/render-video.local"
+export { renderVideoLocal as renderEngineAgent } from "../../local/video/render-video.local"

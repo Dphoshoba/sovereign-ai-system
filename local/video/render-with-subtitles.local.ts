@@ -6,7 +6,7 @@ const resolvedFfmpegPath = path.join(
   process.cwd(),
   "node_modules",
   "ffmpeg-static",
-  "ffmpeg.exe"
+  process.platform === "win32" ? "ffmpeg.exe" : "ffmpeg"
 )
 
 ffmpeg.setFfmpegPath(resolvedFfmpegPath)
