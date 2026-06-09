@@ -25,6 +25,7 @@ export type RenderWithSubtitlesResult = {
   publicUrl: string
 }
 
+/** Local/self-hosted only — do not import from Vercel API routes. */
 export async function renderWithSubtitlesLocal(
   input: RenderWithSubtitlesInput
 ): Promise<RenderWithSubtitlesResult> {
