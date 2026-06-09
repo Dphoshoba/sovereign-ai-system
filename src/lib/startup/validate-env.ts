@@ -25,7 +25,8 @@ export const ENV_SPECS: EnvVarSpec[] = [
     required: true,
     productionOnly: true,
     group: "application",
-    description: "Public site URL used for metadata, server fetches, and callbacks.",
+    description:
+      "Public site URL used for metadata, server fetches, and callbacks (production: https://sovereign-ai-executive.vercel.app).",
   },
   {
     key: "NEXT_PUBLIC_SUPABASE_URL",

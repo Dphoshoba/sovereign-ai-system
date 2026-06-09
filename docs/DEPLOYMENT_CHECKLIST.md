@@ -20,7 +20,7 @@ Use this checklist before every production deploy.
 **Validate:**
 
 ```bash
-curl https://YOUR_DOMAIN/api/health
+curl https://sovereign-ai-executive.vercel.app/api/health
 ```
 
 Expect `ok: true`, `database: "connected"`, `env.ok: true`.
@@ -123,8 +123,8 @@ npm run build
 npm start
 
 # 4. Smoke test
-curl -s https://YOUR_DOMAIN/api/health | jq
-curl -s https://YOUR_DOMAIN/api/executive/health | jq
+curl -s https://sovereign-ai-executive.vercel.app/api/health | jq
+curl -s https://sovereign-ai-executive.vercel.app/api/executive/health | jq
 ```
 
 ---

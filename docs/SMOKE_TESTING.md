@@ -38,13 +38,13 @@ Uses `http://localhost:3000` when `BASE_URL` is not set.
 ### Production / staging
 
 ```bash
-BASE_URL=https://your-domain.com npm run smoke:v1
+BASE_URL=https://sovereign-ai-executive.vercel.app npm run smoke:v1
 ```
 
 On Windows PowerShell:
 
 ```powershell
-$env:BASE_URL="https://your-domain.com"; npm run smoke:v1
+$env:BASE_URL="https://sovereign-ai-executive.vercel.app"; npm run smoke:v1
 ```
 
 ---

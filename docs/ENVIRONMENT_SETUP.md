@@ -81,7 +81,7 @@ npm run dev
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `NEXT_PUBLIC_APP_URL` | **Yes (production)** | Canonical public URL (`https://your-domain.com`). Used for metadata, internal fetches, PDF links, and webhooks. |
+| `NEXT_PUBLIC_APP_URL` | **Yes (production)** | Canonical public URL (`https://sovereign-ai-executive.vercel.app`). Used for metadata, internal fetches, PDF links, and webhooks. |
 | `NEXT_PUBLIC_BASE_URL` | Optional | Alternate base URL for some agent pipeline callbacks. |
 | `NODE_ENV` | Auto | Set by Next.js (`development` / `production`). |
 | `BUILD_TIME` | Auto | Injected at build via `next.config.ts`. Exposed in `/api/health`. |
@@ -156,7 +156,7 @@ For deployment of the **Sovereign V1 executive system** only:
 DATABASE_URL=...
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-NEXT_PUBLIC_APP_URL=https://your-production-domain.com
+NEXT_PUBLIC_APP_URL=https://sovereign-ai-executive.vercel.app
 ```
 
 OpenAI, email, Stripe, and social keys can be added later without redeploying executive logic.

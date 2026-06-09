@@ -282,7 +282,7 @@ Validated programmatically via `src/lib/startup/validate-env.ts` and `GET /api/h
 - [ ] Deploy to production (see runbook §5)
 - [ ] `GET /api/health` → `ok: true`, `database: "connected"`
 - [ ] `GET /api/executive/health` → all modules `ok: true`
-- [ ] `BASE_URL=https://YOUR_DOMAIN npm run smoke:v1` → 22/22 pass
+- [ ] `BASE_URL=https://sovereign-ai-executive.vercel.app npm run smoke:v1` → 22/22 pass
 - [ ] Login at `/login` works
 - [ ] Operator confirms `/admin/runtime` and `/admin/command-center` load
 - [ ] First-week operating plan started (see runbook §9)

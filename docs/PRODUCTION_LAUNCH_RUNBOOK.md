@@ -39,7 +39,7 @@ Set on your hosting platform (Vercel, Railway, VPS, etc.). Never commit secrets 
 DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/DATABASE?sslmode=require
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-NEXT_PUBLIC_APP_URL=https://your-production-domain.com
+NEXT_PUBLIC_APP_URL=https://sovereign-ai-executive.vercel.app
 ```
 
 ### Optional (enable when needed)
@@ -57,7 +57,7 @@ STRIPE_PUBLISHABLE_KEY=pk_live_...     # Client checkout (when enabled)
 
 ```bash
 # After deploy, from any machine:
-curl -s https://your-production-domain.com/api/health
+curl -s https://sovereign-ai-executive.vercel.app/api/health
 ```
 
 Expect: `ok: true`, `database: "connected"`, `env.ok: true`, `version: "v1"`.
@@ -83,7 +83,7 @@ npx prisma migrate deploy
 **Verify DB from app:**
 
 ```bash
-curl -s https://YOUR_DOMAIN/api/health/db
+curl -s https://sovereign-ai-executive.vercel.app/api/health/db
 ```
 
 ---
@@ -152,10 +152,10 @@ pm2 restart sovereign-v1   # or systemd service
 
 ## 6. Post-deploy health checks
 
-Run immediately after deploy (replace `YOUR_DOMAIN`):
+Run immediately after deploy:
 
 ```bash
-DOMAIN=https://YOUR_DOMAIN
+DOMAIN=https://sovereign-ai-executive.vercel.app
 
 curl -sf "$DOMAIN/api/health" | jq '.ok, .database, .version, .env.ok'
 curl -sf "$DOMAIN/api/executive/health" | jq '.ok, .runtime.ok, .commandCenter.ok'
@@ -187,7 +187,7 @@ curl -sf "$DOMAIN/api/executive/runtime" | jq '.ok, .runtime.executiveStatus'
 Automated read-only GET checks (22 routes):
 
 ```bash
-BASE_URL=https://YOUR_DOMAIN npm run smoke:v1
+BASE_URL=https://sovereign-ai-executive.vercel.app npm run smoke:v1
 ```
 
 **Pass:** exit code `0`, all routes `PASS`, HTTP 200–399.
@@ -245,7 +245,7 @@ See [`SMOKE_TESTING.md`](SMOKE_TESTING.md) for full route list and failure inter
 
 - Start at **`/admin/runtime`** → **`/admin/command-center`**
 - Use **`/admin/operations`** as hub; avoid legacy consoles unless intentional
-- Run **`BASE_URL=https://YOUR_DOMAIN npm run smoke:v1`** after each deploy
+- Run **`BASE_URL=https://sovereign-ai-executive.vercel.app npm run smoke:v1`** after each deploy
 
 Full workflow detail: [`V1_OPERATING_MANUAL.md`](V1_OPERATING_MANUAL.md)
 
@@ -260,5 +260,5 @@ Full workflow detail: [`V1_OPERATING_MANUAL.md`](V1_OPERATING_MANUAL.md)
 | Start | `npm start` |
 | Health | `GET /api/health` |
 | Executive health | `GET /api/executive/health` |
-| Smoke | `BASE_URL=https://YOUR_DOMAIN npm run smoke:v1` |
+| Smoke | `BASE_URL=https://sovereign-ai-executive.vercel.app npm run smoke:v1` |
 | V1 entry | `/admin/runtime`, `/admin/command-center`, `/admin/operations` |

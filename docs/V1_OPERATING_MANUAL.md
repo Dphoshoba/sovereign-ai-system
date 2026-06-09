@@ -64,14 +64,14 @@ This manual describes the recommended operating rhythm for Echoes & Visions Sove
 ### Daily health check (optional automation)
 
 ```bash
-BASE_URL=https://your-domain.com npm run smoke:v1
+BASE_URL=https://sovereign-ai-executive.vercel.app npm run smoke:v1
 ```
 
 Or quick API probe:
 
 ```bash
-curl -s https://your-domain.com/api/health
-curl -s https://your-domain.com/api/executive/health
+curl -s https://sovereign-ai-executive.vercel.app/api/health
+curl -s https://sovereign-ai-executive.vercel.app/api/executive/health
 ```
 
 ---

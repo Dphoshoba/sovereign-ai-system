@@ -5,7 +5,7 @@
 
 Run these checks after every production deploy. All tests are read-only unless noted.
 
-Replace `YOUR_DOMAIN` with your production origin (e.g. `https://app.echoesandvisions.com`).
+Production origin: `https://sovereign-ai-executive.vercel.app`
 
 ---
 
@@ -14,7 +14,7 @@ Replace `YOUR_DOMAIN` with your production origin (e.g. `https://app.echoesandvi
 ### 1. Platform health
 
 ```bash
-curl -s https://YOUR_DOMAIN/api/health
+curl -s https://sovereign-ai-executive.vercel.app/api/health
 ```
 
 **Pass criteria:**
@@ -39,7 +39,7 @@ curl -s https://YOUR_DOMAIN/api/health
 ### 2. Executive subsystem health
 
 ```bash
-curl -s https://YOUR_DOMAIN/api/executive/health
+curl -s https://sovereign-ai-executive.vercel.app/api/executive/health
 ```
 
 **Pass criteria:**
@@ -70,7 +70,7 @@ Example module shape:
 ### 3. Executive runtime API
 
 ```bash
-curl -s https://YOUR_DOMAIN/api/executive/runtime
+curl -s https://sovereign-ai-executive.vercel.app/api/executive/runtime
 ```
 
 **Pass criteria:**
@@ -121,7 +121,7 @@ Open in browser while authenticated (Supabase login).
 ## Automated curl script
 
 ```bash
-DOMAIN="https://YOUR_DOMAIN"
+DOMAIN="https://sovereign-ai-executive.vercel.app"
 
 echo "== Platform health =="
 curl -sf "$DOMAIN/api/health" | jq '.ok, .database, .version'
