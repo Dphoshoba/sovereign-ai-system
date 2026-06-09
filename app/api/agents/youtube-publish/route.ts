@@ -1,46 +1,17 @@
-import path from "path"
-import { NextRequest, NextResponse } from "next/server"
-import { youtubePublisherAgent } from "../../../../lib/agents/youtube-publisher-agent"
+export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
 
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json()
+const disabledResponse = {
+  ok: false,
+  disabled: true,
+  error:
+    "YouTube publishing agent is disabled on Vercel because this function exceeds the serverless size limit. Use a dedicated worker or external publishing service.",
+}
 
-    if (!body.accessToken) {
-      return NextResponse.json(
-        { ok: false, error: "accessToken required" },
-        { status: 400 }
-      )
-    }
+export async function GET() {
+  return Response.json(disabledResponse, { status: 501 })
+}
 
-    if (!body.videoFile) {
-      return NextResponse.json(
-        { ok: false, error: "videoFile required" },
-        { status: 400 }
-      )
-    }
-
-    const videoPath = path.join(process.cwd(), "public", body.videoFile)
-
-    const result = await youtubePublisherAgent({
-      accessToken: body.accessToken,
-      videoPath,
-      title: body.title || "Untitled Video",
-      description: body.description || "",
-      tags: body.tags || [],
-      privacyStatus: body.privacyStatus || "private",
-    })
-
-    return NextResponse.json({
-      ok: true,
-      result,
-    })
-  } catch (error) {
-    console.error("YouTube publish failed:", error)
-
-    return NextResponse.json(
-      { ok: false, error: "YouTube publish failed" },
-      { status: 500 }
-    )
-  }
+export async function POST() {
+  return Response.json(disabledResponse, { status: 501 })
 }
