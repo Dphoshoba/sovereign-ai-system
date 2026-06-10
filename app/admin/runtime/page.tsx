@@ -94,6 +94,9 @@ export default function RuntimePage() {
           <Link href="/admin/operations" style={secondaryLinkStyle}>
             Operations Center
           </Link>
+          <Link href="/admin/executive-timeline" style={secondaryLinkStyle}>
+            Executive Timeline
+          </Link>
         </div>
       </section>
 
