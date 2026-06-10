@@ -71,6 +71,12 @@ function normalizeImpactAreaId(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, "-")
 }
 
+/** Lowercased focus key for matching categories, impact areas, owner systems. */
+function normalizeFocus(value: string | null | undefined) {
+  const normalized = value?.trim().toLowerCase()
+  return normalized || null
+}
+
 function toMetadata(value: Prisma.JsonValue | null | undefined) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return null
@@ -250,6 +256,7 @@ export async function buildExecutiveKnowledgeGraph(): Promise<KnowledgeGraphBuil
     leads,
     clients,
     proposals,
+    quarterlyReviews,
   ] = await Promise.all([
     prisma.executiveDecision.findMany(),
     prisma.executiveLesson.findMany(),
@@ -269,6 +276,7 @@ export async function buildExecutiveKnowledgeGraph(): Promise<KnowledgeGraphBuil
         },
       },
     }),
+    prisma.executiveQuarterlyReview.findMany(),
   ])
 
   for (const client of clients) {
@@ -616,6 +624,216 @@ export async function buildExecutiveKnowledgeGraph(): Promise<KnowledgeGraphBuil
 
     if (leadNodeId && proposalNodeId) {
       await ensureEdge(leadNodeId, proposalNodeId, "has_proposal", stats)
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Phase 21.1 expansion — cross-domain relationships (all duplicate-safe
+  // via ensureEdge, which skips existing from/to/relation triples).
+  // -------------------------------------------------------------------------
+
+  // QuarterlyReview nodes + review -> goals in the same quarter/year.
+  for (const review of quarterlyReviews) {
+    await upsertNode(
+      {
+        entityType: "quarterly_review",
+        entityId: review.id,
+        title: `${review.quarter} ${review.year} quarterly review`,
+        summary: review.executiveSummary,
+        category: "quarterly_review",
+        metadata: {
+          quarter: review.quarter,
+          year: review.year,
+          healthScore: review.healthScore,
+        },
+      },
+      registry,
+      stats
+    )
+
+    const reviewNodeId = registry.get(
+      registryKey("quarterly_review", review.id)
+    )
+
+    if (!reviewNodeId) {
+      continue
+    }
+
+    for (const goal of goals) {
+      if (goal.quarter === review.quarter && goal.year === review.year) {
+        const goalNodeId = registry.get(registryKey("goal", goal.id))
+
+        if (goalNodeId) {
+          await ensureEdge(reviewNodeId, goalNodeId, "reviews_goal", stats)
+        }
+      }
+    }
+  }
+
+  // PlanningCycle -> open strategic initiatives it plans against.
+  for (const cycle of planningCycles) {
+    const cycleNodeId = registry.get(registryKey("planning_cycle", cycle.id))
+
+    if (!cycleNodeId) {
+      continue
+    }
+
+    for (const initiative of initiatives) {
+      if (
+        initiative.status === "in_progress" ||
+        initiative.status === "proposed"
+      ) {
+        const initiativeNodeId = registry.get(
+          registryKey("initiative", initiative.id)
+        )
+
+        if (initiativeNodeId) {
+          await ensureEdge(
+            cycleNodeId,
+            initiativeNodeId,
+            "plans_initiative",
+            stats
+          )
+        }
+      }
+    }
+  }
+
+  // ExecutiveDecision -> StrategicInitiative / QuarterlyGoal via shared focus
+  // (decision category or impact area matching initiative owner system or
+  // goal category).
+  for (const decision of decisions) {
+    const decisionNodeId = registry.get(registryKey("decision", decision.id))
+
+    if (!decisionNodeId) {
+      continue
+    }
+
+    const decisionFocus = new Set(
+      [normalizeFocus(decision.category), normalizeFocus(decision.impactArea)]
+        .filter((value): value is string => Boolean(value))
+    )
+
+    if (decisionFocus.size === 0) {
+      continue
+    }
+
+    for (const initiative of initiatives) {
+      const ownerSystem = normalizeFocus(initiative.ownerSystem)
+
+      if (ownerSystem && decisionFocus.has(ownerSystem)) {
+        const initiativeNodeId = registry.get(
+          registryKey("initiative", initiative.id)
+        )
+
+        if (initiativeNodeId) {
+          await ensureEdge(
+            decisionNodeId,
+            initiativeNodeId,
+            "influences_initiative",
+            stats
+          )
+        }
+      }
+    }
+
+    for (const goal of goals) {
+      const goalCategory = normalizeFocus(goal.category)
+
+      if (goalCategory && decisionFocus.has(goalCategory)) {
+        const goalNodeId = registry.get(registryKey("goal", goal.id))
+
+        if (goalNodeId) {
+          await ensureEdge(decisionNodeId, goalNodeId, "supports_goal", stats)
+        }
+      }
+    }
+  }
+
+  // ExecutiveLesson -> QuarterlyGoal via shared category/impact area.
+  for (const lesson of lessons) {
+    const lessonNodeId = registry.get(registryKey("lesson", lesson.id))
+
+    if (!lessonNodeId) {
+      continue
+    }
+
+    const lessonFocus = new Set(
+      [normalizeFocus(lesson.category), normalizeFocus(lesson.impactArea)]
+        .filter((value): value is string => Boolean(value))
+    )
+
+    if (lessonFocus.size === 0) {
+      continue
+    }
+
+    for (const goal of goals) {
+      const goalCategory = normalizeFocus(goal.category)
+
+      if (goalCategory && lessonFocus.has(goalCategory)) {
+        const goalNodeId = registry.get(registryKey("goal", goal.id))
+
+        if (goalNodeId) {
+          await ensureEdge(lessonNodeId, goalNodeId, "informs_goal", stats)
+        }
+      }
+    }
+  }
+
+  // Revenue impact area — invoices, clients, and leads all connect to it.
+  const revenueNodeId = await ensureImpactAreaNode("Revenue", registry, stats)
+
+  for (const invoice of invoices) {
+    const invoiceNodeId = registry.get(
+      registryKey("client_invoice", invoice.id)
+    )
+
+    if (invoiceNodeId) {
+      await ensureEdge(invoiceNodeId, revenueNodeId, "contributes_revenue", stats)
+    }
+  }
+
+  for (const client of clients) {
+    const clientNodeId = registry.get(registryKey("client", client.id))
+
+    if (clientNodeId) {
+      await ensureEdge(clientNodeId, revenueNodeId, "generates_revenue", stats)
+    }
+  }
+
+  for (const lead of leads) {
+    const leadNodeId = registry.get(registryKey("creator_lead", lead.id))
+
+    if (leadNodeId) {
+      await ensureEdge(leadNodeId, revenueNodeId, "potential_revenue", stats)
+    }
+  }
+
+  // ClientProject -> delivery-owned strategic initiatives.
+  for (const project of projects) {
+    const projectNodeId = registry.get(
+      registryKey("client_project", project.id)
+    )
+
+    if (!projectNodeId) {
+      continue
+    }
+
+    for (const initiative of initiatives) {
+      if (normalizeFocus(initiative.ownerSystem) === "delivery") {
+        const initiativeNodeId = registry.get(
+          registryKey("initiative", initiative.id)
+        )
+
+        if (initiativeNodeId) {
+          await ensureEdge(
+            projectNodeId,
+            initiativeNodeId,
+            "supports_initiative",
+            stats
+          )
+        }
+      }
     }
   }
 
