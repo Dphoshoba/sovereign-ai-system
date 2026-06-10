@@ -3,9 +3,28 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import type { ExecutiveCommandCenter } from "@/lib/executive/command-center"
+import type { ExecutiveIntelligenceRecommendation } from "@/lib/executive/recommendations"
+import type { ExecutiveOpportunity } from "@/lib/executive/opportunities"
+import type { ExecutiveRisk } from "@/lib/executive/risks"
+
+type ExecutiveBriefing = {
+  health: number
+  generatedAt: string
+  topOpportunities: ExecutiveOpportunity[]
+  topRisks: ExecutiveRisk[]
+  recommendations: ExecutiveIntelligenceRecommendation[]
+  nextActions: string[]
+  totals: {
+    recommendations: number
+    opportunities: number
+    risks: number
+  }
+}
 
 export default function CommandCenterPage() {
   const [center, setCenter] = useState<ExecutiveCommandCenter | null>(null)
+  const [briefing, setBriefing] = useState<ExecutiveBriefing | null>(null)
+  const [briefingError, setBriefingError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -29,7 +48,28 @@ export default function CommandCenterPage() {
       setCenter(result.center)
     }
 
+    async function loadBriefing() {
+      setBriefingError(null)
+
+      try {
+        const response = await fetch("/api/executive/briefing", {
+          cache: "no-store",
+        })
+        const result = await response.json()
+
+        if (!result.ok) {
+          setBriefingError(result.error || "Failed to load executive briefing")
+          return
+        }
+
+        setBriefing(result.briefing)
+      } catch {
+        setBriefingError("Failed to load executive briefing")
+      }
+    }
+
     loadCenter()
+    loadBriefing()
   }, [])
 
   function statusColor(status: ExecutiveCommandCenter["executiveStatus"]) {
@@ -54,6 +94,22 @@ export default function CommandCenterPage() {
       currency: "AUD",
       maximumFractionDigits: 0,
     })
+  }
+
+  function levelColor(level: string) {
+    if (level === "critical") {
+      return "#b91c1c"
+    }
+
+    if (level === "high") {
+      return "#c2410c"
+    }
+
+    if (level === "medium") {
+      return "#b45309"
+    }
+
+    return "#15803d"
   }
 
   return (
@@ -145,6 +201,138 @@ export default function CommandCenterPage() {
               </p>
             </div>
           </section>
+
+          <section style={panelStyle}>
+            <h2 style={{ marginTop: 0 }}>Executive Briefing</h2>
+            {briefingError && (
+              <p style={{ color: "#b91c1c", margin: 0 }}>{briefingError}</p>
+            )}
+            {!briefing && !briefingError && (
+              <p style={{ color: "var(--muted)", margin: 0 }}>
+                Generating executive briefing...
+              </p>
+            )}
+            {briefing && (
+              <>
+                <p style={subMetaStyle}>
+                  Intelligence health {briefing.health}/100 —{" "}
+                  {briefing.totals.recommendations} recommendation
+                  {briefing.totals.recommendations === 1 ? "" : "s"},{" "}
+                  {briefing.totals.opportunities} opportunit
+                  {briefing.totals.opportunities === 1 ? "y" : "ies"},{" "}
+                  {briefing.totals.risks} risk
+                  {briefing.totals.risks === 1 ? "" : "s"} · generated{" "}
+                  {new Date(briefing.generatedAt).toLocaleString("en-AU")}
+                </p>
+                {briefing.nextActions.length === 0 ? (
+                  <p style={{ color: "var(--muted)", margin: "12px 0 0" }}>
+                    No next actions — systems are on track.
+                  </p>
+                ) : (
+                  <ul style={listStyle}>
+                    {briefing.nextActions.map((action) => (
+                      <li key={action}>{action}</li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            )}
+          </section>
+
+          {briefing && (
+            <>
+              <section style={twoColumnGrid}>
+                <div style={panelStyle}>
+                  <h2 style={{ marginTop: 0 }}>Executive Recommendations</h2>
+                  {briefing.recommendations.length === 0 ? (
+                    <p style={{ color: "var(--muted)", margin: 0 }}>
+                      No recommendations generated.
+                    </p>
+                  ) : (
+                    <ul style={listStyle}>
+                      {briefing.recommendations.map((item) => (
+                        <li key={item.title}>
+                          <strong>{item.title}</strong>{" "}
+                          <span
+                            style={{
+                              color: levelColor(item.priority),
+                              fontWeight: 700,
+                              fontSize: 13,
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            {item.priority}
+                          </span>
+                          <p style={{ margin: "4px 0 0" }}>{item.rationale}</p>
+                          <p style={{ margin: "4px 0 0", color: "var(--muted)" }}>
+                            {item.action} (confidence{" "}
+                            {Math.round(item.confidence * 100)}%)
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div style={panelStyle}>
+                  <h2 style={{ marginTop: 0 }}>Top Opportunities</h2>
+                  {briefing.topOpportunities.length === 0 ? (
+                    <p style={{ color: "var(--muted)", margin: 0 }}>
+                      No opportunities generated.
+                    </p>
+                  ) : (
+                    <ul style={listStyle}>
+                      {briefing.topOpportunities.map((item) => (
+                        <li key={item.title}>
+                          <strong>{item.title}</strong>
+                          <p style={{ margin: "4px 0 0" }}>
+                            Score {item.score}/100
+                            {item.potentialValue > 0
+                              ? ` — potential ${formatAud(item.potentialValue)}`
+                              : ""}
+                          </p>
+                          <p style={{ margin: "4px 0 0", color: "var(--muted)" }}>
+                            {item.nextAction}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </section>
+
+              <section style={panelStyle}>
+                <h2 style={{ marginTop: 0 }}>Top Risks</h2>
+                {briefing.topRisks.length === 0 ? (
+                  <p style={{ color: "var(--muted)", margin: 0 }}>
+                    No risks detected.
+                  </p>
+                ) : (
+                  <ul style={listStyle}>
+                    {briefing.topRisks.map((item) => (
+                      <li key={item.title}>
+                        <strong>{item.title}</strong>{" "}
+                        <span
+                          style={{
+                            color: levelColor(item.severity),
+                            fontWeight: 700,
+                            fontSize: 13,
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          {item.severity}
+                        </span>
+                        <p style={{ margin: "4px 0 0" }}>{item.impact}</p>
+                        <p style={{ margin: "4px 0 0", color: "var(--muted)" }}>
+                          Mitigation: {item.mitigation}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            </>
+          )}
 
           <section style={twoColumnGrid}>
             <div style={panelStyle}>

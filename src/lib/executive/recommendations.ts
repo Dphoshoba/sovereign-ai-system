@@ -1,4 +1,5 @@
 import type { ExecutivePlatformSnapshot } from "@/lib/executive/platform-snapshot"
+import { prisma } from "@/lib/prisma"
 
 export type ExecutiveActionPayload = Record<string, unknown>
 
@@ -406,5 +407,207 @@ export function buildExecutiveRecommendations(
     revenue,
     delivery,
     content,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 19 — Executive Intelligence Engine (rule-based, deterministic)
+// ---------------------------------------------------------------------------
+
+export type ExecutiveIntelligenceRecommendation = {
+  title: string
+  priority: "low" | "medium" | "high" | "critical"
+  category: string
+  rationale: string
+  action: string
+  confidence: number
+}
+
+const INTELLIGENCE_PRIORITY_RANK: Record<
+  ExecutiveIntelligenceRecommendation["priority"],
+  number
+> = {
+  critical: 0,
+  high: 1,
+  medium: 2,
+  low: 3,
+}
+
+const ACTIVE_PROJECT_STATUSES = ["active", "planned", "in_progress"]
+const OPEN_LEAD_STATUSES = ["new", "engaged", "qualified", "contacted"]
+
+/**
+ * Rule-based executive recommendations derived from goals, initiatives,
+ * decisions, leads, projects, and revenue. Deterministic — no AI calls.
+ */
+export async function generateExecutiveRecommendations(): Promise<
+  ExecutiveIntelligenceRecommendation[]
+> {
+  try {
+    const now = new Date()
+
+    const [
+      goals,
+      initiatives,
+      decisions,
+      leads,
+      proposals,
+      projects,
+      tasks,
+      invoices,
+    ] = await Promise.all([
+      prisma.quarterlyGoal.findMany(),
+      prisma.strategicInitiative.findMany(),
+      prisma.executiveDecision.findMany(),
+      prisma.creatorLead.findMany(),
+      prisma.creatorProposal.findMany(),
+      prisma.clientProject.findMany(),
+      prisma.clientProjectTask.findMany(),
+      prisma.clientInvoice.findMany(),
+    ])
+
+    const recommendations: ExecutiveIntelligenceRecommendation[] = []
+
+    // High-score leads without a proposal → create proposal.
+    const leadIdsWithProposals = new Set(
+      proposals.filter((p) => p.leadId).map((p) => p.leadId as string)
+    )
+
+    for (const lead of leads) {
+      if (
+        lead.leadScore > 80 &&
+        OPEN_LEAD_STATUSES.includes(lead.status) &&
+        !leadIdsWithProposals.has(lead.id)
+      ) {
+        recommendations.push({
+          title: `Create proposal for ${lead.name}`,
+          priority: "high",
+          category: "revenue",
+          rationale: `Lead score ${lead.leadScore} with no proposal on record.`,
+          action: `Draft and send a proposal to ${lead.name} (${lead.email}).`,
+          confidence: 0.9,
+        })
+      } else if (
+        lead.readiness === "hot" &&
+        OPEN_LEAD_STATUSES.includes(lead.status) &&
+        !leadIdsWithProposals.has(lead.id)
+      ) {
+        recommendations.push({
+          title: `Follow up with hot lead ${lead.name}`,
+          priority: "medium",
+          category: "revenue",
+          rationale: `Lead readiness is hot but no proposal exists yet.`,
+          action: `Book a call with ${lead.name} and qualify for a proposal.`,
+          confidence: 0.75,
+        })
+      }
+    }
+
+    // Overdue projects → escalate.
+    for (const project of projects) {
+      if (
+        project.dueDate &&
+        project.dueDate < now &&
+        ACTIVE_PROJECT_STATUSES.includes(project.status)
+      ) {
+        recommendations.push({
+          title: `Escalate overdue project: ${project.title}`,
+          priority: "critical",
+          category: "delivery",
+          rationale: `Project due ${project.dueDate.toISOString().slice(0, 10)} is still ${project.status}.`,
+          action: `Review scope and timeline for "${project.title}" and notify the client.`,
+          confidence: 0.95,
+        })
+      }
+    }
+
+    // Overdue tasks → unblock delivery.
+    const overdueTasks = tasks.filter(
+      (task) => task.dueDate && task.dueDate < now && task.status !== "done"
+    )
+
+    if (overdueTasks.length > 0) {
+      recommendations.push({
+        title: `Clear ${overdueTasks.length} overdue delivery task${overdueTasks.length === 1 ? "" : "s"}`,
+        priority: "high",
+        category: "delivery",
+        rationale: `${overdueTasks.length} client task${overdueTasks.length === 1 ? " is" : "s are"} past due.`,
+        action: "Reprioritize the delivery queue and reassign blocked tasks.",
+        confidence: 0.85,
+      })
+    }
+
+    // Low-progress active goals → strategic review.
+    for (const goal of goals) {
+      if (goal.status === "active" && goal.progress < 25) {
+        recommendations.push({
+          title: `Strategic review: ${goal.title}`,
+          priority: "medium",
+          category: "strategy",
+          rationale: `Goal progress is ${goal.progress}% for ${goal.quarter} ${goal.year}.`,
+          action: `Run a strategic review of "${goal.title}" and adjust supporting initiatives.`,
+          confidence: 0.7,
+        })
+      }
+    }
+
+    // Stalled in-progress initiatives → review execution path.
+    for (const initiative of initiatives) {
+      if (initiative.status === "in_progress" && initiative.progress < 25) {
+        recommendations.push({
+          title: `Unblock initiative: ${initiative.title}`,
+          priority: "medium",
+          category: "execution",
+          rationale: `Initiative is in progress but only ${initiative.progress}% complete.`,
+          action: `Review the execution path for "${initiative.title}" and remove blockers.`,
+          confidence: 0.65,
+        })
+      }
+    }
+
+    // Overdue invoices → revenue risk.
+    for (const invoice of invoices) {
+      if (
+        invoice.status !== "paid" &&
+        invoice.dueDate &&
+        invoice.dueDate < now
+      ) {
+        recommendations.push({
+          title: `Chase overdue invoice ${invoice.invoiceNumber}`,
+          priority: "critical",
+          category: "revenue",
+          rationale: `Invoice ${invoice.invoiceNumber} (AUD ${invoice.amountAud.toLocaleString("en-AU")}) is past due.`,
+          action: `Send a payment reminder for ${invoice.invoiceNumber} and confirm payment terms.`,
+          confidence: 0.95,
+        })
+      }
+    }
+
+    // Decisions flagged for follow-up → schedule review.
+    const followUps = decisions.filter(
+      (decision) => decision.followUpRequired && !decision.reviewDate
+    )
+
+    if (followUps.length > 0) {
+      recommendations.push({
+        title: `Schedule follow-up for ${followUps.length} executive decision${followUps.length === 1 ? "" : "s"}`,
+        priority: "low",
+        category: "governance",
+        rationale: `${followUps.length} decision${followUps.length === 1 ? "" : "s"} require follow-up but have no review date.`,
+        action: "Set review dates and add the decisions to the next boardroom agenda.",
+        confidence: 0.8,
+      })
+    }
+
+    return recommendations.sort(
+      (a, b) =>
+        INTELLIGENCE_PRIORITY_RANK[a.priority] -
+          INTELLIGENCE_PRIORITY_RANK[b.priority] ||
+        b.confidence - a.confidence ||
+        a.title.localeCompare(b.title)
+    )
+  } catch (error) {
+    console.error("Executive recommendations engine failed:", error)
+    return []
   }
 }
