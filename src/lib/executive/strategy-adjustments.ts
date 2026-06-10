@@ -1,8 +1,12 @@
+import { generateMonthlyExecutiveReview } from "@/lib/executive/autonomous-review"
 import { serializeDecision } from "@/lib/executive/decision-memory"
 import {
   buildExecutiveForecast,
   type ExecutiveForecast,
 } from "@/lib/executive/forecast"
+import { buildExecutiveMemory } from "@/lib/executive/memory"
+import { generateExecutiveOpportunities } from "@/lib/executive/opportunities"
+import { generateExecutiveRisks } from "@/lib/executive/risks"
 import {
   buildExecutiveLearning,
   serializeExecutiveLesson,
@@ -523,5 +527,416 @@ export async function buildStrategyAdjustments(): Promise<StrategyAdjustmentsRes
     sourceReviewId: context.sourceReviewId,
     quarter: context.quarterlyReview?.quarter ?? getCurrentQuarter().quarter,
     year: context.quarterlyReview?.year ?? getCurrentQuarter().year,
+  }
+}
+
+// ===========================================================================
+// Phase 23 — Executive Strategy Adjustment Engine.
+// Deterministic, rule-based strategic adjustments generated from executive
+// memory, autonomous reviews, risks, opportunities, decisions, lessons, and
+// revenue/growth/delivery trends. No OpenAI. Read-only — proposals are
+// returned, never persisted automatically.
+// ===========================================================================
+
+export type StrategicAdjustmentCategory =
+  | "Revenue"
+  | "Growth"
+  | "Delivery"
+  | "Operations"
+  | "Governance"
+  | "Strategy"
+
+export type StrategicAdjustmentStatus =
+  | "Proposed"
+  | "Under Review"
+  | "Approved"
+  | "Rejected"
+  | "Implemented"
+
+export type StrategicAdjustmentPriorityLevel =
+  | "low"
+  | "medium"
+  | "high"
+  | "critical"
+
+export type StrategicAdjustment = {
+  id: string
+  title: string
+  category: StrategicAdjustmentCategory
+  priority: StrategicAdjustmentPriorityLevel
+  rationale: string
+  evidence: string[]
+  proposedAction: string
+  expectedImpact: string
+  confidence: number
+  status: StrategicAdjustmentStatus
+}
+
+export type StrategicAdjustmentSummary = {
+  total: number
+  byPriority: Record<StrategicAdjustmentPriorityLevel, number>
+  byCategory: Record<StrategicAdjustmentCategory, number>
+  byStatus: Record<StrategicAdjustmentStatus, number>
+  averageConfidence: number
+}
+
+const BOARDROOM_CADENCE_LAPSE_DAYS = 14
+const GOAL_INTERVENTION_PROGRESS_THRESHOLD = 25
+const STRONG_LESSON_EFFECTIVENESS_THRESHOLD = 4
+
+function clampConfidence(value: number) {
+  return Math.round(Math.max(0.3, Math.min(0.95, value)) * 100) / 100
+}
+
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48)
+}
+
+function formatAudAmount(value: number) {
+  return `AUD ${Math.round(value).toLocaleString("en-AU")}`
+}
+
+export async function generateStrategicAdjustments(): Promise<
+  StrategicAdjustment[]
+> {
+  const [memory, review, risks, opportunities, snapshot, goals, proposals, decisions] =
+    await Promise.all([
+      buildExecutiveMemory(),
+      generateMonthlyExecutiveReview(),
+      generateExecutiveRisks(),
+      generateExecutiveOpportunities(),
+      getExecutivePlatformSnapshot(),
+      prisma.quarterlyGoal.findMany(),
+      prisma.creatorProposal.findMany(),
+      prisma.executiveDecision.findMany(),
+    ])
+
+  const adjustments: StrategicAdjustment[] = []
+
+  // Rule 1 — Recurring high-risk pattern → mitigation initiative.
+  for (const risk of memory.strategicMemory.recurringRisks) {
+    if (risk.occurrences < 2) {
+      continue
+    }
+
+    const matchingEngineRisk = risks.find((item) =>
+      item.title.toLowerCase().includes(risk.text.slice(0, 24).toLowerCase())
+    )
+
+    adjustments.push({
+      id: `adj-risk-mitigation-${slugify(risk.text)}`,
+      title: `Mitigation Initiative: ${risk.text}`,
+      category: "Operations",
+      priority: risk.occurrences >= 3 ? "critical" : "high",
+      rationale: `This risk has recurred across ${risk.occurrences} planning cycles and boardroom sessions without a dedicated mitigation initiative.`,
+      evidence: [
+        `Recurring risk recorded ${risk.occurrences} times in executive memory.`,
+        ...(matchingEngineRisk
+          ? [`Active risk engine signal: [${matchingEngineRisk.severity}] ${matchingEngineRisk.impact}`]
+          : []),
+        ...review.recurringPatterns
+          .filter((pattern) => pattern.type === "risk")
+          .slice(0, 1)
+          .map((pattern) => pattern.pattern),
+      ],
+      proposedAction:
+        matchingEngineRisk?.mitigation ??
+        `Stand up a mitigation initiative for "${risk.text}" with a named owner and weekly check-in.`,
+      expectedImpact:
+        "Removes a recurring drag on execution and prevents the risk from compounding across future cycles.",
+      confidence: clampConfidence(0.5 + risk.occurrences * 0.1),
+      status: "Proposed",
+    })
+  }
+
+  // Rule 2 — Recurring opportunity → growth initiative.
+  for (const opportunity of memory.strategicMemory.recurringOpportunities) {
+    if (opportunity.occurrences < 2) {
+      continue
+    }
+
+    const topEngineOpportunity = opportunities[0]
+
+    adjustments.push({
+      id: `adj-growth-${slugify(opportunity.text)}`,
+      title: `Growth Initiative: ${opportunity.text}`,
+      category: "Growth",
+      priority: opportunity.occurrences >= 3 ? "high" : "medium",
+      rationale: `This opportunity has surfaced ${opportunity.occurrences} times across planning cycles and boardroom sessions but has not been converted into a dedicated initiative.`,
+      evidence: [
+        `Recurring opportunity recorded ${opportunity.occurrences} times in executive memory.`,
+        ...(topEngineOpportunity
+          ? [`Top opportunity engine signal: ${topEngineOpportunity.title} (score ${topEngineOpportunity.score}/100).`]
+          : []),
+      ],
+      proposedAction: `Launch a growth initiative around "${opportunity.text}" with a measurable target and owner.`,
+      expectedImpact:
+        "Converts a repeatedly identified opportunity into pipeline and revenue instead of leaving it on the table.",
+      confidence: clampConfidence(0.45 + opportunity.occurrences * 0.1),
+      status: "Proposed",
+    })
+  }
+
+  // Rule 3 — Goal below 25% progress → goal intervention.
+  const stalledGoals = goals.filter(
+    (goal) =>
+      goal.status !== "completed" &&
+      goal.progress < GOAL_INTERVENTION_PROGRESS_THRESHOLD
+  )
+
+  if (stalledGoals.length > 0) {
+    adjustments.push({
+      id: "adj-goal-intervention",
+      title: `Goal Intervention: ${stalledGoals.length} goal${stalledGoals.length === 1 ? "" : "s"} below 25% progress`,
+      category: "Strategy",
+      priority: stalledGoals.length >= 3 ? "high" : "medium",
+      rationale:
+        "Quarterly goals below 25% progress are unlikely to complete without intervention — they need realigned targets, linked initiatives, or explicit deprioritization.",
+      evidence: stalledGoals
+        .slice(0, 5)
+        .map(
+          (goal) =>
+            `"${goal.title}" at ${goal.progress}% progress (${goal.quarter} ${goal.year}, status: ${goal.status}).`
+        ),
+      proposedAction:
+        "Run a goal intervention review: link each stalled goal to an active initiative, reset its target, or formally deprioritize it.",
+      expectedImpact:
+        "Restores quarterly goal completion trajectory and prevents end-of-quarter surprises.",
+      confidence: clampConfidence(0.55 + stalledGoals.length * 0.05),
+      status: "Proposed",
+    })
+  }
+
+  // Rule 4 — Proposal pipeline > revenue collected → sales acceleration.
+  const openProposalValue = proposals
+    .filter((proposal) => proposal.status !== "rejected")
+    .reduce((sum, proposal) => sum + (proposal.estimatedValue ?? 0), 0)
+
+  if (openProposalValue > snapshot.totalPaid) {
+    adjustments.push({
+      id: "adj-sales-acceleration",
+      title: "Sales Acceleration Initiative",
+      category: "Revenue",
+      priority: snapshot.totalPaid === 0 ? "critical" : "high",
+      rationale:
+        "Proposal pipeline value exceeds collected revenue — conversion, not lead generation, is the current revenue bottleneck.",
+      evidence: [
+        `Proposal pipeline: ${formatAudAmount(openProposalValue)} across ${proposals.length} proposal${proposals.length === 1 ? "" : "s"}.`,
+        `Revenue collected to date: ${formatAudAmount(snapshot.totalPaid)}.`,
+        `${snapshot.wonLeads} lead${snapshot.wonLeads === 1 ? "" : "s"} won so far.`,
+      ],
+      proposedAction:
+        "Run a sales acceleration sprint: follow up every open proposal this week, set close dates, and remove pricing or scope blockers.",
+      expectedImpact: `Converting the open pipeline would add up to ${formatAudAmount(openProposalValue)} in collected revenue.`,
+      confidence: clampConfidence(
+        0.6 + Math.min(proposals.length, 5) * 0.05
+      ),
+      status: "Proposed",
+    })
+  }
+
+  // Rule 5 — Unpaid invoices → collections initiative.
+  if (snapshot.outstandingRevenue > 0) {
+    adjustments.push({
+      id: "adj-collections",
+      title: "Collections Initiative",
+      category: "Revenue",
+      priority: snapshot.overdueInvoices > 0 ? "high" : "medium",
+      rationale:
+        "Outstanding invoice revenue is earned but uncollected — collections is the fastest available revenue lever.",
+      evidence: [
+        `Outstanding revenue: ${formatAudAmount(snapshot.outstandingRevenue)}.`,
+        `${snapshot.overdueInvoices} overdue invoice${snapshot.overdueInvoices === 1 ? "" : "s"}.`,
+        `Total invoiced: ${formatAudAmount(snapshot.totalInvoiced)}, collected: ${formatAudAmount(snapshot.totalPaid)}.`,
+      ],
+      proposedAction:
+        "Run a structured collections pass: send reminders for all unpaid invoices, escalate overdue items, and agree on payment dates.",
+      expectedImpact: `Recovers up to ${formatAudAmount(snapshot.outstandingRevenue)} without any new sales effort.`,
+      confidence: clampConfidence(0.7 + snapshot.overdueInvoices * 0.05),
+      status: "Proposed",
+    })
+  }
+
+  // Rule 6 — Repeated decision failures → governance review.
+  const failuresByCategory = new Map<string, number>()
+
+  for (const decision of decisions) {
+    const effectiveness =
+      decision.effectiveness === null
+        ? null
+        : decision.effectiveness <= 5
+          ? decision.effectiveness * 20
+          : decision.effectiveness
+
+    const failed =
+      decision.status === "rejected" ||
+      (effectiveness !== null && effectiveness < 40)
+
+    if (failed) {
+      const category = decision.category?.trim() || "uncategorized"
+      failuresByCategory.set(
+        category,
+        (failuresByCategory.get(category) ?? 0) + 1
+      )
+    }
+  }
+
+  for (const [category, count] of [...failuresByCategory.entries()].sort(
+    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0])
+  )) {
+    if (count < 2) {
+      continue
+    }
+
+    adjustments.push({
+      id: `adj-governance-${slugify(category)}`,
+      title: `Governance Review: repeated decision failures in ${category}`,
+      category: "Governance",
+      priority: count >= 3 ? "high" : "medium",
+      rationale: `${count} decisions in the "${category}" category were rejected or scored low on effectiveness — the decision-making process in this area needs review.`,
+      evidence: [
+        `${count} rejected or low-effectiveness decision${count === 1 ? "" : "s"} in "${category}".`,
+        ...review.recurringPatterns
+          .filter((pattern) => pattern.type === "decision_failure")
+          .slice(0, 1)
+          .map((pattern) => pattern.pattern),
+      ],
+      proposedAction: `Hold a governance review of ${category} decisions: examine why they failed and add a pre-approval checklist for similar future decisions.`,
+      expectedImpact:
+        "Raises decision effectiveness and avoids repeating known failure modes.",
+      confidence: clampConfidence(0.5 + count * 0.08),
+      status: "Proposed",
+    })
+  }
+
+  // Rule 7 — Boardroom cadence lapse → executive review.
+  const latestBoardroom = memory.history.boardroomSessions[0]
+  const daysSinceBoardroom = latestBoardroom
+    ? Math.floor(
+        (Date.now() - new Date(latestBoardroom.createdAt).getTime()) /
+          (24 * 60 * 60 * 1000)
+      )
+    : null
+
+  if (daysSinceBoardroom === null || daysSinceBoardroom > BOARDROOM_CADENCE_LAPSE_DAYS) {
+    adjustments.push({
+      id: "adj-executive-review-cadence",
+      title: "Executive Review: boardroom cadence lapse",
+      category: "Governance",
+      priority: daysSinceBoardroom === null || daysSinceBoardroom > 30 ? "high" : "medium",
+      rationale:
+        "The executive operating rhythm depends on regular boardroom sessions — the cadence has lapsed beyond the expected interval.",
+      evidence: [
+        daysSinceBoardroom === null
+          ? "No boardroom session found in executive history."
+          : `Last boardroom session was ${daysSinceBoardroom} days ago (expected within ${BOARDROOM_CADENCE_LAPSE_DAYS} days).`,
+        `Current platform health score: ${review.healthScore}/100.`,
+      ],
+      proposedAction:
+        "Schedule an executive boardroom session this week to review risks, opportunities, and the current quarter trajectory.",
+      expectedImpact:
+        "Restores the executive operating rhythm and keeps strategy synchronized with execution.",
+      confidence: clampConfidence(
+        daysSinceBoardroom === null ? 0.85 : 0.55 + daysSinceBoardroom * 0.01
+      ),
+      status: "Proposed",
+    })
+  }
+
+  // Rule 8 — Strongest lessons recurring → standardization.
+  const strongLessons = memory.strategicMemory.mostEffectiveLessons.filter(
+    (lesson) =>
+      lesson.effectiveness !== null &&
+      lesson.effectiveness >= STRONG_LESSON_EFFECTIVENESS_THRESHOLD
+  )
+
+  if (strongLessons.length >= 2) {
+    adjustments.push({
+      id: "adj-lesson-standardization",
+      title: `Standardization: codify ${strongLessons.length} proven executive lessons`,
+      category: "Operations",
+      priority: "medium",
+      rationale:
+        "Multiple high-effectiveness lessons have been validated repeatedly — codifying them as standard operating practice locks in the gains.",
+      evidence: strongLessons
+        .slice(0, 5)
+        .map(
+          (lesson) =>
+            `"${lesson.title}" (effectiveness ${lesson.effectiveness}/5${lesson.impactArea ? `, ${lesson.impactArea}` : ""}).`
+        ),
+      proposedAction:
+        "Convert the strongest lessons into documented standard practices and apply them as default checks in planning cycles.",
+      expectedImpact:
+        "Makes proven behaviors repeatable by default instead of relying on memory.",
+      confidence: clampConfidence(0.55 + strongLessons.length * 0.07),
+      status: "Proposed",
+    })
+  }
+
+  const priorityRank: Record<StrategicAdjustmentPriorityLevel, number> = {
+    critical: 0,
+    high: 1,
+    medium: 2,
+    low: 3,
+  }
+
+  return adjustments.sort(
+    (a, b) =>
+      priorityRank[a.priority] - priorityRank[b.priority] ||
+      b.confidence - a.confidence ||
+      a.title.localeCompare(b.title)
+  )
+}
+
+export function summarizeStrategicAdjustments(
+  adjustments: StrategicAdjustment[]
+): StrategicAdjustmentSummary {
+  const byPriority: StrategicAdjustmentSummary["byPriority"] = {
+    critical: 0,
+    high: 0,
+    medium: 0,
+    low: 0,
+  }
+  const byCategory: StrategicAdjustmentSummary["byCategory"] = {
+    Revenue: 0,
+    Growth: 0,
+    Delivery: 0,
+    Operations: 0,
+    Governance: 0,
+    Strategy: 0,
+  }
+  const byStatus: StrategicAdjustmentSummary["byStatus"] = {
+    Proposed: 0,
+    "Under Review": 0,
+    Approved: 0,
+    Rejected: 0,
+    Implemented: 0,
+  }
+
+  for (const adjustment of adjustments) {
+    byPriority[adjustment.priority] += 1
+    byCategory[adjustment.category] += 1
+    byStatus[adjustment.status] += 1
+  }
+
+  const averageConfidence =
+    adjustments.length > 0
+      ? Math.round(
+          (adjustments.reduce((sum, item) => sum + item.confidence, 0) /
+            adjustments.length) *
+            100
+        ) / 100
+      : 0
+
+  return {
+    total: adjustments.length,
+    byPriority,
+    byCategory,
+    byStatus,
+    averageConfidence,
   }
 }

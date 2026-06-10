@@ -40,6 +40,35 @@ type AdjustmentSummary = {
   rejected: number
 }
 
+type StrategicAdjustment = {
+  id: string
+  title: string
+  category: string
+  priority: string
+  rationale: string
+  evidence: string[]
+  proposedAction: string
+  expectedImpact: string
+  confidence: number
+  status: string
+}
+
+type StrategicAdjustmentSummary = {
+  total: number
+  byPriority: Record<string, number>
+  byCategory: Record<string, number>
+  byStatus: Record<string, number>
+  averageConfidence: number
+}
+
+const EMPTY_ENGINE_SUMMARY: StrategicAdjustmentSummary = {
+  total: 0,
+  byPriority: {},
+  byCategory: {},
+  byStatus: {},
+  averageConfidence: 0,
+}
+
 export default function StrategyAdjustmentsPage() {
   const [adjustments, setAdjustments] = useState<StrategyAdjustmentRecord[]>([])
   const [summary, setSummary] = useState<AdjustmentSummary>({
@@ -48,6 +77,11 @@ export default function StrategyAdjustmentsPage() {
     implemented: 0,
     rejected: 0,
   })
+  const [engineAdjustments, setEngineAdjustments] = useState<
+    StrategicAdjustment[]
+  >([])
+  const [engineSummary, setEngineSummary] =
+    useState<StrategicAdjustmentSummary>(EMPTY_ENGINE_SUMMARY)
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [actingId, setActingId] = useState<string | null>(null)
@@ -70,9 +104,11 @@ export default function StrategyAdjustmentsPage() {
       return
     }
 
-    setAdjustments(result.adjustments ?? [])
+    setEngineAdjustments(result.adjustments ?? [])
+    setEngineSummary(result.summary ?? EMPTY_ENGINE_SUMMARY)
+    setAdjustments(result.stored?.adjustments ?? [])
     setSummary(
-      result.summary ?? {
+      result.stored?.summary ?? {
         proposed: 0,
         approved: 0,
         implemented: 0,
@@ -166,9 +202,9 @@ export default function StrategyAdjustmentsPage() {
         <p style={eyebrowStyle}>Executive Command</p>
         <h1 style={{ fontSize: 42, margin: "8px 0" }}>Strategy Adjustments</h1>
         <p style={{ color: "var(--hero-muted)", maxWidth: 820, lineHeight: 1.7 }}>
-          Autonomous strategy adjustment proposals from quarterly reviews,
-          forecasts, executive learning, and boardroom sessions — all changes
-          require approval before application.
+          Deterministic strategy adjustment proposals generated from executive
+          memory, autonomous reviews, risks, opportunities, decisions, and
+          lessons — all changes require approval before application.
         </p>
         <div style={actionRowStyle}>
           <button
@@ -179,27 +215,38 @@ export default function StrategyAdjustmentsPage() {
           >
             {generating ? "Generating..." : "Generate Adjustments"}
           </button>
+          <Link href="/admin/command-center" style={secondaryLinkStyle}>
+            Command Center
+          </Link>
+          <Link href="/admin/executive-memory" style={secondaryLinkStyle}>
+            Executive Memory
+          </Link>
+          <Link href="/admin/executive-timeline" style={secondaryLinkStyle}>
+            Executive Timeline
+          </Link>
+          <Link href="/admin/autonomous-review" style={secondaryLinkStyle}>
+            Autonomous Review
+          </Link>
           <Link href="/admin/quarterly-review" style={secondaryLinkStyle}>
             Quarterly Review
           </Link>
           <Link href="/admin/strategic-plan" style={secondaryLinkStyle}>
             Strategic Plan
           </Link>
-          <Link href="/admin/scenarios" style={secondaryLinkStyle}>
-            Strategy Scenarios
-          </Link>
-          <Link href="/admin/command-center" style={secondaryLinkStyle}>
-            Command Center
-          </Link>
-          <Link href="/admin/operations" style={secondaryLinkStyle}>
-            Operations Center
-          </Link>
         </div>
       </section>
 
       <section style={metricsGrid}>
         <div style={metricCard}>
-          <p style={metaStyle}>Proposed</p>
+          <p style={metaStyle}>Engine Adjustments</p>
+          <h2>{engineSummary.total}</h2>
+        </div>
+        <div style={metricCard}>
+          <p style={metaStyle}>Avg Confidence</p>
+          <h2>{Math.round(engineSummary.averageConfidence * 100)}%</h2>
+        </div>
+        <div style={metricCard}>
+          <p style={metaStyle}>Proposed (Stored)</p>
           <h2>{summary.proposed}</h2>
         </div>
         <div style={metricCard}>
@@ -212,10 +259,132 @@ export default function StrategyAdjustmentsPage() {
         </div>
       </section>
 
+      {!loading && (
+        <section style={panelGridStyle}>
+          <div style={panelStyle}>
+            <h3 style={sectionHeadingStyle}>Priority Breakdown</h3>
+            {Object.entries(engineSummary.byPriority).filter(
+              ([, count]) => count > 0
+            ).length === 0 ? (
+              <p style={{ color: "var(--muted)", margin: 0 }}>
+                No adjustments generated.
+              </p>
+            ) : (
+              <ul style={listStyle}>
+                {Object.entries(engineSummary.byPriority)
+                  .filter(([, count]) => count > 0)
+                  .map(([priority, count]) => (
+                    <li key={priority}>
+                      <strong style={{ textTransform: "capitalize" }}>
+                        {priority}
+                      </strong>
+                      : {count}
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </div>
+          <div style={panelStyle}>
+            <h3 style={sectionHeadingStyle}>Category Breakdown</h3>
+            {Object.entries(engineSummary.byCategory).filter(
+              ([, count]) => count > 0
+            ).length === 0 ? (
+              <p style={{ color: "var(--muted)", margin: 0 }}>
+                No adjustments generated.
+              </p>
+            ) : (
+              <ul style={listStyle}>
+                {Object.entries(engineSummary.byCategory)
+                  .filter(([, count]) => count > 0)
+                  .map(([category, count]) => (
+                    <li key={category}>
+                      <strong>{category}</strong>: {count}
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </div>
+        </section>
+      )}
+
       {error && <p style={{ marginTop: 28, color: "#b91c1c" }}>{error}</p>}
       {message && <p style={{ marginTop: 28, color: "#166534" }}>{message}</p>}
 
       {loading && <p style={{ marginTop: 28 }}>Loading strategy adjustments...</p>}
+
+      {!loading && (
+        <>
+          <h2 style={{ marginTop: 40 }}>Proposed Strategic Adjustments</h2>
+          <p style={{ color: "var(--muted)", maxWidth: 820, lineHeight: 1.6 }}>
+            Generated live by the rule-based strategy adjustment engine on every
+            load — not persisted until approved through the workflow below.
+          </p>
+        </>
+      )}
+
+      {!loading && engineAdjustments.length === 0 && (
+        <p style={{ marginTop: 16, color: "var(--muted)" }}>
+          No strategic adjustments needed right now — all engine rules passed.
+        </p>
+      )}
+
+      {!loading &&
+        engineAdjustments.map((item) => (
+          <section key={item.id} style={scenarioCardStyle}>
+            <div style={scenarioHeaderStyle}>
+              <div>
+                <p style={metaStyle}>{item.category}</p>
+                <h2 style={{ margin: "8px 0", fontSize: 24 }}>{item.title}</h2>
+                <p style={{ color: "var(--muted)", lineHeight: 1.6 }}>
+                  {item.rationale}
+                </p>
+              </div>
+              <div style={badgeColumnStyle}>
+                <span style={engineStatusBadgeStyle(item.status)}>
+                  {item.status}
+                </span>
+                <span style={priorityBadgeStyle(item.priority)}>
+                  {item.priority} priority
+                </span>
+                <span style={confidenceBadgeStyle}>
+                  {Math.round(item.confidence * 100)}% confidence
+                </span>
+              </div>
+            </div>
+
+            <div style={{ ...panelStyle, marginTop: 16 }}>
+              <h3 style={sectionHeadingStyle}>Evidence</h3>
+              {item.evidence.length === 0 ? (
+                <p style={{ color: "var(--muted)", margin: 0 }}>
+                  No supporting evidence recorded.
+                </p>
+              ) : (
+                <ul style={listStyle}>
+                  {item.evidence.map((entry) => (
+                    <li key={entry}>{entry}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <p style={{ marginTop: 16, lineHeight: 1.6 }}>
+              <strong>Proposed action:</strong> {item.proposedAction}
+            </p>
+            <p style={{ marginTop: 8, lineHeight: 1.6 }}>
+              <strong>Expected impact:</strong> {item.expectedImpact}
+            </p>
+          </section>
+        ))}
+
+      {!loading && (
+        <>
+          <h2 style={{ marginTop: 48 }}>Stored Adjustment Workflow</h2>
+          <p style={{ color: "var(--muted)", maxWidth: 820, lineHeight: 1.6 }}>
+            Persisted proposals generated from quarterly reviews — approve,
+            reject, or apply them to create goals and initiatives.
+          </p>
+        </>
+      )}
 
       {!loading && adjustments.length === 0 && (
         <p style={{ marginTop: 28 }}>
@@ -365,6 +534,40 @@ function statusBadgeStyle(status: string): React.CSSProperties {
     background: palette.background,
     color: palette.color,
   }
+}
+
+function engineStatusBadgeStyle(status: string): React.CSSProperties {
+  const colors: Record<string, { background: string; color: string }> = {
+    Proposed: { background: "#dbeafe", color: "#1d4ed8" },
+    "Under Review": { background: "#fef9c3", color: "#854d0e" },
+    Approved: { background: "#dcfce7", color: "#166534" },
+    Rejected: { background: "#fee2e2", color: "#b91c1c" },
+    Implemented: { background: "#f3e8ff", color: "#7e22ce" },
+  }
+
+  const palette = colors[status] ?? colors.Proposed
+
+  return {
+    display: "inline-block",
+    padding: "6px 12px",
+    borderRadius: 999,
+    fontSize: 12,
+    fontWeight: 700,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    background: palette.background,
+    color: palette.color,
+  }
+}
+
+const confidenceBadgeStyle: React.CSSProperties = {
+  display: "inline-block",
+  padding: "6px 12px",
+  borderRadius: 999,
+  fontSize: 12,
+  fontWeight: 700,
+  background: "var(--card-background)",
+  border: "1px solid var(--border)",
 }
 
 const priorityBadgeStyle = (priority: string): React.CSSProperties => ({

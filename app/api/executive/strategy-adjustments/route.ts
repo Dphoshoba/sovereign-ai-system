@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import {
   buildStrategyAdjustments,
+  generateStrategicAdjustments,
+  summarizeStrategicAdjustments,
   type StrategyAdjustmentProposal,
 } from "@/lib/executive/strategy-adjustments"
 import {
@@ -56,7 +58,7 @@ function serializeAdjustment(record: {
 
 export async function GET() {
   try {
-    const [records, statusGroups] = await Promise.all([
+    const [records, statusGroups, generated] = await Promise.all([
       prisma.strategyAdjustment.findMany({
         orderBy: { createdAt: "desc" },
         take: EXECUTIVE_LIST_LIMITS.strategyAdjustments,
@@ -65,15 +67,22 @@ export async function GET() {
         by: ["status"],
         _count: { _all: true },
       }),
+      generateStrategicAdjustments(),
     ])
 
-    const adjustments = records.map(serializeAdjustment)
-    const summary = summarizeStatusCounts(statusGroups, ADJUSTMENT_STATUSES)
+    const stored = records.map(serializeAdjustment)
+    const storedSummary = summarizeStatusCounts(statusGroups, ADJUSTMENT_STATUSES)
 
     return NextResponse.json({
       ok: true,
-      summary,
-      adjustments,
+      // Phase 23 engine output — deterministic, rule-based proposals.
+      adjustments: generated,
+      summary: summarizeStrategicAdjustments(generated),
+      // Persisted adjustment workflow (generate/approve/apply) — unchanged.
+      stored: {
+        adjustments: stored,
+        summary: storedSummary,
+      },
     })
   } catch (error) {
     return NextResponse.json(
