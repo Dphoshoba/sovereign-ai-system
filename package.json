@@ -12,7 +12,8 @@
     "sweep:mojibake:dry": "tsx scripts/clean-article-mojibake.ts --dry",
     "smoke:v1": "tsx scripts/smoke-test-sovereign-v1.ts",
     "graph:build": "tsx scripts/build-knowledge-graph.ts",
-    "seed:executive-intelligence": "tsx scripts/seed-executive-intelligence.ts"
+    "seed:executive-intelligence": "tsx scripts/seed-executive-intelligence.ts",
+    "activate:executive-ops": "tsx scripts/activate-executive-operations.ts"
   },
   "dependencies": {
     "@mdx-js/react": "^3.1.1",
