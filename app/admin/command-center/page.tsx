@@ -150,6 +150,9 @@ export default function CommandCenterPage() {
           <Link href="/admin/client-intelligence" style={secondaryLinkStyle}>
             Client Intelligence
           </Link>
+          <Link href="/admin/automation-actions" style={secondaryLinkStyle}>
+            Automation Actions
+          </Link>
           <Link href="/admin/operations" style={secondaryLinkStyle}>
             Operations Center
           </Link>

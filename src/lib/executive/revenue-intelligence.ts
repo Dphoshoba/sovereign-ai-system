@@ -268,14 +268,18 @@ function buildTrendSummary(
   return trends
 }
 
-export async function buildRevenueIntelligence(): Promise<RevenueIntelligence> {
+export async function buildRevenueIntelligence(options?: {
+  /** Reuse already-built inputs to avoid duplicate queries. */
+  snapshot?: BusinessSnapshot
+  memory?: BusinessMemory
+}): Promise<RevenueIntelligence> {
   const now = new Date()
 
   // Unified business data layer + business memory (snapshot shared, not re-queried).
-  const snapshot = await getBusinessSnapshot()
+  const snapshot = options?.snapshot ?? (await getBusinessSnapshot())
 
   const [memory, invoiceRows, proposalRows] = await Promise.all([
-    buildBusinessMemory({ snapshot }),
+    options?.memory ?? buildBusinessMemory({ snapshot }),
     prisma.clientInvoice.findMany({
       orderBy: { createdAt: "desc" },
       take: QUERY_LIMIT,

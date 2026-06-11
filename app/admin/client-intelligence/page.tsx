@@ -88,6 +88,9 @@ export default function ClientIntelligencePage() {
           <Link href="/admin/operations" style={secondaryLinkStyle}>
             Operations Center
           </Link>
+          <Link href="/admin/automation-actions" style={secondaryLinkStyle}>
+            Automation Actions
+          </Link>
           <Link href="/admin/clients" style={secondaryLinkStyle}>
             Clients
           </Link>

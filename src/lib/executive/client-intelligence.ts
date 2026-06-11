@@ -1,4 +1,7 @@
-import { getBusinessSnapshot } from "@/lib/business/business-data-layer"
+import {
+  getBusinessSnapshot,
+  type BusinessSnapshot,
+} from "@/lib/business/business-data-layer"
 import { buildBusinessMemory } from "@/lib/executive/business-memory"
 import { prisma } from "@/lib/prisma"
 
@@ -106,15 +109,20 @@ async function storeClientIntelligenceSnapshot(
   }
 }
 
-export async function buildClientIntelligence(): Promise<ClientIntelligence> {
+export async function buildClientIntelligence(options?: {
+  /** Reuse an already-fetched snapshot to avoid duplicate queries. */
+  snapshot?: BusinessSnapshot
+}): Promise<ClientIntelligence> {
   const now = new Date()
 
   // Shared snapshot feeds business memory without duplicate queries; memory
   // keeps the daily business event stream warm alongside this engine.
-  const snapshot = await getBusinessSnapshot()
+  const snapshot = options?.snapshot ?? (await getBusinessSnapshot())
 
   const [, clients, projects, invoices, leads, proposals] = await Promise.all([
-    buildBusinessMemory({ snapshot }),
+    options?.snapshot
+      ? Promise.resolve(null)
+      : buildBusinessMemory({ snapshot }),
     prisma.clientProfile.findMany({
       orderBy: { createdAt: "desc" },
       take: QUERY_LIMIT,

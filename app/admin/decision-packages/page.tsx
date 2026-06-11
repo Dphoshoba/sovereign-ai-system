@@ -98,6 +98,9 @@ export default function DecisionPackagesPage() {
           <Link href="/admin/executive-memory" style={secondaryLinkStyle}>
             Executive Memory
           </Link>
+          <Link href="/admin/automation-actions" style={secondaryLinkStyle}>
+            Automation Actions
+          </Link>
           <Link href="/admin/command-center" style={secondaryLinkStyle}>
             Command Center
           </Link>
