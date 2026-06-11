@@ -93,6 +93,9 @@ export default function DecisionExecutionPage() {
           <Link href="/admin/strategy-adjustments" style={secondaryLinkStyle}>
             Strategy Adjustments
           </Link>
+          <Link href="/admin/recommendation-improvement" style={secondaryLinkStyle}>
+            Recommendation Improvement
+          </Link>
           <Link href="/admin/command-center" style={secondaryLinkStyle}>
             Command Center
           </Link>

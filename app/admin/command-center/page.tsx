@@ -138,6 +138,9 @@ export default function CommandCenterPage() {
           <Link href="/admin/strategy-adjustments" style={secondaryLinkStyle}>
             Strategy Adjustments
           </Link>
+          <Link href="/admin/recommendation-improvement" style={secondaryLinkStyle}>
+            Recommendation Improvement
+          </Link>
           <Link href="/admin/operations" style={secondaryLinkStyle}>
             Operations Center
           </Link>
