@@ -32,7 +32,7 @@ export async function buildBoardroomConsensus() {
   const decisions: ConsensusDecision[] = []
 
   for (const topic of topics) {
-    const votes = [
+        const votes: ConsensusDecision["votes"] = [
       {
         agent: "CEO",
         vote: "approve" as AgentVote,
