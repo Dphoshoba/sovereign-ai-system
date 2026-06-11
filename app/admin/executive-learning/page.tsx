@@ -36,12 +36,39 @@ type ExecutiveLessonRecord = {
   createdAt: string
 }
 
+type LearningDecisionRecord = {
+  decisionId: string
+  title: string
+  status: string
+  effectivenessScore: number
+  outcomeSummary: string
+}
+
+type OperatingPrinciple = {
+  id: string
+  principle: string
+  source: string
+  sourceTitle: string
+  confidence: number
+}
+
+type LearningEngineResult = {
+  topPerformingDecisions: LearningDecisionRecord[]
+  weakestDecisions: LearningDecisionRecord[]
+  successPatterns: string[]
+  failurePatterns: string[]
+  operatingPrinciples: OperatingPrinciple[]
+  learningScore: number
+  confidence: number
+}
+
 type ExecutiveLearningSummary = {
   totalLessons: number
   strongestPatterns: ImpactPattern[]
   weakestPatterns: ImpactPattern[]
   recommendedPractices: RecommendedPractice[]
   lessons: DecisionLesson[]
+  engine?: LearningEngineResult
 }
 
 export default function ExecutiveLearningPage() {
@@ -163,6 +190,18 @@ export default function ExecutiveLearningPage() {
       {!loading && learning && (
         <>
           <section style={metricsGrid}>
+            {learning.engine && (
+              <>
+                <div style={metricCard}>
+                  <p style={metaStyle}>Learning Score</p>
+                  <h2>{learning.engine.learningScore}/100</h2>
+                </div>
+                <div style={metricCard}>
+                  <p style={metaStyle}>Confidence</p>
+                  <h2>{Math.round(learning.engine.confidence * 100)}%</h2>
+                </div>
+              </>
+            )}
             <div style={metricCard}>
               <p style={metaStyle}>Total Lessons</p>
               <h2>{learning.totalLessons}</h2>
@@ -180,6 +219,97 @@ export default function ExecutiveLearningPage() {
               <h2>{learning.recommendedPractices.length}</h2>
             </div>
           </section>
+
+          {learning.engine && (
+            <>
+              <section style={panelStyle}>
+                <h2 style={sectionHeadingStyle}>Top Performing Decisions</h2>
+                {learning.engine.topPerformingDecisions.length === 0 ? (
+                  <p style={mutedText}>No implemented decisions tracked yet.</p>
+                ) : (
+                  <ul style={listStyle}>
+                    {learning.engine.topPerformingDecisions.map((decision) => (
+                      <li key={decision.decisionId}>
+                        <strong>{decision.title}</strong> —{" "}
+                        {decision.effectivenessScore}/100 effectiveness
+                        <p style={itemDetailStyle}>{decision.outcomeSummary}</p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+
+              <section style={panelStyle}>
+                <h2 style={sectionHeadingStyle}>Weakest Decisions</h2>
+                {learning.engine.weakestDecisions.length === 0 ? (
+                  <p style={mutedText}>
+                    No approved or implemented decisions to rank yet.
+                  </p>
+                ) : (
+                  <ul style={listStyle}>
+                    {learning.engine.weakestDecisions.map((decision) => (
+                      <li key={decision.decisionId}>
+                        <strong>{decision.title}</strong> —{" "}
+                        {decision.effectivenessScore}/100 effectiveness (
+                        {decision.status})
+                        <p style={itemDetailStyle}>{decision.outcomeSummary}</p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+
+              <section style={panelStyle}>
+                <h2 style={sectionHeadingStyle}>Success Patterns</h2>
+                {learning.engine.successPatterns.length === 0 ? (
+                  <p style={mutedText}>
+                    Not enough execution evidence to detect success patterns yet.
+                  </p>
+                ) : (
+                  <ul style={listStyle}>
+                    {learning.engine.successPatterns.map((pattern) => (
+                      <li key={pattern}>{pattern}</li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+
+              <section style={panelStyle}>
+                <h2 style={sectionHeadingStyle}>Failure Patterns</h2>
+                {learning.engine.failurePatterns.length === 0 ? (
+                  <p style={mutedText}>No failure patterns detected.</p>
+                ) : (
+                  <ul style={listStyle}>
+                    {learning.engine.failurePatterns.map((pattern) => (
+                      <li key={pattern}>{pattern}</li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+
+              <section style={panelStyle}>
+                <h2 style={sectionHeadingStyle}>Operating Principles</h2>
+                {learning.engine.operatingPrinciples.length === 0 ? (
+                  <p style={mutedText}>
+                    No principles codified yet — implement decisions and record
+                    effectiveness to generate them.
+                  </p>
+                ) : (
+                  <ul style={listStyle}>
+                    {learning.engine.operatingPrinciples.map((principle) => (
+                      <li key={principle.id}>
+                        {principle.principle}
+                        <p style={itemDetailStyle}>
+                          From {principle.source}: {principle.sourceTitle} (
+                          {Math.round(principle.confidence * 100)}% confidence)
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            </>
+          )}
 
           <section style={panelStyle}>
             <h2 style={sectionHeadingStyle}>Strongest Patterns</h2>

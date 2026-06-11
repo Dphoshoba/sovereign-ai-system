@@ -1,3 +1,4 @@
+import { deriveOperatingPrinciples } from "@/lib/executive/operating-principles"
 import { prisma } from "@/lib/prisma"
 import type { Prisma } from "@prisma/client"
 
@@ -904,6 +905,129 @@ export async function buildExecutiveKnowledgeGraph(): Promise<KnowledgeGraphBuil
         "has_effectiveness",
         stats
       )
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Phase 26 expansion — operating principles derived from proven decisions
+  // and lessons. Duplicate-safe: principle nodes are keyed on their stable
+  // derived id, and ensureEdge skips existing triples.
+  // Relationships: decision -> principle, lesson -> principle, and the
+  // decision's outcome node -> principle when one exists.
+  // -------------------------------------------------------------------------
+  const operatingPrinciples = deriveOperatingPrinciples(
+    decisions.map((decision) => ({
+      id: decision.id,
+      title: decision.title,
+      status: decision.status,
+      effectiveness: decision.effectiveness,
+      outcome: decision.outcome,
+    })),
+    lessons.map((lesson) => ({
+      id: lesson.id,
+      title: lesson.title,
+      lesson: lesson.lesson,
+      effectiveness: lesson.effectiveness,
+      sourceDecisionId: lesson.sourceDecisionId,
+    }))
+  )
+
+  const lessonSourceDecision = new Map(
+    lessons
+      .filter((lesson) => lesson.sourceDecisionId)
+      .map((lesson) => [lesson.id, lesson.sourceDecisionId as string])
+  )
+
+  for (const principle of operatingPrinciples) {
+    const principleNodeId = await upsertNode(
+      {
+        entityType: "operating_principle",
+        entityId: principle.id,
+        title: principle.principle,
+        summary: `Operating principle codified from ${principle.source} "${principle.sourceTitle}" (confidence ${Math.round(principle.confidence * 100)}%).`,
+        category: "operating_principle",
+        metadata: {
+          source: principle.source,
+          sourceId: principle.sourceId,
+          confidence: principle.confidence,
+        },
+      },
+      registry,
+      stats
+    )
+
+    if (principle.source === "decision") {
+      const decisionNodeId = registry.get(
+        registryKey("decision", principle.sourceId)
+      )
+
+      if (decisionNodeId) {
+        await ensureEdge(
+          decisionNodeId,
+          principleNodeId,
+          "establishes_principle",
+          stats
+        )
+      }
+
+      const outcomeNodeId = registry.get(
+        registryKey("decision_outcome", principle.sourceId)
+      )
+
+      if (outcomeNodeId) {
+        await ensureEdge(
+          outcomeNodeId,
+          principleNodeId,
+          "supports_principle",
+          stats
+        )
+      }
+    }
+
+    if (principle.source === "lesson") {
+      const lessonNodeId = registry.get(
+        registryKey("lesson", principle.sourceId)
+      )
+
+      if (lessonNodeId) {
+        await ensureEdge(
+          lessonNodeId,
+          principleNodeId,
+          "informs_principle",
+          stats
+        )
+      }
+
+      // Link back to the originating decision (and its outcome) when known.
+      const sourceDecisionId = lessonSourceDecision.get(principle.sourceId)
+
+      if (sourceDecisionId) {
+        const decisionNodeId = registry.get(
+          registryKey("decision", sourceDecisionId)
+        )
+
+        if (decisionNodeId) {
+          await ensureEdge(
+            decisionNodeId,
+            principleNodeId,
+            "establishes_principle",
+            stats
+          )
+        }
+
+        const outcomeNodeId = registry.get(
+          registryKey("decision_outcome", sourceDecisionId)
+        )
+
+        if (outcomeNodeId) {
+          await ensureEdge(
+            outcomeNodeId,
+            principleNodeId,
+            "supports_principle",
+            stats
+          )
+        }
+      }
     }
   }
 

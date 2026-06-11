@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { serializeDecision } from "@/lib/executive/decision-memory"
+import { generateExecutiveLearning } from "@/lib/executive/learning-engine"
 import {
   buildExecutiveLearning,
   decisionsEligibleForLessonGeneration,
@@ -10,7 +11,7 @@ import { EXECUTIVE_LIST_LIMITS } from "@/lib/executive/list-limits"
 
 export async function GET() {
   try {
-    const [decisions, storedLessons] = await Promise.all([
+    const [decisions, storedLessons, engine] = await Promise.all([
       prisma.executiveDecision.findMany({
         orderBy: [{ createdAt: "desc" }],
         take: EXECUTIVE_LIST_LIMITS.decisions,
@@ -19,6 +20,8 @@ export async function GET() {
         orderBy: [{ createdAt: "desc" }],
         take: EXECUTIVE_LIST_LIMITS.lessons,
       }),
+      // Phase 26 learning engine — outcome-driven institutional learning.
+      generateExecutiveLearning(),
     ])
 
     const serializedDecisions = decisions.map(serializeDecision)
@@ -30,7 +33,10 @@ export async function GET() {
 
     return NextResponse.json({
       ok: true,
-      learning,
+      learning: {
+        ...learning,
+        engine,
+      },
       storedLessons: serializedLessons,
     })
   } catch (error) {
