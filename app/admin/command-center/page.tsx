@@ -156,6 +156,9 @@ export default function CommandCenterPage() {
           <Link href="/admin/cfo" style={secondaryLinkStyle}>
             CFO Intelligence
           </Link>
+          <Link href="/admin/coo" style={secondaryLinkStyle}>
+            COO Intelligence
+          </Link>
           <Link href="/admin/operations" style={secondaryLinkStyle}>
             Operations Center
           </Link>

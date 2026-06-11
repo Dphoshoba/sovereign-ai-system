@@ -3,48 +3,60 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 
-type CfoRisk = {
+type Severity = "low" | "medium" | "high" | "critical"
+
+type CooBottleneck = {
   type: string
   title: string
-  severity: "low" | "medium" | "high" | "critical"
+  severity: Severity
+  impact: string
+  resolution: string
+}
+
+type CooRisk = {
+  type: string
+  title: string
+  severity: Severity
   impact: string
   mitigation: string
 }
 
-type CfoOpportunity = {
+type CooOpportunity = {
   type: string
   title: string
   value: number
   action: string
 }
 
-type CfoIntelligence = {
-  financialHealth: number
-  cashflowHealth: {
+type CooIntelligence = {
+  operationsHealth: number
+  deliveryHealth: {
     score: number
     status: "Healthy" | "Stable" | "Warning" | "Critical"
   }
-  revenueForecast: {
-    next30Days: number
-    next60Days: number
-    next90Days: number
+  workloadHealth: {
+    score: number
+    openTasks: number
+    highPriorityTasks: number
+    overdueTasks: number
+    operationalLoad: number
   }
-  collectionsForecast: {
-    expectedCollections: number
-    collectionRate: number
-    overdueExposure: number
+  projectForecast: {
+    activeProjects: number
+    overdueProjects: number
+    completionRisk: "low" | "medium" | "high"
+    deliveryCapacity: number
   }
-  clientValue: {
-    highestValueClient: string | null
-    averageClientValue: number
-    totalClientValue: number
+  taskForecast: {
+    open: number
+    inProgress: number
+    completed: number
+    overdue: number
+    highPriority: number
   }
-  revenueConcentration: {
-    largestClientPercent: number
-    concentrationRisk: "low" | "medium" | "high"
-  }
-  risks: CfoRisk[]
-  opportunities: CfoOpportunity[]
+  bottlenecks: CooBottleneck[]
+  risks: CooRisk[]
+  opportunities: CooOpportunity[]
   recommendations: string[]
   generatedAt: string
 }
@@ -53,8 +65,8 @@ function formatAud(value: number) {
   return `$${value.toLocaleString()} AUD`
 }
 
-export default function CfoPage() {
-  const [cfo, setCfo] = useState<CfoIntelligence | null>(null)
+export default function CooPage() {
+  const [coo, setCoo] = useState<CooIntelligence | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -63,17 +75,17 @@ export default function CfoPage() {
       setLoading(true)
       setError(null)
 
-      const response = await fetch("/api/executive/cfo", { cache: "no-store" })
+      const response = await fetch("/api/executive/coo", { cache: "no-store" })
       const result = await response.json()
 
       setLoading(false)
 
       if (!result.ok) {
-        setError(result.error || "Failed to load CFO intelligence")
+        setError(result.error || "Failed to load COO intelligence")
         return
       }
 
-      setCfo(result.cfo)
+      setCoo(result.coo)
     }
 
     load()
@@ -83,18 +95,18 @@ export default function CfoPage() {
     <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
       <section style={heroStyle}>
         <p style={eyebrowStyle}>Executive Command</p>
-        <h1 style={{ fontSize: 42, margin: "8px 0" }}>CFO Intelligence</h1>
+        <h1 style={{ fontSize: 42, margin: "8px 0" }}>COO Intelligence</h1>
         <p style={{ color: "var(--hero-muted)", maxWidth: 820, lineHeight: 1.7 }}>
-          Financial intelligence above revenue intelligence — cashflow health,
-          30/60/90 forecasts, client value, concentration, and CFO-level
-          recommendations.
+          Operations intelligence above business memory, client intelligence,
+          and automation actions — delivery health, workload, bottlenecks, and
+          COO-level recommendations.
         </p>
         <div style={actionRowStyle}>
           <Link href="/admin/command-center" style={secondaryLinkStyle}>
             Command Center
           </Link>
-          <Link href="/admin/revenue-intelligence" style={secondaryLinkStyle}>
-            Revenue Intelligence
+          <Link href="/admin/operations" style={secondaryLinkStyle}>
+            Operations Center
           </Link>
           <Link href="/admin/client-intelligence" style={secondaryLinkStyle}>
             Client Intelligence
@@ -102,98 +114,110 @@ export default function CfoPage() {
           <Link href="/admin/automation-actions" style={secondaryLinkStyle}>
             Automation Actions
           </Link>
-          <Link href="/admin/coo" style={secondaryLinkStyle}>
-            COO Intelligence
+          <Link href="/admin/cfo" style={secondaryLinkStyle}>
+            CFO Intelligence
           </Link>
         </div>
       </section>
 
       {error && <p style={{ marginTop: 28, color: "#b91c1c" }}>{error}</p>}
 
-      {loading && <p style={{ marginTop: 28 }}>Loading CFO intelligence...</p>}
+      {loading && <p style={{ marginTop: 28 }}>Loading COO intelligence...</p>}
 
-      {!loading && cfo && (
+      {!loading && coo && (
         <>
           <section style={metricsGrid}>
             <div style={metricCard}>
-              <p style={metaStyle}>Financial Health</p>
-              <h2>{cfo.financialHealth}/100</h2>
+              <p style={metaStyle}>Operations Health</p>
+              <h2>{coo.operationsHealth}/100</h2>
             </div>
             <div style={metricCard}>
-              <p style={metaStyle}>Cashflow Health</p>
+              <p style={metaStyle}>Delivery Health</p>
               <h2>
-                {cfo.cashflowHealth.score}/100{" "}
-                <span style={statusBadge(cfo.cashflowHealth.status)}>
-                  {cfo.cashflowHealth.status}
+                {coo.deliveryHealth.score}/100{" "}
+                <span style={statusBadge(coo.deliveryHealth.status)}>
+                  {coo.deliveryHealth.status}
                 </span>
               </h2>
             </div>
             <div style={metricCard}>
-              <p style={metaStyle}>30-Day Forecast</p>
-              <h2>{formatAud(cfo.revenueForecast.next30Days)}</h2>
+              <p style={metaStyle}>Workload Health</p>
+              <h2>{coo.workloadHealth.score}/100</h2>
             </div>
             <div style={metricCard}>
-              <p style={metaStyle}>60-Day Forecast</p>
-              <h2>{formatAud(cfo.revenueForecast.next60Days)}</h2>
+              <p style={metaStyle}>Delivery Capacity</p>
+              <h2>{coo.projectForecast.deliveryCapacity}/100</h2>
             </div>
             <div style={metricCard}>
-              <p style={metaStyle}>90-Day Forecast</p>
-              <h2>{formatAud(cfo.revenueForecast.next90Days)}</h2>
-            </div>
-          </section>
-
-          <section style={metricsGrid}>
-            <div style={metricCard}>
-              <p style={metaStyle}>Expected Collections</p>
-              <h2>{formatAud(cfo.collectionsForecast.expectedCollections)}</h2>
-            </div>
-            <div style={metricCard}>
-              <p style={metaStyle}>Collection Rate</p>
-              <h2>{cfo.collectionsForecast.collectionRate}%</h2>
-            </div>
-            <div style={metricCard}>
-              <p style={metaStyle}>Overdue Exposure</p>
-              <h2>{formatAud(cfo.collectionsForecast.overdueExposure)}</h2>
-            </div>
-            <div style={metricCard}>
-              <p style={metaStyle}>Revenue Concentration</p>
+              <p style={metaStyle}>Completion Risk</p>
               <h2>
-                {cfo.revenueConcentration.largestClientPercent}%{" "}
-                <span style={riskBadge(cfo.revenueConcentration.concentrationRisk)}>
-                  {cfo.revenueConcentration.concentrationRisk}
+                <span style={riskBadge(coo.projectForecast.completionRisk)}>
+                  {coo.projectForecast.completionRisk}
                 </span>
               </h2>
             </div>
           </section>
 
           <section style={panelStyle}>
-            <h2 style={sectionHeadingStyle}>Client Value</h2>
+            <h2 style={sectionHeadingStyle}>Project Forecast</h2>
             <div style={breakdownGrid}>
               <div style={breakdownCard}>
-                <p style={metaStyle}>Highest Value Client</p>
+                <p style={metaStyle}>Active Projects</p>
                 <h3 style={{ margin: "6px 0 0" }}>
-                  {cfo.clientValue.highestValueClient ?? "—"}
+                  {coo.projectForecast.activeProjects}
                 </h3>
               </div>
               <div style={breakdownCard}>
-                <p style={metaStyle}>Average Client Value</p>
+                <p style={metaStyle}>Overdue Projects</p>
                 <h3 style={{ margin: "6px 0 0" }}>
-                  {formatAud(cfo.clientValue.averageClientValue)}
+                  {coo.projectForecast.overdueProjects}
                 </h3>
               </div>
               <div style={breakdownCard}>
-                <p style={metaStyle}>Total Client Value</p>
+                <p style={metaStyle}>Operational Load</p>
                 <h3 style={{ margin: "6px 0 0" }}>
-                  {formatAud(cfo.clientValue.totalClientValue)}
+                  {coo.workloadHealth.operationalLoad}/100
                 </h3>
               </div>
             </div>
           </section>
 
           <section style={panelStyle}>
-            <h2 style={sectionHeadingStyle}>CFO Recommendations</h2>
+            <h2 style={sectionHeadingStyle}>Task Forecast</h2>
+            <div style={breakdownGrid}>
+              <div style={breakdownCard}>
+                <p style={metaStyle}>Open</p>
+                <h3 style={{ margin: "6px 0 0" }}>{coo.taskForecast.open}</h3>
+              </div>
+              <div style={breakdownCard}>
+                <p style={metaStyle}>In Progress</p>
+                <h3 style={{ margin: "6px 0 0" }}>
+                  {coo.taskForecast.inProgress}
+                </h3>
+              </div>
+              <div style={breakdownCard}>
+                <p style={metaStyle}>Completed</p>
+                <h3 style={{ margin: "6px 0 0" }}>
+                  {coo.taskForecast.completed}
+                </h3>
+              </div>
+              <div style={breakdownCard}>
+                <p style={metaStyle}>Overdue</p>
+                <h3 style={{ margin: "6px 0 0" }}>{coo.taskForecast.overdue}</h3>
+              </div>
+              <div style={breakdownCard}>
+                <p style={metaStyle}>High Priority</p>
+                <h3 style={{ margin: "6px 0 0" }}>
+                  {coo.taskForecast.highPriority}
+                </h3>
+              </div>
+            </div>
+          </section>
+
+          <section style={panelStyle}>
+            <h2 style={sectionHeadingStyle}>COO Recommendations</h2>
             <ol style={listStyle}>
-              {cfo.recommendations.map((recommendation) => (
+              {coo.recommendations.map((recommendation) => (
                 <li key={recommendation} style={{ marginBottom: 8 }}>
                   {recommendation}
                 </li>
@@ -202,12 +226,34 @@ export default function CfoPage() {
           </section>
 
           <section style={panelStyle}>
-            <h2 style={sectionHeadingStyle}>Financial Risks</h2>
-            {cfo.risks.length === 0 ? (
-              <p style={mutedText}>No financial risks detected.</p>
+            <h2 style={sectionHeadingStyle}>Bottlenecks</h2>
+            {coo.bottlenecks.length === 0 ? (
+              <p style={mutedText}>No delivery bottlenecks detected.</p>
             ) : (
               <ul style={listStyle}>
-                {cfo.risks.map((risk) => (
+                {coo.bottlenecks.map((bottleneck) => (
+                  <li key={bottleneck.type} style={{ marginBottom: 10 }}>
+                    <strong>{bottleneck.title}</strong>{" "}
+                    <span style={severityBadge(bottleneck.severity)}>
+                      {bottleneck.severity}
+                    </span>
+                    <p style={itemDetailStyle}>{bottleneck.impact}</p>
+                    <p style={itemDetailStyle}>
+                      <em>Resolution:</em> {bottleneck.resolution}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section style={panelStyle}>
+            <h2 style={sectionHeadingStyle}>Operations Risks</h2>
+            {coo.risks.length === 0 ? (
+              <p style={mutedText}>No operations risks detected.</p>
+            ) : (
+              <ul style={listStyle}>
+                {coo.risks.map((risk) => (
                   <li key={risk.type} style={{ marginBottom: 10 }}>
                     <strong>{risk.title}</strong>{" "}
                     <span style={severityBadge(risk.severity)}>
@@ -224,12 +270,12 @@ export default function CfoPage() {
           </section>
 
           <section style={panelStyle}>
-            <h2 style={sectionHeadingStyle}>Financial Opportunities</h2>
-            {cfo.opportunities.length === 0 ? (
-              <p style={mutedText}>No financial opportunities detected.</p>
+            <h2 style={sectionHeadingStyle}>Operations Opportunities</h2>
+            {coo.opportunities.length === 0 ? (
+              <p style={mutedText}>No operations opportunities detected.</p>
             ) : (
               <ul style={listStyle}>
-                {cfo.opportunities.map((opportunity) => (
+                {coo.opportunities.map((opportunity) => (
                   <li key={opportunity.type} style={{ marginBottom: 10 }}>
                     <strong>{opportunity.title}</strong> —{" "}
                     {formatAud(opportunity.value)}
@@ -293,7 +339,7 @@ const metricCard: React.CSSProperties = {
 
 const breakdownGrid: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+  gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
   gap: 12,
   marginTop: 12,
 }
@@ -374,9 +420,7 @@ function riskBadge(risk: "low" | "medium" | "high"): React.CSSProperties {
   return { ...badgeBase, ...palette }
 }
 
-function severityBadge(
-  severity: "low" | "medium" | "high" | "critical"
-): React.CSSProperties {
+function severityBadge(severity: Severity): React.CSSProperties {
   const palette = {
     low: { background: "#dbeafe", color: "#1d4ed8" },
     medium: { background: "#fef9c3", color: "#a16207" },

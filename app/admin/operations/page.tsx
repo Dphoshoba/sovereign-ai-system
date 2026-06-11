@@ -112,6 +112,8 @@ export default async function OperationsPage() {
           <Link href="/admin/revenue-intelligence" style={buttonStyle}>Revenue Intelligence</Link>
           <Link href="/admin/client-intelligence" style={buttonStyle}>Client Intelligence</Link>
           <Link href="/admin/automation-actions" style={buttonStyle}>Automation Actions</Link>
+          <Link href="/admin/cfo" style={buttonStyle}>CFO Intelligence</Link>
+          <Link href="/admin/coo" style={buttonStyle}>COO Intelligence</Link>
         </div>
       </section>
 

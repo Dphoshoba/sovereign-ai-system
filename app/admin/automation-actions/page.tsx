@@ -97,6 +97,9 @@ export default function AutomationActionsPage() {
           <Link href="/admin/cfo" style={secondaryLinkStyle}>
             CFO Intelligence
           </Link>
+          <Link href="/admin/coo" style={secondaryLinkStyle}>
+            COO Intelligence
+          </Link>
         </div>
       </section>
 

@@ -1,6 +1,15 @@
-import { getBusinessSnapshot } from "@/lib/business/business-data-layer"
-import { buildBusinessMemory } from "@/lib/executive/business-memory"
-import { buildClientIntelligence } from "@/lib/executive/client-intelligence"
+import {
+  getBusinessSnapshot,
+  type BusinessSnapshot,
+} from "@/lib/business/business-data-layer"
+import {
+  buildBusinessMemory,
+  type BusinessMemory,
+} from "@/lib/executive/business-memory"
+import {
+  buildClientIntelligence,
+  type ClientIntelligence,
+} from "@/lib/executive/client-intelligence"
 import { generateExecutiveLearning } from "@/lib/executive/learning-engine"
 import { buildRevenueIntelligence } from "@/lib/executive/revenue-intelligence"
 import { generateExecutiveRisks } from "@/lib/executive/risks"
@@ -135,12 +144,17 @@ async function storeAutomationSnapshot(automation: ExecutiveAutomation) {
   }
 }
 
-export async function generateExecutiveAutomationActions(): Promise<ExecutiveAutomation> {
+export async function generateExecutiveAutomationActions(options?: {
+  /** Reuse already-built inputs to avoid duplicate queries. */
+  snapshot?: BusinessSnapshot
+  memory?: BusinessMemory
+  clientIntel?: ClientIntelligence
+}): Promise<ExecutiveAutomation> {
   const now = new Date()
 
   // Shared inputs, fetched once and reused across engines (production safe).
-  const snapshot = await getBusinessSnapshot()
-  const memory = await buildBusinessMemory({ snapshot })
+  const snapshot = options?.snapshot ?? (await getBusinessSnapshot())
+  const memory = options?.memory ?? (await buildBusinessMemory({ snapshot }))
 
   const [
     revenue,
@@ -153,7 +167,7 @@ export async function generateExecutiveAutomationActions(): Promise<ExecutiveAut
     subscriberCount,
   ] = await Promise.all([
     buildRevenueIntelligence({ snapshot, memory }),
-    buildClientIntelligence({ snapshot }),
+    options?.clientIntel ?? buildClientIntelligence({ snapshot }),
     generateExecutiveLearning({ lightweight: true, skipPersistence: true }),
     generateExecutiveRisks(),
     prisma.executiveDecision.findMany({
