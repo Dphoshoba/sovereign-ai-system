@@ -9,6 +9,9 @@ import {
 } from "@/lib/executive/learning-system"
 import { EXECUTIVE_LIST_LIMITS } from "@/lib/executive/list-limits"
 
+export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
+
 export async function GET() {
   try {
     const [decisions, storedLessons, engine] = await Promise.all([
@@ -20,8 +23,13 @@ export async function GET() {
         orderBy: [{ createdAt: "desc" }],
         take: EXECUTIVE_LIST_LIMITS.lessons,
       }),
-      // Phase 26 learning engine — outcome-driven institutional learning.
-      generateExecutiveLearning(),
+      // Phase 26 learning engine — lightweight mode keeps this route
+      // production-safe (limited direct queries, no heavy aggregator chains).
+      // Engine failure degrades gracefully instead of failing the route.
+      generateExecutiveLearning({ lightweight: true }).catch((error) => {
+        console.error("Learning engine failed, returning legacy data:", error)
+        return null
+      }),
     ])
 
     const serializedDecisions = decisions.map(serializeDecision)
@@ -35,7 +43,7 @@ export async function GET() {
       ok: true,
       learning: {
         ...learning,
-        engine,
+        ...(engine ? { engine } : {}),
       },
       storedLessons: serializedLessons,
     })
