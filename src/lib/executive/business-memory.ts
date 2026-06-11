@@ -133,11 +133,14 @@ async function storeBusinessMemorySnapshot(memory: BusinessMemory) {
   }
 }
 
-export async function buildBusinessMemory(): Promise<BusinessMemory> {
+export async function buildBusinessMemory(options?: {
+  /** Reuse an already-fetched snapshot to avoid duplicate queries. */
+  snapshot?: BusinessSnapshot
+}): Promise<BusinessMemory> {
   const now = new Date()
 
   // Aggregates from the unified business data layer; raw rows for events.
-  const snapshot = await getBusinessSnapshot()
+  const snapshot = options?.snapshot ?? (await getBusinessSnapshot())
 
   const [projects, tasks, invoices, leads, proposals] = await Promise.all([
     prisma.clientProject.findMany({

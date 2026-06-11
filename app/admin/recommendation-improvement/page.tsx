@@ -88,6 +88,9 @@ export default function RecommendationImprovementPage() {
           <Link href="/admin/operations" style={secondaryLinkStyle}>
             Operations Center
           </Link>
+          <Link href="/admin/revenue-intelligence" style={secondaryLinkStyle}>
+            Revenue Intelligence
+          </Link>
         </div>
       </section>
 

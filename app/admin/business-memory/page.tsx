@@ -92,6 +92,9 @@ export default function BusinessMemoryPage() {
           <Link href="/admin/knowledge-graph" style={secondaryLinkStyle}>
             Knowledge Graph
           </Link>
+          <Link href="/admin/revenue-intelligence" style={secondaryLinkStyle}>
+            Revenue Intelligence
+          </Link>
           <Link href="/admin/revenue" style={secondaryLinkStyle}>
             Revenue
           </Link>

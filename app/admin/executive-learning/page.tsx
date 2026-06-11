@@ -195,6 +195,9 @@ export default function ExecutiveLearningPage() {
           <Link href="/admin/recommendation-improvement" style={secondaryLinkStyle}>
             Recommendation Improvement
           </Link>
+          <Link href="/admin/revenue-intelligence" style={secondaryLinkStyle}>
+            Revenue Intelligence
+          </Link>
           <Link href="/admin/knowledge-graph" style={secondaryLinkStyle}>
             Knowledge Graph
           </Link>

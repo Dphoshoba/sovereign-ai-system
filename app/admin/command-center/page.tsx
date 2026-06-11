@@ -144,6 +144,9 @@ export default function CommandCenterPage() {
           <Link href="/admin/business-memory" style={secondaryLinkStyle}>
             Business Memory
           </Link>
+          <Link href="/admin/revenue-intelligence" style={secondaryLinkStyle}>
+            Revenue Intelligence
+          </Link>
           <Link href="/admin/operations" style={secondaryLinkStyle}>
             Operations Center
           </Link>
