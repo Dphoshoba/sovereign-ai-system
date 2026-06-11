@@ -153,6 +153,9 @@ export default function CommandCenterPage() {
           <Link href="/admin/automation-actions" style={secondaryLinkStyle}>
             Automation Actions
           </Link>
+          <Link href="/admin/cfo" style={secondaryLinkStyle}>
+            CFO Intelligence
+          </Link>
           <Link href="/admin/operations" style={secondaryLinkStyle}>
             Operations Center
           </Link>

@@ -94,6 +94,9 @@ export default function AutomationActionsPage() {
           <Link href="/admin/decision-packages" style={secondaryLinkStyle}>
             Decision Packages
           </Link>
+          <Link href="/admin/cfo" style={secondaryLinkStyle}>
+            CFO Intelligence
+          </Link>
         </div>
       </section>
 
