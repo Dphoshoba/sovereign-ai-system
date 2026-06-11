@@ -837,6 +837,76 @@ export async function buildExecutiveKnowledgeGraph(): Promise<KnowledgeGraphBuil
     }
   }
 
+  // -------------------------------------------------------------------------
+  // Phase 25 expansion — decision execution outcomes. Each decision with a
+  // recorded outcome or effectiveness gets dedicated outcome/effectiveness
+  // nodes linked back to the decision (duplicate-safe via upsertNode keyed
+  // on entityType + entityId, and ensureEdge).
+  // -------------------------------------------------------------------------
+  for (const decision of decisions) {
+    const decisionNodeId = registry.get(registryKey("decision", decision.id))
+
+    if (!decisionNodeId) {
+      continue
+    }
+
+    if (decision.outcome?.trim()) {
+      const outcomeNodeId = await upsertNode(
+        {
+          entityType: "decision_outcome",
+          entityId: decision.id,
+          title: `Outcome: ${decision.title}`,
+          summary: decision.outcome.trim(),
+          category: "decision_outcome",
+          metadata: {
+            decisionId: decision.id,
+            status: decision.status,
+          },
+        },
+        registry,
+        stats
+      )
+
+      await ensureEdge(decisionNodeId, outcomeNodeId, "has_outcome", stats)
+    }
+
+    if (decision.effectiveness !== null) {
+      const normalizedEffectiveness = Math.max(
+        0,
+        Math.min(
+          100,
+          decision.effectiveness <= 5
+            ? decision.effectiveness * 20
+            : decision.effectiveness
+        )
+      )
+
+      const effectivenessNodeId = await upsertNode(
+        {
+          entityType: "decision_effectiveness",
+          entityId: decision.id,
+          title: `Effectiveness ${normalizedEffectiveness}/100: ${decision.title}`,
+          summary: `Recorded effectiveness for "${decision.title}" normalized to ${normalizedEffectiveness}/100.`,
+          category: "decision_effectiveness",
+          metadata: {
+            decisionId: decision.id,
+            effectiveness: decision.effectiveness,
+            normalizedEffectiveness,
+          },
+        },
+        registry,
+        stats
+      )
+
+      await ensureEdge(
+        decisionNodeId,
+        effectivenessNodeId,
+        "has_effectiveness",
+        stats
+      )
+    }
+  }
+
   const [totalNodes, totalEdges] = await Promise.all([
     prisma.executiveKnowledgeNode.count(),
     prisma.executiveKnowledgeEdge.count(),

@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/prisma"
 import {
+  generateExecutionTracker,
+  type DecisionExecutionRecord,
+} from "@/lib/executive/decision-execution"
+import {
   trackDecisionImpacts,
   type DecisionImpact,
 } from "@/lib/executive/decision-impact"
@@ -30,6 +34,13 @@ export type HistoryItem = {
   createdAt: string
 }
 
+export type DecisionImplementationHistoryItem = {
+  decisionId: string
+  title: string
+  status: string
+  implementationProgress: number
+}
+
 export type ExecutiveMemory = {
   graph: {
     totalNodes: number
@@ -48,6 +59,13 @@ export type ExecutiveMemory = {
     mostEffectiveLessons: EffectiveLesson[]
     recurringRisks: RecurringTheme[]
     recurringOpportunities: RecurringTheme[]
+  }
+  // Phase 25 — decision execution memory: outcome, effectiveness, and
+  // implementation history per tracked decision.
+  executionMemory: {
+    decisionOutcomes: DecisionExecutionRecord[]
+    implementationHistory: DecisionImplementationHistoryItem[]
+    averageEffectiveness: number
   }
 }
 
@@ -105,6 +123,7 @@ export async function buildExecutiveMemory(): Promise<ExecutiveMemory> {
     planningCycles,
     lessons,
     decisionImpacts,
+    executionRecords,
   ] = await Promise.all([
     prisma.executiveKnowledgeNode.count(),
     prisma.executiveKnowledgeEdge.count(),
@@ -134,6 +153,7 @@ export async function buildExecutiveMemory(): Promise<ExecutiveMemory> {
       orderBy: { createdAt: "desc" },
     }),
     trackDecisionImpacts(),
+    generateExecutionTracker(),
   ])
 
   // Most connected entities — count edge endpoints per node.
@@ -236,6 +256,24 @@ export async function buildExecutiveMemory(): Promise<ExecutiveMemory> {
       mostEffectiveLessons,
       recurringRisks: countThemes(riskTexts),
       recurringOpportunities: countThemes(opportunityTexts),
+    },
+    executionMemory: {
+      decisionOutcomes: executionRecords.slice(0, HISTORY_LIMIT),
+      implementationHistory: executionRecords.map((record) => ({
+        decisionId: record.decisionId,
+        title: record.title,
+        status: record.status,
+        implementationProgress: record.implementationProgress,
+      })),
+      averageEffectiveness:
+        executionRecords.length > 0
+          ? Math.round(
+              executionRecords.reduce(
+                (sum, record) => sum + record.effectivenessScore,
+                0
+              ) / executionRecords.length
+            )
+          : 0,
     },
   }
 }
