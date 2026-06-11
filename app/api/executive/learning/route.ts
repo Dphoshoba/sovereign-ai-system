@@ -12,52 +12,65 @@ import { EXECUTIVE_LIST_LIMITS } from "@/lib/executive/list-limits"
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
+// GET is hard-minimal and production-safe: lightweight engine only, no
+// persistence, no legacy aggregation, and never a 500 — failures degrade to a
+// 200 fallback payload so the dashboard always renders.
 export async function GET() {
-  try {
-    const [decisions, storedLessons, engine] = await Promise.all([
-      prisma.executiveDecision.findMany({
-        orderBy: [{ createdAt: "desc" }],
-        take: EXECUTIVE_LIST_LIMITS.decisions,
-      }),
-      prisma.executiveLesson.findMany({
-        orderBy: [{ createdAt: "desc" }],
-        take: EXECUTIVE_LIST_LIMITS.lessons,
-      }),
-      // Phase 26 learning engine — lightweight mode keeps this route
-      // production-safe (limited direct queries, no heavy aggregator chains).
-      // Engine failure degrades gracefully instead of failing the route.
-      generateExecutiveLearning({ lightweight: true }).catch((error) => {
-        console.error("Learning engine failed, returning legacy data:", error)
-        return null
-      }),
-    ])
+  console.time("executive-learning-get")
 
-    const serializedDecisions = decisions.map(serializeDecision)
-    const serializedLessons = storedLessons.map(serializeExecutiveLesson)
-    const learning = buildExecutiveLearning(
-      serializedDecisions,
-      serializedLessons
-    )
+  try {
+    let engineError: string | null = null
+
+    const engine = await generateExecutiveLearning({
+      lightweight: true,
+      skipPersistence: true,
+    }).catch((error) => {
+      engineError =
+        error instanceof Error
+          ? error.message
+          : "Failed to generate executive learning"
+      console.error("Learning engine failed:", error)
+      return null
+    })
+
+    if (!engine) {
+      return NextResponse.json({
+        ok: true,
+        learning: {
+          lessons: [],
+          engine: null,
+          fallback: true,
+          error: engineError ?? "Failed to generate executive learning",
+        },
+        storedLessons: [],
+      })
+    }
 
     return NextResponse.json({
       ok: true,
       learning: {
-        ...learning,
-        ...(engine ? { engine } : {}),
+        lessons: [],
+        engine,
       },
-      storedLessons: serializedLessons,
+      storedLessons: [],
     })
   } catch (error) {
-    return NextResponse.json(
-      {
-        ok: false,
+    // Last-resort guard — still no 500 for GET.
+    return NextResponse.json({
+      ok: true,
+      learning: {
+        lessons: [],
+        engine: null,
+        fallback: true,
         error:
           error instanceof Error
             ? error.message
             : "Failed to build executive learning summary",
       },
-      { status: 500 }
-    )
+      storedLessons: [],
+    })
+  } finally {
+    console.timeEnd("executive-learning-get")
   }
 }
 

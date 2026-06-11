@@ -54,6 +54,8 @@ export type ExecutiveLearning = {
 
 export type GenerateExecutiveLearningOptions = {
   lightweight?: boolean
+  /** Skip AiMemory writes entirely — for latency-critical serverless paths. */
+  skipPersistence?: boolean
 }
 
 const TOP_LIMIT = 5
@@ -762,8 +764,10 @@ export async function generateExecutiveLearning(
 
   const learning = synthesizeLearning(data)
 
-  // Fire-and-forget: persistence must never block or fail the response.
-  void storeLearningMemory(learning)
+  if (!options.skipPersistence) {
+    // Fire-and-forget: persistence must never block or fail the response.
+    void storeLearningMemory(learning)
+  }
 
   return learning
 }

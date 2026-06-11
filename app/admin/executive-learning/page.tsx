@@ -71,6 +71,21 @@ type ExecutiveLearningSummary = {
   engine?: LearningEngineResult
 }
 
+// GET returns a hard-minimal payload in production (engine only, possibly a
+// fallback) — normalize so legacy sections render safely with defaults.
+function normalizeLearning(
+  raw: Partial<ExecutiveLearningSummary> | null | undefined
+): ExecutiveLearningSummary {
+  return {
+    totalLessons: raw?.totalLessons ?? 0,
+    strongestPatterns: raw?.strongestPatterns ?? [],
+    weakestPatterns: raw?.weakestPatterns ?? [],
+    recommendedPractices: raw?.recommendedPractices ?? [],
+    lessons: raw?.lessons ?? [],
+    engine: raw?.engine ?? undefined,
+  }
+}
+
 export default function ExecutiveLearningPage() {
   const [learning, setLearning] = useState<ExecutiveLearningSummary | null>(
     null
@@ -99,7 +114,11 @@ export default function ExecutiveLearningPage() {
       return
     }
 
-    setLearning(result.learning)
+    if (result.learning?.fallback) {
+      setError(result.learning.error || "Learning engine is unavailable")
+    }
+
+    setLearning(normalizeLearning(result.learning))
     setStoredLessons(result.storedLessons ?? [])
   }, [])
 
@@ -124,7 +143,7 @@ export default function ExecutiveLearningPage() {
       return
     }
 
-    setLearning(result.learning)
+    setLearning(normalizeLearning(result.learning))
     setStoredLessons(result.storedLessons ?? [])
     setMessage(
       result.created > 0
