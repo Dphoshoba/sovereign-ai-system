@@ -109,6 +109,8 @@ export default async function OperationsPage() {
           <Link href="/admin/strategy-adjustments" style={buttonStyle}>Strategy Adjustments</Link>
           <Link href="/admin/recommendation-improvement" style={buttonStyle}>Recommendation Improvement</Link>
           <Link href="/admin/business-memory" style={buttonStyle}>Business Memory</Link>
+          <Link href="/admin/revenue-intelligence" style={buttonStyle}>Revenue Intelligence</Link>
+          <Link href="/admin/client-intelligence" style={buttonStyle}>Client Intelligence</Link>
         </div>
       </section>
 

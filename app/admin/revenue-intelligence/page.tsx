@@ -88,6 +88,9 @@ export default function RevenueIntelligencePage() {
           <Link href="/admin/recommendation-improvement" style={secondaryLinkStyle}>
             Recommendation Improvement
           </Link>
+          <Link href="/admin/client-intelligence" style={secondaryLinkStyle}>
+            Client Intelligence
+          </Link>
           <Link href="/admin/revenue" style={secondaryLinkStyle}>
             Revenue
           </Link>
