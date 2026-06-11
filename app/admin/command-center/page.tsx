@@ -141,6 +141,9 @@ export default function CommandCenterPage() {
           <Link href="/admin/recommendation-improvement" style={secondaryLinkStyle}>
             Recommendation Improvement
           </Link>
+          <Link href="/admin/business-memory" style={secondaryLinkStyle}>
+            Business Memory
+          </Link>
           <Link href="/admin/operations" style={secondaryLinkStyle}>
             Operations Center
           </Link>
