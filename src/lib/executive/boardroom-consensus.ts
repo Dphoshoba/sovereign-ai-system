@@ -84,7 +84,7 @@ export async function buildBoardroomConsensus() {
       rejectedVotes,
       neutralVotes,
       consensus:
-        approvedVotes >= 3
+        approvedVotes > rejectedVotes
           ? "APPROVED"
           : "REVIEW_REQUIRED",
     })
