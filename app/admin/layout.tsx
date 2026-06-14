@@ -63,6 +63,7 @@ export default async function AdminLayout({
           <Link href="/admin/tool-execution" style={linkStyle}>Tools</Link>
           <Link href="/admin/scheduler" style={linkStyle}>Scheduler</Link>
           <Link href="/admin/governance" style={linkStyle}>Governance</Link>
+          <Link href="/admin/documentation" style={linkStyle}>Documentation</Link>
           <Link href="/admin/revenue" style={linkStyle}>Revenue</Link>
           <Link href="/admin/knowledge-graph" style={linkStyle}>Graph</Link>
           <Link href="/admin/simulation" style={linkStyle}>Simulation</Link>
