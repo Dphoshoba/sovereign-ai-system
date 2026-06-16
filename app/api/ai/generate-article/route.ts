@@ -4,8 +4,6 @@ import { getOpenAI } from "@/lib/ai/openai"
 import { DAVID_WRITING_DNA } from "@/lib/ai/writing-dna"
 import { getMemoryContext } from "@/lib/ai/memory-context"
 
-// NOTE: the "@/*" path alias maps to "./src/*", but these research modules
-// live at the repo-root "lib/research", so they must be imported relatively.
 import {
   sourceCollector,
   type SourceRecord,
@@ -14,6 +12,7 @@ import { evidenceRegistry } from "../../../../lib/research/evidence-registry"
 import { factExtractor } from "../../../../lib/research/fact-extractor"
 import { factVerificationEngine } from "../../../../lib/research/fact-verification-engine"
 import { consensusEngine } from "../../../../lib/research/consensus-engine"
+import { publicationGate } from "../../../../lib/research/publication-gate"
 import { encodingNormalizer } from "../../../../lib/research/encoding-normalizer"
 import { contentSafeNormalizer } from "../../../../lib/research/content-safe-normalizer"
 import { calculateEditorialQualityScore } from "../../../../lib/editorial/quality-score"
@@ -43,6 +42,28 @@ async function createUniqueSlug(baseSlug: string, category: string) {
   }
 }
 
+function finalTextCleanup(value: string): string {
+  const bad = String.fromCharCode(226)
+
+  return value
+    .replace(new RegExp(`([A-Za-z])${bad}s\\b`, "g"), "$1's")
+    .replace(new RegExp(`([A-Za-z])${bad}t\\b`, "g"), "$1't")
+    .replace(new RegExp(`([A-Za-z])${bad}re\\b`, "g"), "$1're")
+    .replace(new RegExp(`([A-Za-z])${bad}ll\\b`, "g"), "$1'll")
+    .replace(new RegExp(`([A-Za-z])${bad}ve\\b`, "g"), "$1've")
+    .replace(new RegExp(`([A-Za-z])${bad}m\\b`, "g"), "$1'm")
+    .replace(new RegExp(`([A-Za-z])${bad}d\\b`, "g"), "$1'd")
+    .replace(new RegExp(`\\s*${bad}\\s*`, "g"), " - ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/\s+/g, " ")
+    .replace(/\s+([,.!?;:])/g, "$1")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/\bwillreward\b/gi, "will reward")
+    .replace(/\bdeepentrust\b/gi, "deepen trust")
+    .replace(/\bimprovecontent\b/gi, "improve content")
+    .trim()
+}
+
 export async function POST(request: Request) {
   try {
     if (!process.env.OPENAI_API_KEY) {
@@ -61,49 +82,61 @@ export async function POST(request: Request) {
       ? body.manualSources
       : []
 
-    // --- Phase 2A: evidence-first research pipeline (runs before OpenAI) ---
-
-    // 1. Collect sources (search provider + any manually supplied sources).
     const sourceCollection = await sourceCollector(topic, manualSources)
 
-    // 2. Build an evidence registry from the actual fetched source content.
     const evidence = await evidenceRegistry(
       topic,
       sourceCollection.collectedSources
     )
 
-    // 3. Extract structured claims strictly from the evidence.
     const factExtraction = factExtractor(topic, evidence.evidence)
 
-    // 4. Cross-verify claims across sources.
     const factVerification = factVerificationEngine(factExtraction.facts)
 
-    // 5. Score consensus / publication readiness.
     const consensus = consensusEngine(factVerification.verifiedFacts)
 
-    const consensusText =
-      consensus.consensusGroups
-        .map(
-          (group) =>
-            `Theme: ${group.theme}\n` +
-            `Sources: ${group.sourceCount}\n` +
-            `Consensus: ${group.consensusStatement}`
-        )
-        .join("\n\n")
+    const publicationDecision = publicationGate(consensus)
+
+    if (publicationDecision.status === "blocked") {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Publication blocked by research gate",
+          publicationDecision,
+          researchAudit: {
+            sourceCount: sourceCollection.sourceCount,
+            evidenceCount: evidence.evidenceCount,
+            factCount: factExtraction.factCount,
+            verifiedCount: factVerification.verifiedCount,
+            partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
+            unverifiedCount: factVerification.unverifiedCount,
+            consensusScore: consensus.consensusScore,
+            publicationRecommendation: consensus.publicationRecommendation,
+          },
+        },
+        { status: 422 }
+      )
+    }
+
+    const consensusText = consensus.consensusGroups
+      .map(
+        (group) =>
+          `Theme: ${group.theme}\n` +
+          `Sources: ${group.sourceCount}\n` +
+          `Consensus: ${group.consensusStatement}`
+      )
+      .join("\n\n")
 
     const consensusBlock =
       consensus.consensusGroupCount > 0
         ? "CONSENSUS THEMES:\n\n" + consensusText
         : "No consensus themes available."
 
-    // --- Build the grounding block handed to the model ---
-
-    const publishableFacts =
-      factVerification.verifiedFacts.filter(
-        (fact) =>
-          fact.verificationStatus === "verified" ||
-          fact.verificationStatus === "partially verified"
-      )
+    const publishableFacts = factVerification.verifiedFacts.filter(
+      (fact) =>
+        fact.verificationStatus === "verified" ||
+        fact.verificationStatus === "partially verified"
+    )
 
     const verifiedFactsText = publishableFacts
       .map((fact) => {
@@ -120,8 +153,7 @@ export async function POST(request: Request) {
       .join("\n")
 
     const hasVerifiedEvidence =
-      evidence.evidenceCount > 0 &&
-      publishableFacts.length > 0
+      evidence.evidenceCount > 0 && publishableFacts.length > 0
 
     const factsBlock = hasVerifiedEvidence
       ? "EVIDENCE-SUPPORTED FACTS (the only factual material you may use):\n" +
@@ -160,36 +192,44 @@ export async function POST(request: Request) {
         "- Do not invent statistics, quotes, sources, companies, or historical details.\n" +
         "- If evidence is limited, say so naturally and write around what is supported.\n" +
         "- Keep the article practical and useful.\n" +
-        "- Return valid JSON only.\n\n" +
+        "- Return valid JSON only.\n" +
+        "- Use plain ASCII punctuation only.\n" +
+        "- Use straight apostrophes (').\n" +
+        "- Use straight quotation marks (\").\n" +
+        "- Use normal hyphens (-).\n" +
+        "- Do not use smart quotes.\n" +
+        "- Do not use curly apostrophes.\n" +
+        "- Do not use em dashes.\n" +
+        "- Do not use en dashes.\n\n" +
         'Return JSON only in this exact format: {"title":"...","excerpt":"...","content":"...","seoTitle":"...","seoDescription":"...","seoKeywords":"keyword one, keyword two, keyword three","featuredImagePrompt":"..."}. ' +
         "Requirements: use Markdown in content, include headings, practical examples, founder-level thinking, natural human rhythm, and a subtle Echoes & Visions CTA near the end.",
     })
 
     const parsed = JSON.parse(response.output_text)
 
-    const cleanedContent =
-      parsed.content
-        ? contentSafeNormalizer(parsed.content)
-        : null
+    const cleanedContent = parsed.content
+      ? finalTextCleanup(
+          contentSafeNormalizer(encodingNormalizer(parsed.content))
+        )
+      : null
 
-    const cleanedExcerpt =
-      parsed.excerpt
-        ? encodingNormalizer(parsed.excerpt)
-        : null
+    const finalContent = cleanedContent
 
-    const cleanedSeoDescription =
-      parsed.seoDescription
-        ? encodingNormalizer(parsed.seoDescription)
-        : null
+    const cleanedExcerpt = parsed.excerpt
+      ? finalTextCleanup(encodingNormalizer(parsed.excerpt))
+      : null
 
-    const title = parsed.title || topic
+    const cleanedSeoDescription = parsed.seoDescription
+      ? finalTextCleanup(encodingNormalizer(parsed.seoDescription))
+      : null
+
+    const title = finalTextCleanup(parsed.title || topic)
     const baseSlug = slugify(title)
     const slug = await createUniqueSlug(baseSlug, category)
 
-    const wordCount =
-      cleanedContent
-        ? cleanedContent.split(/\s+/).filter(Boolean).length
-        : 0
+    const wordCount = finalContent
+      ? finalContent.split(/\s+/).filter(Boolean).length
+      : 0
 
     const editorialQuality = calculateEditorialQualityScore({
       wordCount,
@@ -212,14 +252,13 @@ export async function POST(request: Request) {
         category,
         status: "review-required",
         excerpt: cleanedExcerpt,
-        content: cleanedContent,
+        content: finalContent,
         featuredImage: null,
-        seoTitle: parsed.seoTitle || title,
-        seoDescription:
-          cleanedSeoDescription ||
-          cleanedExcerpt ||
-          null,
-        seoKeywords: parsed.seoKeywords || null,
+        seoTitle: finalTextCleanup(parsed.seoTitle || title),
+        seoDescription: cleanedSeoDescription || cleanedExcerpt || null,
+        seoKeywords: parsed.seoKeywords
+          ? finalTextCleanup(parsed.seoKeywords)
+          : null,
         publishedAt: null,
         scheduledFor: scheduledFor ? new Date(scheduledFor) : null,
         editorialScore: editorialQuality.score,
@@ -273,6 +312,7 @@ export async function POST(request: Request) {
         unverifiedCount: factVerification.unverifiedCount,
         consensusScore: consensus.consensusScore,
         publicationRecommendation: consensus.publicationRecommendation,
+        publicationDecision,
         editorialWarning,
         editorialQuality,
       },
@@ -284,9 +324,7 @@ export async function POST(request: Request) {
       {
         ok: false,
         error:
-          error instanceof Error
-            ? error.message
-            : "Failed to generate article",
+          error instanceof Error ? error.message : "Failed to generate article",
       },
       { status: 500 }
     )

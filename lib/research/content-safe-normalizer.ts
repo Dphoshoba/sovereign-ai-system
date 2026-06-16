@@ -1,15 +1,8 @@
 import { repairMojibakeChars } from "./encoding-normalizer"
 
-/**
- * Fix mojibake and HTML entities in Markdown without destroying structure.
- *
- * Uses the full repairMojibakeChars pipeline per line so article content gets
- * the same fixes as excerpt/SEO, but without collapsing newlines or whitespace.
- */
 export function contentSafeNormalizer(text: string): string {
   if (!text) return text
 
-  // Split on fenced code blocks so their contents stay byte-for-byte intact.
   const segments = text.split(/(```[\s\S]*?```)/g)
 
   return segments

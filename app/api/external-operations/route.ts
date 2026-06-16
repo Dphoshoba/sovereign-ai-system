@@ -1,6 +1,32 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
+function resolveIntegrationStatus(provider: string, config: any) {
+  const envKey = config?.envKey
+
+  if (provider === "webhook") {
+    return {
+      status: "restricted",
+      enabled: false,
+      lastError: null,
+    }
+  }
+
+  if (!envKey || !process.env[envKey]) {
+    return {
+      status: "not-configured",
+      enabled: false,
+      lastError: `${envKey || "ENV_KEY"} is missing`,
+    }
+  }
+
+  return {
+    status: "configured",
+    enabled: true,
+    lastError: null,
+  }
+}
+
 const defaultIntegrations = [
   {
     name: "Email Provider",
@@ -52,6 +78,25 @@ export async function GET() {
       })
     }
 
+    const refreshedIntegrations = await Promise.all(
+      integrations.map((integration) => {
+        const health = resolveIntegrationStatus(
+          integration.provider,
+          integration.config
+        )
+
+        return prisma.externalIntegration.update({
+          where: { id: integration.id },
+          data: {
+            status: health.status,
+            enabled: health.enabled,
+            lastError: health.lastError,
+            lastChecked: new Date(),
+          },
+        })
+      })
+    )
+
     const logs = await prisma.externalOperationLog.findMany({
       orderBy: { createdAt: "desc" },
       take: 100,
@@ -59,7 +104,7 @@ export async function GET() {
 
     return NextResponse.json({
       ok: true,
-      integrations,
+      integrations: refreshedIntegrations,
       logs,
     })
   } catch (error) {
