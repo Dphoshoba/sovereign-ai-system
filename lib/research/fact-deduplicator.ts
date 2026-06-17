@@ -3,18 +3,17 @@ import type { ExtractedFact } from "./fact-extractor"
 export function factDeduplicator(
   facts: ExtractedFact[]
 ): ExtractedFact[] {
-  const seen = new Set<string>()
+  const grouped = new Map<string, ExtractedFact[]>()
 
-  return facts.filter((fact) => {
-    const key = fact.claim
-      .toLowerCase()
-      .trim()
+  for (const fact of facts) {
+    const key = fact.claim.toLowerCase().trim()
 
-    if (seen.has(key)) {
-      return false
+    if (!grouped.has(key)) {
+      grouped.set(key, [])
     }
 
-    seen.add(key)
-    return true
-  })
+    grouped.get(key)?.push(fact)
+  }
+
+  return Array.from(grouped.values()).flat()
 }

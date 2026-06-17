@@ -1,0 +1,25 @@
+# Phase 1 Post Launch Fixes
+
+## Formatting
+- Occasional missing spaces after AI generation
+- Review article content formatting consistency
+- Review markdown heading spacing
+
+## Research
+- Add stronger source ranking
+- Add source quality scoring
+- Add source freshness scoring
+
+## Editorial
+- Improve editorial quality scoring
+- Add readability scoring
+- Add human review checklist
+
+## Publishing
+- Add preview before publication
+- Add publication audit trail
+- Add rollback capability
+
+## Images
+- Improve featured image prompts
+- Add image quality validation

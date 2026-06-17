@@ -4,6 +4,7 @@ export type ConsensusGroup = {
   theme: string
   facts: VerifiedFact[]
   sourceCount: number
+  sourceQualityScore: number
   consensusStatement: string
 }
 
@@ -13,6 +14,7 @@ export type ConsensusResult = {
   partiallyVerifiedFacts: number
   unverifiedFacts: number
   consensusScore: number
+  sourceQualityScore: number
   consensusGroups: ConsensusGroup[]
   consensusGroupCount: number
   publicationRecommendation:
@@ -22,8 +24,6 @@ export type ConsensusResult = {
   summary: string
 }
 
-// Semantic themes used to group corroborating facts. Order matters: a fact is
-// assigned to the first theme whose keywords it matches.
 const THEMES: { theme: string; keywords: string[]; body: string }[] = [
   {
     theme: "Automation",
@@ -160,9 +160,43 @@ function classifyTheme(claim: string): string {
 
 function themeBody(theme: string): string {
   const match = THEMES.find((entry) => entry.theme === theme)
+
   return match
     ? match.body
     : "the available evidence supports relevant findings on this topic"
+}
+
+function authorityScoreForUrl(url: string): number {
+  const lower = url.toLowerCase()
+
+  if (lower.includes(".gov")) return 100
+  if (lower.includes(".edu")) return 95
+
+  if (
+    lower.includes("nature.com") ||
+    lower.includes("science.org") ||
+    lower.includes("nih.gov")
+  ) {
+    return 90
+  }
+
+  if (
+    lower.includes("reuters.com") ||
+    lower.includes("bbc.com") ||
+    lower.includes("apnews.com")
+  ) {
+    return 85
+  }
+
+  if (
+    lower.includes("microsoft.com") ||
+    lower.includes("google.com") ||
+    lower.includes("openai.com")
+  ) {
+    return 80
+  }
+
+  return 50
 }
 
 function countUniqueSources(facts: VerifiedFact[]): number {
@@ -181,36 +215,63 @@ function countUniqueSources(facts: VerifiedFact[]): number {
   return urls.size
 }
 
-function buildConsensusGroups(
-  facts: VerifiedFact[]
-): ConsensusGroup[] {
+function calculateSourceQualityScore(facts: VerifiedFact[]): number {
+  const urls = new Set<string>()
+
+  for (const fact of facts) {
+    if (fact.supportingSources.length > 0) {
+      for (const source of fact.supportingSources) {
+        if (source.sourceUrl) urls.add(source.sourceUrl)
+      }
+    } else if (fact.sourceUrl) {
+      urls.add(fact.sourceUrl)
+    }
+  }
+
+  const scores = Array.from(urls).map(authorityScoreForUrl)
+
+  if (scores.length === 0) return 0
+
+  return Math.round(
+    scores.reduce((sum, score) => sum + score, 0) / scores.length
+  )
+}
+
+function buildConsensusGroups(facts: VerifiedFact[]): ConsensusGroup[] {
   const byTheme = new Map<string, VerifiedFact[]>()
 
   for (const fact of facts) {
     const theme = classifyTheme(fact.claim)
-    if (!byTheme.has(theme)) byTheme.set(theme, [])
+
+    if (!byTheme.has(theme)) {
+      byTheme.set(theme, [])
+    }
+
     byTheme.get(theme)?.push(fact)
   }
 
   return Array.from(byTheme.entries()).map(([theme, themeFacts]) => {
     const sourceCount = countUniqueSources(themeFacts)
+    const sourceQualityScore = calculateSourceQualityScore(themeFacts)
+
     const prefix =
-      sourceCount >= 2
-        ? "Multiple sources indicate that"
-        : "A source indicates that"
+      sourceCount >= 3
+        ? "Strong multi-source evidence indicates that"
+        : sourceCount === 2
+          ? "Multiple sources indicate that"
+          : "A source indicates that"
 
     return {
       theme,
       facts: themeFacts,
       sourceCount,
+      sourceQualityScore,
       consensusStatement: `${prefix} ${themeBody(theme)}.`,
     }
   })
 }
 
-export function consensusEngine(
-  facts: VerifiedFact[]
-): ConsensusResult {
+export function consensusEngine(facts: VerifiedFact[]): ConsensusResult {
   const totalFacts = facts.length
 
   const verifiedFacts = facts.filter(
@@ -218,20 +279,16 @@ export function consensusEngine(
   ).length
 
   const partiallyVerifiedFacts = facts.filter(
-    (fact) =>
-      fact.verificationStatus === "partially verified"
+    (fact) => fact.verificationStatus === "partially verified"
   ).length
 
   const unverifiedFacts = facts.filter(
     (fact) => fact.verificationStatus === "unverified"
   ).length
 
-  // Build semantic consensus groups before scoring.
   const consensusGroups = buildConsensusGroups(facts)
   const consensusGroupCount = consensusGroups.length
 
-  // Score from the consensus groups: a group corroborated by more independent
-  // sources contributes a higher weight.
   const stronglyCorroborated = consensusGroups.filter(
     (group) => group.sourceCount >= 3
   ).length
@@ -240,7 +297,17 @@ export function consensusEngine(
     (group) => group.sourceCount === 2
   ).length
 
-  const consensusScore =
+  const sourceQualityScore =
+    consensusGroups.length > 0
+      ? Math.round(
+          consensusGroups.reduce(
+            (sum, group) => sum + group.sourceQualityScore,
+            0
+          ) / consensusGroups.length
+        )
+      : 0
+
+  const rawConsensusScore =
     totalFacts === 0
       ? 0
       : Math.round(
@@ -248,16 +315,16 @@ export function consensusEngine(
             verifiedFacts * 100 +
             partiallyVerifiedFacts * 70 +
             stronglyCorroborated * 100 +
-            moderatelyCorroborated * 60
+            moderatelyCorroborated * 60 +
+            sourceQualityScore * 0.5
           ) /
-          (
-            totalFacts +
-            Math.max(consensusGroupCount, 1)
-          )
+            (totalFacts + Math.max(consensusGroupCount, 1))
         )
 
+  const consensusScore = Math.min(rawConsensusScore, 100)
+
   const publicationRecommendation =
-    consensusScore >= 80
+    consensusScore >= 80 && sourceQualityScore >= 70
       ? "publish-ready"
       : consensusScore >= 50 || totalFacts >= 2
         ? "review-required"
@@ -269,11 +336,13 @@ export function consensusEngine(
     partiallyVerifiedFacts,
     unverifiedFacts,
     consensusScore,
+    sourceQualityScore,
     consensusGroups,
     consensusGroupCount,
     publicationRecommendation,
     summary:
       `Consensus score is ${consensusScore} across ${consensusGroupCount} consensus group(s). ` +
+      `Source quality score is ${sourceQualityScore}. ` +
       `Verified: ${verifiedFacts}. ` +
       `Partially verified: ${partiallyVerifiedFacts}. ` +
       `Unverified: ${unverifiedFacts}.`,

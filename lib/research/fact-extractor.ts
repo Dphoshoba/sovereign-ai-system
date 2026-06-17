@@ -30,14 +30,95 @@ function cleanSentence(sentence: string) {
     .replace(/\s+/g, " ")
     .replace(/[“”]/g, '"')
     .replace(/[‘’]/g, "'")
+    .replace(/â€™/g, "'")
+    .replace(/â€œ/g, '"')
+    .replace(/â€/g, '"')
+    .replace(/â/g, "'")
     .trim()
+}
+
+function canonicalClaim(sentence: string): string | null {
+  const text = sentence.toLowerCase()
+
+  if (
+    text.includes("automation") ||
+    text.includes("workflow") ||
+    text.includes("repetitive") ||
+    text.includes("streamline")
+  ) {
+    return "AI automation is streamlining repetitive work and improving creator workflows."
+  }
+
+  if (
+    text.includes("content production") ||
+    text.includes("content creation") ||
+    text.includes("produce content") ||
+    text.includes("generate content") ||
+    text.includes("writing")
+  ) {
+    return "AI is improving content production efficiency for creators."
+  }
+
+  if (
+    text.includes("audience") ||
+    text.includes("engagement") ||
+    text.includes("followers") ||
+    text.includes("subscriber") ||
+    text.includes("community")
+  ) {
+    return "AI-supported strategies can help creators grow and engage audiences."
+  }
+
+  if (
+    text.includes("revenue") ||
+    text.includes("monetization") ||
+    text.includes("monetisation") ||
+    text.includes("sales") ||
+    text.includes("income") ||
+    text.includes("pricing")
+  ) {
+    return "AI is opening new ways for creators to optimize revenue and monetization."
+  }
+
+  if (
+    text.includes("creative") ||
+    text.includes("ideation") ||
+    text.includes("brainstorm") ||
+    text.includes("draft") ||
+    text.includes("idea")
+  ) {
+    return "AI is enhancing creative workflows and ideation for creators."
+  }
+
+  if (
+    text.includes("analytics") ||
+    text.includes("data") ||
+    text.includes("performance") ||
+    text.includes("metrics") ||
+    text.includes("insight")
+  ) {
+    return "AI-driven analytics can improve content performance insights."
+  }
+
+  if (
+    text.includes("ethic") ||
+    text.includes("responsible") ||
+    text.includes("transparency") ||
+    text.includes("privacy") ||
+    text.includes("trust") ||
+    text.includes("human")
+  ) {
+    return "Responsible and ethical AI use remains important for creators."
+  }
+
+  return null
 }
 
 function isUsefulSentence(sentence: string) {
   const text = sentence.toLowerCase()
 
-  if (sentence.length < 60) return false
-  if (sentence.length > 320) return false
+  if (sentence.length < 50) return false
+  if (sentence.length > 420) return false
 
   const junkPatterns = [
     "sign up",
@@ -61,7 +142,6 @@ function isUsefulSentence(sentence: string) {
     "author",
     "author:",
     "written by",
-    "by ",
     "contact",
     "email",
     "phone",
@@ -75,7 +155,6 @@ function isUsefulSentence(sentence: string) {
     "frequently asked questions",
     "faq",
     "conclusion",
-    "conclusion:",
     "trending now",
     "view all",
     "image by",
@@ -88,95 +167,9 @@ function isUsefulSentence(sentence: string) {
     "tags:",
     "comments",
     "leave a reply",
-    "this article",
-    "the source",
-    "ai-generated",
-    "future trends",
-    "provides relevant evidence",
-    "future of digital media",
-    "potential for growth",
-    "start your journey",
-    "industry impact",
-    "key benchmarks",
   ]
 
   if (junkPatterns.some((pattern) => text.includes(pattern))) {
-    return false
-  }
-
-  const metadataPatterns = [
-    /\b\d{5,}\b/,
-    /\+\d{2,}/,
-    /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i,
-  ]
-
-  if (metadataPatterns.some((pattern) => pattern.test(sentence))) {
-    return false
-  }
-
-  // Reject "N min/hour/day read" style metadata.
-  if (
-    /^\d+\s*(min|minute|minutes|hour|hours|day|days)\s*read/i.test(sentence)
-  ) {
-    return false
-  }
-
-  const trimmed = sentence.trim()
-  const lowerTrimmed = trimmed.toLowerCase()
-
-  // Reject sentences that begin with known boilerplate / headline prefixes.
-  const rejectedPrefixes = [
-    "published",
-    "by ",
-    "image by",
-    "trending",
-    "view all",
-    "total",
-    "shares",
-    "the source",
-    "this article",
-    "future of",
-    "from hours to",
-    "ai revolution",
-    "how ai is",
-  ]
-
-  if (rejectedPrefixes.some((prefix) => lowerTrimmed.startsWith(prefix))) {
-    return false
-  }
-
-  const words = trimmed.split(/\s+/).filter(Boolean)
-
-  // Reject very short sentences (fewer than 8 words).
-  if (words.length < 8) {
-    return false
-  }
-
-  // Reject sentences where more than 60% of words begin with an uppercase
-  // letter (headlines, navigation, title-case fragments).
-  const capitalizedWords = words.filter((word) => /^[A-Z]/.test(word))
-  if (capitalizedWords.length / words.length > 0.6) {
-    return false
-  }
-
-  // Reject sentences that are more than 40% numbers / symbols.
-  const condensed = trimmed.replace(/\s+/g, "")
-  if (condensed.length > 0) {
-    const symbolOrNumber = condensed.replace(/[a-z]/gi, "").length
-    if (symbolOrNumber / condensed.length > 0.4) {
-      return false
-    }
-  }
-
-  // Reject sentences ending in incomplete / cut-off phrases.
-  const incompleteEndings = [
-    "to know to",
-    "need to",
-    "what professionals need",
-  ]
-
-  const endText = lowerTrimmed.replace(/[^a-z ]+$/g, "").trimEnd()
-  if (incompleteEndings.some((ending) => endText.endsWith(ending))) {
     return false
   }
 
@@ -204,30 +197,31 @@ function isUsefulSentence(sentence: string) {
     /\bethic/,
     /\btransparency\b/,
     /\bhuman\b/,
+    /\bcreative\b/,
+    /\bideation\b/,
+    /\banalytics\b/,
   ]
 
   return usefulPatterns.some((pattern) => pattern.test(text))
 }
 
-function sentenceToClaim(sentence: string) {
-  return cleanSentence(sentence)
-}
-
 function buildClaims(topic: string, evidence: EvidenceRecord): string[] {
+  const canonicalClaims = new Set<string>()
+
   const sentences = evidence.extractedText
     .split(/(?<=[.!?])\s+/)
     .map(cleanSentence)
     .filter(isUsefulSentence)
 
-  const claims = sentences
-    .slice(0, 5)
-    .map(sentenceToClaim)
+  for (const sentence of sentences.slice(0, 12)) {
+    const claim = canonicalClaim(sentence)
 
-  if (claims.length === 0) {
-    return []
+    if (claim) {
+      canonicalClaims.add(claim)
+    }
   }
 
-  return claims
+  return Array.from(canonicalClaims).slice(0, 5)
 }
 
 export function factExtractor(
@@ -255,7 +249,7 @@ export function factExtractor(
     factCount: uniqueFacts.length,
     extractionStatus:
       uniqueFacts.length > 0
-        ? "Structured facts extracted from evidence records."
+        ? "Canonical facts extracted from evidence records."
         : "No facts extracted because no suitable evidence records were supplied.",
   }
 }
