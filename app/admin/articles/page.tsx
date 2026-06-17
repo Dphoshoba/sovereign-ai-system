@@ -49,12 +49,22 @@ export default async function AdminArticlesPage({
   const activeFilter =
     STATUS_FILTERS.find((f) => f.key === statusParam) ?? STATUS_FILTERS[0]
 
-  const articles = await prisma.article.findMany({
-    where: activeFilter.status ? { status: activeFilter.status } : undefined,
-    orderBy: {
-      createdAt: "desc",
+const articles = await prisma.article.findMany({
+  where: activeFilter.status
+    ? { status: activeFilter.status }
+    : undefined,
+  include: {
+    researchAudits: {
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 1,
     },
-  })
+  },
+  orderBy: {
+    createdAt: "desc",
+  },
+})
 
   const counts = await prisma.article.groupBy({
     by: ["status"],
@@ -133,6 +143,9 @@ export default async function AdminArticlesPage({
           </p>
         ) : (
           articles.map((article) => (
+           const audit = article.researchAudits?.[0]
+           
+          return (
             <div key={article.id} style={cardStyle}>
               <h2>{article.title}</h2>
               <p>{article.excerpt}</p>
@@ -142,6 +155,37 @@ export default async function AdminArticlesPage({
               <p>
                 <strong>Status:</strong> {article.status}
               </p>
+              {audit && (
+                <div
+                  style={{
+                    marginTop: "12px",
+                    padding: "12px",
+                    background: "#f8f9fa",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                  }}
+                >
+                 <div>
+                    <strong>Research Confidence:</strong>{" "}
+                    {audit.researchConfidence}
+                 </div>
+
+                 <div>
+                   <strong>Consensus Score:</strong>{" "}
+                   {audit.consensusScore}
+                 </div>
+
+                <div>
+                  <strong>Verification Score:</strong>{" "}
+                  {audit.averageVerificationScore}
+                </div>
+
+                <div>
+                  <strong>Sources:</strong>{" "}
+                  {audit.sourceCount}
+                </div>
+              </div>
+            )}
               {article.scheduledFor && (
                 <p>
                   <strong>Scheduled For:</strong>{" "}
@@ -208,6 +252,13 @@ export default async function AdminArticlesPage({
                 {article.status === "approved" && (
                   <ScheduleArticleButton articleId={article.id} />
                 )}
+               
+                <Link
+                  href={`/admin/articles/${article.id}/audit`}
+                 style={buttonStyle}
+                >
+                  Audit
+                </Link>
 
                 <ArticleActions
                   articleId={article.id}
@@ -220,7 +271,9 @@ export default async function AdminArticlesPage({
       </div>
     </main>
   )
-}
+) 
+})
+
 
 const cardStyle: React.CSSProperties = {
   border: "1px solid var(--border)",
