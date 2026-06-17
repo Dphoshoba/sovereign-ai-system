@@ -272,6 +272,61 @@ export async function POST(request: Request) {
         editorialWarnings: editorialQuality.warnings,
       },
     })
+   
+    await prisma.articleResearchAudit.create({
+      data: {
+        articleId: article.id,
+    
+        sourceCount: sourceCollection.sourceCount,
+        averageAuthorityScore:
+          sourceCollection.averageAuthorityScore,
+    
+        averageTrustScore:
+          sourceCollection.averageTrustScore,
+    
+        researchConfidence:
+          sourceCollection.researchConfidence,
+    
+        evidenceCount:
+          evidence.evidenceCount,
+    
+        factCount:
+          factExtraction.factCount,
+    
+        verifiedCount:
+          factVerification.verifiedCount,
+    
+        partiallyVerifiedCount:
+          factVerification.partiallyVerifiedCount,
+    
+        unverifiedCount:
+          factVerification.unverifiedCount,
+    
+        averageVerificationScore:
+          factVerification.averageVerificationScore,
+    
+        consensusScore:
+          consensus.consensusScore,
+    
+        sourceQualityScore:
+          consensus.sourceQualityScore,
+    
+        publicationRecommendation:
+          consensus.publicationRecommendation,
+    
+        sources:
+          sourceCollection.collectedSources,
+    
+        evidence:
+          evidence.records,
+    
+        facts:
+          factVerification.verifiedFacts,
+    
+        consensus:
+          consensus.consensusGroups,
+      },
+    })
 
     let updatedArticle = article
 

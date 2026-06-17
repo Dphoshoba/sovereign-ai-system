@@ -6,7 +6,6 @@ datasource db {
   provider = "postgresql"
 }
 
-
 model Role {
   id          String   @id @default(cuid())
   key         String   @unique
@@ -60,32 +59,34 @@ enum ArticleStatus {
 }
 
 model Article {
-  id             String            @id @default(cuid())
-  title          String
-  slug           String
-  category       String
-  status         String            @default("draft")
-  excerpt        String?
-  content        String?
-  featuredImage  String?
+  id            String  @id @default(cuid())
+  title         String
+  slug          String
+  category      String
+  status        String  @default("draft")
+  excerpt       String?
+  content       String?
+  featuredImage String?
 
-  seoTitle        String?
+  seoTitle       String?
   seoDescription String?
   seoKeywords    String?
 
-  publishedAt   DateTime?
-  scheduledFor  DateTime?
-  approvedAt     DateTime?
-  approvedBy     String?
-  editorialScore     Int?
-  editorialGrade     String?
-  editorialWarnings  Json?
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  publishedAt       DateTime?
+  scheduledFor      DateTime?
+  approvedAt        DateTime?
+  approvedBy        String?
+  editorialScore    Int?
+  editorialGrade    String?
+  editorialWarnings Json?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
-  embedding      ArticleEmbedding?
-  socialPosts    SocialPost[]
-  newsletters    Newsletter[]
+  embedding   ArticleEmbedding?
+  socialPosts SocialPost[]
+  newsletters Newsletter[]
+
+  researchAudits ArticleResearchAudit[]
 
   @@unique([category, slug])
   @@index([status])
@@ -101,7 +102,6 @@ model ArticleEmbedding {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-  
 
 model AuditEvent {
   id        String   @id @default(cuid())
@@ -127,18 +127,18 @@ model AiMemory {
 }
 
 model AiJob {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   type        String
-  status      String   @default("queued")
+  status      String    @default("queued")
   payload     Json?
   result      Json?
   error       String?
-  attempts    Int      @default(0)
-  scheduledAt DateTime @default(now())
+  attempts    Int       @default(0)
+  scheduledAt DateTime  @default(now())
   startedAt   DateTime?
   completedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([status])
   @@index([type])
@@ -255,13 +255,13 @@ model AiDepartment {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  agents      AiAgent[]
+  agents AiAgent[]
 
   @@index([status])
 }
 
 model AiAgent {
-  id           String       @id @default(cuid())
+  id           String        @id @default(cuid())
   name         String
   departmentId String?
   department   AiDepartment? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
@@ -269,25 +269,25 @@ model AiAgent {
   instructions String
   tools        String?
   tags         String?
-  status       String       @default("active")
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  status       String        @default("active")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
   @@index([status])
   @@index([departmentId])
 }
 
 model AiScheduledOperation {
-  id          String    @id @default(cuid())
-  name        String
-  type        String
-  status      String    @default("active")
-  frequency   String
-  payload     Json?
-  lastRunAt   DateTime?
-  nextRunAt   DateTime
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        String    @id @default(cuid())
+  name      String
+  type      String
+  status    String    @default("active")
+  frequency String
+  payload   Json?
+  lastRunAt DateTime?
+  nextRunAt DateTime
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   @@index([status])
   @@index([type])
@@ -295,15 +295,15 @@ model AiScheduledOperation {
 }
 
 model AiPermissionRule {
-  id          String   @id @default(cuid())
-  agentId     String?
-  department  String?
-  action      String
-  allowed     Boolean  @default(false)
-  requiresApproval Boolean @default(true)
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               String   @id @default(cuid())
+  agentId          String?
+  department       String?
+  action           String
+  allowed          Boolean  @default(false)
+  requiresApproval Boolean  @default(true)
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@index([agentId])
   @@index([department])
@@ -325,17 +325,17 @@ model AiApprovalRequest {
 }
 
 model RevenueRecord {
-  id          String   @id @default(cuid())
-  source      String
-  category    String
-  clientName  String?
-  amount      Float
-  currency    String   @default("AUD")
-  recurring   Boolean  @default(false)
-  status      String   @default("received")
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  source     String
+  category   String
+  clientName String?
+  amount     Float
+  currency   String   @default("AUD")
+  recurring  Boolean  @default(false)
+  status     String   @default("received")
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([source])
   @@index([category])
@@ -344,28 +344,28 @@ model RevenueRecord {
 }
 
 model RevenueInsight {
-  id          String   @id @default(cuid())
-  title       String
-  insight     String
-  priority    String   @default("medium")
-  confidence  Float?
-  source      String?
-  metadata    Json?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  title      String
+  insight    String
+  priority   String   @default("medium")
+  confidence Float?
+  source     String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
 
   @@index([priority])
   @@index([createdAt])
 }
 
 model KnowledgeNode {
-  id         String   @id @default(cuid())
-  type       String
-  label      String
-  entityId   String?
-  summary    String?
-  metadata   Json?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(cuid())
+  type      String
+  label     String
+  entityId  String?
+  summary   String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   outgoingEdges KnowledgeEdge[] @relation("FromNode")
   incomingEdges KnowledgeEdge[] @relation("ToNode")
@@ -412,20 +412,20 @@ model AiAutonomousAction {
 }
 
 model CreatorLead {
-  id            String   @id @default(cuid())
-  name          String
-  email         String   @unique
-  creatorType   String?
-  source        String   @default("starter-pack")
-  status        String   @default("new")
-  leadScore     Int      @default(50)
-  readiness     String   @default("unknown")
-  niche         String?
-  bottlenecks   String?
-  notes         String?
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  creatorType    String?
+  source         String   @default("starter-pack")
+  status         String   @default("new")
+  leadScore      Int      @default(50)
+  readiness      String   @default("unknown")
+  niche          String?
+  bottlenecks    String?
+  notes          String?
   projectedValue Float?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([email])
   @@index([status])
@@ -434,16 +434,16 @@ model CreatorLead {
 }
 
 model CreatorNurtureEvent {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   leadId    String
   type      String
   subject   String?
   body      String?
-  status    String   @default("draft")
+  status    String    @default("draft")
   metadata  Json?
   sentAt    DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   @@index([leadId])
   @@index([status])
@@ -452,14 +452,14 @@ model CreatorNurtureEvent {
 }
 
 model CreatorLeadInsight {
-  id          String   @id @default(cuid())
-  leadId      String
-  title       String
-  insight     String
-  priority    String   @default("medium")
+  id                String   @id @default(cuid())
+  leadId            String
+  title             String
+  insight           String
+  priority          String   @default("medium")
   recommendedAction String?
-  metadata    Json?
-  createdAt   DateTime @default(now())
+  metadata          Json?
+  createdAt         DateTime @default(now())
 
   @@index([leadId])
   @@index([priority])
@@ -467,25 +467,25 @@ model CreatorLeadInsight {
 }
 
 model CreatorAuditRequest {
-  id                String   @id @default(cuid())
-  name              String
-  email             String
-  creatorType        String?
-  niche             String?
-  audienceSize       String?
+  id                  String   @id @default(cuid())
+  name                String
+  email               String
+  creatorType         String?
+  niche               String?
+  audienceSize        String?
   publishingFrequency String?
-  monetizationMethod String?
-  currentTools       String?
-  biggestBottleneck  String?
-  automationGoals    String?
-  status             String   @default("audit-requested")
-  opportunityScore   Int      @default(50)
-  auditSummary       String?
-  recommendedSystems String?
-  nextActions        String?
-  proposalDraft      String?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  monetizationMethod  String?
+  currentTools        String?
+  biggestBottleneck   String?
+  automationGoals     String?
+  status              String   @default("audit-requested")
+  opportunityScore    Int      @default(50)
+  auditSummary        String?
+  recommendedSystems  String?
+  nextActions         String?
+  proposalDraft       String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   @@index([email])
   @@index([status])
@@ -518,20 +518,20 @@ model CreatorAutomationAction {
 }
 
 model CreatorProposal {
-  id              String   @id @default(cuid())
-  auditId         String?
-  leadId          String?
-  title           String
-  description     String?
-  packageType     String?
-  status          String   @default("draft")
-  estimatedValue  Float?
+  id                  String   @id @default(cuid())
+  auditId             String?
+  leadId              String?
+  title               String
+  description         String?
+  packageType         String?
+  status              String   @default("draft")
+  estimatedValue      Float?
   implementationWeeks Int?
-  proposalContent String?
-  pricingBreakdown Json?
-  aiSummary       String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  proposalContent     String?
+  pricingBreakdown    Json?
+  aiSummary           String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   @@index([auditId])
   @@index([leadId])
@@ -540,20 +540,20 @@ model CreatorProposal {
 }
 
 model CreatorInvoice {
-  id              String   @id @default(cuid())
-  proposalId      String?
-  leadId          String?
-  invoiceNumber   String   @unique
-  status          String   @default("draft")
-  amount          Float
-  currency        String   @default("AUD")
-  dueDate         DateTime?
-  paidAt          DateTime?
-  notes           String?
-  paymentLink     String?
-  metadata        Json?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id            String    @id @default(cuid())
+  proposalId    String?
+  leadId        String?
+  invoiceNumber String    @unique
+  status        String    @default("draft")
+  amount        Float
+  currency      String    @default("AUD")
+  dueDate       DateTime?
+  paidAt        DateTime?
+  notes         String?
+  paymentLink   String?
+  metadata      Json?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([proposalId])
   @@index([leadId])
@@ -562,16 +562,16 @@ model CreatorInvoice {
 }
 
 model CreatorRevenueEvent {
-  id          String   @id @default(cuid())
-  type        String
-  title       String
-  amount      Float?
-  status      String   @default("pending")
-  leadId      String?
-  proposalId  String?
-  invoiceId   String?
-  metadata    Json?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  type       String
+  title      String
+  amount     Float?
+  status     String   @default("pending")
+  leadId     String?
+  proposalId String?
+  invoiceId  String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
 
   @@index([type])
   @@index([status])
@@ -580,16 +580,16 @@ model CreatorRevenueEvent {
 }
 
 model CreatorLearningMemory {
-  id          String   @id @default(cuid())
-  type        String
-  title       String
-  insight     String
-  evidence    Json?
-  confidence  Float    @default(0.7)
-  priority    String   @default("medium")
-  status      String   @default("active")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  type       String
+  title      String
+  insight    String
+  evidence   Json?
+  confidence Float    @default(0.7)
+  priority   String   @default("medium")
+  status     String   @default("active")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([type])
   @@index([priority])
@@ -598,11 +598,11 @@ model CreatorLearningMemory {
 }
 
 model CreatorLearningRun {
-  id          String   @id @default(cuid())
-  summary     String?
-  status      String   @default("completed")
-  findings    Json?
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  summary   String?
+  status    String   @default("completed")
+  findings  Json?
+  createdAt DateTime @default(now())
 
   @@index([status])
   @@index([createdAt])
@@ -642,18 +642,18 @@ model ExecutiveAgentRun {
 
 model AgentDelegation {
   id              String   @id @default(cuid())
-  fromAgentId      String
-  fromAgentName    String
-  toAgentId        String
-  toAgentName      String
-  task             String
-  context          String?
-  status           String   @default("pending")
-  priority         String   @default("medium")
-  responseSummary  String?
-  responsePayload  Json?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  fromAgentId     String
+  fromAgentName   String
+  toAgentId       String
+  toAgentName     String
+  task            String
+  context         String?
+  status          String   @default("pending")
+  priority        String   @default("medium")
+  responseSummary String?
+  responsePayload Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([fromAgentId])
   @@index([toAgentId])
@@ -677,16 +677,16 @@ model AgentCollaborationSession {
 }
 
 model AutonomousMissionCycle {
-  id            String   @id @default(cuid())
-  title         String
-  objective     String
-  cycleType     String
-  status        String   @default("running")
-  summary       String?
-  findings      Json?
-  startedAt     DateTime @default(now())
-  completedAt   DateTime?
-  createdAt     DateTime @default(now())
+  id          String    @id @default(cuid())
+  title       String
+  objective   String
+  cycleType   String
+  status      String    @default("running")
+  summary     String?
+  findings    Json?
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
 
   @@index([cycleType])
   @@index([status])
@@ -713,18 +713,18 @@ model AutonomousMissionTask {
 }
 
 model OperationalEvent {
-  id          String   @id @default(cuid())
-  type        String
-  source      String
-  title       String
-  message     String?
-  severity    String   @default("info")
-  status      String   @default("new")
-  entityType  String?
-  entityId    String?
-  payload     Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  type       String
+  source     String
+  title      String
+  message    String?
+  severity   String   @default("info")
+  status     String   @default("new")
+  entityType String?
+  entityId   String?
+  payload    Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([type])
   @@index([source])
@@ -735,16 +735,16 @@ model OperationalEvent {
 }
 
 model PredictiveForecast {
-  id            String   @id @default(cuid())
-  title         String
-  forecastType  String
-  timeframe     String
-  confidence    Float
-  summary       String?
-  prediction    Json?
+  id              String   @id @default(cuid())
+  title           String
+  forecastType    String
+  timeframe       String
+  confidence      Float
+  summary         String?
+  prediction      Json?
   recommendations Json?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([forecastType])
   @@index([timeframe])
@@ -752,28 +752,28 @@ model PredictiveForecast {
 }
 
 model StrategicSimulation {
-  id            String   @id @default(cuid())
-  title         String
-  scenario      String
-  assumptions   Json?
-  results       Json?
-  riskLevel     String   @default("medium")
+  id             String   @id @default(cuid())
+  title          String
+  scenario       String
+  assumptions    Json?
+  results        Json?
+  riskLevel      String   @default("medium")
   recommendation String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([riskLevel])
   @@index([createdAt])
 }
 
 model OptimizationRun {
-  id              String   @id @default(cuid())
-  title           String
-  status          String   @default("completed")
-  summary         String?
-  healthScore     Int      @default(70)
-  findings        Json?
-  createdAt       DateTime @default(now())
+  id          String   @id @default(cuid())
+  title       String
+  status      String   @default("completed")
+  summary     String?
+  healthScore Int      @default(70)
+  findings    Json?
+  createdAt   DateTime @default(now())
 
   @@index([status])
   @@index([healthScore])
@@ -781,20 +781,20 @@ model OptimizationRun {
 }
 
 model OptimizationAction {
-  id              String   @id @default(cuid())
-  runId           String?
-  title           String
-  description     String?
-  actionType      String
-  targetSystem    String
-  priority        String   @default("medium")
-  status          String   @default("proposed")
-  riskLevel       String   @default("medium")
-  payload         Json?
-  result          Json?
-  error           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id           String   @id @default(cuid())
+  runId        String?
+  title        String
+  description  String?
+  actionType   String
+  targetSystem String
+  priority     String   @default("medium")
+  status       String   @default("proposed")
+  riskLevel    String   @default("medium")
+  payload      Json?
+  result       Json?
+  error        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([runId])
   @@index([targetSystem])
@@ -849,17 +849,17 @@ model ExecutiveCopilotMessage {
 }
 
 model ExternalIntegration {
-  id          String   @id @default(cuid())
-  name        String   @unique
+  id          String    @id @default(cuid())
+  name        String    @unique
   provider    String
   category    String
-  status      String   @default("not-configured")
-  enabled     Boolean  @default(false)
+  status      String    @default("not-configured")
+  enabled     Boolean   @default(false)
   config      Json?
   lastChecked DateTime?
   lastError   String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([provider])
   @@index([category])
@@ -886,22 +886,22 @@ model ExternalOperationLog {
 }
 
 model EmailExecution {
-  id          String   @id @default(cuid())
-  to          String
-  subject     String
-  body        String
-  status      String   @default("draft")
-  provider    String   @default("resend")
-  leadId      String?
-  source      String?
-  riskLevel   String   @default("medium")
-  approved    Boolean  @default(false)
-  providerId  String?
-  error       String?
-  metadata    Json?
-  sentAt      DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String    @id @default(cuid())
+  to         String
+  subject    String
+  body       String
+  status     String    @default("draft")
+  provider   String    @default("resend")
+  leadId     String?
+  source     String?
+  riskLevel  String    @default("medium")
+  approved   Boolean   @default(false)
+  providerId String?
+  error      String?
+  metadata   Json?
+  sentAt     DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   @@index([to])
   @@index([status])
@@ -927,15 +927,15 @@ model WorkflowAutomationRule {
 }
 
 model WorkflowAutomationRun {
-  id          String   @id @default(cuid())
-  ruleId      String?
-  eventId     String?
-  status      String   @default("running")
-  summary     String?
-  result      Json?
-  error       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  ruleId    String?
+  eventId   String?
+  status    String   @default("running")
+  summary   String?
+  result    Json?
+  error     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([ruleId])
   @@index([eventId])
@@ -944,16 +944,16 @@ model WorkflowAutomationRun {
 }
 
 model WorkflowAutomationStep {
-  id          String   @id @default(cuid())
-  runId       String
-  actionType  String
-  status      String   @default("pending")
-  title       String
-  payload     Json?
-  result      Json?
-  error       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  runId      String
+  actionType String
+  status     String   @default("pending")
+  title      String
+  payload    Json?
+  result     Json?
+  error      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([runId])
   @@index([actionType])
@@ -976,20 +976,20 @@ model WorkflowDefinition {
 }
 
 model WorkflowExecution {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   workflowId     String
   workflowName   String
   triggerType    String
   triggerSource  String?
-  status         String   @default("queued")
+  status         String    @default("queued")
   currentStep    String?
   completedSteps Json?
   payload        Json?
   result         Json?
   error          String?
-  startedAt      DateTime @default(now())
+  startedAt      DateTime  @default(now())
   completedAt    DateTime?
-  createdAt      DateTime @default(now())
+  createdAt      DateTime  @default(now())
 
   @@index([workflowId])
   @@index([workflowName])
@@ -999,16 +999,16 @@ model WorkflowExecution {
 }
 
 model WorkflowAction {
-  id            String   @id @default(cuid())
-  executionId   String
-  actionType    String
-  title         String
-  status        String   @default("pending")
-  payload       Json?
-  result        Json?
-  error         String?
-  executedAt    DateTime?
-  createdAt     DateTime @default(now())
+  id          String    @id @default(cuid())
+  executionId String
+  actionType  String
+  title       String
+  status      String    @default("pending")
+  payload     Json?
+  result      Json?
+  error       String?
+  executedAt  DateTime?
+  createdAt   DateTime  @default(now())
 
   @@index([executionId])
   @@index([actionType])
@@ -1033,19 +1033,19 @@ model OrchestrationKernelRun {
 }
 
 model OrchestrationDecision {
-  id          String   @id @default(cuid())
-  runId       String?
-  title       String
+  id           String   @id @default(cuid())
+  runId        String?
+  title        String
   decisionType String
   targetSystem String
-  priority    String   @default("medium")
-  status      String   @default("proposed")
-  reason      String?
-  payload     Json?
-  result      Json?
-  error       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  priority     String   @default("medium")
+  status       String   @default("proposed")
+  reason       String?
+  payload      Json?
+  result       Json?
+  error        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([runId])
   @@index([decisionType])
@@ -1054,19 +1054,18 @@ model OrchestrationDecision {
   @@index([status])
 }
 
-
 model RuntimeObjective {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
   description String?
-  priority    String   @default("medium")
-  status      String   @default("active")
-  cadence     String   @default("manual")
+  priority    String    @default("medium")
+  status      String    @default("active")
+  cadence     String    @default("manual")
   lastRunAt   DateTime?
   nextRunAt   DateTime?
   metadata    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([status])
   @@index([priority])
@@ -1088,28 +1087,28 @@ model RuntimeHeartbeat {
 }
 
 model RuntimeMemorySnapshot {
-  id          String   @id @default(cuid())
-  title       String
-  summary     String?
-  snapshot    Json?
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  title     String
+  summary   String?
+  snapshot  Json?
+  createdAt DateTime @default(now())
 
   @@index([createdAt])
 }
 
 model RuntimeRetryQueue {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   source      String
   sourceId    String?
   title       String
-  status      String   @default("queued")
-  attempts    Int      @default(0)
-  maxAttempts Int      @default(3)
+  status      String    @default("queued")
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(3)
   error       String?
   payload     Json?
   nextRetryAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([source])
   @@index([status])
@@ -1117,13 +1116,13 @@ model RuntimeRetryQueue {
 }
 
 model EvolutionRun {
-  id          String   @id @default(cuid())
-  title       String
-  status      String   @default("completed")
-  summary     String?
-  maturityScore Int    @default(70)
-  findings    Json?
-  createdAt   DateTime @default(now())
+  id            String   @id @default(cuid())
+  title         String
+  status        String   @default("completed")
+  summary       String?
+  maturityScore Int      @default(70)
+  findings      Json?
+  createdAt     DateTime @default(now())
 
   @@index([status])
   @@index([maturityScore])
@@ -1131,18 +1130,18 @@ model EvolutionRun {
 }
 
 model EvolutionInsight {
-  id          String   @id @default(cuid())
-  runId       String?
-  type        String
-  title       String
-  insight     String
-  priority    String   @default("medium")
-  confidence  Float    @default(0.7)
+  id           String   @id @default(cuid())
+  runId        String?
+  type         String
+  title        String
+  insight      String
+  priority     String   @default("medium")
+  confidence   Float    @default(0.7)
   targetSystem String?
-  status      String   @default("active")
-  evidence    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  status       String   @default("active")
+  evidence     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([runId])
   @@index([type])
@@ -1152,19 +1151,19 @@ model EvolutionInsight {
 }
 
 model EvolutionPolicyRecommendation {
-  id          String   @id @default(cuid())
-  runId       String?
-  title       String
-  policyArea  String
+  id             String   @id @default(cuid())
+  runId          String?
+  title          String
+  policyArea     String
   recommendation String
-  priority    String   @default("medium")
-  riskLevel   String   @default("medium")
-  status      String   @default("proposed")
-  payload     Json?
-  result      Json?
-  error       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  priority       String   @default("medium")
+  riskLevel      String   @default("medium")
+  status         String   @default("proposed")
+  payload        Json?
+  result         Json?
+  error          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([runId])
   @@index([policyArea])
@@ -1192,23 +1191,23 @@ model StrategicPlan {
 }
 
 model StrategicInitiative {
-  id             String   @id @default(cuid())
-  planId         String?
-  title          String
-  description    String?
-  priority       String   @default("medium")
-  status         String   @default("proposed")
-  ownerSystem    String?
-  targetOutcome  String?
-  executionPath  Json?
-  riskLevel      String   @default("medium")
-  result         Json?
-  error          String?
-  source         String?
-  progress       Int      @default(0)
-  goalId         String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id            String   @id @default(cuid())
+  planId        String?
+  title         String
+  description   String?
+  priority      String   @default("medium")
+  status        String   @default("proposed")
+  ownerSystem   String?
+  targetOutcome String?
+  executionPath Json?
+  riskLevel     String   @default("medium")
+  result        Json?
+  error         String?
+  source        String?
+  progress      Int      @default(0)
+  goalId        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([planId])
   @@index([priority])
@@ -1270,21 +1269,21 @@ model ExecutiveBoardroomSession {
 }
 
 model ExecutiveDecision {
-  id            String   @id @default(cuid())
-  boardroomId   String?
-  title         String
-  description   String?
-  category      String?
-  status        String   @default("proposed")
-  outcome           String?
-  effectiveness     Int?
-  actionTaken       String?
-  lessonLearned     String?
-  reviewDate        DateTime?
-  impactArea        String?
-  followUpRequired  Boolean  @default(false)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id               String    @id @default(cuid())
+  boardroomId      String?
+  title            String
+  description      String?
+  category         String?
+  status           String    @default("proposed")
+  outcome          String?
+  effectiveness    Int?
+  actionTaken      String?
+  lessonLearned    String?
+  reviewDate       DateTime?
+  impactArea       String?
+  followUpRequired Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   @@index([status])
   @@index([category])
@@ -1310,15 +1309,15 @@ model ExecutiveLesson {
 }
 
 model ExecutiveKnowledgeNode {
-  id          String   @id @default(cuid())
-  entityType  String
-  entityId    String
-  title       String
-  summary     String?
-  category    String?
-  metadata    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  entityType String
+  entityId   String
+  title      String
+  summary    String?
+  category   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@unique([entityType, entityId])
   @@index([entityType])
@@ -1327,13 +1326,13 @@ model ExecutiveKnowledgeNode {
 }
 
 model ExecutiveKnowledgeEdge {
-  id          String   @id @default(cuid())
-  fromNodeId  String
-  toNodeId    String
-  relation    String
-  weight      Int      @default(1)
-  metadata    Json?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  fromNodeId String
+  toNodeId   String
+  relation   String
+  weight     Int      @default(1)
+  metadata   Json?
+  createdAt  DateTime @default(now())
 
   @@index([fromNodeId])
   @@index([toNodeId])
@@ -1341,16 +1340,16 @@ model ExecutiveKnowledgeEdge {
 }
 
 model StrategicScenario {
-  id              String   @id @default(cuid())
-  scenario        String
-  title           String
-  summary         String?
-  impactScore     Int?
-  recommendation  String?
-  status          String   @default("generated")
-  simulationJson  Json?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(cuid())
+  scenario       String
+  title          String
+  summary        String?
+  impactScore    Int?
+  recommendation String?
+  status         String   @default("generated")
+  simulationJson Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([scenario])
   @@index([status])
@@ -1372,17 +1371,17 @@ model ExecutiveQuarterlyReview {
 }
 
 model StrategyAdjustment {
-  id               String   @id @default(cuid())
-  title            String
-  description      String?
-  category         String?
-  priority         String   @default("medium")
-  recommendation   String?
-  status           String   @default("proposed")
-  sourceReviewId   String?
-  adjustmentJson   Json?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id             String   @id @default(cuid())
+  title          String
+  description    String?
+  category       String?
+  priority       String   @default("medium")
+  recommendation String?
+  status         String   @default("proposed")
+  sourceReviewId String?
+  adjustmentJson Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([status])
   @@index([category])
@@ -1391,14 +1390,14 @@ model StrategyAdjustment {
 }
 
 model StrategicDecisionLog {
-  id          String   @id @default(cuid())
-  title       String
-  decision    String
-  rationale   String?
-  status      String   @default("recorded")
-  impactArea  String?
-  metadata    Json?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  title      String
+  decision   String
+  rationale  String?
+  status     String   @default("recorded")
+  impactArea String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
 
   @@index([status])
   @@index([impactArea])
@@ -1406,17 +1405,17 @@ model StrategicDecisionLog {
 }
 
 model GovernancePolicy {
-  id            String   @id @default(cuid())
-  title         String
-  description   String?
-  policyType    String
-  severity      String   @default("medium")
-  enforcement   String   @default("advisory")
-  status        String   @default("active")
-  conditions    Json?
-  actions       Json?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  policyType  String
+  severity    String   @default("medium")
+  enforcement String   @default("advisory")
+  status      String   @default("active")
+  conditions  Json?
+  actions     Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([policyType])
   @@index([severity])
@@ -1446,19 +1445,19 @@ model GovernanceArbitration {
 }
 
 model GovernanceApproval {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   title         String
   targetType    String
   targetId      String?
   requestedBy   String?
-  status        String   @default("pending")
-  priority      String   @default("medium")
+  status        String    @default("pending")
+  priority      String    @default("medium")
   rationale     String?
   decisionNotes String?
   approvedAt    DateTime?
   rejectedAt    DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([targetType])
   @@index([targetId])
@@ -1467,17 +1466,17 @@ model GovernanceApproval {
 }
 
 model GovernanceRiskSignal {
-  id            String   @id @default(cuid())
-  title         String
-  signalType    String
-  severity      String   @default("medium")
-  affectedArea  String?
-  description   String?
+  id             String   @id @default(cuid())
+  title          String
+  signalType     String
+  severity       String   @default("medium")
+  affectedArea   String?
+  description    String?
   recommendation String?
-  status        String   @default("open")
-  metadata      Json?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  status         String   @default("open")
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([signalType])
   @@index([severity])
@@ -1486,17 +1485,17 @@ model GovernanceRiskSignal {
 }
 
 model ExternalSignalSource {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   name        String
   sourceType  String
   category    String
   url         String?
-  enabled     Boolean  @default(true)
-  scanCadence String   @default("manual")
+  enabled     Boolean   @default(true)
+  scanCadence String    @default("manual")
   lastScanned DateTime?
   metadata    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([sourceType])
   @@index([category])
@@ -1527,13 +1526,13 @@ model ExternalIntelligenceSignal {
 }
 
 model ExternalWorldScan {
-  id          String   @id @default(cuid())
-  title       String
-  scanType    String
-  status      String   @default("completed")
-  summary     String?
-  findings    Json?
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  title     String
+  scanType  String
+  status    String   @default("completed")
+  summary   String?
+  findings  Json?
+  createdAt DateTime @default(now())
 
   @@index([scanType])
   @@index([status])
@@ -1541,16 +1540,16 @@ model ExternalWorldScan {
 }
 
 model CognitiveEntity {
-  id          String   @id @default(cuid())
-  entityType  String
-  entityId    String?
-  name        String
-  summary     String?
-  importance  Int      @default(50)
-  status      String   @default("active")
-  metadata    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  entityType String
+  entityId   String?
+  name       String
+  summary    String?
+  importance Int      @default(50)
+  status     String   @default("active")
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([entityType])
   @@index([entityId])
@@ -1559,15 +1558,15 @@ model CognitiveEntity {
 }
 
 model CognitiveRelation {
-  id              String   @id @default(cuid())
-  sourceEntityId  String
-  targetEntityId  String
-  relationType    String
-  strength        Float    @default(0.5)
-  summary         String?
-  evidence        Json?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(cuid())
+  sourceEntityId String
+  targetEntityId String
+  relationType   String
+  strength       Float    @default(0.5)
+  summary        String?
+  evidence       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([sourceEntityId])
   @@index([targetEntityId])
@@ -1590,17 +1589,17 @@ model CognitiveSynthesisRun {
 }
 
 model CognitiveInsight {
-  id            String   @id @default(cuid())
-  runId         String?
-  title         String
-  insight       String
-  insightType   String
-  priority      String   @default("medium")
-  confidence    Float    @default(0.7)
+  id              String   @id @default(cuid())
+  runId           String?
+  title           String
+  insight         String
+  insightType     String
+  priority        String   @default("medium")
+  confidence      Float    @default(0.7)
   relatedEntities Json?
-  status        String   @default("active")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  status          String   @default("active")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([runId])
   @@index([insightType])
@@ -1610,21 +1609,21 @@ model CognitiveInsight {
 }
 
 model ExecutiveOperationCampaign {
-  id              String   @id @default(cuid())
-  title           String
-  description     String?
-  campaignType    String
-  priority        String   @default("medium")
-  status          String   @default("planned")
-  strategicGoal   String?
-  executionTempo  String   @default("normal")
-  targetSystems   Json?
+  id                String   @id @default(cuid())
+  title             String
+  description       String?
+  campaignType      String
+  priority          String   @default("medium")
+  status            String   @default("planned")
+  strategicGoal     String?
+  executionTempo    String   @default("normal")
+  targetSystems     Json?
   orchestrationPlan Json?
-  progressScore   Int      @default(0)
-  riskLevel       String   @default("medium")
-  metadata        Json?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  progressScore     Int      @default(0)
+  riskLevel         String   @default("medium")
+  metadata          Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   @@index([campaignType])
   @@index([priority])
@@ -1674,16 +1673,16 @@ model ExecutiveCommandDecision {
 }
 
 model ExecutiveOperationalPulse {
-  id                String   @id @default(cuid())
-  title             String
-  operationalHealth Int      @default(75)
-  executionVelocity Int      @default(70)
-  coordinationScore Int      @default(70)
-  strategicAlignment Int     @default(70)
-  riskPressure      Int      @default(40)
-  summary           String?
-  recommendations   Json?
-  createdAt         DateTime @default(now())
+  id                 String   @id @default(cuid())
+  title              String
+  operationalHealth  Int      @default(75)
+  executionVelocity  Int      @default(70)
+  coordinationScore  Int      @default(70)
+  strategicAlignment Int      @default(70)
+  riskPressure       Int      @default(40)
+  summary            String?
+  recommendations    Json?
+  createdAt          DateTime @default(now())
 
   @@index([operationalHealth])
   @@index([executionVelocity])
@@ -1692,15 +1691,15 @@ model ExecutiveOperationalPulse {
 }
 
 model EconomicIntelligenceRun {
-  id              String   @id @default(cuid())
-  title           String
-  status          String   @default("completed")
-  revenueHealth   Int      @default(70)
-  opportunityScore Int     @default(70)
-  riskPressure    Int      @default(40)
-  summary         String?
-  findings        Json?
-  createdAt       DateTime @default(now())
+  id               String   @id @default(cuid())
+  title            String
+  status           String   @default("completed")
+  revenueHealth    Int      @default(70)
+  opportunityScore Int      @default(70)
+  riskPressure     Int      @default(40)
+  summary          String?
+  findings         Json?
+  createdAt        DateTime @default(now())
 
   @@index([status])
   @@index([revenueHealth])
@@ -1734,19 +1733,19 @@ model RevenueOpportunity {
 }
 
 model EconomicCampaign {
-  id              String   @id @default(cuid())
-  title           String
-  description     String?
-  campaignType    String
-  revenueGoal     Float    @default(0)
-  priority        String   @default("medium")
-  status          String   @default("planned")
-  riskLevel       String   @default("medium")
-  targetAudience  String?
-  strategy        Json?
-  progressScore   Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(cuid())
+  title          String
+  description    String?
+  campaignType   String
+  revenueGoal    Float    @default(0)
+  priority       String   @default("medium")
+  status         String   @default("planned")
+  riskLevel      String   @default("medium")
+  targetAudience String?
+  strategy       Json?
+  progressScore  Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([campaignType])
   @@index([priority])
@@ -1755,18 +1754,18 @@ model EconomicCampaign {
 }
 
 model EconomicDecision {
-  id              String   @id @default(cuid())
-  title           String
-  decisionType    String
-  rationale       String?
-  expectedImpact  String?
-  status          String   @default("proposed")
-  priority        String   @default("medium")
-  payload         Json?
-  result          Json?
-  error           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(cuid())
+  title          String
+  decisionType   String
+  rationale      String?
+  expectedImpact String?
+  status         String   @default("proposed")
+  priority       String   @default("medium")
+  payload        Json?
+  result         Json?
+  error          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([decisionType])
   @@index([status])
@@ -1794,20 +1793,20 @@ model TemporalSimulationRun {
 }
 
 model FutureScenario {
-  id                String   @id @default(cuid())
-  simulationRunId   String?
-  title             String
-  scenarioType      String
-  probability       Float    @default(0.5)
-  impactLevel       String   @default("medium")
-  strategicOutcome  String?
-  economicOutcome   String?
+  id                 String   @id @default(cuid())
+  simulationRunId    String?
+  title              String
+  scenarioType       String
+  probability        Float    @default(0.5)
+  impactLevel        String   @default("medium")
+  strategicOutcome   String?
+  economicOutcome    String?
   operationalOutcome String?
-  governanceOutcome String?
-  narrative         String?
-  recommendations   Json?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  governanceOutcome  String?
+  narrative          String?
+  recommendations    Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   @@index([simulationRunId])
   @@index([scenarioType])
@@ -1815,15 +1814,15 @@ model FutureScenario {
 }
 
 model StrategicTimelineEvent {
-  id               String   @id @default(cuid())
-  simulationRunId  String?
-  title            String
-  eventType        String
-  projectedDate    String
-  severity         String   @default("medium")
-  confidence       Float    @default(0.7)
-  implications     Json?
-  createdAt        DateTime @default(now())
+  id              String   @id @default(cuid())
+  simulationRunId String?
+  title           String
+  eventType       String
+  projectedDate   String
+  severity        String   @default("medium")
+  confidence      Float    @default(0.7)
+  implications    Json?
+  createdAt       DateTime @default(now())
 
   @@index([simulationRunId])
   @@index([eventType])
@@ -1831,18 +1830,18 @@ model StrategicTimelineEvent {
 }
 
 model TemporalRecommendation {
-  id                String   @id @default(cuid())
-  simulationRunId   String?
-  title             String
+  id                 String   @id @default(cuid())
+  simulationRunId    String?
+  title              String
   recommendationType String
-  priority          String   @default("medium")
-  rationale         String?
-  executionWindow   String?
-  expectedBenefit   String?
-  status            String   @default("proposed")
-  payload           Json?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  priority           String   @default("medium")
+  rationale          String?
+  executionWindow    String?
+  expectedBenefit    String?
+  status             String   @default("proposed")
+  payload            Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   @@index([simulationRunId])
   @@index([recommendationType])
@@ -1851,16 +1850,16 @@ model TemporalRecommendation {
 }
 
 model FederatedNode {
-  id          String   @id @default(cuid())
-  name        String
-  nodeType    String
-  domain      String?
-  status      String   @default("active")
-  trustLevel  Int      @default(50)
+  id           String   @id @default(cuid())
+  name         String
+  nodeType     String
+  domain       String?
+  status       String   @default("active")
+  trustLevel   Int      @default(50)
   capabilities Json?
-  metadata    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([nodeType])
   @@index([status])
@@ -1868,16 +1867,16 @@ model FederatedNode {
 }
 
 model FederationSignal {
-  id          String   @id @default(cuid())
-  sourceNode  String
-  signalType  String
-  title       String
-  summary     String?
-  priority    String   @default("medium")
-  status      String   @default("new")
-  payload     Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  sourceNode String
+  signalType String
+  title      String
+  summary    String?
+  priority   String   @default("medium")
+  status     String   @default("new")
+  payload    Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([sourceNode])
   @@index([signalType])
@@ -1886,29 +1885,29 @@ model FederationSignal {
 }
 
 model FederationCouncilSession {
-  id          String   @id @default(cuid())
-  title       String
-  status      String   @default("completed")
-  purpose     String?
+  id           String   @id @default(cuid())
+  title        String
+  status       String   @default("completed")
+  purpose      String?
   participants Json?
-  findings    Json?
-  decisions   Json?
-  createdAt   DateTime @default(now())
+  findings     Json?
+  decisions    Json?
+  createdAt    DateTime @default(now())
 
   @@index([status])
   @@index([createdAt])
 }
 
 model FederationAgreement {
-  id          String   @id @default(cuid())
-  title       String
+  id            String   @id @default(cuid())
+  title         String
   agreementType String
-  parties     Json?
-  terms       Json?
-  status      String   @default("proposed")
-  riskLevel   String   @default("medium")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  parties       Json?
+  terms         Json?
+  status        String   @default("proposed")
+  riskLevel     String   @default("medium")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([agreementType])
   @@index([status])
@@ -1916,18 +1915,18 @@ model FederationAgreement {
 }
 
 model FederationAction {
-  id          String   @id @default(cuid())
-  title       String
-  actionType  String
-  targetNode  String?
-  priority    String   @default("medium")
-  status      String   @default("proposed")
-  rationale   String?
-  payload     Json?
-  result      Json?
-  error       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  title      String
+  actionType String
+  targetNode String?
+  priority   String   @default("medium")
+  status     String   @default("proposed")
+  rationale  String?
+  payload    Json?
+  result     Json?
+  error      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([actionType])
   @@index([targetNode])
@@ -1956,16 +1955,16 @@ model RecursiveEvolutionCycle {
 }
 
 model ArchitectureObservation {
-  id                 String   @id @default(cuid())
-  evolutionCycleId   String?
-  observationType    String
-  title              String
-  severity           String   @default("medium")
-  affectedLayer      String?
-  description        String?
-  recommendation     String?
-  metadata           Json?
-  createdAt          DateTime @default(now())
+  id               String   @id @default(cuid())
+  evolutionCycleId String?
+  observationType  String
+  title            String
+  severity         String   @default("medium")
+  affectedLayer    String?
+  description      String?
+  recommendation   String?
+  metadata         Json?
+  createdAt        DateTime @default(now())
 
   @@index([evolutionCycleId])
   @@index([observationType])
@@ -1974,21 +1973,21 @@ model ArchitectureObservation {
 }
 
 model SelfOptimizationProposal {
-  id                  String   @id @default(cuid())
-  evolutionCycleId    String?
-  proposalType        String
-  title               String
-  rationale           String?
-  expectedBenefit     String?
-  implementationRisk  String   @default("medium")
-  status              String   @default("proposed")
-  targetSystem        String?
-  payload             Json?
-  executionPlan       Json?
-  result              Json?
-  error               String?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  evolutionCycleId   String?
+  proposalType       String
+  title              String
+  rationale          String?
+  expectedBenefit    String?
+  implementationRisk String   @default("medium")
+  status             String   @default("proposed")
+  targetSystem       String?
+  payload            Json?
+  executionPlan      Json?
+  result             Json?
+  error              String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   @@index([evolutionCycleId])
   @@index([proposalType])
@@ -1997,17 +1996,17 @@ model SelfOptimizationProposal {
 }
 
 model InstitutionalMutation {
-  id                 String   @id @default(cuid())
-  mutationType       String
-  title              String
-  description        String?
-  targetLayer        String?
-  strategicImpact    String?
-  riskLevel          String   @default("medium")
-  status             String   @default("simulated")
-  payload            Json?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id              String   @id @default(cuid())
+  mutationType    String
+  title           String
+  description     String?
+  targetLayer     String?
+  strategicImpact String?
+  riskLevel       String   @default("medium")
+  status          String   @default("simulated")
+  payload         Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([mutationType])
   @@index([targetLayer])
@@ -2016,15 +2015,15 @@ model InstitutionalMutation {
 }
 
 model EvolutionMemory {
-  id                String   @id @default(cuid())
-  memoryType        String
-  title             String
-  insight           String
-  confidence        Float    @default(0.7)
-  priority          String   @default("medium")
-  sourceCycleId     String?
-  metadata          Json?
-  createdAt         DateTime @default(now())
+  id            String   @id @default(cuid())
+  memoryType    String
+  title         String
+  insight       String
+  confidence    Float    @default(0.7)
+  priority      String   @default("medium")
+  sourceCycleId String?
+  metadata      Json?
+  createdAt     DateTime @default(now())
 
   @@index([memoryType])
   @@index([priority])
@@ -2032,19 +2031,19 @@ model EvolutionMemory {
 }
 
 model WorldModelRun {
-  id                 String   @id @default(cuid())
-  title              String
-  modelType          String
-  status             String   @default("completed")
-  horizon            String   @default("12-months")
-  confidenceScore    Float    @default(0.65)
-  stabilityIndex     Int      @default(70)
-  opportunityIndex   Int      @default(70)
-  riskIndex          Int      @default(45)
-  summary            String?
-  assumptions        Json?
-  findings           Json?
-  createdAt          DateTime @default(now())
+  id               String   @id @default(cuid())
+  title            String
+  modelType        String
+  status           String   @default("completed")
+  horizon          String   @default("12-months")
+  confidenceScore  Float    @default(0.65)
+  stabilityIndex   Int      @default(70)
+  opportunityIndex Int      @default(70)
+  riskIndex        Int      @default(45)
+  summary          String?
+  assumptions      Json?
+  findings         Json?
+  createdAt        DateTime @default(now())
 
   @@index([modelType])
   @@index([status])
@@ -2054,19 +2053,19 @@ model WorldModelRun {
 }
 
 model PlanetarySignal {
-  id              String   @id @default(cuid())
-  signalType      String
-  domain          String
-  title           String
-  summary         String?
-  severity        String   @default("medium")
-  relevanceScore  Int      @default(50)
-  confidence      Float    @default(0.65)
-  source          String?
-  status          String   @default("new")
-  payload         Json?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(cuid())
+  signalType     String
+  domain         String
+  title          String
+  summary        String?
+  severity       String   @default("medium")
+  relevanceScore Int      @default(50)
+  confidence     Float    @default(0.65)
+  source         String?
+  status         String   @default("new")
+  payload        Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([signalType])
   @@index([domain])
@@ -2076,20 +2075,20 @@ model PlanetarySignal {
 }
 
 model CivilizationScenario {
-  id                String   @id @default(cuid())
-  worldModelRunId   String?
-  title             String
-  scenarioType      String
-  probability       Float    @default(0.5)
-  impactLevel       String   @default("medium")
-  narrative         String?
-  economicImpact    String?
-  technologyImpact  String?
-  socialImpact      String?
-  governanceImpact  String?
-  recommendations   Json?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id               String   @id @default(cuid())
+  worldModelRunId  String?
+  title            String
+  scenarioType     String
+  probability      Float    @default(0.5)
+  impactLevel      String   @default("medium")
+  narrative        String?
+  economicImpact   String?
+  technologyImpact String?
+  socialImpact     String?
+  governanceImpact String?
+  recommendations  Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@index([worldModelRunId])
   @@index([scenarioType])
@@ -2117,18 +2116,18 @@ model WorldModelRecommendation {
 }
 
 model SovereignRuntimeSnapshot {
-  id                    String   @id @default(cuid())
-  title                 String
-  status                String   @default("completed")
-  overallHealth          Int     @default(75)
-  intelligenceScore      Int     @default(75)
-  governanceScore        Int     @default(75)
-  executionScore         Int     @default(75)
-  economicScore          Int     @default(75)
-  futureReadinessScore   Int     @default(75)
-  summary                String?
-  executiveState         Json?
-  createdAt              DateTime @default(now())
+  id                   String   @id @default(cuid())
+  title                String
+  status               String   @default("completed")
+  overallHealth        Int      @default(75)
+  intelligenceScore    Int      @default(75)
+  governanceScore      Int      @default(75)
+  executionScore       Int      @default(75)
+  economicScore        Int      @default(75)
+  futureReadinessScore Int      @default(75)
+  summary              String?
+  executiveState       Json?
+  createdAt            DateTime @default(now())
 
   @@index([status])
   @@index([overallHealth])
@@ -2136,16 +2135,16 @@ model SovereignRuntimeSnapshot {
 }
 
 model SovereignRuntimePriority {
-  id          String   @id @default(cuid())
-  snapshotId  String?
-  title       String
-  priority    String   @default("medium")
-  area        String
-  rationale   String?
-  status      String   @default("active")
-  payload     Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  snapshotId String?
+  title      String
+  priority   String   @default("medium")
+  area       String
+  rationale  String?
+  status     String   @default("active")
+  payload    Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([snapshotId])
   @@index([priority])
@@ -2176,18 +2175,18 @@ model SovereignRuntimeAction {
 }
 
 model SovereignIntelligenceRoute {
-  id            String   @id @default(cuid())
-  snapshotId    String?
-  sourceLayer   String
-  targetLayer   String
-  routeType     String
-  title         String
-  reason        String?
-  priority      String   @default("medium")
-  status        String   @default("open")
-  metadata      Json?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String   @id @default(cuid())
+  snapshotId  String?
+  sourceLayer String
+  targetLayer String
+  routeType   String
+  title       String
+  reason      String?
+  priority    String   @default("medium")
+  status      String   @default("open")
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([sourceLayer])
   @@index([targetLayer])
@@ -2197,30 +2196,30 @@ model SovereignIntelligenceRoute {
 }
 
 model GovernanceRole {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  permissions Json?
-  authorityLevel Int   @default(1)
-  status      String   @default("active")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  name           String   @unique
+  description    String?
+  permissions    Json?
+  authorityLevel Int      @default(1)
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([authorityLevel])
   @@index([status])
 }
 
 model GovernanceActor {
-  id          String   @id @default(cuid())
-  name        String
-  email       String?
-  actorType   String   @default("human")
-  roleId      String?
-  roleName    String?
-  status      String   @default("active")
-  metadata    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  actorType String   @default("human")
+  roleId    String?
+  roleName  String?
+  status    String   @default("active")
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([email])
   @@index([actorType])
@@ -2229,19 +2228,19 @@ model GovernanceActor {
 }
 
 model ConstitutionalPolicy {
-  id            String   @id @default(cuid())
-  title         String
-  description   String?
-  policyArea    String
-  ruleType      String
-  enforcement   String   @default("approval-required")
-  severity      String   @default("medium")
-  status        String   @default("active")
-  conditions    Json?
-  allowedRoles  Json?
+  id             String   @id @default(cuid())
+  title          String
+  description    String?
+  policyArea     String
+  ruleType       String
+  enforcement    String   @default("approval-required")
+  severity       String   @default("medium")
+  status         String   @default("active")
+  conditions     Json?
+  allowedRoles   Json?
   blockedActions Json?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([policyArea])
   @@index([ruleType])
@@ -2281,17 +2280,17 @@ model ExecutionAuthorizationRequest {
 }
 
 model GovernanceAuditTrail {
-  id          String   @id @default(cuid())
-  eventType   String
-  actor       String?
-  actorRole   String?
-  targetType  String?
-  targetId    String?
-  action      String
-  outcome     String
-  severity    String   @default("info")
-  details     Json?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  eventType  String
+  actor      String?
+  actorRole  String?
+  targetType String?
+  targetId   String?
+  action     String
+  outcome    String
+  severity   String   @default("info")
+  details    Json?
+  createdAt  DateTime @default(now())
 
   @@index([eventType])
   @@index([actor])
@@ -2320,18 +2319,18 @@ model InfrastructureHealthCheck {
 }
 
 model ResilienceIncident {
-  id          String   @id @default(cuid())
-  title       String
-  incidentType String
-  severity    String   @default("medium")
-  status      String   @default("open")
+  id             String    @id @default(cuid())
+  title          String
+  incidentType   String
+  severity       String    @default("medium")
+  status         String    @default("open")
   affectedSystem String?
-  summary     String?
-  rootCause   String?
-  recoveryPlan Json?
-  resolvedAt  DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  summary        String?
+  rootCause      String?
+  recoveryPlan   Json?
+  resolvedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@index([incidentType])
   @@index([severity])
@@ -2340,16 +2339,16 @@ model ResilienceIncident {
 }
 
 model ResiliencePolicy {
-  id          String   @id @default(cuid())
-  title       String
-  policyType  String
+  id           String   @id @default(cuid())
+  title        String
+  policyType   String
   targetSystem String?
-  enabled     Boolean  @default(true)
-  severity    String   @default("medium")
-  rules       Json?
-  actions     Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  enabled      Boolean  @default(true)
+  severity     String   @default("medium")
+  rules        Json?
+  actions      Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([policyType])
   @@index([targetSystem])
@@ -2358,20 +2357,20 @@ model ResiliencePolicy {
 }
 
 model ResilienceRetryJob {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   source      String
   sourceId    String?
   title       String
-  status      String   @default("queued")
-  attempts    Int      @default(0)
-  maxAttempts Int      @default(3)
-  priority    String   @default("medium")
+  status      String    @default("queued")
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(3)
+  priority    String    @default("medium")
   error       String?
   payload     Json?
   nextRunAt   DateTime?
   lastRunAt   DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([source])
   @@index([status])
@@ -2380,15 +2379,15 @@ model ResilienceRetryJob {
 }
 
 model InfrastructureEventTrace {
-  id          String   @id @default(cuid())
-  traceType   String
-  source      String
-  target      String?
-  status      String   @default("recorded")
-  durationMs  Int?
-  summary     String?
-  payload     Json?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  traceType  String
+  source     String
+  target     String?
+  status     String   @default("recorded")
+  durationMs Int?
+  summary    String?
+  payload    Json?
+  createdAt  DateTime @default(now())
 
   @@index([traceType])
   @@index([source])
@@ -2398,16 +2397,16 @@ model InfrastructureEventTrace {
 }
 
 model SovereignOrganization {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  orgType     String   @default("creator")
-  status      String   @default("active")
-  plan        String   @default("starter")
-  ownerEmail  String?
-  settings    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  name       String
+  slug       String   @unique
+  orgType    String   @default("creator")
+  status     String   @default("active")
+  plan       String   @default("starter")
+  ownerEmail String?
+  settings   Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([slug])
   @@index([orgType])
@@ -2491,18 +2490,18 @@ model TenantGovernancePolicy {
 }
 
 model TenantRuntimeSnapshot {
-  id             String   @id @default(cuid())
-  organizationId String
-  workspaceId    String?
-  title          String
-  status         String   @default("completed")
-  healthScore    Int      @default(75)
-  governanceScore Int     @default(75)
-  executionScore Int      @default(75)
-  economicScore  Int      @default(75)
-  summary        String?
-  state          Json?
-  createdAt      DateTime @default(now())
+  id              String   @id @default(cuid())
+  organizationId  String
+  workspaceId     String?
+  title           String
+  status          String   @default("completed")
+  healthScore     Int      @default(75)
+  governanceScore Int      @default(75)
+  executionScore  Int      @default(75)
+  economicScore   Int      @default(75)
+  summary         String?
+  state           Json?
+  createdAt       DateTime @default(now())
 
   @@index([organizationId])
   @@index([workspaceId])
@@ -2511,15 +2510,15 @@ model TenantRuntimeSnapshot {
 }
 
 model IdentityUser {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  name          String?
-  status        String   @default("active")
-  defaultOrgId  String?
-  lastLoginAt   DateTime?
-  metadata      Json?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String?
+  status       String    @default("active")
+  defaultOrgId String?
+  lastLoginAt  DateTime?
+  metadata     Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   @@index([email])
   @@index([status])
@@ -2527,17 +2526,17 @@ model IdentityUser {
 }
 
 model IdentitySession {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   userId         String
   email          String
   organizationId String?
   workspaceId    String?
   role           String?
-  status         String   @default("active")
+  status         String    @default("active")
   expiresAt      DateTime?
   metadata       Json?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@index([userId])
   @@index([email])
@@ -2547,18 +2546,18 @@ model IdentitySession {
 }
 
 model OrganizationInvitation {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   organizationId String
   email          String
-  role           String   @default("member")
+  role           String    @default("member")
   invitedBy      String?
-  token          String   @unique
-  status         String   @default("pending")
+  token          String    @unique
+  status         String    @default("pending")
   expiresAt      DateTime?
   acceptedAt     DateTime?
   metadata       Json?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@index([organizationId])
   @@index([email])
@@ -2623,18 +2622,18 @@ model RealtimeEventStream {
 }
 
 model RealtimeEventMessage {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   streamName  String
   eventType   String
   source      String
   title       String
   message     String?
-  priority    String   @default("medium")
-  status      String   @default("pending")
+  priority    String    @default("medium")
+  status      String    @default("pending")
   payload     Json?
   processedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([streamName])
   @@index([eventType])
@@ -2645,15 +2644,15 @@ model RealtimeEventMessage {
 }
 
 model DistributedWorkerNode {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   name          String
   workerType    String
-  status        String   @default("online")
+  status        String    @default("online")
   capabilities  Json?
   lastHeartbeat DateTime?
   metadata      Json?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([workerType])
   @@index([status])
@@ -2661,23 +2660,23 @@ model DistributedWorkerNode {
 }
 
 model DistributedExecutionJob {
-  id            String   @id @default(cuid())
-  jobType       String
-  title         String
-  targetLayer   String?
-  priority      String   @default("medium")
-  status        String   @default("queued")
+  id             String    @id @default(cuid())
+  jobType        String
+  title          String
+  targetLayer    String?
+  priority       String    @default("medium")
+  status         String    @default("queued")
   assignedWorker String?
-  attempts      Int      @default(0)
-  maxAttempts   Int      @default(3)
-  payload       Json?
-  result        Json?
-  error         String?
-  scheduledAt   DateTime?
-  startedAt     DateTime?
-  completedAt   DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  attempts       Int       @default(0)
+  maxAttempts    Int       @default(3)
+  payload        Json?
+  result         Json?
+  error          String?
+  scheduledAt    DateTime?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@index([jobType])
   @@index([targetLayer])
@@ -2707,36 +2706,36 @@ model RealtimeFabricRun {
 }
 
 model BillingPlan {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  slug        String   @unique
-  description String?
-  priceAud    Float    @default(0)
-  billingCycle String  @default("monthly")
-  limits      Json?
-  features    Json?
-  status      String   @default("active")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(cuid())
+  name         String   @unique
+  slug         String   @unique
+  description  String?
+  priceAud     Float    @default(0)
+  billingCycle String   @default("monthly")
+  limits       Json?
+  features     Json?
+  status       String   @default("active")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([slug])
   @@index([status])
 }
 
 model TenantSubscription {
-  id             String   @id @default(cuid())
-  organizationId String
-  planId         String?
-  planSlug       String
-  status         String   @default("active")
-  stripeCustomerId String?
+  id                   String    @id @default(cuid())
+  organizationId       String
+  planId               String?
+  planSlug             String
+  status               String    @default("active")
+  stripeCustomerId     String?
   stripeSubscriptionId String?
-  currentPeriodStart DateTime?
-  currentPeriodEnd   DateTime?
-  cancelAtPeriodEnd  Boolean @default(false)
-  metadata       Json?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
+  metadata             Json?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   @@index([organizationId])
   @@index([planSlug])
@@ -2768,17 +2767,17 @@ model UsageMeterEvent {
 }
 
 model TenantQuotaState {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   organizationId String
   meterType      String
-  limitValue     Float    @default(0)
-  usedValue      Float    @default(0)
-  resetPeriod    String   @default("monthly")
+  limitValue     Float     @default(0)
+  usedValue      Float     @default(0)
+  resetPeriod    String    @default("monthly")
   resetAt        DateTime?
-  status         String   @default("within-limit")
+  status         String    @default("within-limit")
   metadata       Json?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@unique([organizationId, meterType])
   @@index([organizationId])
@@ -2788,18 +2787,18 @@ model TenantQuotaState {
 }
 
 model BillingInvoiceRecord {
-  id             String   @id @default(cuid())
-  organizationId String
-  invoiceNumber  String?
-  status         String   @default("draft")
-  amountAud      Float    @default(0)
-  dueAt          DateTime?
-  paidAt         DateTime?
+  id              String    @id @default(cuid())
+  organizationId  String
+  invoiceNumber   String?
+  status          String    @default("draft")
+  amountAud       Float     @default(0)
+  dueAt           DateTime?
+  paidAt          DateTime?
   stripeInvoiceId String?
-  lineItems      Json?
-  metadata       Json?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  lineItems       Json?
+  metadata        Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@index([organizationId])
   @@index([status])
@@ -2808,16 +2807,16 @@ model BillingInvoiceRecord {
 }
 
 model BillingIntelligenceRun {
-  id              String   @id @default(cuid())
-  title           String
-  status          String   @default("completed")
-  revenueHealth   Int      @default(75)
-  usageHealth     Int      @default(75)
-  quotaRisk       Int      @default(30)
-  costRisk        Int      @default(30)
-  summary         String?
-  findings        Json?
-  createdAt       DateTime @default(now())
+  id            String   @id @default(cuid())
+  title         String
+  status        String   @default("completed")
+  revenueHealth Int      @default(75)
+  usageHealth   Int      @default(75)
+  quotaRisk     Int      @default(30)
+  costRisk      Int      @default(30)
+  summary       String?
+  findings      Json?
+  createdAt     DateTime @default(now())
 
   @@index([status])
   @@index([revenueHealth])
@@ -2857,13 +2856,13 @@ model SemanticEmbeddingIndex {
   organizationId String?
   workspaceId    String?
   embeddingModel String   @default("text-embedding-3-small")
-  vectorHash      String?
-  dimensions      Int      @default(1536)
-  contentPreview  String?
-  metadata        Json?
-  status          String   @default("indexed")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  vectorHash     String?
+  dimensions     Int      @default(1536)
+  contentPreview String?
+  metadata       Json?
+  status         String   @default("indexed")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([knowledgeId])
   @@index([organizationId])
@@ -2898,15 +2897,15 @@ model KnowledgeGraphEdge {
   id             String   @id @default(cuid())
   organizationId String?
   workspaceId    String?
-  sourceNodeId    String
-  targetNodeId    String
-  relationType    String
-  strength        Float    @default(0.5)
-  summary         String?
-  evidence        Json?
-  status          String   @default("active")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  sourceNodeId   String
+  targetNodeId   String
+  relationType   String
+  strength       Float    @default(0.5)
+  summary        String?
+  evidence       Json?
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([organizationId])
   @@index([workspaceId])
@@ -2937,17 +2936,17 @@ model SemanticMemoryQuery {
 }
 
 model KnowledgeGraphSynthesisRun {
-  id             String   @id @default(cuid())
-  organizationId String?
-  workspaceId    String?
-  title          String
-  status         String   @default("completed")
-  graphHealth    Int      @default(75)
-  memoryHealth   Int      @default(75)
-  retrievalHealth Int     @default(75)
-  summary        String?
-  findings       Json?
-  createdAt      DateTime @default(now())
+  id              String   @id @default(cuid())
+  organizationId  String?
+  workspaceId     String?
+  title           String
+  status          String   @default("completed")
+  graphHealth     Int      @default(75)
+  memoryHealth    Int      @default(75)
+  retrievalHealth Int      @default(75)
+  summary         String?
+  findings        Json?
+  createdAt       DateTime @default(now())
 
   @@index([organizationId])
   @@index([workspaceId])
@@ -2956,21 +2955,21 @@ model KnowledgeGraphSynthesisRun {
 }
 
 model ReasoningSimulationRun {
-  id                String   @id @default(cuid())
-  organizationId    String?
-  workspaceId       String?
-  title             String
-  status            String   @default("completed")
-  reasoningType     String   @default("strategic-decision")
-  confidenceScore   Float    @default(0.7)
-  strategicScore    Int      @default(75)
-  riskScore         Int      @default(40)
-  opportunityScore  Int      @default(75)
-  summary           String?
-  question          String?
-  reasoningTrace    Json?
-  findings          Json?
-  createdAt         DateTime @default(now())
+  id               String   @id @default(cuid())
+  organizationId   String?
+  workspaceId      String?
+  title            String
+  status           String   @default("completed")
+  reasoningType    String   @default("strategic-decision")
+  confidenceScore  Float    @default(0.7)
+  strategicScore   Int      @default(75)
+  riskScore        Int      @default(40)
+  opportunityScore Int      @default(75)
+  summary          String?
+  question         String?
+  reasoningTrace   Json?
+  findings         Json?
+  createdAt        DateTime @default(now())
 
   @@index([organizationId])
   @@index([workspaceId])
@@ -3071,23 +3070,23 @@ model ActionMission {
 }
 
 model ActionExecutionStep {
-  id             String   @id @default(cuid())
-  missionId      String?
-  title          String
-  stepType       String
-  targetLayer    String?
-  assignedAgent  String?
-  sequence       Int      @default(1)
-  status         String   @default("queued")
-  priority       String   @default("medium")
-  instruction    String?
-  payload        Json?
-  result         Json?
-  error          String?
-  startedAt      DateTime?
-  completedAt    DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id            String    @id @default(cuid())
+  missionId     String?
+  title         String
+  stepType      String
+  targetLayer   String?
+  assignedAgent String?
+  sequence      Int       @default(1)
+  status        String    @default("queued")
+  priority      String    @default("medium")
+  instruction   String?
+  payload       Json?
+  result        Json?
+  error         String?
+  startedAt     DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([missionId])
   @@index([stepType])
@@ -3098,17 +3097,17 @@ model ActionExecutionStep {
 }
 
 model AgentExecutionAssignment {
-  id             String   @id @default(cuid())
-  missionId      String?
-  stepId         String?
-  agentName      String
-  agentRole      String
-  status         String   @default("assigned")
-  instruction    String?
-  output         Json?
-  confidence     Float    @default(0.7)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id          String   @id @default(cuid())
+  missionId   String?
+  stepId      String?
+  agentName   String
+  agentRole   String
+  status      String   @default("assigned")
+  instruction String?
+  output      Json?
+  confidence  Float    @default(0.7)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([missionId])
   @@index([stepId])
@@ -3138,15 +3137,15 @@ model ActionCoordinationRun {
 }
 
 model ActionOutcomeRecord {
-  id             String   @id @default(cuid())
-  missionId      String?
-  stepId         String?
-  outcomeType    String
-  title          String
-  summary        String?
-  impactLevel    String   @default("medium")
-  evidence       Json?
-  createdAt      DateTime @default(now())
+  id          String   @id @default(cuid())
+  missionId   String?
+  stepId      String?
+  outcomeType String
+  title       String
+  summary     String?
+  impactLevel String   @default("medium")
+  evidence    Json?
+  createdAt   DateTime @default(now())
 
   @@index([missionId])
   @@index([stepId])
@@ -3177,20 +3176,20 @@ model EvolutionOptimizationRun {
 }
 
 model EvolutionImprovementProposal {
-  id                String   @id @default(cuid())
-  runId             String?
-  proposalType      String
-  targetLayer       String
-  title             String
-  description       String?
-  expectedImpact    String?
-  riskLevel         String   @default("medium")
-  optimizationValue Int      @default(70)
-  implementationEffort Int   @default(45)
-  status            String   @default("proposed")
-  payload           Json?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                   String   @id @default(cuid())
+  runId                String?
+  proposalType         String
+  targetLayer          String
+  title                String
+  description          String?
+  expectedImpact       String?
+  riskLevel            String   @default("medium")
+  optimizationValue    Int      @default(70)
+  implementationEffort Int      @default(45)
+  status               String   @default("proposed")
+  payload              Json?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   @@index([runId])
   @@index([proposalType])
@@ -3200,20 +3199,20 @@ model EvolutionImprovementProposal {
 }
 
 model AgentPerformanceProfile {
-  id                 String   @id @default(cuid())
-  agentName          String
-  agentRole          String
-  coordinationScore  Int      @default(70)
-  reliabilityScore   Int      @default(70)
-  executionScore     Int      @default(70)
-  governanceScore    Int      @default(70)
-  adaptationScore    Int      @default(70)
-  strengths          Json?
-  weaknesses         Json?
-  recommendations    Json?
-  lastEvaluatedAt    DateTime?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id                String    @id @default(cuid())
+  agentName         String
+  agentRole         String
+  coordinationScore Int       @default(70)
+  reliabilityScore  Int       @default(70)
+  executionScore    Int       @default(70)
+  governanceScore   Int       @default(70)
+  adaptationScore   Int       @default(70)
+  strengths         Json?
+  weaknesses        Json?
+  recommendations   Json?
+  lastEvaluatedAt   DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   @@index([agentName])
   @@index([agentRole])
@@ -3222,17 +3221,17 @@ model AgentPerformanceProfile {
 }
 
 model WorkflowEvolutionPattern {
-  id                    String   @id @default(cuid())
-  workflowName          String
-  workflowType          String
-  bottleneckRisk        Int      @default(40)
-  efficiencyScore       Int      @default(65)
-  automationPotential   Int      @default(75)
-  governancePressure    Int      @default(35)
+  id                     String   @id @default(cuid())
+  workflowName           String
+  workflowType           String
+  bottleneckRisk         Int      @default(40)
+  efficiencyScore        Int      @default(65)
+  automationPotential    Int      @default(75)
+  governancePressure     Int      @default(35)
   optimizationSuggestion String?
-  payload               Json?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  payload                Json?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 
   @@index([workflowName])
   @@index([workflowType])
@@ -3256,18 +3255,18 @@ model InstitutionalEvolutionMemory {
 }
 
 model FederatedMeshNode {
-  id              String   @id @default(cuid())
-  organizationId  String?
-  nodeName        String
-  nodeType        String   @default("tenant")
-  domain          String?
-  status          String   @default("active")
-  trustScore      Int      @default(70)
-  capabilities    Json?
-  policies        Json?
-  metadata        Json?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(cuid())
+  organizationId String?
+  nodeName       String
+  nodeType       String   @default("tenant")
+  domain         String?
+  status         String   @default("active")
+  trustScore     Int      @default(70)
+  capabilities   Json?
+  policies       Json?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([organizationId])
   @@index([nodeType])
@@ -3276,18 +3275,18 @@ model FederatedMeshNode {
 }
 
 model FederatedIntelligencePacket {
-  id              String   @id @default(cuid())
-  sourceNodeId    String?
-  targetNodeId    String?
-  packetType      String
-  title           String
-  summary         String?
-  priority        String   @default("medium")
-  classification  String   @default("internal")
-  status          String   @default("queued")
-  payload         Json?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(cuid())
+  sourceNodeId   String?
+  targetNodeId   String?
+  packetType     String
+  title          String
+  summary        String?
+  priority       String   @default("medium")
+  classification String   @default("internal")
+  status         String   @default("queued")
+  payload        Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([sourceNodeId])
   @@index([targetNodeId])
@@ -3298,16 +3297,16 @@ model FederatedIntelligencePacket {
 }
 
 model FederationCoordinationSession {
-  id              String   @id @default(cuid())
-  title           String
-  sessionType     String   @default("coordination")
-  status          String   @default("completed")
+  id                 String   @id @default(cuid())
+  title              String
+  sessionType        String   @default("coordination")
+  status             String   @default("completed")
   participatingNodes Json?
-  coordinationGoal String?
-  decisions       Json?
-  risks           Json?
-  outcomes        Json?
-  createdAt       DateTime @default(now())
+  coordinationGoal   String?
+  decisions          Json?
+  risks              Json?
+  outcomes           Json?
+  createdAt          DateTime @default(now())
 
   @@index([sessionType])
   @@index([status])
@@ -3315,16 +3314,16 @@ model FederationCoordinationSession {
 }
 
 model FederationAllianceProtocol {
-  id              String   @id @default(cuid())
-  title           String
-  protocolType    String
-  scope           String   @default("tenant-federation")
-  status          String   @default("active")
-  trustRequired   Int      @default(70)
-  rules           Json?
+  id                 String   @id @default(cuid())
+  title              String
+  protocolType       String
+  scope              String   @default("tenant-federation")
+  status             String   @default("active")
+  trustRequired      Int      @default(70)
+  rules              Json?
   allowedPacketTypes Json?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   @@index([protocolType])
   @@index([scope])
@@ -3333,16 +3332,16 @@ model FederationAllianceProtocol {
 }
 
 model MeshAgentSociety {
-  id              String   @id @default(cuid())
-  societyName     String
-  societyType     String   @default("multi-agent")
-  status          String   @default("active")
-  purpose         String?
-  agents          Json?
+  id                String   @id @default(cuid())
+  societyName       String
+  societyType       String   @default("multi-agent")
+  status            String   @default("active")
+  purpose           String?
+  agents            Json?
   coordinationRules Json?
-  performanceScore Int     @default(70)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  performanceScore  Int      @default(70)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   @@index([societyType])
   @@index([status])
@@ -3350,16 +3349,16 @@ model MeshAgentSociety {
 }
 
 model FederationMeshRun {
-  id              String   @id @default(cuid())
-  title           String
-  status          String   @default("completed")
-  meshHealth      Int      @default(75)
-  trustHealth     Int      @default(75)
-  coordinationScore Int    @default(70)
-  riskScore       Int      @default(35)
-  summary         String?
-  findings        Json?
-  createdAt       DateTime @default(now())
+  id                String   @id @default(cuid())
+  title             String
+  status            String   @default("completed")
+  meshHealth        Int      @default(75)
+  trustHealth       Int      @default(75)
+  coordinationScore Int      @default(70)
+  riskScore         Int      @default(35)
+  summary           String?
+  findings          Json?
+  createdAt         DateTime @default(now())
 
   @@index([status])
   @@index([meshHealth])
@@ -3369,19 +3368,19 @@ model FederationMeshRun {
 }
 
 model WorldModelV2Run {
-  id                String   @id @default(cuid())
-  title             String
-  status            String   @default("completed")
-  horizon           String   @default("12-months")
-  confidenceScore   Float    @default(0.7)
-  planetaryStability Int     @default(70)
-  opportunityIndex  Int      @default(75)
-  systemicRiskIndex Int      @default(40)
-  strategicReadiness Int     @default(70)
-  summary           String?
-  assumptions       Json?
-  findings          Json?
-  createdAt         DateTime @default(now())
+  id                 String   @id @default(cuid())
+  title              String
+  status             String   @default("completed")
+  horizon            String   @default("12-months")
+  confidenceScore    Float    @default(0.7)
+  planetaryStability Int      @default(70)
+  opportunityIndex   Int      @default(75)
+  systemicRiskIndex  Int      @default(40)
+  strategicReadiness Int      @default(70)
+  summary            String?
+  assumptions        Json?
+  findings           Json?
+  createdAt          DateTime @default(now())
 
   @@index([status])
   @@index([horizon])
@@ -3390,18 +3389,18 @@ model WorldModelV2Run {
 }
 
 model PlanetaryDomainSignal {
-  id              String   @id @default(cuid())
-  runId           String?
-  domain          String
-  signalType      String
-  title           String
-  summary         String?
-  severity        String   @default("medium")
-  probability     Float    @default(0.5)
-  impactScore     Int      @default(50)
-  sourceLayer     String?
-  payload         Json?
-  createdAt       DateTime @default(now())
+  id          String   @id @default(cuid())
+  runId       String?
+  domain      String
+  signalType  String
+  title       String
+  summary     String?
+  severity    String   @default("medium")
+  probability Float    @default(0.5)
+  impactScore Int      @default(50)
+  sourceLayer String?
+  payload     Json?
+  createdAt   DateTime @default(now())
 
   @@index([runId])
   @@index([domain])
@@ -3411,17 +3410,17 @@ model PlanetaryDomainSignal {
 }
 
 model PlanetaryScenarioV2 {
-  id              String   @id @default(cuid())
-  runId           String?
-  title           String
-  scenarioType    String
-  probability     Float    @default(0.5)
-  impactLevel     String   @default("medium")
-  narrative       String?
-  risks           Json?
-  opportunities   Json?
-  strategicMoves  Json?
-  createdAt       DateTime @default(now())
+  id             String   @id @default(cuid())
+  runId          String?
+  title          String
+  scenarioType   String
+  probability    Float    @default(0.5)
+  impactLevel    String   @default("medium")
+  narrative      String?
+  risks          Json?
+  opportunities  Json?
+  strategicMoves Json?
+  createdAt      DateTime @default(now())
 
   @@index([runId])
   @@index([scenarioType])
@@ -3465,18 +3464,18 @@ model PlanetaryStressTest {
 }
 
 model StrategicShockModel {
-  id              String   @id @default(cuid())
-  runId           String?
-  title           String
-  shockType       String
-  severity        String   @default("medium")
-  probability     Float    @default(0.5)
-  impactScore     Int      @default(50)
-  timeHorizon     String   @default("near-term")
-  narrative       String?
-  responsePlan    String?
-  payload         Json?
-  createdAt       DateTime @default(now())
+  id           String   @id @default(cuid())
+  runId        String?
+  title        String
+  shockType    String
+  severity     String   @default("medium")
+  probability  Float    @default(0.5)
+  impactScore  Int      @default(50)
+  timeHorizon  String   @default("near-term")
+  narrative    String?
+  responsePlan String?
+  payload      Json?
+  createdAt    DateTime @default(now())
 
   @@index([runId])
   @@index([shockType])
@@ -3485,26 +3484,26 @@ model StrategicShockModel {
 }
 
 model PlanetaryRecommendationV2 {
-  id                        String   @id @default(cuid())
-  runId                     String?
-  title                     String
-  recommendationType        String   @default("strategy")
-  priority                  String   @default("medium")
-  rationale                 String?
-  expectedOutcome           String?
-  urgencyScore              Int      @default(50)
-  opportunityScore          Int      @default(50)
-  riskScore                 Int      @default(40)
-  costPressureScore         Int      @default(40)
-  executionDifficultyScore  Int      @default(50)
-  governanceSensitivityScore Int     @default(40)
-  confidenceScore           Float    @default(0.7)
-  compositeScore            Int      @default(60)
-  requiredApproval          Boolean  @default(true)
-  status                    String   @default("proposed")
-  payload                   Json?
-  createdAt                 DateTime @default(now())
-  updatedAt                 DateTime @updatedAt
+  id                         String   @id @default(cuid())
+  runId                      String?
+  title                      String
+  recommendationType         String   @default("strategy")
+  priority                   String   @default("medium")
+  rationale                  String?
+  expectedOutcome            String?
+  urgencyScore               Int      @default(50)
+  opportunityScore           Int      @default(50)
+  riskScore                  Int      @default(40)
+  costPressureScore          Int      @default(40)
+  executionDifficultyScore   Int      @default(50)
+  governanceSensitivityScore Int      @default(40)
+  confidenceScore            Float    @default(0.7)
+  compositeScore             Int      @default(60)
+  requiredApproval           Boolean  @default(true)
+  status                     String   @default("proposed")
+  payload                    Json?
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
 
   @@index([runId])
   @@index([recommendationType])
@@ -3531,13 +3530,13 @@ model NewsletterSubscriber {
 }
 
 model ContentOperatingItem {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
   contentType String
-  channel     String   @default("youtube")
+  channel     String    @default("youtube")
   pillar      String?
-  status      String   @default("idea")
-  priority    String   @default("medium")
+  status      String    @default("idea")
+  priority    String    @default("medium")
   script      String?
   hook        String?
   description String?
@@ -3545,8 +3544,8 @@ model ContentOperatingItem {
   tags        Json?
   publishAt   DateTime?
   metadata    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([contentType])
   @@index([channel])
@@ -3574,11 +3573,11 @@ model PublishingCadenceGoal {
 }
 
 model YouTubePublishingAsset {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   contentItemId String?
   title         String
   assetType     String
-  status        String   @default("idea")
+  status        String    @default("idea")
   hook          String?
   script        String?
   description   String?
@@ -3586,10 +3585,10 @@ model YouTubePublishingAsset {
   cta           String?
   publishAt     DateTime?
   pillar        String?
-  score         Int      @default(70)
+  score         Int       @default(70)
   metadata      Json?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([contentItemId])
   @@index([assetType])
@@ -3617,15 +3616,15 @@ model YouTubeIntelligenceRun {
 }
 
 model PublishingWorkflowEvent {
-  id          String   @id @default(cuid())
-  assetId     String?
-  eventType   String
-  title       String
-  status      String   @default("open")
-  notes       String?
-  metadata    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  assetId   String?
+  eventType String
+  title     String
+  status    String   @default("open")
+  notes     String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([assetId])
   @@index([eventType])
@@ -3633,20 +3632,20 @@ model PublishingWorkflowEvent {
 }
 
 model AudienceProfile {
-  id                 String   @id @default(cuid())
-  email              String?  @unique
-  name               String?
-  source             String?
-  audienceType       String   @default("unknown")
-  relationshipStage  String   @default("visitor")
-  trustScore         Int      @default(50)
-  engagementScore    Int      @default(50)
-  resonanceScore     Int      @default(50)
-  tags               Json?
-  interests          Json?
-  metadata           Json?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id                String   @id @default(cuid())
+  email             String?  @unique
+  name              String?
+  source            String?
+  audienceType      String   @default("unknown")
+  relationshipStage String   @default("visitor")
+  trustScore        Int      @default(50)
+  engagementScore   Int      @default(50)
+  resonanceScore    Int      @default(50)
+  tags              Json?
+  interests         Json?
+  metadata          Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   @@index([email])
   @@index([source])
@@ -3655,15 +3654,15 @@ model AudienceProfile {
 }
 
 model AudienceInteraction {
-  id               String   @id @default(cuid())
+  id                String   @id @default(cuid())
   audienceProfileId String?
-  interactionType  String
-  channel          String
-  title            String?
-  content          String?
-  score            Int      @default(50)
-  metadata         Json?
-  createdAt        DateTime @default(now())
+  interactionType   String
+  channel           String
+  title             String?
+  content           String?
+  score             Int      @default(50)
+  metadata          Json?
+  createdAt         DateTime @default(now())
 
   @@index([audienceProfileId])
   @@index([interactionType])
@@ -3671,14 +3670,14 @@ model AudienceInteraction {
 }
 
 model AudienceTopicSignal {
-  id          String   @id @default(cuid())
-  topic       String
-  pillar      String?
-  signalType  String
-  strength    Int      @default(50)
-  source      String?
-  metadata    Json?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  topic      String
+  pillar     String?
+  signalType String
+  strength   Int      @default(50)
+  source     String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
 
   @@index([topic])
   @@index([pillar])
@@ -3686,16 +3685,16 @@ model AudienceTopicSignal {
 }
 
 model CommunityInsightRun {
-  id                String   @id @default(cuid())
-  title             String
-  summary           String?
-  audienceHealth    Int      @default(70)
-  resonanceHealth   Int      @default(70)
-  conversionHealth  Int      @default(70)
-  findings          Json?
-  recommendations   Json?
-  metadata          Json?
-  createdAt         DateTime @default(now())
+  id               String   @id @default(cuid())
+  title            String
+  summary          String?
+  audienceHealth   Int      @default(70)
+  resonanceHealth  Int      @default(70)
+  conversionHealth Int      @default(70)
+  findings         Json?
+  recommendations  Json?
+  metadata         Json?
+  createdAt        DateTime @default(now())
 
   @@index([audienceHealth])
   @@index([resonanceHealth])
@@ -3734,34 +3733,33 @@ model Newsletter {
   previewText String?
   content     String
 
-  status      String   @default("review-required")
+  status String @default("review-required")
 
-  approvedAt  DateTime?
-  approvedBy  String?
+  approvedAt DateTime?
+  approvedBy String?
 
-  sentAt      DateTime?
+  sentAt       DateTime?
   scheduledFor DateTime?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([articleId])
   @@index([status])
 }
 
-
 model SocialPost {
-  id          String   @id @default(cuid())
-  articleId   String?
-  article     Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  platform    String
-  content     String
-  status      String   @default("review-required")
-  externalId  String?
-  publishedAt DateTime?
+  id           String    @id @default(cuid())
+  articleId    String?
+  article      Article?  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  platform     String
+  content      String
+  status       String    @default("review-required")
+  externalId   String?
+  publishedAt  DateTime?
   scheduledFor DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   @@index([articleId])
   @@index([platform])
@@ -3769,76 +3767,76 @@ model SocialPost {
 }
 
 model YouTubePost {
-  id                String   @id @default(cuid())
-  articleId         String?
-  title             String
-  description       String
-  tags              String?
-  shortsCaption     String?
-  thumbnailPrompt   String?
-  thumbnailImage    String?
-  scriptOutline     String?
-  fullScript        String?
-  shortsHooks       String?
-  retentionHooks    String?
-  chapterTimestamps String?
-  cta               String?
-  shortsIdeas       String?
-  shortsScripts     String?
-  editingNotes      String?
-  pacingSuggestions String?
-  viralAngles       String?
-  voiceoverUrl      String?
-  shortsVoiceUrl    String?
-  scenePlan         String?
-  brollSuggestions  String?
-  cameraDirections  String?
-  visualPrompts     String?
-  shortsScenes      String?
-  youtubeVideoId String?
-  youtubeUrl     String?
-  uploadStatus   String? @default("draft")
-  scheduledFor   DateTime?
-  status            String   @default("draft")
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  shortsVideoUrl String?
-  shortsUploadUrl String?
-  shortsVideoId  String?
-  subtitleUrl String?
-  shortsStatus   String? @default("draft")
-  renderedVideoUrl String?
-  renderStatus     String? @default("draft")
-  sceneTimeline Json?
-  selectedMusic String?
+  id                  String    @id @default(cuid())
+  articleId           String?
+  title               String
+  description         String
+  tags                String?
+  shortsCaption       String?
+  thumbnailPrompt     String?
+  thumbnailImage      String?
+  scriptOutline       String?
+  fullScript          String?
+  shortsHooks         String?
+  retentionHooks      String?
+  chapterTimestamps   String?
+  cta                 String?
+  shortsIdeas         String?
+  shortsScripts       String?
+  editingNotes        String?
+  pacingSuggestions   String?
+  viralAngles         String?
+  voiceoverUrl        String?
+  shortsVoiceUrl      String?
+  scenePlan           String?
+  brollSuggestions    String?
+  cameraDirections    String?
+  visualPrompts       String?
+  shortsScenes        String?
+  youtubeVideoId      String?
+  youtubeUrl          String?
+  uploadStatus        String?   @default("draft")
+  scheduledFor        DateTime?
+  status              String    @default("draft")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  shortsVideoUrl      String?
+  shortsUploadUrl     String?
+  shortsVideoId       String?
+  subtitleUrl         String?
+  shortsStatus        String?   @default("draft")
+  renderedVideoUrl    String?
+  renderStatus        String?   @default("draft")
+  sceneTimeline       Json?
+  selectedMusic       String?
   generatedTitles     String?
   generatedThumbnails String?
   generatedShorts     String?
 }
 
 model PublishingQueue {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   articleId   String
   platform    String
   contentType String
-  status      String   @default("pending")
+  status      String    @default("pending")
   scheduledAt DateTime?
   publishedAt DateTime?
   payload     String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model AgentMemory {
-  id               String   @id @default(cuid())
-  topic            String
-  title            String
-  thumbnailStyle   String
-  ctr              Float
-  retention        Float
-  views            Int
-  outcome          String
-  createdAt        DateTime @default(now())
+  id             String   @id @default(cuid())
+  topic          String
+  title          String
+  thumbnailStyle String
+  ctr            Float
+  retention      Float
+  views          Int
+  outcome        String
+  createdAt      DateTime @default(now())
 }
 
 model VideoPerformanceMemory {
@@ -3854,12 +3852,13 @@ model VideoPerformanceMemory {
   strategyNotes           Json?
   createdAt               DateTime @default(now())
 }
-model Subscriber {
-  id        String   @id @default(cuid())
-  email     String   @unique
 
-  status    String   @default("active")
-  source    String?
+model Subscriber {
+  id    String @id @default(cuid())
+  email String @unique
+
+  status String  @default("active")
+  source String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -3879,14 +3878,50 @@ model LeadMagnet {
 }
 
 model MonthlySnapshot {
-  id                String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  month             String   @unique
+  month String @unique
 
   articlesPublished Int
   socialPublished   Int
   newslettersSent   Int
   subscribers       Int
 
-  createdAt         DateTime @default(now())
+  createdAt DateTime @default(now())
+}
+
+model ArticleResearchAudit {
+  id String @id @default(cuid())
+
+  articleId String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  sourceCount           Int @default(0)
+  averageAuthorityScore Int @default(0)
+  averageTrustScore     Int @default(0)
+  researchConfidence    Int @default(0)
+
+  evidenceCount Int @default(0)
+
+  factCount Int @default(0)
+
+  verifiedCount          Int @default(0)
+  partiallyVerifiedCount Int @default(0)
+  unverifiedCount        Int @default(0)
+
+  averageVerificationScore Int @default(0)
+
+  consensusScore     Int @default(0)
+  sourceQualityScore Int @default(0)
+
+  publicationRecommendation String?
+
+  sources   Json?
+  evidence  Json?
+  facts     Json?
+  consensus Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([articleId])
 }
