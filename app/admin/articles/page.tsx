@@ -29,13 +29,13 @@ function gradeColor(grade: string | null) {
 function gradeLabel(grade: string | null) {
   switch (grade) {
     case "approval-candidate":
-      return "🟢 Approval Candidate"
+      return "Approval Candidate"
     case "review":
-      return "🟡 Review"
+      return "Review"
     case "reject":
-      return "🔴 Reject"
+      return "Reject"
     default:
-      return "⚪ Unscored"
+      return "Unscored"
   }
 }
 
@@ -49,22 +49,16 @@ export default async function AdminArticlesPage({
   const activeFilter =
     STATUS_FILTERS.find((f) => f.key === statusParam) ?? STATUS_FILTERS[0]
 
-const articles = await prisma.article.findMany({
-  where: activeFilter.status
-    ? { status: activeFilter.status }
-    : undefined,
-  include: {
-    researchAudits: {
-      orderBy: {
-        createdAt: "desc",
+  const articles = await prisma.article.findMany({
+    where: activeFilter.status ? { status: activeFilter.status } : undefined,
+    include: {
+      researchAudits: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
       },
-      take: 1,
     },
-  },
-  orderBy: {
-    createdAt: "desc",
-  },
-})
+    orderBy: { createdAt: "desc" },
+  })
 
   const counts = await prisma.article.groupBy({
     by: ["status"],
@@ -73,6 +67,7 @@ const articles = await prisma.article.findMany({
 
   const countByStatus = new Map<string, number>()
   let total = 0
+
   for (const row of counts) {
     countByStatus.set(row.status, row._count._all)
     total += row._count._all
@@ -142,138 +137,151 @@ const articles = await prisma.article.findMany({
             No articles with status &ldquo;{activeFilter.label}&rdquo;.
           </p>
         ) : (
-          articles.map((article) => (
-           const audit = article.researchAudits?.[0]
-           
-          return (
-            <div key={article.id} style={cardStyle}>
-              <h2>{article.title}</h2>
-              <p>{article.excerpt}</p>
-              <p>
-                <strong>Category:</strong> {article.category}
-              </p>
-              <p>
-                <strong>Status:</strong> {article.status}
-              </p>
-              {audit && (
-                <div
-                  style={{
-                    marginTop: "12px",
-                    padding: "12px",
-                    background: "#f8f9fa",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                  }}
-                >
-                 <div>
-                    <strong>Research Confidence:</strong>{" "}
-                    {audit.researchConfidence}
-                 </div>
+          articles.map((article) => {
+            const audit = article.researchAudits?.[0]
 
-                 <div>
-                   <strong>Consensus Score:</strong>{" "}
-                   {audit.consensusScore}
-                 </div>
+            return (
+              <div key={article.id} style={cardStyle}>
+                <h2>{article.title}</h2>
+                <p>{article.excerpt}</p>
 
-                <div>
-                  <strong>Verification Score:</strong>{" "}
-                  {audit.averageVerificationScore}
-                </div>
-
-                <div>
-                  <strong>Sources:</strong>{" "}
-                  {audit.sourceCount}
-                </div>
-              </div>
-            )}
-              {article.scheduledFor && (
                 <p>
-                  <strong>Scheduled For:</strong>{" "}
-                  {new Date(article.scheduledFor).toLocaleString()}
+                  <strong>Category:</strong> {article.category}
                 </p>
-              )}
-              <div
-                style={{
-                  marginTop: "8px",
-                  fontWeight: "bold",
-                  color:
-                    (article.editorialScore ?? 0) >= 80
-                      ? "#15803d"
-                      : (article.editorialScore ?? 0) >= 60
-                        ? "#d97706"
-                        : "#b91c1c",
-                }}
-              >
-                Editorial Score: {article.editorialScore ?? "Not scored"}
-              </div>
-              <div
-                style={{
-                  display: "inline-block",
-                  padding: "6px 12px",
-                  borderRadius: "999px",
-                  background: gradeColor(article.editorialGrade),
-                  color: "var(--button-foreground)",
-                  fontWeight: "bold",
-                  marginTop: "8px",
-                }}
-              >
-                {gradeLabel(article.editorialGrade)}
-              </div>
-              {Array.isArray(article.editorialWarnings) &&
-                article.editorialWarnings.length > 0 && (
-                  <div>
-                    <strong>Editorial Warnings:</strong>
-                    <ul>
-                      {article.editorialWarnings.map((warning, index) => (
-                        <li key={index}>{String(warning)}</li>
-                      ))}
-                    </ul>
+
+                <p>
+                  <strong>Status:</strong> {article.status}
+                </p>
+
+                {audit && (
+                  <div
+                    style={{
+                      marginTop: "12px",
+                      padding: "12px",
+                      background: "#f8f9fa",
+                      borderRadius: "8px",
+                      fontSize: "14px",
+                    }}
+                  >
+                    <div>
+                      <strong>Research Confidence:</strong>{" "}
+                      {audit.researchConfidence}
+                    </div>
+
+                    <div>
+                      <strong>Consensus Score:</strong> {audit.consensusScore}
+                    </div>
+
+                    <div>
+                      <strong>Verification Score:</strong>{" "}
+                      {audit.averageVerificationScore}
+                    </div>
+
+                    <div>
+                      <strong>Sources:</strong> {audit.sourceCount}
+                    </div>
                   </div>
                 )}
-              <p>
-                <strong>ID:</strong> {article.id}
-              </p>
-              <p>
-                <strong>Slug:</strong> {article.slug}
-              </p>
 
-              <div style={{ display: "flex", gap: "12px", marginTop: "16px" }}>
-                <Link
-                  href={`/admin/articles/${article.id}/edit`}
-                  style={buttonStyle}
-                >
-                  Edit
-                </Link>
-
-                {article.status === "review-required" && (
-                  <ArticleReviewActions articleId={article.id} />
+                {article.scheduledFor && (
+                  <p>
+                    <strong>Scheduled For:</strong>{" "}
+                    {new Date(article.scheduledFor).toLocaleString()}
+                  </p>
                 )}
 
-                {article.status === "approved" && (
-                  <ScheduleArticleButton articleId={article.id} />
-                )}
-               
-                <Link
-                  href={`/admin/articles/${article.id}/audit`}
-                 style={buttonStyle}
+                <div
+                  style={{
+                    marginTop: "8px",
+                    fontWeight: "bold",
+                    color:
+                      (article.editorialScore ?? 0) >= 80
+                        ? "#15803d"
+                        : (article.editorialScore ?? 0) >= 60
+                          ? "#d97706"
+                          : "#b91c1c",
+                  }}
                 >
-                  Audit
-                </Link>
+                  Editorial Score: {article.editorialScore ?? "Not scored"}
+                </div>
 
-                <ArticleActions
-                  articleId={article.id}
-                  status={article.status}
-                />
+                <div
+                  style={{
+                    display: "inline-block",
+                    padding: "6px 12px",
+                    borderRadius: "999px",
+                    background: gradeColor(article.editorialGrade),
+                    color: "var(--button-foreground)",
+                    fontWeight: "bold",
+                    marginTop: "8px",
+                  }}
+                >
+                  {gradeLabel(article.editorialGrade)}
+                </div>
+
+                {Array.isArray(article.editorialWarnings) &&
+                  article.editorialWarnings.length > 0 && (
+                    <div>
+                      <strong>Editorial Warnings:</strong>
+                      <ul>
+                        {article.editorialWarnings.map((warning, index) => (
+                          <li key={index}>{String(warning)}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                <p>
+                  <strong>ID:</strong> {article.id}
+                </p>
+
+                <p>
+                  <strong>Slug:</strong> {article.slug}
+                </p>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "12px",
+                    marginTop: "16px",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <Link
+                    href={`/admin/articles/${article.id}/edit`}
+                    style={buttonStyle}
+                  >
+                    Edit
+                  </Link>
+
+                  <Link
+                    href={`/admin/articles/${article.id}/audit`}
+                    style={buttonStyle}
+                  >
+                    Audit
+                  </Link>
+
+                  {article.status === "review-required" && (
+                    <ArticleReviewActions articleId={article.id} />
+                  )}
+
+                  {article.status === "approved" && (
+                    <ScheduleArticleButton articleId={article.id} />
+                  )}
+
+                  <ArticleActions
+                    articleId={article.id}
+                    status={article.status}
+                  />
+                </div>
               </div>
-            </div>
-          ))
+            )
+          })
         )}
       </div>
     </main>
   )
-) 
-})
-
+}
 
 const cardStyle: React.CSSProperties = {
   border: "1px solid var(--border)",

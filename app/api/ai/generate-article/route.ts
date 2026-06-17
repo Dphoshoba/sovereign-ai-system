@@ -316,7 +316,7 @@ export async function POST(request: Request) {
         sources:
           sourceCollection.collectedSources,
     
-        evidence:
+
         evidence: evidence.evidence,
     
         facts:
