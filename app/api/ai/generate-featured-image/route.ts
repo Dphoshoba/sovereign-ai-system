@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server"
-import { writeFile } from "fs/promises"
+import { mkdir, writeFile } from "fs/promises"
 import path from "path"
 import { prisma } from "@/lib/prisma"
 import { getOpenAI } from "@/lib/ai/openai"
+import { calculateEditorialQualityScore } from "../../../../lib/editorial/quality-score"
 
 function safeFileName(value: string) {
   return value
@@ -12,14 +13,16 @@ function safeFileName(value: string) {
     .replace(/^-+|-+$/g, "")
 }
 
+function wordCount(value: string | null) {
+  if (!value) return 0
+  return value.split(/\s+/).filter(Boolean).length
+}
+
 export async function POST(request: Request) {
   try {
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
-        {
-          ok: false,
-          error: "Missing OPENAI_API_KEY",
-        },
+        { ok: false, error: "Missing OPENAI_API_KEY" },
         { status: 500 }
       )
     }
@@ -29,26 +32,18 @@ export async function POST(request: Request) {
 
     if (!articleId) {
       return NextResponse.json(
-        {
-          ok: false,
-          error: "Missing articleId",
-        },
+        { ok: false, error: "Missing articleId" },
         { status: 400 }
       )
     }
 
     const article = await prisma.article.findUnique({
-      where: {
-        id: articleId,
-      },
+      where: { id: articleId },
     })
 
     if (!article) {
       return NextResponse.json(
-        {
-          ok: false,
-          error: "Article not found",
-        },
+        { ok: false, error: "Article not found" },
         { status: 404 }
       )
     }
@@ -56,7 +51,7 @@ export async function POST(request: Request) {
     const prompt =
       article.featuredImage && !article.featuredImage.startsWith("/")
         ? article.featuredImage
-        : `Create a cinematic blog cover image for this article: ${article.title}. Modern AI automation, warm professional lighting, human-centered technology, elegant premium SaaS feel, no text, no logos, no watermarks.`
+        : `Create a cinematic blog cover image for this article: ${article.title}. Modern AI automation, warm professional lighting, human-centered technology, elegant premium SaaS feel, abstract creator workspace, no text, no logos, no watermarks.`
 
     const image = await getOpenAI().images.generate({
       model: "gpt-image-2",
@@ -68,33 +63,42 @@ export async function POST(request: Request) {
 
     if (!base64) {
       return NextResponse.json(
-        {
-          ok: false,
-          error: "No image returned from OpenAI",
-        },
+        { ok: false, error: "No image returned from OpenAI" },
         { status: 500 }
       )
     }
 
-    const fileName = `${safeFileName(article.slug)}-${Date.now()}.png`
+    const generatedDir = path.join(process.cwd(), "public", "generated")
+    await mkdir(generatedDir, { recursive: true })
 
-    const filePath = path.join(
-      process.cwd(),
-      "public",
-      "generated",
-      fileName
-    )
+    const fileName = `${safeFileName(article.slug)}-${Date.now()}.png`
+    const filePath = path.join(generatedDir, fileName)
 
     await writeFile(filePath, Buffer.from(base64, "base64"))
 
     const imageUrl = `/generated/${fileName}`
 
+    const editorialQuality = calculateEditorialQualityScore({
+      wordCount: wordCount(article.content),
+      hasTitle: Boolean(article.title),
+      hasExcerpt: Boolean(article.excerpt),
+      hasSeoTitle: Boolean(article.seoTitle),
+      hasSeoDescription: Boolean(article.seoDescription),
+      hasFeaturedImage: true,
+      consensusScore: 80,
+      verifiedCount: 1,
+      partiallyVerifiedCount: 1,
+      unverifiedCount: 0,
+      publicationRecommendation: "review-required",
+    })
+
     const updatedArticle = await prisma.article.update({
-      where: {
-        id: article.id,
-      },
+      where: { id: article.id },
       data: {
         featuredImage: imageUrl,
+        editorialScore: editorialQuality.score,
+        editorialGrade: editorialQuality.grade,
+        editorialWarnings: editorialQuality.warnings,
       },
     })
 
@@ -102,19 +106,18 @@ export async function POST(request: Request) {
       ok: true,
       article: updatedArticle,
       imageUrl,
+      editorialQuality,
     })
   } catch (error) {
     console.error("Featured image generation failed:", error)
 
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Failed to generate featured image"
-
     return NextResponse.json(
       {
         ok: false,
-        error: message,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to generate featured image",
       },
       { status: 500 }
     )
