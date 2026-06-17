@@ -317,7 +317,9 @@ export async function POST(request: Request) {
           sourceCollection.collectedSources,
     
 
-        evidence: evidence.evidence,
+          evidence: Array.isArray(evidence.evidence)
+          ? evidence.evidence
+          : [],
     
         facts:
           factVerification.verifiedFacts,
