@@ -245,7 +245,6 @@ export async function POST(request: Request) {
       hasFeaturedImage: false,
       consensusScore: consensus.consensusScore,
       verifiedCount: factVerification.verifiedCount,
-      averageVerificationScore: factVerification.averageVerificationScore,
       partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
       unverifiedCount: factVerification.unverifiedCount,
       publicationRecommendation: consensus.publicationRecommendation,
