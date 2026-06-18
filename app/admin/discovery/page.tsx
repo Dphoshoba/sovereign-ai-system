@@ -38,6 +38,26 @@ export default async function DiscoveryAdminPage() {
     countByStatus.set(row.status, row._count._all)
   }
 
+  const articleCounts = await prisma.article.groupBy({
+    by: ["status"],
+    _count: { _all: true },
+  })
+
+  const articleCountByStatus = new Map<string, number>()
+
+  for (const row of articleCounts) {
+    articleCountByStatus.set(row.status, row._count._all)
+  }
+
+  const recentGeneratedTopics = await prisma.discoveredTopic.count({
+    where: {
+      status: "generated",
+      updatedAt: {
+        gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+      },
+    },
+  })
+
   return (
     <main style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
@@ -47,9 +67,9 @@ export default async function DiscoveryAdminPage() {
         </div>
 
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-         <RunAutonomousButton />
+          <RunAutonomousButton />
 
-         <Link href="/admin/articles" style={buttonStyle}>
+          <Link href="/admin/articles" style={buttonStyle}>
             Articles
           </Link>
         </div>
@@ -64,6 +84,20 @@ export default async function DiscoveryAdminPage() {
             </div>
           </div>
         ))}
+
+        <div style={summaryCard}>
+          <strong>Awaiting Review</strong>
+          <div style={{ fontSize: 28, marginTop: 8 }}>
+            {articleCountByStatus.get("review-required") ?? 0}
+          </div>
+        </div>
+
+        <div style={summaryCard}>
+          <strong>Generated This Week</strong>
+          <div style={{ fontSize: 28, marginTop: 8 }}>
+            {recentGeneratedTopics}
+          </div>
+        </div>
       </div>
 
       <div style={{ display: "grid", gap: 16, marginTop: 24 }}>
@@ -82,9 +116,11 @@ export default async function DiscoveryAdminPage() {
                     <strong>Angle:</strong> {topic.angle ?? "Unknown"}
                   </p>
                   <p>
-                    <strong>Source:</strong> {topic.sourceTitle ?? topic.source ?? "Unknown"}
+                    <strong>Source:</strong>{" "}
+                    {topic.sourceTitle ?? topic.source ?? "Unknown"}
                   </p>
                 </div>
+
                 <div style={{ minWidth: 160 }}>
                   <div
                     style={{
@@ -165,4 +201,3 @@ const pillStyle: React.CSSProperties = {
   fontWeight: "bold",
   textTransform: "capitalize",
 }
-
