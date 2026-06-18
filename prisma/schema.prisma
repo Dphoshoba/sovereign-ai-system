@@ -3925,3 +3925,20 @@ model ArticleResearchAudit {
 
   @@index([articleId])
 }
+
+model DiscoveredTopic {
+  id String @id @default(cuid())
+
+  title       String
+  sourceTitle String?
+  source      String?
+  audience    String?
+  angle       String?
+
+  opportunityScore Int @default(0)
+
+  status String @default("discovered")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
