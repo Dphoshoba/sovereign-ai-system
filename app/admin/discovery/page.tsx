@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
+import { GenerateTopicButton } from "./GenerateTopicButton"
 
 function statusColor(status: string) {
   switch (status) {
@@ -79,7 +80,6 @@ export default async function DiscoveryAdminPage() {
                     <strong>Source:</strong> {topic.sourceTitle ?? topic.source ?? "Unknown"}
                   </p>
                 </div>
-
                 <div style={{ minWidth: 160 }}>
                   <div
                     style={{
@@ -96,14 +96,16 @@ export default async function DiscoveryAdminPage() {
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: 12, marginTop: 16, flexWrap: "wrap" }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 12,
+                  marginTop: 16,
+                  flexWrap: "wrap",
+                }}
+              >
                 {topic.status === "discovered" && (
-                  <form action="/api/discovery/generate-from-queue" method="post">
-                    <input type="hidden" name="topicId" value={topic.id} />
-                    <button type="submit" style={buttonStyle}>
-                      Generate Article
-                    </button>
-                  </form>
+                  <GenerateTopicButton topicId={topic.id} />
                 )}
 
                 <Link href="/admin/articles" style={buttonStyle}>
@@ -158,3 +160,4 @@ const pillStyle: React.CSSProperties = {
   fontWeight: "bold",
   textTransform: "capitalize",
 }
+
