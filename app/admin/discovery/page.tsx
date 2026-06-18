@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { GenerateTopicButton } from "./GenerateTopicButton"
+import { RunAutonomousButton } from "./RunAutonomousButton"
 
 function statusColor(status: string) {
   switch (status) {
@@ -45,9 +46,13 @@ export default async function DiscoveryAdminPage() {
           <p>Review discovered topic opportunities and generated article leads.</p>
         </div>
 
-        <Link href="/admin/articles" style={buttonStyle}>
-          Articles
-        </Link>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+         <RunAutonomousButton />
+
+         <Link href="/admin/articles" style={buttonStyle}>
+            Articles
+          </Link>
+        </div>
       </div>
 
       <div style={summaryGrid}>
