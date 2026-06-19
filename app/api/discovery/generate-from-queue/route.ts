@@ -45,7 +45,7 @@ export async function POST(request: Request) {
         },
         body: JSON.stringify({
           topic: topic.title,
-          category: "ai-automation",
+          category: topic.category,
         }),
       }
     )

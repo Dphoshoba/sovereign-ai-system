@@ -32,6 +32,7 @@ export async function POST() {
             angle: opportunity.angle,
             opportunityScore: opportunity.opportunityScore,
             status: "discovered",
+            category: opportunity.category,
           },
         })
   

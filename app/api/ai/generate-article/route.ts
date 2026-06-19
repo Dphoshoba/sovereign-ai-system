@@ -57,7 +57,6 @@ function finalTextCleanup(value: string): string {
     .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/\s+/g, " ")
     .replace(/\s+([,.!?;:])/g, "$1")
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/\bwillreward\b/gi, "will reward")
     .replace(/\bdeepentrust\b/gi, "deepen trust")
     .replace(/\bimprovecontent\b/gi, "improve content")
@@ -111,12 +110,15 @@ export async function POST(request: Request) {
             evidenceCount: evidence.evidenceCount,
             factCount: factExtraction.factCount,
             verifiedCount: factVerification.verifiedCount,
-            averageVerificationScore: factVerification.averageVerificationScore,
-            partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
+            averageVerificationScore:
+              factVerification.averageVerificationScore,
+            partiallyVerifiedCount:
+              factVerification.partiallyVerifiedCount,
             unverifiedCount: factVerification.unverifiedCount,
             consensusScore: consensus.consensusScore,
             sourceQualityScore: consensus.sourceQualityScore,
-            publicationRecommendation: consensus.publicationRecommendation,
+            publicationRecommendation:
+              consensus.publicationRecommendation,
           },
         },
         { status: 422 }
@@ -181,10 +183,19 @@ export async function POST(request: Request) {
         DAVID_WRITING_DNA +
         " Return only valid JSON. No markdown wrapper. No explanations.",
       input:
-        "Write a practical SEO blog article for Echoes & Visions in David's voice. " +
+        "RESEARCH LOCK MODE. Write only from the supplied topic, category, consensus themes, and evidence-supported facts.\n\n" +
         "Topic: " +
         topic +
-        ". Audience: creators, founders, ministries, agencies, and business owners using AI automation. " +
+        "\n" +
+        "Category: " +
+        category +
+        "\n\n" +
+        "Do not redirect the article back to AI automation unless the category is ai-tools or ai-automation.\n" +
+        "If the category is bible-stories, write a Bible/history article.\n" +
+        "If the category is motivation, write a motivation article.\n" +
+        "If the category is health, write a health article.\n" +
+        "If the category is space, write a space article.\n" +
+        "If the category is history, write a history article.\n\n" +
         "Relevant saved AI memory context: " +
         memoryContext +
         "\n\n" +
@@ -193,10 +204,10 @@ export async function POST(request: Request) {
         factsBlock +
         "\n\n" +
         "STRICT RULES:\n" +
-        "- Write only from the verified facts above.\n" +
-        "- Do not invent statistics, quotes, sources, companies, or historical details.\n" +
-        "- If evidence is limited, say so naturally and write around what is supported.\n" +
-        "- Keep the article practical and useful.\n" +
+        "- Stay faithful to the category.\n" +
+        "- Write only from verified or partially verified facts.\n" +
+        "- Do not invent statistics, quotes, dates, historical claims, companies, or sources.\n" +
+        "- If evidence is limited, clearly say so and write a cautious article around what is supported.\n" +
         "- Return valid JSON only.\n" +
         "- Use plain ASCII punctuation only.\n" +
         "- Use straight apostrophes (').\n" +
@@ -207,7 +218,7 @@ export async function POST(request: Request) {
         "- Do not use em dashes.\n" +
         "- Do not use en dashes.\n\n" +
         'Return JSON only in this exact format: {"title":"...","excerpt":"...","content":"...","seoTitle":"...","seoDescription":"...","seoKeywords":"keyword one, keyword two, keyword three","featuredImagePrompt":"..."}. ' +
-        "Requirements: use Markdown in content, include headings, practical examples, founder-level thinking, natural human rhythm, and a subtle Echoes & Visions CTA near the end.",
+        "Requirements: use Markdown in content, include headings, practical examples, clear human rhythm, and a subtle Echoes & Visions CTA near the end.",
     })
 
     const parsed = JSON.parse(response.output_text)
@@ -271,61 +282,36 @@ export async function POST(request: Request) {
         editorialWarnings: editorialQuality.warnings,
       },
     })
-   
+
     await prisma.articleResearchAudit.create({
       data: {
         articleId: article.id,
-    
+
         sourceCount: sourceCollection.sourceCount,
-        averageAuthorityScore:
-          sourceCollection.averageAuthorityScore,
-    
-        averageTrustScore:
-          sourceCollection.averageTrustScore,
-    
-        researchConfidence:
-          sourceCollection.researchConfidence,
-    
-        evidenceCount:
-          evidence.evidenceCount,
-    
-        factCount:
-          factExtraction.factCount,
-    
-        verifiedCount:
-          factVerification.verifiedCount,
-    
-        partiallyVerifiedCount:
-          factVerification.partiallyVerifiedCount,
-    
-        unverifiedCount:
-          factVerification.unverifiedCount,
-    
+        averageAuthorityScore: sourceCollection.averageAuthorityScore,
+        averageTrustScore: sourceCollection.averageTrustScore,
+        researchConfidence: sourceCollection.researchConfidence,
+
+        evidenceCount: evidence.evidenceCount,
+        factCount: factExtraction.factCount,
+
+        verifiedCount: factVerification.verifiedCount,
+        partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
+        unverifiedCount: factVerification.unverifiedCount,
         averageVerificationScore:
           factVerification.averageVerificationScore,
-    
-        consensusScore:
-          consensus.consensusScore,
-    
-        sourceQualityScore:
-          consensus.sourceQualityScore,
-    
+
+        consensusScore: consensus.consensusScore,
+        sourceQualityScore: consensus.sourceQualityScore,
         publicationRecommendation:
           consensus.publicationRecommendation,
-    
-        sources:
-          sourceCollection.collectedSources,
-    
 
-          evidence: Array.isArray(evidence.evidence)
+        sources: sourceCollection.collectedSources,
+        evidence: Array.isArray(evidence.evidence)
           ? evidence.evidence
           : [],
-    
-        facts:
-          factVerification.verifiedFacts,
-    
-        consensus:
-          consensus.consensusGroups,
+        facts: factVerification.verifiedFacts,
+        consensus: consensus.consensusGroups,
       },
     })
 
@@ -333,7 +319,9 @@ export async function POST(request: Request) {
 
     try {
       const imageResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/ai/generate-featured-image`,
+        `${
+          process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+        }/api/ai/generate-featured-image`,
         {
           method: "POST",
           headers: {
@@ -373,8 +361,10 @@ export async function POST(request: Request) {
         evidenceCount: evidence.evidenceCount,
         factCount: factExtraction.factCount,
         verifiedCount: factVerification.verifiedCount,
-        averageVerificationScore: factVerification.averageVerificationScore,
-        partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
+        averageVerificationScore:
+          factVerification.averageVerificationScore,
+        partiallyVerifiedCount:
+          factVerification.partiallyVerifiedCount,
         unverifiedCount: factVerification.unverifiedCount,
         consensusScore: consensus.consensusScore,
         sourceQualityScore: consensus.sourceQualityScore,
@@ -391,7 +381,9 @@ export async function POST(request: Request) {
       {
         ok: false,
         error:
-          error instanceof Error ? error.message : "Failed to generate article",
+          error instanceof Error
+            ? error.message
+            : "Failed to generate article",
       },
       { status: 500 }
     )
