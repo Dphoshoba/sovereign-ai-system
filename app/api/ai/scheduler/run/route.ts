@@ -31,6 +31,10 @@ function getNextRunDate(frequency: string) {
 function mapOperationToJobType(operationType: string) {
   if (operationType === "publish_scheduled_articles") {
     return "publish-scheduled"
+    if (operationType === "run_discovery_cycle") {
+      return "run-discovery-cycle"
+    }
+
   }
 
   if (operationType === "embed_published_articles") {

@@ -49,6 +49,22 @@ async function runJob(job: any) {
     }
   }
 
+  if (job.type === "run-discovery-cycle" || job.type === "run_discovery_cycle") {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/discovery/scheduled-run`,
+      {
+        method: "POST",
+      }
+    )
+
+    const result = await response.json()
+
+    return {
+      message: "Discovery cycle completed",
+      result,
+    }
+  }
+
   if (job.type === "embed-published-articles") {
     return {
       message:
