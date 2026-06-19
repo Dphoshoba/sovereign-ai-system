@@ -55,6 +55,22 @@ export async function POST(request: Request) {
 
     const frequency = body.frequency || "daily"
 
+    const existingOperation = await prisma.aiScheduledOperation.findFirst({
+      where: {
+        name: body.name,
+        type: body.type,
+        status: "active",
+      },
+    })
+    
+    if (existingOperation) {
+      return NextResponse.json({
+        ok: true,
+        existing: true,
+        operation: existingOperation,
+      })
+    }
+
     const operation = await prisma.aiScheduledOperation.create({
       data: {
         name: body.name,
