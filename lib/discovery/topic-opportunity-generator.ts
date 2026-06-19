@@ -6,6 +6,7 @@ export type TopicOpportunity = {
   audience: string
   angle: string
   opportunityScore: number
+  category: string
 }
 
 function generateTitle(sourceTitle: string) {
@@ -22,8 +23,7 @@ function generateTitle(sourceTitle: string) {
 
   if (text.includes("reddit") && text.includes("day to day")) {
     return {
-      title:
-        "Which AI Automation Tools Are Actually Useful Day to Day?",
+      title: "Which AI Automation Tools Are Actually Useful Day to Day?",
       audience: "Creators and Small Teams",
       angle: "Tool Selection",
     }
@@ -31,8 +31,7 @@ function generateTitle(sourceTitle: string) {
 
   if (text.includes("enterprise") || text.includes("efficiency")) {
     return {
-      title:
-        "What Small Businesses Can Learn from Enterprise AI Automation",
+      title: "What Small Businesses Can Learn from Enterprise AI Automation",
       audience: "Small Business",
       angle: "Operational Efficiency",
     }
@@ -49,8 +48,7 @@ function generateTitle(sourceTitle: string) {
 
   if (text.includes("microsoft") || text.includes("copilot")) {
     return {
-      title:
-        "How Teams Can Use AI Copilots to Reduce Repetitive Work",
+      title: "How Teams Can Use AI Copilots to Reduce Repetitive Work",
       audience: "Teams",
       angle: "Workplace Productivity",
     }
@@ -58,8 +56,7 @@ function generateTitle(sourceTitle: string) {
 
   if (text.includes("aws")) {
     return {
-      title:
-        "What AI Automation Really Means for Small Teams and Creators",
+      title: "What AI Automation Really Means for Small Teams and Creators",
       audience: "Creators and Small Teams",
       angle: "AI Fundamentals",
     }
@@ -76,8 +73,7 @@ function generateTitle(sourceTitle: string) {
 
   if (text.includes("uipath") || text.includes("blue prism")) {
     return {
-      title:
-        "How Workflow Automation Is Evolving With AI",
+      title: "How Workflow Automation Is Evolving With AI",
       audience: "Business Owners",
       angle: "Workflow Automation",
     }
@@ -85,8 +81,7 @@ function generateTitle(sourceTitle: string) {
 
   if (text.includes("church") || text.includes("ministr")) {
     return {
-      title:
-        "How Churches Can Use AI Automation Without Losing the Human Touch",
+      title: "How Churches Can Use AI Automation Without Losing the Human Touch",
       audience: "Churches",
       angle: "Ministry Operations",
     }
@@ -94,16 +89,54 @@ function generateTitle(sourceTitle: string) {
 
   if (text.includes("creator") || text.includes("content")) {
     return {
-      title:
-        "How Content Creators Can Build an AI-Powered Publishing System",
+      title: "How Content Creators Can Build an AI-Powered Publishing System",
       audience: "Creators",
       angle: "Content Operations",
     }
   }
 
+  if (text.includes("bible") || text.includes("biblical")) {
+    return {
+      title: "What Bible History Can Teach Us Today",
+      audience: "Bible Readers",
+      angle: "Biblical Reflection",
+    }
+  }
+
+  if (text.includes("space") || text.includes("nasa") || text.includes("telescope")) {
+    return {
+      title: "What Recent Space Discoveries Reveal About the Universe",
+      audience: "Curious Learners",
+      angle: "Space Discovery",
+    }
+  }
+
+  if (text.includes("health") || text.includes("wellness") || text.includes("nutrition")) {
+    return {
+      title: "Simple Health Habits That Support Long-Term Wellness",
+      audience: "Health Readers",
+      angle: "Practical Wellness",
+    }
+  }
+
+  if (text.includes("history") || text.includes("ancient")) {
+    return {
+      title: "What Ancient History Still Teaches the Modern World",
+      audience: "History Readers",
+      angle: "Historical Lessons",
+    }
+  }
+
+  if (text.includes("motivation") || text.includes("mindset") || text.includes("growth")) {
+    return {
+      title: "How to Build Discipline When Motivation Fades",
+      audience: "Personal Growth Readers",
+      angle: "Motivation",
+    }
+  }
+
   return {
-    title:
-      "The Future of AI Automation: Practical Opportunities and Risks",
+    title: "The Future of AI Automation: Practical Opportunities and Risks",
     audience: "General",
     angle: "Industry Trends",
   }
@@ -113,7 +146,7 @@ function dedupeOpportunities(opportunities: TopicOpportunity[]) {
   const seen = new Set<string>()
 
   return opportunities.filter((opportunity) => {
-    const key = opportunity.title.toLowerCase()
+    const key = `${opportunity.category}:${opportunity.title.toLowerCase()}`
 
     if (seen.has(key)) return false
 
@@ -134,6 +167,7 @@ export function topicOpportunityGenerator(
       audience: generated.audience,
       angle: generated.angle,
       opportunityScore: topic.score,
+      category: topic.category,
     }
   })
 
