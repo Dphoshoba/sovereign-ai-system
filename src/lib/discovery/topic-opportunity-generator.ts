@@ -9,7 +9,60 @@ export type TopicOpportunity = {
   category: string
 }
 
-function generateTitle(sourceTitle: string) {
+function cleanTitle(text: string) {
+  return text
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+function defaultCategoryTitle(category: string) {
+  switch (category) {
+    case "bible-stories":
+      return {
+        title: "Lessons From Biblical History That Still Matter Today",
+        audience: "Bible Readers",
+        angle: "Biblical Reflection",
+      }
+
+    case "motivation":
+      return {
+        title: "How Personal Growth Happens One Decision at a Time",
+        audience: "Personal Growth Readers",
+        angle: "Self Improvement",
+      }
+
+    case "history":
+      return {
+        title: "What History Can Teach Modern Leaders",
+        audience: "History Readers",
+        angle: "Historical Lessons",
+      }
+
+    case "space":
+      return {
+        title: "Recent Discoveries Expanding Our Understanding of Space",
+        audience: "Space Enthusiasts",
+        angle: "Space Exploration",
+      }
+
+    case "health":
+      return {
+        title: "Evidence-Based Habits for Better Long-Term Health",
+        audience: "Health Readers",
+        angle: "Wellness",
+      }
+
+    default:
+      return {
+        title: "The Future of AI Automation: Practical Opportunities and Risks",
+        audience: "General",
+        angle: "Industry Trends",
+      }
+  }
+}
+
+function generateTitle(sourceTitle: string, category: string) {
   const text = sourceTitle.toLowerCase()
 
   if (text.includes("reddit") && text.includes("success")) {
@@ -103,7 +156,11 @@ function generateTitle(sourceTitle: string) {
     }
   }
 
-  if (text.includes("space") || text.includes("nasa") || text.includes("telescope")) {
+  if (
+    text.includes("space") ||
+    text.includes("nasa") ||
+    text.includes("telescope")
+  ) {
     return {
       title: "What Recent Space Discoveries Reveal About the Universe",
       audience: "Curious Learners",
@@ -111,7 +168,11 @@ function generateTitle(sourceTitle: string) {
     }
   }
 
-  if (text.includes("health") || text.includes("wellness") || text.includes("nutrition")) {
+  if (
+    text.includes("health") ||
+    text.includes("wellness") ||
+    text.includes("nutrition")
+  ) {
     return {
       title: "Simple Health Habits That Support Long-Term Wellness",
       audience: "Health Readers",
@@ -127,7 +188,11 @@ function generateTitle(sourceTitle: string) {
     }
   }
 
-  if (text.includes("motivation") || text.includes("mindset") || text.includes("growth")) {
+  if (
+    text.includes("motivation") ||
+    text.includes("mindset") ||
+    text.includes("growth")
+  ) {
     return {
       title: "How to Build Discipline When Motivation Fades",
       audience: "Personal Growth Readers",
@@ -135,11 +200,7 @@ function generateTitle(sourceTitle: string) {
     }
   }
 
-  return {
-    title: "The Future of AI Automation: Practical Opportunities and Risks",
-    audience: "General",
-    angle: "Industry Trends",
-  }
+  return defaultCategoryTitle(category)
 }
 
 function dedupeOpportunities(opportunities: TopicOpportunity[]) {
@@ -159,11 +220,11 @@ export function topicOpportunityGenerator(
   topics: ScoredTopic[]
 ): TopicOpportunity[] {
   const opportunities = topics.map((topic) => {
-    const generated = generateTitle(topic.title)
+    const generated = generateTitle(topic.title, topic.category)
 
     return {
-      title: generated.title,
-      sourceTitle: topic.title,
+      title: cleanTitle(generated.title),
+      sourceTitle: cleanTitle(topic.title),
       audience: generated.audience,
       angle: generated.angle,
       opportunityScore: topic.score,
