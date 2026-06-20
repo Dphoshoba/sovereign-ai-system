@@ -19,7 +19,10 @@ export async function POST(request: Request) {
 
     for (const opportunity of opportunities) {
       const existing = await prisma.discoveredTopic.findFirst({
-        where: { title: opportunity.title },
+        where: {
+          title: opportunity.title,
+          category: opportunity.category,
+        },
       })
 
       if (existing) continue
@@ -27,6 +30,7 @@ export async function POST(request: Request) {
       const saved = await prisma.discoveredTopic.create({
         data: {
           title: opportunity.title,
+          category: opportunity.category,
           sourceTitle: opportunity.sourceTitle,
           source: opportunity.sourceTitle,
           audience: opportunity.audience,
@@ -41,7 +45,10 @@ export async function POST(request: Request) {
 
     const queueTopics = await prisma.discoveredTopic.findMany({
       where: { status: "discovered" },
-      orderBy: { opportunityScore: "desc" },
+      orderBy: [
+        { opportunityScore: "desc" },
+        { createdAt: "asc" },
+      ],
       take: generateLimit,
     })
 
@@ -54,18 +61,29 @@ export async function POST(request: Request) {
       })
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/ai/generate-article`,
+        `${
+          process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+        }/api/ai/generate-article`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             topic: topic.title,
-            category: topic.category,
+            category: topic.category || "ai-tools",
+            status: "review-required",
+            publishedAt: null,
+            metadata: {
+              source: "autonomous-discovery",
+              topicId: topic.id,
+              audience: topic.audience,
+              angle: topic.angle,
+              opportunityScore: topic.opportunityScore,
+            },
           }),
         }
       )
 
-      const articleResult = await response.json()
+      const articleResult = await response.json().catch(() => null)
 
       if (!response.ok || !articleResult?.ok) {
         await prisma.discoveredTopic.update({
@@ -76,8 +94,11 @@ export async function POST(request: Request) {
         generated.push({
           topicId: topic.id,
           title: topic.title,
+          category: topic.category,
           ok: false,
-          error: "Article generation failed",
+          error:
+            articleResult?.error ||
+            `Article generation failed with status ${response.status}`,
         })
 
         continue
@@ -91,6 +112,7 @@ export async function POST(request: Request) {
       generated.push({
         topicId: topic.id,
         title: topic.title,
+        category: topic.category,
         ok: true,
         articleId: articleResult.article?.id,
         articleStatus: articleResult.article?.status,
@@ -107,6 +129,8 @@ export async function POST(request: Request) {
       generated,
     })
   } catch (error) {
+    console.error("[DISCOVERY] Autonomous cycle failed:", error)
+
     return NextResponse.json(
       {
         ok: false,
