@@ -127,6 +127,43 @@ const THEMES: { theme: string; keywords: string[]; body: string }[] = [
     body: "AI is enhancing creative workflows and ideation",
   },
   {
+    theme: "Motivation and Discipline",
+    keywords: [
+      "motivation",
+      "discipline",
+      "habit",
+      "habits",
+      "consistency",
+      "goal",
+      "goals",
+      "mindset",
+      "focus",
+      "resilience",
+      "perseverance",
+      "self-control",
+      "growth",
+    ],
+    body: "motivation and discipline are strengthened through consistent habits, clear goals, and repeated practice",
+  },
+  {
+    theme: "Personal Growth",
+    keywords: [
+      "personal growth",
+      "self improvement",
+      "self-improvement",
+      "leadership",
+      "character",
+      "decision",
+      "decisions",
+      "responsibility",
+      "learning",
+      "reflection",
+      "purpose",
+    ],
+    body: "personal growth develops through intentional decisions, reflection, responsibility, and continued learning",
+  },
+
+  {
     theme: "Ethics and Responsibility",
     keywords: [
       "ethic",
@@ -171,6 +208,17 @@ function authorityScoreForUrl(url: string): number {
 
   if (lower.includes(".gov")) return 100
   if (lower.includes(".edu")) return 95
+  if (
+    lower.includes("apa.org") ||
+    lower.includes("psychologytoday.com") ||
+    lower.includes("verywellmind.com") ||
+    lower.includes("mindtools.com") ||
+    lower.includes("harvard.edu") ||
+    lower.includes("stanford.edu")
+  ) {
+    return 75
+  }
+
 
   if (
     lower.includes("nature.com") ||
