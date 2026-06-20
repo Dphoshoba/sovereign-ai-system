@@ -22,10 +22,12 @@ export const DISCOVERY_CATEGORIES = [
     {
       category: "motivation",
       searches: [
-        "personal growth",
-        "mindset development",
-        "leadership lessons",
-        "self improvement",
+        "site:apa.org motivation discipline habits",
+        "site:harvard.edu habit formation motivation",
+        "site:stanford.edu growth mindset motivation",
+        "site:verywellmind.com discipline motivation habits",
+        "site:mindtools.com personal growth leadership discipline",
+        "site:psychologytoday.com motivation self discipline",
       ],
     },
   

@@ -97,7 +97,7 @@ function canonicalClaim(sentence: string): string | null {
     text.includes("metrics") ||
     text.includes("insight")
   ) {
-    return "AI-driven analytics can improve content performance insights."
+    return `${text} can be explored through cautious, evidence-aware practical guidance.`
   }
 
   if (
