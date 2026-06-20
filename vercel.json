@@ -1,22 +1,4 @@
 {
-  "build": {
-    "env": {
-      "NODE_OPTIONS": "--max-old-space-size=6144"
-    }
-  },
-  "crons": [
-    {
-      "path": "/api/workers/publish-scheduled",
-      "schedule": "0 9 * * *"
-    },
-    {
-      "path": "/api/workers/weekly-planner",
-      "schedule": "0 9 * * 1"
-    }
-  ]
-}
-
-{
   "crons": [
     {
       "path": "/api/cron/run-pipeline",
