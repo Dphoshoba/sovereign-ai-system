@@ -315,6 +315,44 @@ export async function POST(request: Request) {
       },
     })
 
+  // Persist research sources
+
+for (const source of sourceCollection.collectedSources || []) {
+  await prisma.researchSource.create({
+    data: {
+      articleId: article.id,
+      title: source.title || null,
+      url: source.url || null,
+      publisher: null,
+      authorityScore: 0,
+      trustScore: 0,
+      sourceType: null,
+      category,
+    },
+  })
+}
+// Persist extracted facts
+
+for (const fact of factVerification.verifiedFacts || []) {
+  await prisma.researchFact.create({
+    data: {
+      articleId: article.id,
+
+      claim: fact.claim || "",
+
+      verificationStatus:
+        fact.verificationStatus || "unverified",
+
+      confidence: fact.confidence || null,
+
+      supportingSources:
+        fact.supportingSources || [],
+
+      category,
+    }
+  })
+} 
+
     let updatedArticle = article
 
     try {

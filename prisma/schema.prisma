@@ -88,9 +88,50 @@ model Article {
 
   researchAudits ArticleResearchAudit[]
 
+  researchSources ResearchSource[]
+  researchFacts   ResearchFact[]
+
   @@unique([category, slug])
   @@index([status])
   @@index([category])
+}
+
+model ResearchSource {
+  id String @id @default(cuid())
+
+  articleId String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  title          String?
+  url            String?
+  publisher      String?
+  authorityScore Int     @default(0)
+  trustScore     Int     @default(0)
+  sourceType     String?
+  category       String?
+
+  createdAt DateTime @default(now())
+
+  @@index([articleId])
+  @@index([url])
+}
+
+model ResearchFact {
+  id String @id @default(cuid())
+
+  articleId String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  claim              String
+  verificationStatus String  @default("unverified")
+  confidence         String?
+  supportingSources  Json?
+  category           String?
+
+  createdAt DateTime @default(now())
+
+  @@index([articleId])
+  @@index([verificationStatus])
 }
 
 model ArticleEmbedding {
