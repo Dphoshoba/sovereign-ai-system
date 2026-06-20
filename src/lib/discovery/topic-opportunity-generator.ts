@@ -10,10 +10,49 @@ export type TopicOpportunity = {
 }
 
 function cleanTitle(text: string) {
-  return text
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/\s+/g, " ")
-    .trim()
+  if (!text) return ""
+
+  // 1) Insert spaces between lowercase-uppercase boundaries (camelCase, PascalCase)
+  let out = text.replace(/([a-z])([A-Z])/g, "$1 $2")
+
+  // 2) Insert spaces before common "stuck" words when they are appended directly
+  const stuckWords = [
+    "in",
+    "and",
+    "with",
+    "for",
+    "to",
+    "from",
+    "the",
+    "what",
+    "how",
+    "why",
+    "system",
+    "support",
+    "creators",
+    "means",
+  ]
+
+  const stuckPattern = new RegExp(
+    `([A-Za-z0-9])(${stuckWords.join("|")})(?=\b)`,
+    "gi"
+  )
+
+  out = out.replace(stuckPattern, "$1 $2")
+
+  // Additional targeted fixes for common joined phrases
+  out = out.replace(/Discoveriesin/gi, "Discoveries in")
+  out = out.replace(/ReallyMeans/gi, "Really Means")
+  out = out.replace(/WhatCreators/gi, "What Creators")
+  out = out.replace(/PublishingSystem/gi, "Publishing System")
+  out = out.replace(/ThatSupport/gi, "That Support")
+  out = out.replace(/valuableleadership/gi, "valuable leadership")
+  out = out.replace(/you'?velearned/gi, "you've learned")
+
+  // 3) Normalize multiple spaces and 4) trim
+  out = out.replace(/\s+/g, " ").trim()
+
+  return out
 }
 
 function defaultCategoryTitle(category: string) {
@@ -204,14 +243,19 @@ function generateTitle(sourceTitle: string, category: string) {
 }
 
 function dedupeOpportunities(opportunities: TopicOpportunity[]) {
-  const seen = new Set<string>()
+  const seenTitles = new Set()
 
   return opportunities.filter((opportunity) => {
-    const key = `${opportunity.category}:${opportunity.title.toLowerCase()}`
+    const normalizedTitle = opportunity.title
+      .toLowerCase()
+      .replace(/[^a-z0-9 ]/g, "")
+      .trim()
 
-    if (seen.has(key)) return false
+    if (seenTitles.has(normalizedTitle)) {
+      return false
+    }
 
-    seen.add(key)
+    seenTitles.add(normalizedTitle)
     return true
   })
 }
@@ -233,4 +277,10 @@ export function topicOpportunityGenerator(
   })
 
   return dedupeOpportunities(opportunities)
+    .sort(
+      (a, b) =>
+        b.opportunityScore -
+        a.opportunityScore
+    )
+    .slice(0, 25)
 }
