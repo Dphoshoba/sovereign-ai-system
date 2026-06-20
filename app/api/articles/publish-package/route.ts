@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { publicationGuard } from "../../../../lib/publishing/publication-guard"
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,13 +24,27 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const guard = publicationGuard(article.status)
+
+    if (!guard.allowed) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: guard.reason,
+          guard,
+        },
+        { status: 403 }
+      )
+    }
+
     const publishedArticle = await prisma.article.update({
       where: { id: articleId },
       data: {
         status: "published",
         approvedAt: article.approvedAt || new Date(),
-        approvedBy: approvedBy || "system",
+        approvedBy: approvedBy || article.approvedBy || "system",
         publishedAt: new Date(),
+        scheduledFor: null,
       },
     })
 
@@ -41,7 +56,7 @@ export async function POST(req: NextRequest) {
       data: {
         status: "approved",
         approvedAt: new Date(),
-        approvedBy: approvedBy || "system",
+        approvedBy: approvedBy || article.approvedBy || "system",
       },
     })
 

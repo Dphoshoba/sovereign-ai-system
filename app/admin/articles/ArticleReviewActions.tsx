@@ -10,19 +10,29 @@ export function ArticleReviewActions({ articleId }: { articleId: string }) {
   async function approveArticle() {
     setLoading(true)
 
-    await fetch("/api/articles/approve", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        articleId,
-        approvedBy: "David",
-      }),
-    })
+    try {
+      const response = await fetch("/api/articles/approve", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          articleId,
+          approvedBy: "David",
+        }),
+      })
 
-    setLoading(false)
-    router.refresh()
+      const result = await response.json()
+
+      if (!response.ok) {
+        alert(result.error || "Approval failed")
+        return
+      }
+
+      router.refresh()
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function rejectArticle() {
@@ -32,30 +42,40 @@ export function ArticleReviewActions({ articleId }: { articleId: string }) {
 
     setLoading(true)
 
-    await fetch("/api/articles/reject", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        articleId,
-        rejectedBy: "David",
-        rejectionReason,
-      }),
-    })
+    try {
+      const response = await fetch("/api/articles/reject", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          articleId,
+          rejectedBy: "David",
+          rejectionReason,
+        }),
+      })
 
-    setLoading(false)
-    router.refresh()
+      const result = await response.json()
+
+      if (!response.ok) {
+        alert(result.error || "Rejection failed")
+        return
+      }
+
+      router.refresh()
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div style={{ display: "flex", gap: "10px" }}>
       <button onClick={approveArticle} disabled={loading} style={approveStyle}>
-        Approve
+        {loading ? "Working..." : "Approve"}
       </button>
 
       <button onClick={rejectArticle} disabled={loading} style={rejectStyle}>
-        Reject
+        {loading ? "Working..." : "Reject"}
       </button>
     </div>
   )
