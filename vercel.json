@@ -15,3 +15,12 @@
     }
   ]
 }
+
+{
+  "crons": [
+    {
+      "path": "/api/cron/run-pipeline",
+      "schedule": "0 * * * *"
+    }
+  ]
+}
