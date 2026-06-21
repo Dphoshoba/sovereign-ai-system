@@ -19,12 +19,19 @@ export default async function ArticleAuditPage({
     where: { id },
     include: {
       researchAudits: {
-        orderBy: { createdAt: "desc" },
+        orderBy: {
+          createdAt: "desc",
+        },
         take: 1,
+      },
+
+      reviewNotes: {
+        orderBy: {
+          createdAt: "desc",
+        },
       },
     },
   })
-
   if (!article) notFound()
 
   const audit = article.researchAudits[0]
@@ -87,6 +94,46 @@ export default async function ArticleAuditPage({
               <Metric label="Unverified" value={audit.unverifiedCount} />
             </div>
           </div>
+          
+          <div style={card}>
+            <h3>Review History</h3>
+
+            {article.reviewNotes.length === 0 ? (
+              <p>No review history recorded.</p>
+            ) : (
+              article.reviewNotes.map((note) => (
+                <div
+                  key={note.id}
+                  style={{
+                    padding: "12px",
+                    marginBottom: "10px",
+                    border: "1px solid #ddd",
+                    borderRadius: "8px",
+                  }}
+                >
+                  <div>
+                    <strong>Action:</strong> {note.action}
+                  </div>
+
+                  <div>
+                    <strong>Reviewer:</strong> {note.reviewer}
+                  </div>
+
+                  <div>
+                    <strong>Date:</strong>{" "}
+                    {new Date(note.createdAt).toLocaleString()}
+                  </div>
+
+                  <div style={{ marginTop: "8px" }}>
+                    <strong>Note:</strong>
+                    <br />
+                    {note.note || "-"}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+         
 
           <JsonCard title="Sources Used" data={audit.sources} />
           <JsonCard title="Evidence Used" data={audit.evidence} />

@@ -99,6 +99,23 @@ model Article {
   qualityGrade String?
   seoScore     Int?
   seoGrade     String?
+
+  reviewNotes ArticleReviewNote[]
+}
+
+model ArticleReviewNote {
+  id        String   @id @default(cuid())
+  articleId String
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  action    String
+  note      String?
+  reviewer  String   @default("system")
+
+  createdAt DateTime @default(now())
+
+  @@index([articleId])
+  @@index([action])
 }
 
 model ResearchSource {

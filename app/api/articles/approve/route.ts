@@ -3,42 +3,37 @@ import { prisma } from "@/lib/prisma"
 
 export async function POST(req: NextRequest) {
   try {
-    const { articleId, approvedBy } = await req.json()
+    const { articleId, approvedBy, reviewNote } = await req.json()
 
     if (!articleId) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "Missing articleId",
-        },
-        { status: 400 }
-      )
+      return NextResponse.json({ ok: false, error: "Missing articleId" }, { status: 400 })
     }
 
     const article = await prisma.article.findUnique({
-      where: {
-        id: articleId,
-      },
+      where: { id: articleId },
     })
 
     if (!article) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "Article not found",
-        },
-        { status: 404 }
-      )
+      return NextResponse.json({ ok: false, error: "Article not found" }, { status: 404 })
     }
 
+    const reviewer = approvedBy || "system"
+
     const updatedArticle = await prisma.article.update({
-      where: {
-        id: articleId,
-      },
+      where: { id: articleId },
       data: {
         status: "approved",
         approvedAt: new Date(),
-        approvedBy: approvedBy || "system",
+        approvedBy: reviewer,
+      },
+    })
+
+    await prisma.articleReviewNote.create({
+      data: {
+        articleId,
+        action: "approved",
+        reviewer,
+        note: reviewNote || "Article approved for publishing workflow.",
       },
     })
 
@@ -50,10 +45,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         ok: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Approval failed",
+        error: error instanceof Error ? error.message : "Approval failed",
       },
       { status: 500 }
     )
