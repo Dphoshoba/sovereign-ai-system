@@ -204,7 +204,38 @@ export default async function AdminArticlesPage({
                 >
                   Editorial Score: {article.editorialScore ?? "Not scored"}
                 </div>
+                <div
+                  style={{
+                    marginTop: "10px",
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                    gap: "10px",
+                  }}
+                >
+                  <div style={metricBoxStyle}>
+                    <strong>Quality Score:</strong>
+                    <br />
+                    {article.qualityScore ?? "Not scored"}
+                  </div>
 
+                  <div style={metricBoxStyle}>
+                  <strong>SEO Score:</strong>
+                 <br />
+                  {article.seoScore ?? "Not scored"}
+                </div>
+
+                <div style={metricBoxStyle}>
+                  <strong>SEO Grade:</strong>
+                  <br />
+                  {article.seoGrade ?? "-"}
+                </div>
+
+                  <div style={metricBoxStyle}>
+                    <strong>SEO Grade:</strong>
+                    <br />
+                    {article.seoGrade ?? "-"}
+                  </div>
+                </div>
                 <div
                   style={{
                     display: "inline-block",
@@ -319,4 +350,12 @@ const badgeStyle: React.CSSProperties = {
   padding: "0 6px",
   borderRadius: "999px",
   fontSize: "12px",
+}
+
+const metricBoxStyle: React.CSSProperties = {
+  padding: "10px",
+  borderRadius: "8px",
+  background: "#f8f9fa",
+  border: "1px solid var(--border)",
+  fontSize: "14px",
 }
