@@ -2,6 +2,12 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 
+function scoreColor(score?: number | null) {
+  if ((score ?? 0) >= 80) return "#15803d"
+  if ((score ?? 0) >= 60) return "#d97706"
+  return "#b91c1c"
+}
+
 export default async function ArticleAuditPage({
   params,
 }: {
@@ -13,155 +19,140 @@ export default async function ArticleAuditPage({
     where: { id },
     include: {
       researchAudits: {
-        orderBy: {
-          createdAt: "desc",
-        },
+        orderBy: { createdAt: "desc" },
         take: 1,
       },
     },
   })
 
-  if (!article) {
-    notFound()
-  }
+  if (!article) notFound()
 
   const audit = article.researchAudits[0]
 
-  if (!audit) {
-    return (
-      <main style={{ padding: "40px" }}>
-        <h1>Research Audit</h1>
-        <p>No audit record exists for this article.</p>
-
-        <Link href="/admin/articles">
-          Back to Articles
-        </Link>
-      </main>
-    )
-  }
-
   return (
-    <main
-      style={{
-        padding: "40px",
-        maxWidth: "1200px",
-        margin: "0 auto",
-      }}
-    >
-      <Link href="/admin/articles">
-         Back to Articles
-      </Link>
+    <main style={{ padding: "40px", maxWidth: "1200px", margin: "0 auto" }}>
+      <Link href="/admin/articles">Back to Articles</Link>
 
-      <h1 style={{ marginTop: "20px" }}>
-        Research Audit
-      </h1>
-
+      <h1 style={{ marginTop: "20px" }}>Executive Article Audit</h1>
       <h2>{article.title}</h2>
 
-      <div style={card}>
-        <h3>Research Scores</h3>
-
-        <p>
-          <strong>Research Confidence:</strong>{" "}
-          {audit.researchConfidence}
-        </p>
-
-        <p>
-          <strong>Authority Score:</strong>{" "}
-          {audit.averageAuthorityScore}
-        </p>
-
-        <p>
-          <strong>Trust Score:</strong>{" "}
-          {audit.averageTrustScore}
-        </p>
-
-        <p>
-          <strong>Verification Score:</strong>{" "}
-          {audit.averageVerificationScore}
-        </p>
-
-        <p>
-          <strong>Consensus Score:</strong>{" "}
-          {audit.consensusScore}
-        </p>
-
-        <p>
-          <strong>Sources:</strong>{" "}
-          {audit.sourceCount}
-        </p>
-
-        <p>
-          <strong>Evidence Records:</strong>{" "}
-          {audit.evidenceCount}
-        </p>
-
-        <p>
-          <strong>Facts:</strong>{" "}
-          {audit.factCount}
-        </p>
-
-        <p>
-          <strong>Verified:</strong>{" "}
-          {audit.verifiedCount}
-        </p>
-
-        <p>
-          <strong>Partially Verified:</strong>{" "}
-          {audit.partiallyVerifiedCount}
-        </p>
-
-        <p>
-          <strong>Unverified:</strong>{" "}
-          {audit.unverifiedCount}
-        </p>
-
-        <p>
-          <strong>Recommendation:</strong>{" "}
-          {audit.publicationRecommendation}
-        </p>
+      <div style={grid}>
+        <Metric label="Editorial Score" value={article.editorialScore} />
+        <Metric label="Quality Score" value={article.qualityScore} />
+        <Metric label="SEO Score" value={article.seoScore} />
+        <Metric label="Status" value={article.status} />
       </div>
 
-      <div style={card}>
-        <h3>Sources</h3>
-
-        <pre style={pre}>
-          {JSON.stringify(audit.sources, null, 2)}
-        </pre>
+      <div style={grid}>
+        <Metric label="Editorial Grade" value={article.editorialGrade} />
+        <Metric label="Quality Grade" value={article.qualityGrade} />
+        <Metric label="SEO Grade" value={article.seoGrade} />
+        <Metric label="Category" value={article.category} />
       </div>
 
-      <div style={card}>
-        <h3>Evidence</h3>
+      {!audit ? (
+        <div style={card}>
+          <h3>No Research Audit</h3>
+          <p>No audit record exists for this article.</p>
+        </div>
+      ) : (
+        <>
+          <div style={card}>
+            <h3>Research Governance</h3>
 
-        <pre style={pre}>
-          {JSON.stringify(audit.evidence, null, 2)}
-        </pre>
-      </div>
+            <div style={grid}>
+              <Metric label="Research Confidence" value={audit.researchConfidence} />
+              <Metric label="Authority Score" value={audit.averageAuthorityScore} />
+              <Metric label="Trust Score" value={audit.averageTrustScore} />
+              <Metric label="Verification Score" value={audit.averageVerificationScore} />
+              <Metric label="Consensus Score" value={audit.consensusScore} />
+              <Metric label="Source Quality" value={audit.sourceQualityScore} />
+            </div>
 
-      <div style={card}>
-        <h3>Facts</h3>
+            <p>
+              <strong>Publication Recommendation:</strong>{" "}
+              {audit.publicationRecommendation ?? "Not available"}
+            </p>
+          </div>
 
-        <pre style={pre}>
-          {JSON.stringify(audit.facts, null, 2)}
-        </pre>
-      </div>
+          <div style={card}>
+            <h3>Evidence Summary</h3>
 
-      <div style={card}>
-        <h3>Consensus</h3>
+            <div style={grid}>
+              <Metric label="Sources" value={audit.sourceCount} />
+              <Metric label="Evidence Records" value={audit.evidenceCount} />
+              <Metric label="Facts" value={audit.factCount} />
+              <Metric label="Verified" value={audit.verifiedCount} />
+              <Metric label="Partially Verified" value={audit.partiallyVerifiedCount} />
+              <Metric label="Unverified" value={audit.unverifiedCount} />
+            </div>
+          </div>
 
-        <pre style={pre}>
-          {JSON.stringify(audit.consensus, null, 2)}
-        </pre>
-      </div>
+          <JsonCard title="Sources Used" data={audit.sources} />
+          <JsonCard title="Evidence Used" data={audit.evidence} />
+          <JsonCard title="Facts Extracted" data={audit.facts} />
+          <JsonCard title="Consensus Groups" data={audit.consensus} />
+        </>
+      )}
     </main>
   )
 }
 
+function Metric({
+  label,
+  value,
+}: {
+  label: string
+  value?: string | number | null
+}) {
+  const isNumber = typeof value === "number"
+
+  return (
+    <div style={metric}>
+      <div style={{ fontSize: "13px", color: "#666" }}>{label}</div>
+      <div
+        style={{
+          marginTop: "6px",
+          fontSize: "22px",
+          fontWeight: "bold",
+          color: isNumber ? scoreColor(value) : "#111",
+        }}
+      >
+        {value ?? "-"}
+      </div>
+    </div>
+  )
+}
+
+function JsonCard({ title, data }: { title: string; data: unknown }) {
+  return (
+    <div style={card}>
+      <h3>{title}</h3>
+      <pre style={pre}>{JSON.stringify(data, null, 2)}</pre>
+    </div>
+  )
+}
+
+const grid: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+  gap: "12px",
+  marginTop: "16px",
+}
+
 const card: React.CSSProperties = {
-  border: "1px solid #ddd",
+  border: "1px solid var(--border)",
   borderRadius: "12px",
   padding: "20px",
   marginTop: "20px",
+  background: "var(--card)",
+}
+
+const metric: React.CSSProperties = {
+  border: "1px solid var(--border)",
+  borderRadius: "12px",
+  padding: "16px",
+  background: "#f8f9fa",
 }
 
 const pre: React.CSSProperties = {
