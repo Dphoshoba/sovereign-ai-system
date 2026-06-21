@@ -94,6 +94,11 @@ model Article {
   @@unique([category, slug])
   @@index([status])
   @@index([category])
+
+  qualityScore Int?
+  qualityGrade String?
+  seoScore     Int?
+  seoGrade     String?
 }
 
 model ResearchSource {

@@ -224,7 +224,7 @@ export async function POST(request: Request) {
         "- faq must include 3 to 5 practical questions and answers.\n\n" +
         "Requirements: use Markdown in content, include headings, practical examples, clear human rhythm, and a subtle Echoes & Visions CTA near the end.",   
     })
-    
+
     const parsed = JSON.parse(response.output_text)
 
     const cleanedContent = parsed.content
@@ -300,6 +300,12 @@ const slug = await createUniqueSlug(baseSlug, category)
         editorialScore: editorialQuality.score,
         editorialGrade: editorialQuality.grade,
         editorialWarnings: editorialQuality.warnings,
+
+        qualityScore: qualityResult.score,
+        qualityGrade: qualityResult.grade,
+
+        seoScore: seoResult.score,
+        seoGrade: seoResult.grade,
       },
     })
 
