@@ -16,6 +16,8 @@ import { publicationGate } from "../../../../lib/research/publication-gate"
 import { encodingNormalizer } from "../../../../lib/research/encoding-normalizer"
 import { contentSafeNormalizer } from "../../../../lib/research/content-safe-normalizer"
 import { calculateEditorialQualityScore } from "../../../../lib/editorial/quality-score"
+import { articleQualityScorer } from "../../../../lib/editorial/article-quality-scorer"
+import { seoScorer } from "../../../../lib/editorial/seo-scorer"
 
 function slugify(value: string) {
   return value
@@ -89,11 +91,8 @@ export async function POST(request: Request) {
     )
 
     const factExtraction = factExtractor(topic, evidence.evidence)
-
     const factVerification = factVerificationEngine(factExtraction.facts)
-
     const consensus = consensusEngine(factVerification.verifiedFacts)
-
     const publicationDecision = publicationGate(consensus)
 
     if (publicationDecision.status === "blocked") {
@@ -217,10 +216,15 @@ export async function POST(request: Request) {
         "- Do not use curly apostrophes.\n" +
         "- Do not use em dashes.\n" +
         "- Do not use en dashes.\n\n" +
-        'Return JSON only in this exact format: {"title":"...","excerpt":"...","content":"...","seoTitle":"...","seoDescription":"...","seoKeywords":"keyword one, keyword two, keyword three","featuredImagePrompt":"..."}. ' +
-        "Requirements: use Markdown in content, include headings, practical examples, clear human rhythm, and a subtle Echoes & Visions CTA near the end.",
+        'Return JSON only in this exact format: {"title":"...","excerpt":"...","content":"...","seoTitle":"...","seoDescription":"...","seoKeywords":"keyword one, keyword two, keyword three","featuredImagePrompt":"...","faq":[{"question":"...","answer":"..."}]}.\n\n' +
+        "SEO RULES:\n" +
+        "- seoTitle must be 40 to 65 characters.\n" +
+        "- seoDescription must be 120 to 160 characters.\n" +
+        "- seoKeywords must include at least 3 comma-separated keyword phrases.\n" +
+        "- faq must include 3 to 5 practical questions and answers.\n\n" +
+        "Requirements: use Markdown in content, include headings, practical examples, clear human rhythm, and a subtle Echoes & Visions CTA near the end.",   
     })
-
+    
     const parsed = JSON.parse(response.output_text)
 
     const cleanedContent = parsed.content
@@ -239,9 +243,13 @@ export async function POST(request: Request) {
       ? finalTextCleanup(encodingNormalizer(parsed.seoDescription))
       : null
 
-    const title = finalTextCleanup(parsed.title || topic)
-    const baseSlug = slugify(title)
-    const slug = await createUniqueSlug(baseSlug, category)
+      const faq = Array.isArray(parsed.faq)
+  ? parsed.faq
+  : []
+
+const title = finalTextCleanup(parsed.title || topic)
+const baseSlug = slugify(title)
+const slug = await createUniqueSlug(baseSlug, category)
 
     const wordCount = finalContent
       ? finalContent.split(/\s+/).filter(Boolean).length
@@ -259,6 +267,18 @@ export async function POST(request: Request) {
       partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
       unverifiedCount: factVerification.unverifiedCount,
       publicationRecommendation: consensus.publicationRecommendation,
+    })
+
+    const qualityResult = articleQualityScorer({
+      title,
+      content: finalContent || "",
+      faq,
+    })
+
+    const seoResult = seoScorer({
+      seoTitle: parsed.seoTitle || title,
+      seoDescription: cleanedSeoDescription || cleanedExcerpt || "",
+      seoKeywords: parsed.seoKeywords || "",
     })
 
     const article = await prisma.article.create({
@@ -286,72 +306,54 @@ export async function POST(request: Request) {
     await prisma.articleResearchAudit.create({
       data: {
         articleId: article.id,
-
         sourceCount: sourceCollection.sourceCount,
         averageAuthorityScore: sourceCollection.averageAuthorityScore,
         averageTrustScore: sourceCollection.averageTrustScore,
         researchConfidence: sourceCollection.researchConfidence,
-
         evidenceCount: evidence.evidenceCount,
         factCount: factExtraction.factCount,
-
         verifiedCount: factVerification.verifiedCount,
         partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
         unverifiedCount: factVerification.unverifiedCount,
         averageVerificationScore:
           factVerification.averageVerificationScore,
-
         consensusScore: consensus.consensusScore,
         sourceQualityScore: consensus.sourceQualityScore,
-        publicationRecommendation:
-          consensus.publicationRecommendation,
-
+        publicationRecommendation: consensus.publicationRecommendation,
         sources: sourceCollection.collectedSources,
-        evidence: Array.isArray(evidence.evidence)
-          ? evidence.evidence
-          : [],
+        evidence: Array.isArray(evidence.evidence) ? evidence.evidence : [],
         facts: factVerification.verifiedFacts,
         consensus: consensus.consensusGroups,
       },
     })
 
-  // Persist research sources
-
-for (const source of sourceCollection.collectedSources || []) {
-  await prisma.researchSource.create({
-    data: {
-      articleId: article.id,
-      title: source.title || null,
-      url: source.url || null,
-      publisher: null,
-      authorityScore: 0,
-      trustScore: 0,
-      sourceType: null,
-      category,
-    },
-  })
-}
-// Persist extracted facts
-
-for (const fact of factVerification.verifiedFacts || []) {
-  await prisma.researchFact.create({
-    data: {
-      articleId: article.id,
-
-      claim: fact.claim || "",
-
-      verificationStatus:
-        fact.verificationStatus || "unverified",
-
-      confidence: fact.confidence || null,
-
-      supportingSources:
-        fact.supportingSources || [],
-
-      category,
+    for (const source of sourceCollection.collectedSources || []) {
+      await prisma.researchSource.create({
+        data: {
+          articleId: article.id,
+          title: source.title || null,
+          url: source.url || null,
+          publisher: null,
+          authorityScore: 0,
+          trustScore: 0,
+          sourceType: null,
+          category,
+        },
+      })
     }
-  })
-} 
+
+    for (const fact of factVerification.verifiedFacts || []) {
+      await prisma.researchFact.create({
+        data: {
+          articleId: article.id,
+          claim: fact.claim || "",
+          verificationStatus: fact.verificationStatus || "unverified",
+          confidence: fact.confidence || null,
+          supportingSources: fact.supportingSources || [],
+          category,
+        },
+      })
+    }
 
     let updatedArticle = article
 
@@ -391,6 +393,15 @@ for (const fact of factVerification.verifiedFacts || []) {
     return NextResponse.json({
       ok: true,
       article: updatedArticle,
+
+      qualityScore: qualityResult.score,
+      qualityGrade: qualityResult.grade,
+      qualityChecks: qualityResult.checks,
+
+      seoScore: seoResult.score,
+      seoGrade: seoResult.grade,
+      seoChecks: seoResult.checks,
+
       researchAudit: {
         sourceCount: sourceCollection.sourceCount,
         averageAuthorityScore: sourceCollection.averageAuthorityScore,
@@ -401,8 +412,7 @@ for (const fact of factVerification.verifiedFacts || []) {
         verifiedCount: factVerification.verifiedCount,
         averageVerificationScore:
           factVerification.averageVerificationScore,
-        partiallyVerifiedCount:
-          factVerification.partiallyVerifiedCount,
+        partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
         unverifiedCount: factVerification.unverifiedCount,
         consensusScore: consensus.consensusScore,
         sourceQualityScore: consensus.sourceQualityScore,
