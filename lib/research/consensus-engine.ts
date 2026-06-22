@@ -208,22 +208,12 @@ function authorityScoreForUrl(url: string): number {
 
   if (lower.includes(".gov")) return 100
   if (lower.includes(".edu")) return 95
-  if (
-    lower.includes("apa.org") ||
-    lower.includes("psychologytoday.com") ||
-    lower.includes("verywellmind.com") ||
-    lower.includes("mindtools.com") ||
-    lower.includes("harvard.edu") ||
-    lower.includes("stanford.edu")
-  ) {
-    return 75
-  }
-
 
   if (
+    lower.includes("nih.gov") ||
+    lower.includes("who.int") ||
     lower.includes("nature.com") ||
-    lower.includes("science.org") ||
-    lower.includes("nih.gov")
+    lower.includes("science.org")
   ) {
     return 90
   }
@@ -231,7 +221,8 @@ function authorityScoreForUrl(url: string): number {
   if (
     lower.includes("reuters.com") ||
     lower.includes("bbc.com") ||
-    lower.includes("apnews.com")
+    lower.includes("apnews.com") ||
+    lower.includes("theguardian.com")
   ) {
     return 85
   }
@@ -239,14 +230,48 @@ function authorityScoreForUrl(url: string): number {
   if (
     lower.includes("microsoft.com") ||
     lower.includes("google.com") ||
-    lower.includes("openai.com")
+    lower.includes("openai.com") ||
+    lower.includes("adobe.com") ||
+    lower.includes("salesforce.com") ||
+    lower.includes("ibm.com") ||
+    lower.includes("aws.amazon.com")
   ) {
     return 80
   }
 
+  if (
+    lower.includes("forbes.com") ||
+    lower.includes("hbr.org") ||
+    lower.includes("mckinsey.com") ||
+    lower.includes("zapier.com") ||
+    lower.includes("kit.com")
+  ) {
+    return 75
+  }
+
+  if (
+    lower.includes("startus-insights.com") ||
+    lower.includes("desilo.studio") ||
+    lower.includes("automateed.com") ||
+    lower.includes("analyticsinsight.net") ||
+    lower.includes("etedge-insights.com") ||
+    lower.includes("uxmatters.com") ||
+    lower.includes("storyteq.com") ||
+    lower.includes("goconsensus.com")
+  ) {
+    return 65
+  }
+
+  if (
+    lower.includes("pressmaster.ai") ||
+    lower.includes("floodlightnewmarketing.co.uk") ||
+    lower.includes("solomonadvising.com")
+  ) {
+    return 60
+  }
+
   return 50
 }
-
 function countUniqueSources(facts: VerifiedFact[]): number {
   const urls = new Set<string>()
 

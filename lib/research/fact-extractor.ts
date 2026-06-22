@@ -37,6 +37,68 @@ function cleanSentence(sentence: string) {
     .trim()
 }
 
+function isUsefulClaim(claim: string): boolean {
+  const normalized = claim.toLowerCase().trim()
+
+  if (normalized.length < 40) return false
+  if (normalized.length > 220) return false
+
+  const blockedPhrases = [
+    "contact us",
+    "buy now",
+    "free trial",
+    "sunflower",
+    "menu",
+    "cookie",
+    "privacy policy",
+    "terms of service",
+    "subscribe",
+    "newsletter",
+    "table of contents",
+    "frequently asked questions",
+    "all rights reserved",
+    "read more",
+    "get in touch",
+    "hero image",
+    "category:",
+    "tags:",
+  ]
+
+  if (blockedPhrases.some((phrase) => normalized.includes(phrase))) {
+    return false
+  }
+
+  const usefulSignals = [
+    " is ",
+    " are ",
+    " can ",
+    " will ",
+    " helps ",
+    " improve",
+    " improves",
+    " reduce",
+    " reduces",
+    " increase",
+    " increases",
+    " support",
+    " supports",
+    " enable",
+    " enables",
+    " remain",
+    " remains",
+    " reshape",
+    " reshapes",
+    " streamline",
+    " streamlines",
+    " enhance",
+    " enhances",
+    " optimize",
+    " optimizes",
+  ]
+
+  return usefulSignals.some((signal) => normalized.includes(signal))
+}
+
 function canonicalClaim(sentence: string): string | null {
   const text = sentence.toLowerCase()
 
@@ -92,12 +154,11 @@ function canonicalClaim(sentence: string): string | null {
 
   if (
     text.includes("analytics") ||
-    text.includes("data") ||
     text.includes("performance") ||
     text.includes("metrics") ||
     text.includes("insight")
   ) {
-    return `${text} can be explored through cautious, evidence-aware practical guidance.`
+    return "AI-driven analytics can improve content performance insights."
   }
 
   if (
@@ -167,6 +228,7 @@ function isUsefulSentence(sentence: string) {
     "tags:",
     "comments",
     "leave a reply",
+    "sunflower",
   ]
 
   if (junkPatterns.some((pattern) => text.includes(pattern))) {
@@ -216,7 +278,7 @@ function buildClaims(topic: string, evidence: EvidenceRecord): string[] {
   for (const sentence of sentences.slice(0, 12)) {
     const claim = canonicalClaim(sentence)
 
-    if (claim) {
+    if (claim && isUsefulClaim(claim)) {
       canonicalClaims.add(claim)
     }
   }

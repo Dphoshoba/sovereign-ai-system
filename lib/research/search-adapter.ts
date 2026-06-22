@@ -182,12 +182,8 @@ async function braveSearch(topic: string): Promise<SourceRecord[]> {
     .slice(0, 8)
 }
 
-export async function searchAdapter(
-  topic: string
-): Promise<SourceRecord[]> {
-  const provider = (process.env.SEARCH_PROVIDER || "none")
-    .trim()
-    .toLowerCase()
+export async function searchAdapter(topic: string): Promise<SourceRecord[]> {
+  const provider = process.env.SEARCH_PROVIDER || "brave"
 
   if (provider === "brave") {
     return braveSearch(topic)

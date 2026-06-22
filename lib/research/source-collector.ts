@@ -4,11 +4,10 @@ export type SourceRecord = {
   title: string
   url: string
   sourceType: string
-  relevanceScore: number
-
   authorityScore?: number
-  freshnessScore?: number
   trustScore?: number
+  freshnessScore?: number
+  relevanceScore: number
 }
 
 export type SourceCollectionResult = {
@@ -21,122 +20,106 @@ export type SourceCollectionResult = {
   collectionStatus: string
 }
 
-function calculateAuthorityScore(url: string): number {
+function scoreAuthority(url: string): number {
   const lower = url.toLowerCase()
 
   if (lower.includes(".gov")) return 100
   if (lower.includes(".edu")) return 95
-
-  if (
-    lower.includes("nature.com") ||
-    lower.includes("science.org") ||
-    lower.includes("nih.gov")
-  ) {
-    return 90
-  }
-
-  if (
-    lower.includes("reuters.com") ||
-    lower.includes("bbc.com") ||
-    lower.includes("apnews.com")
-  ) {
-    return 85
-  }
-
-  if (
-    lower.includes("microsoft.com") ||
-    lower.includes("google.com") ||
-    lower.includes("openai.com")
-  ) {
-    return 80
-  }
+  if (lower.includes("openai.com")) return 90
+  if (lower.includes("microsoft.com")) return 85
+  if (lower.includes("google.com")) return 85
+  if (lower.includes("ibm.com")) return 80
+  if (lower.includes("reuters.com")) return 85
+  if (lower.includes("bbc.com")) return 85
+  if (lower.includes("apnews.com")) return 85
+  if (lower.includes("forbes.com")) return 70
+  if (lower.includes("hbr.org")) return 75
 
   return 50
 }
 
-function calculateFreshnessScore(): number {
-  return 75
+function scoreTrust(url: string): number {
+  const lower = url.toLowerCase()
+
+  if (lower.includes(".gov")) return 95
+  if (lower.includes(".edu")) return 90
+  if (lower.includes("reuters.com")) return 90
+  if (lower.includes("bbc.com")) return 88
+  if (lower.includes("apnews.com")) return 88
+  if (lower.includes("openai.com")) return 85
+  if (lower.includes("microsoft.com")) return 82
+  if (lower.includes("google.com")) return 82
+  if (lower.includes("ibm.com")) return 80
+  if (lower.includes("forbes.com")) return 70
+  if (lower.includes("hbr.org")) return 75
+
+  return 65
 }
 
-function calculateTrustScore(
-  authorityScore: number,
-  relevanceScore: number,
-  freshnessScore: number
-): number {
+function average(values: number[]): number {
+  if (values.length === 0) return 0
+
   return Math.round(
-    authorityScore * 0.5 +
-      relevanceScore * 0.3 +
-      freshnessScore * 0.2
+    values.reduce((sum, value) => sum + value, 0) / values.length
   )
+}
+
+function normalizeSources(sources: SourceRecord[]): SourceRecord[] {
+  return sources.map((source) => ({
+    ...source,
+    authorityScore: source.authorityScore ?? scoreAuthority(source.url),
+    trustScore: source.trustScore ?? scoreTrust(source.url),
+    freshnessScore: source.freshnessScore ?? 75,
+    relevanceScore: source.relevanceScore ?? 70,
+  }))
 }
 
 export async function sourceCollector(
   topic: string,
   manualSources: SourceRecord[] = []
 ): Promise<SourceCollectionResult> {
-  const searchSources = await searchAdapter(topic)
+  const searchedSources = await searchAdapter(topic)
 
-  const combinedSources = [
+  const collectedSources = normalizeSources([
     ...manualSources,
-    ...searchSources,
-  ]
+    ...searchedSources,
+  ]).slice(0, 8)
 
-  const collectedSources = combinedSources.map((source) => {
-    const authorityScore = calculateAuthorityScore(source.url)
-    const freshnessScore = calculateFreshnessScore()
+  const sourceCount = collectedSources.length
 
-    const trustScore = calculateTrustScore(
-      authorityScore,
-      source.relevanceScore,
-      freshnessScore
-    )
-
-    return {
-      ...source,
-      authorityScore,
-      freshnessScore,
-      trustScore,
-    }
-  })
-
-  const averageAuthorityScore =
-    collectedSources.length > 0
-      ? Math.round(
-          collectedSources.reduce(
-            (sum, source) =>
-              sum + (source.authorityScore || 0),
-            0
-          ) / collectedSources.length
-        )
-      : 0
-
-  const averageTrustScore =
-    collectedSources.length > 0
-      ? Math.round(
-          collectedSources.reduce(
-            (sum, source) =>
-              sum + (source.trustScore || 0),
-            0
-          ) / collectedSources.length
-        )
-      : 0
-
-  const researchConfidence = Math.round(
-    averageAuthorityScore * 0.4 +
-      averageTrustScore * 0.4 +
-      Math.min(collectedSources.length * 5, 20)
+  const averageAuthorityScore = average(
+    collectedSources.map((source) => source.authorityScore ?? 0)
   )
+
+  const averageTrustScore = average(
+    collectedSources.map((source) => source.trustScore ?? 0)
+  )
+
+  const averageRelevanceScore = average(
+    collectedSources.map((source) => source.relevanceScore ?? 0)
+  )
+
+  const researchConfidence =
+    sourceCount === 0
+      ? 0
+      : Math.round(
+          average([
+            averageAuthorityScore,
+            averageTrustScore,
+            averageRelevanceScore,
+          ])
+        )
 
   return {
     topic,
     collectedSources,
-    sourceCount: collectedSources.length,
+    sourceCount,
     averageAuthorityScore,
     averageTrustScore,
     researchConfidence,
     collectionStatus:
-      collectedSources.length > 0
-        ? "Sources collected and scored."
-        : "No sources collected. Search provider is not connected yet.",
+      sourceCount > 0
+        ? "Sources collected successfully."
+        : "No sources collected. Search provider returned no results.",
   }
 }
