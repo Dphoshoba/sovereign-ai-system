@@ -1,4 +1,5 @@
 import { searchAdapter } from "./search-adapter"
+import { fallbackSources } from "./fallback-source-provider"
 
 export type SourceRecord = {
   title: string
@@ -78,7 +79,12 @@ export async function sourceCollector(
   topic: string,
   manualSources: SourceRecord[] = []
 ): Promise<SourceCollectionResult> {
-  const searchedSources = await searchAdapter(topic)
+  const searchResults = await searchAdapter(topic)
+
+ const searchedSources =
+   searchResults.length > 0
+     ? searchResults
+     : fallbackSources(topic)
 
   const collectedSources = normalizeSources([
     ...manualSources,
@@ -98,6 +104,7 @@ export async function sourceCollector(
   const averageRelevanceScore = average(
     collectedSources.map((source) => source.relevanceScore ?? 0)
   )
+  
 
   const researchConfidence =
     sourceCount === 0
@@ -123,3 +130,4 @@ export async function sourceCollector(
         : "No sources collected. Search provider returned no results.",
   }
 }
+
