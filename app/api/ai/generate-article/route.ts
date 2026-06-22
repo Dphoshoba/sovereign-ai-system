@@ -62,6 +62,17 @@ function finalTextCleanup(value: string): string {
     .replace(/\bwillreward\b/gi, "will reward")
     .replace(/\bdeepentrust\b/gi, "deepen trust")
     .replace(/\bimprovecontent\b/gi, "improve content")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/\b(content)(creation)\b/gi, "$1 $2")
+    .replace(/\b(responsible)(and)\b/gi, "$1 $2")
+    .replace(/\b(ethical)(use)\b/gi, "$1 $2")
+    .replace(/\b(workflow)(automation)\b/gi, "$1 $2")
+    .replace(/\b(AI)(automation)\b/g, "$1 $2")
+    .replace(/\b(The)(evidence)\b/g, "$1 $2")
+    .replace(/\b(where)(to)\b/gi, "$1 $2")
+    .replace(/\b(can)(help)\b/gi, "$1 $2")
+    .replace(/\b(while)(ethical)\b/gi, "$1 $2")
     .trim()
 }
 

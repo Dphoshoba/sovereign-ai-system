@@ -20,6 +20,75 @@ export type EvidenceRegistryResult = {
   registryStatus: string
 }
 
+function isUsefulEvidence(text: string): boolean {
+  const normalized = text.toLowerCase().trim()
+
+  if (normalized.length < 80) return false
+
+  const blocked = [
+    "cookie",
+    "privacy policy",
+    "terms of service",
+    "subscribe",
+    "newsletter",
+    "contact us",
+    "sign up",
+    "menu",
+    "copyright",
+    "all rights reserved",
+    "read more",
+    "follow us",
+    "table of contents",
+  ]
+
+  if (blocked.some((phrase) => normalized.includes(phrase))) {
+    return false
+  }
+
+  const useful = [
+    "research",
+    "study",
+    "survey",
+    "report",
+    "analysis",
+    "evidence",
+    "automation",
+    "artificial intelligence",
+    "generative ai",
+    "workflow",
+    "productivity",
+    "content",
+    "creator",
+    "audience",
+    "ethics",
+    "responsible",
+    "governance",
+    "risk",
+    "trend",
+  ]
+
+  return useful.some((word) => normalized.includes(word))
+}
+
+function sourceTypeBoost(sourceType: string): number {
+  switch (sourceType) {
+    case "government":
+      return 15
+    case "academic":
+      return 15
+    case "industry-research":
+      return 12
+    case "research-media":
+      return 10
+    case "policy":
+      return 10
+    case "authority":
+      return 8
+    default:
+      return 0
+  }
+}
+
 export async function evidenceRegistry(
   topic: string,
   sources: SourceRecord[]
@@ -27,24 +96,15 @@ export async function evidenceRegistry(
   const evidenceRecords: EvidenceRecord[] = []
 
   for (const source of sources) {
-    const fetched = await contentFetcher(
-      source.url,
-      source.title
-    )
+    const fetched = await contentFetcher(source.url, source.title)
 
-    const chunks = evidenceChunker(
-      fetched.extractedText,
-      120
-    )
+    const chunks = evidenceChunker(fetched.extractedText, 120)
 
-    const rankedChunks = chunkRanker(
-      topic,
-      chunks
-    )
+    const rankedChunks = chunkRanker(topic, chunks)
+      .filter((chunk) => isUsefulEvidence(chunk.text))
+      .slice(0, 3)
 
-    const topChunks = rankedChunks.slice(0, 2)
-
-    for (const chunk of topChunks) {
+    for (const chunk of rankedChunks) {
       evidenceRecords.push({
         id: `${source.title
           .toLowerCase()
@@ -58,7 +118,7 @@ export async function evidenceRegistry(
 
         confidence: Math.min(
           100,
-          source.relevanceScore
+          (source.relevanceScore ?? 70) + sourceTypeBoost(source.sourceType)
         ),
 
         requiresHumanReview: true,
@@ -72,7 +132,7 @@ export async function evidenceRegistry(
     evidenceCount: evidenceRecords.length,
     registryStatus:
       evidenceRecords.length > 0
-        ? "Evidence registry created from ranked chunks."
-        : "No evidence available.",
+        ? "Evidence registry created from filtered and ranked evidence chunks."
+        : "No useful evidence available after filtering.",
   }
 }

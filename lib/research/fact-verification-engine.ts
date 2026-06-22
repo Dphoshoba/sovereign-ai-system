@@ -13,20 +13,16 @@ export type VerifiedFact = ExtractedFact & {
     | "verified"
     | "partially verified"
     | "unverified"
-
   verificationMethod: "exact" | "semantic" | "single-source-supported"
-
   supportingSources: {
     sourceTitle: string
     sourceUrl: string
     evidenceId: string
   }[]
-
   similarityMatches?: {
     claim: string
     score: number
   }[]
-
   verificationScore: number
 }
 
@@ -44,30 +40,24 @@ function authorityScoreForUrl(url: string): number {
 
   if (lower.includes(".gov")) return 100
   if (lower.includes(".edu")) return 95
-
-  if (
-    lower.includes("nature.com") ||
-    lower.includes("science.org") ||
-    lower.includes("nih.gov")
-  ) {
-    return 90
-  }
-
-  if (
-    lower.includes("reuters.com") ||
-    lower.includes("bbc.com") ||
-    lower.includes("apnews.com")
-  ) {
-    return 85
-  }
-
-  if (
-    lower.includes("microsoft.com") ||
-    lower.includes("google.com") ||
-    lower.includes("openai.com")
-  ) {
-    return 80
-  }
+  if (lower.includes("stanford.edu")) return 95
+  if (lower.includes("nist.gov")) return 95
+  if (lower.includes("oecd.ai")) return 90
+  if (lower.includes("nature.com")) return 90
+  if (lower.includes("science.org")) return 90
+  if (lower.includes("nih.gov")) return 90
+  if (lower.includes("reuters.com")) return 85
+  if (lower.includes("bbc.com")) return 85
+  if (lower.includes("apnews.com")) return 85
+  if (lower.includes("openai.com")) return 85
+  if (lower.includes("microsoft.com")) return 85
+  if (lower.includes("google.com")) return 82
+  if (lower.includes("ibm.com")) return 80
+  if (lower.includes("nvidia.com")) return 80
+  if (lower.includes("mckinsey.com")) return 80
+  if (lower.includes("hbr.org")) return 75
+  if (lower.includes("technologyreview.com")) return 75
+  if (lower.includes("forbes.com")) return 70
 
   return 50
 }
@@ -90,7 +80,7 @@ function calculateVerificationScore(
   sourceAuthorityAverage: number,
   similarityMatches: { score: number }[]
 ): number {
-  const sourceCountScore = Math.min(verificationCount * 30, 90)
+  const sourceCountScore = Math.min(verificationCount * 32, 96)
 
   const similarityScore =
     similarityMatches.length > 0
@@ -98,12 +88,14 @@ function calculateVerificationScore(
           similarityMatches.reduce((sum, match) => sum + match.score, 0) /
             similarityMatches.length
         )
-      : 0
+      : verificationCount > 1
+        ? 80
+        : 0
 
   return Math.min(
     Math.round(
-      sourceCountScore * 0.5 +
-        sourceAuthorityAverage * 0.3 +
+      sourceCountScore * 0.45 +
+        sourceAuthorityAverage * 0.35 +
         similarityScore * 0.2
     ),
     100
@@ -183,9 +175,15 @@ export function factVerificationEngine(
     )
 
     const verificationStatus =
-      verificationCount >= 3
+      verificationCount >= 3 ||
+      verificationScore >= 75 ||
+      (verificationCount >= 2 &&
+        sourceAuthorityAverage >= 80 &&
+        strongSemanticMatch)
         ? "verified"
-        : verificationCount === 2 || strongSemanticMatch || verificationScore >= 65
+        : verificationCount >= 2 ||
+            strongSemanticMatch ||
+            verificationScore >= 55
           ? "partially verified"
           : "unverified"
 
