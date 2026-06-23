@@ -175,17 +175,17 @@ export function factVerificationEngine(
     )
 
     const verificationStatus =
-      verificationCount >= 3 ||
-      verificationScore >= 75 ||
-      (verificationCount >= 2 &&
-        sourceAuthorityAverage >= 80 &&
-        strongSemanticMatch)
-        ? "verified"
-        : verificationCount >= 2 ||
-            strongSemanticMatch ||
-            verificationScore >= 55
-          ? "partially verified"
-          : "unverified"
+       verificationCount >= 3 ||
+       verificationScore >= 68 ||
+       (verificationCount >= 2 &&
+         sourceAuthorityAverage >= 75 &&
+         strongSemanticMatch)
+         ? "verified"
+         : verificationCount >= 2 ||
+             strongSemanticMatch ||
+             verificationScore >= 50
+           ? "partially verified"
+           : "unverified"
 
     const verificationMethod =
       similarityMatches.length > 0

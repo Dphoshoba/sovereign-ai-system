@@ -258,13 +258,25 @@ export async function POST(request: Request) {
 
     const rawOutput = response.output_text || ""
 
-    const jsonMatch = rawOutput.match(/\{[\s\S]*\}\s*$/)
+    function extractJsonObject(text: string): string {
+      const start = text.indexOf("{")
+      const end = text.lastIndexOf("}")
 
-    if (!jsonMatch) {
-      throw new Error("AI returned no JSON object.")
+      if (start === -1 || end === -1 || end <= start) {
+        throw new Error("AI returned no JSON object.")
+      }
+
+     return text.slice(start, end + 1)
     }
 
-    const parsed = JSON.parse(jsonMatch[0])
+    let parsed
+
+    try {
+      parsed = JSON.parse(extractJsonObject(rawOutput))
+    } catch (parseError) {
+      console.error("AI JSON parse failed. Raw output:", rawOutput)
+      throw parseError
+    }
 
     const cleanedContent = parsed.content
       ? finalTextCleanup(

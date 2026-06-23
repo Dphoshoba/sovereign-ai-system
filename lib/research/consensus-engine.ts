@@ -380,18 +380,21 @@ export function consensusEngine(facts: VerifiedFact[]): ConsensusResult {
         )
       : 0
 
+  const verificationStrength =
+    verifiedFacts * 100 +
+    partiallyVerifiedFacts * 75
+
+  const corroborationStrength =
+    stronglyCorroborated * 100 +
+    moderatelyCorroborated * 75
+
   const rawConsensusScore =
     totalFacts === 0
       ? 0
       : Math.round(
-          (
-            verifiedFacts * 100 +
-            partiallyVerifiedFacts * 70 +
-            stronglyCorroborated * 100 +
-            moderatelyCorroborated * 60 +
-            sourceQualityScore * 0.5
-          ) /
-            (totalFacts + Math.max(consensusGroupCount, 1))
+          verificationStrength * 0.5 +
+          corroborationStrength * 0.25 +
+          sourceQualityScore * 0.25
         )
 
   const consensusScore = Math.min(rawConsensusScore, 100)
@@ -402,6 +405,15 @@ export function consensusEngine(facts: VerifiedFact[]): ConsensusResult {
       : consensusScore >= 50 || totalFacts >= 2
         ? "review-required"
         : "blocked"
+
+ console.log(
+  "Consensus Groups:",
+  consensusGroups.map(group => ({
+    theme: group.theme,
+    sourceCount: group.sourceCount,
+    facts: group.facts.map(f => f.claim)
+  }))
+)
 
   return {
     totalFacts,

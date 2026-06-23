@@ -41,7 +41,7 @@ function isUsefulClaim(claim: string): boolean {
   const normalized = claim.toLowerCase().trim()
 
   if (normalized.length < 40) return false
-  if (normalized.length > 220) return false
+  if (normalized.length > 240) return false
 
   const blockedPhrases = [
     "contact us",
@@ -64,51 +64,31 @@ function isUsefulClaim(claim: string): boolean {
     "tags:",
   ]
 
-  if (blockedPhrases.some((phrase) => normalized.includes(phrase))) {
-    return false
-  }
-
-  const usefulSignals = [
-    " is ",
-    " are ",
-    " can ",
-    " will ",
-    " helps ",
-    " improve",
-    " improves",
-    " reduce",
-    " reduces",
-    " increase",
-    " increases",
-    " support",
-    " supports",
-    " enable",
-    " enables",
-    " remain",
-    " remains",
-    " reshape",
-    " reshapes",
-    " streamline",
-    " streamlines",
-    " enhance",
-    " enhances",
-    " optimize",
-    " optimizes",
-  ]
-
-  return usefulSignals.some((signal) => normalized.includes(signal))
+  return !blockedPhrases.some((phrase) => normalized.includes(phrase))
 }
 
-function canonicalClaim(sentence: string): string | null {
+function canonicalClaims(sentence: string): string[] {
   const text = sentence.toLowerCase()
+  const claims = new Set<string>()
 
-  if (
-    text.includes("automation") ||
-    text.includes("workflow") ||
-    text.includes("repetitive") ||
-    text.includes("streamline")
-  ) {
-    return "AI automation is streamlining repetitive work and improving creator workflows."
+  if (text.includes("repetitive") || text.includes("routine")) {
+    claims.add("AI automation can reduce repetitive creator tasks.")
+  }
+
+  if (text.includes("workflow") || text.includes("process") || text.includes("pipeline")) {
+    claims.add("AI automation can improve creator workflows.")
+  }
+
+  if (text.includes("draft") || text.includes("first draft")) {
+    claims.add("AI-assisted drafting can support content production.")
+  }
+
+  if (text.includes("editing") || text.includes("rewrite") || text.includes("clarity")) {
+    claims.add("AI tools can assist with content editing workflows.")
+  }
+
+  if (text.includes("format") || text.includes("reformat") || text.includes("repurpose")) {
+    claims.add("AI automation can reduce manual formatting and repurposing effort.")
   }
 
   if (
@@ -118,7 +98,24 @@ function canonicalClaim(sentence: string): string | null {
     text.includes("generate content") ||
     text.includes("writing")
   ) {
-    return "AI is improving content production efficiency for creators."
+    claims.add("AI can improve content production efficiency for creators.")
+  }
+
+  if (
+    text.includes("outline") ||
+    text.includes("planning") ||
+    text.includes("structure")
+  ) {
+    claims.add("AI tools can support content planning and outlining.")
+  }
+
+  if (
+    text.includes("title") ||
+    text.includes("headline") ||
+    text.includes("caption") ||
+    text.includes("summary")
+  ) {
+    claims.add("AI tools can support creator packaging tasks such as titles, captions, and summaries.")
   }
 
   if (
@@ -128,7 +125,7 @@ function canonicalClaim(sentence: string): string | null {
     text.includes("subscriber") ||
     text.includes("community")
   ) {
-    return "AI-supported strategies can help creators grow and engage audiences."
+    claims.add("AI-supported workflows can help creators plan audience engagement.")
   }
 
   if (
@@ -139,17 +136,16 @@ function canonicalClaim(sentence: string): string | null {
     text.includes("income") ||
     text.includes("pricing")
   ) {
-    return "AI is opening new ways for creators to optimize revenue and monetization."
+    claims.add("AI can support creator monetization and revenue workflow planning.")
   }
 
   if (
     text.includes("creative") ||
     text.includes("ideation") ||
     text.includes("brainstorm") ||
-    text.includes("draft") ||
     text.includes("idea")
   ) {
-    return "AI is enhancing creative workflows and ideation for creators."
+    claims.add("AI tools can support creator ideation and creative planning.")
   }
 
   if (
@@ -158,7 +154,7 @@ function canonicalClaim(sentence: string): string | null {
     text.includes("metrics") ||
     text.includes("insight")
   ) {
-    return "AI-driven analytics can improve content performance insights."
+    claims.add("AI-driven analytics can improve content performance insights.")
   }
 
   if (
@@ -166,20 +162,28 @@ function canonicalClaim(sentence: string): string | null {
     text.includes("responsible") ||
     text.includes("transparency") ||
     text.includes("privacy") ||
-    text.includes("trust") ||
-    text.includes("human")
+    text.includes("trust")
   ) {
-    return "Responsible and ethical AI use remains important for creators."
+    claims.add("Responsible and ethical AI use remains important for creators.")
   }
 
-  return null
+  if (
+    text.includes("human") ||
+    text.includes("review") ||
+    text.includes("oversight") ||
+    text.includes("accountability")
+  ) {
+    claims.add("Human review remains important before publishing AI-assisted content.")
+  }
+
+  return Array.from(claims).filter(isUsefulClaim)
 }
 
 function isUsefulSentence(sentence: string) {
   const text = sentence.toLowerCase()
 
-  if (sentence.length < 50) return false
-  if (sentence.length > 420) return false
+  if (sentence.length < 40) return false
+  if (sentence.length > 500) return false
 
   const junkPatterns = [
     "sign up",
@@ -236,24 +240,14 @@ function isUsefulSentence(sentence: string) {
   }
 
   const usefulPatterns = [
-    /\b\d+%/,
-    /\b\d{4}\b/,
-    /\bmarket\b/,
-    /\bgrowth\b/,
     /\bcreators?\b/,
     /\bautomation\b/,
     /\bartificial intelligence\b/,
     /\bgenerative ai\b/,
     /\bworkflow\b/,
     /\btools?\b/,
-    /\btrend\b/,
-    /\bchallenge\b/,
-    /\brisk\b/,
-    /\bopportunity\b/,
-    /\bplatform\b/,
     /\baudience\b/,
     /\bcontent\b/,
-    /\bbusiness\b/,
     /\brevenue\b/,
     /\bproductivity\b/,
     /\bethic/,
@@ -262,28 +256,33 @@ function isUsefulSentence(sentence: string) {
     /\bcreative\b/,
     /\bideation\b/,
     /\banalytics\b/,
+    /\bdraft\b/,
+    /\bediting\b/,
+    /\bformat\b/,
+    /\brepurpose\b/,
+    /\boutline\b/,
+    /\bresponsible\b/,
+    /\btrust\b/,
   ]
 
   return usefulPatterns.some((pattern) => pattern.test(text))
 }
 
 function buildClaims(topic: string, evidence: EvidenceRecord): string[] {
-  const canonicalClaims = new Set<string>()
+  const claims = new Set<string>()
 
   const sentences = evidence.extractedText
     .split(/(?<=[.!?])\s+/)
     .map(cleanSentence)
     .filter(isUsefulSentence)
 
-  for (const sentence of sentences.slice(0, 12)) {
-    const claim = canonicalClaim(sentence)
-
-    if (claim && isUsefulClaim(claim)) {
-      canonicalClaims.add(claim)
+  for (const sentence of sentences.slice(0, 20)) {
+    for (const claim of canonicalClaims(sentence)) {
+      claims.add(claim)
     }
   }
 
-  return Array.from(canonicalClaims).slice(0, 5)
+  return Array.from(claims).slice(0, 12)
 }
 
 export function factExtractor(
@@ -305,13 +304,18 @@ export function factExtractor(
 
   const uniqueFacts = factDeduplicator(facts)
 
+  console.log(
+    "Extracted Unique Claims:",
+    Array.from(new Set(uniqueFacts.map((fact) => fact.claim)))
+  )
+
   return {
     topic,
     facts: uniqueFacts,
     factCount: uniqueFacts.length,
     extractionStatus:
       uniqueFacts.length > 0
-        ? "Canonical facts extracted from evidence records."
+        ? "Expanded canonical facts extracted from evidence records."
         : "No facts extracted because no suitable evidence records were supplied.",
   }
 }
