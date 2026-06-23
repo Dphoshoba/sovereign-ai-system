@@ -89,6 +89,10 @@ function finalTextCleanup(value: string): string {
     .replace(/\sstreamlineworkflow\b/gi, "streamline workflow")
     .replace(/\bdoesnot\b/gi, "does not")
     .replace(/\bBe wise\.Do\b/g, "Be wise. Do")
+    .replace(/\*\*\s+/g, "**")
+    .replace(/\s+\*\*/g, "**")
+    .replace(/\*\s+/g, "*")
+    .replace(/\s+\*/g, "*")
     .trim()
 }
 
@@ -252,7 +256,15 @@ export async function POST(request: Request) {
         "Requirements: use Markdown in content, include headings, practical examples, clear human rhythm, and a subtle Echoes & Visions CTA near the end.",
     })
 
-    const parsed = JSON.parse(response.output_text)
+    const rawOutput = response.output_text || ""
+
+    const jsonMatch = rawOutput.match(/\{[\s\S]*\}\s*$/)
+
+    if (!jsonMatch) {
+      throw new Error("AI returned no JSON object.")
+    }
+
+    const parsed = JSON.parse(jsonMatch[0])
 
     const cleanedContent = parsed.content
       ? finalTextCleanup(
