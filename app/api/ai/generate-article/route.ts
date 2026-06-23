@@ -57,22 +57,38 @@ function finalTextCleanup(value: string): string {
     .replace(new RegExp(`([A-Za-z])${bad}d\\b`, "g"), "$1'd")
     .replace(new RegExp(`\\s*${bad}\\s*`, "g"), " - ")
     .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/\s+/g, " ")
+    .replace(/([.!?])([A-Z])/g, "$1 $2")
+    .replace(/([a-z])(\*\*)/g, "$1 $2")
+    .replace(/(\*\*)([A-Za-z])/g, "$1 $2")
+    .replace(/([a-z])(-\s)/g, "$1 $2")
+    .replace(/([a-z]{3,})(AI)/g, "$1 AI")
+    .replace(/(AI)([a-z]{3,})/g, "$1 $2")
+    .replace(/\bandresponsible\b/gi, "and responsible")
+    .replace(/\bagainand\b/gi, "again and")
+    .replace(/\bWorkflowcleanup\b/g, "Workflow cleanup")
+    .replace(/\bAIuse\b/g, "AI use")
+    .replace(/\bpublishcarelessly\b/gi, "publish carelessly")
+    .replace(/\bcontentcreation\b/gi, "content creation")
+    .replace(/\bTheevidence\b/g, "The evidence")
+    .replace(/\bwhereverifiable\b/gi, "where verifiable")
+    .replace(/\bisabout\b/gi, "is about")
+    .replace(/\bUsea\b/g, "Use a")
+    .replace(/\bhowto\b/gi, "how to")
     .replace(/\s+([,.!?;:])/g, "$1")
-    .replace(/\bwillreward\b/gi, "will reward")
-    .replace(/\bdeepentrust\b/gi, "deepen trust")
-    .replace(/\bimprovecontent\b/gi, "improve content")
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/\b(content)(creation)\b/gi, "$1 $2")
-    .replace(/\b(responsible)(and)\b/gi, "$1 $2")
-    .replace(/\b(ethical)(use)\b/gi, "$1 $2")
-    .replace(/\b(workflow)(automation)\b/gi, "$1 $2")
-    .replace(/\b(AI)(automation)\b/g, "$1 $2")
-    .replace(/\b(The)(evidence)\b/g, "$1 $2")
-    .replace(/\b(where)(to)\b/gi, "$1 $2")
-    .replace(/\b(can)(help)\b/gi, "$1 $2")
-    .replace(/\b(while)(ethical)\b/gi, "$1 $2")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\bWhatChanges\b/g, "What Changes")
+    .replace(/\bThatis\b/gi, "That is")
+    .replace(/\btwothings\b/gi, "two things")
+    .replace(/\btasksget\b/gi, "tasks get")
+    .replace(/\bcreatorscan\b/gi, "creators can")
+    .replace(/\banduses\b/gi, "and uses")
+    .replace(/\bon(outhe)\b/gi, "on the")
+    .replace(/\bresponsibleand\b/gi, "responsible and")
+    .replace(/\bneeda\b/gi, "need a")
+    .replace(/\bItis\b/g, "It is")
+    .replace(/\sstreamlineworkflow\b/gi, "streamline workflow")
+    .replace(/\bdoesnot\b/gi, "does not")
+    .replace(/\bBe wise\.Do\b/g, "Be wise. Do")
     .trim()
 }
 
@@ -95,7 +111,6 @@ export async function POST(request: Request) {
       : []
 
     const sourceCollection = await sourceCollector(topic, manualSources)
-
     const evidence = await evidenceRegistry(
       topic,
       sourceCollection.collectedSources
@@ -200,6 +215,7 @@ export async function POST(request: Request) {
         "Category: " +
         category +
         "\n\n" +
+        "Write a full, useful article of 1200 to 1800 words when evidence allows. If evidence is limited, write as fully as possible without inventing claims.\n\n" +
         "Do not redirect the article back to AI automation unless the category is ai-tools or ai-automation.\n" +
         "If the category is bible-stories, write a Bible/history article.\n" +
         "If the category is motivation, write a motivation article.\n" +
@@ -233,7 +249,7 @@ export async function POST(request: Request) {
         "- seoDescription must be 120 to 160 characters.\n" +
         "- seoKeywords must include at least 3 comma-separated keyword phrases.\n" +
         "- faq must include 3 to 5 practical questions and answers.\n\n" +
-        "Requirements: use Markdown in content, include headings, practical examples, clear human rhythm, and a subtle Echoes & Visions CTA near the end.",   
+        "Requirements: use Markdown in content, include headings, practical examples, clear human rhythm, and a subtle Echoes & Visions CTA near the end.",
     })
 
     const parsed = JSON.parse(response.output_text)
@@ -254,13 +270,11 @@ export async function POST(request: Request) {
       ? finalTextCleanup(encodingNormalizer(parsed.seoDescription))
       : null
 
-      const faq = Array.isArray(parsed.faq)
-  ? parsed.faq
-  : []
+    const faq = Array.isArray(parsed.faq) ? parsed.faq : []
 
-const title = finalTextCleanup(parsed.title || topic)
-const baseSlug = slugify(title)
-const slug = await createUniqueSlug(baseSlug, category)
+    const title = finalTextCleanup(parsed.title || topic)
+    const baseSlug = slugify(title)
+    const slug = await createUniqueSlug(baseSlug, category)
 
     const wordCount = finalContent
       ? finalContent.split(/\s+/).filter(Boolean).length
@@ -311,10 +325,8 @@ const slug = await createUniqueSlug(baseSlug, category)
         editorialScore: editorialQuality.score,
         editorialGrade: editorialQuality.grade,
         editorialWarnings: editorialQuality.warnings,
-
         qualityScore: qualityResult.score,
         qualityGrade: qualityResult.grade,
-
         seoScore: seoResult.score,
         seoGrade: seoResult.grade,
       },
@@ -410,15 +422,12 @@ const slug = await createUniqueSlug(baseSlug, category)
     return NextResponse.json({
       ok: true,
       article: updatedArticle,
-
       qualityScore: qualityResult.score,
       qualityGrade: qualityResult.grade,
       qualityChecks: qualityResult.checks,
-
       seoScore: seoResult.score,
       seoGrade: seoResult.grade,
       seoChecks: seoResult.checks,
-
       researchAudit: {
         sourceCount: sourceCollection.sourceCount,
         averageAuthorityScore: sourceCollection.averageAuthorityScore,
@@ -446,9 +455,7 @@ const slug = await createUniqueSlug(baseSlug, category)
       {
         ok: false,
         error:
-          error instanceof Error
-            ? error.message
-            : "Failed to generate article",
+          error instanceof Error ? error.message : "Failed to generate article",
       },
       { status: 500 }
     )
