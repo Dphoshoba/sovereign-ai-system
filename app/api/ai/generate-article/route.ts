@@ -93,6 +93,11 @@ function finalTextCleanup(value: string): string {
     .replace(/\s+\*\*/g, "**")
     .replace(/\*\s+/g, "*")
     .replace(/\s+\*/g, "*")
+    .replace(/-\*\*/g, "- **")
+    .replace(/\*\*([A-Za-z])/g, "** $1")
+    .replace(/([a-z])\*\*/g, "$1 **")
+    .replace(/\*\*([a-z])/g, "** $1")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
     .trim()
 }
 
@@ -175,18 +180,18 @@ export async function POST(request: Request) {
     )
 
     const verifiedFactsText = publishableFacts
-      .map((fact) => {
+      .map((fact, index) => {
         const sources = fact.supportingSources
           .map((source) => source.sourceUrl)
           .join(", ")
 
         return (
-          `- ${fact.claim}\n` +
-          `  Verification: ${fact.verificationStatus}\n` +
-          `  Sources: ${sources || "none"}`
+          `FACT ${index + 1}: ${fact.claim}\n` +
+          `Verification: ${fact.verificationStatus}\n` +
+          `Sources: ${sources || "none"}`
         )
       })
-      .join("\n")
+      .join("\n\n")
 
     const hasVerifiedEvidence =
       evidence.evidenceCount > 0 && publishableFacts.length > 0
@@ -233,9 +238,19 @@ export async function POST(request: Request) {
         "\n\n" +
         factsBlock +
         "\n\n" +
+        "ARTICLE STRUCTURE REQUIREMENT:\n" +
+        "Create one major section for each verified fact.\n" +
+        "Use the verified facts as H2 headings or the basis of H2 headings.\n" +
+        "Expand each fact with explanation, examples, implications and practical guidance.\n\n" +
         "STRICT RULES:\n" +
         "- Stay faithful to the category.\n" +
         "- Write only from verified or partially verified facts.\n" +
+        "- Every verified fact must appear somewhere in the article.\n" +
+        "- Create at least one section heading for each major verified fact.\n" +
+        "- Expand verified facts into practical examples, implications, benefits, risks, and applications.\n" +
+        "- Do not summarize multiple facts into one sentence.\n" +
+        "- If five verified facts are supplied, discuss all five.\n" +
+        "- Use verified facts as the backbone of the article structure.\n" +
         "- Do not invent statistics, quotes, dates, historical claims, companies, or sources.\n" +
         "- If evidence is limited, clearly say so and write a cautious article around what is supported.\n" +
         "- Return valid JSON only.\n" +
