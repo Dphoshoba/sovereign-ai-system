@@ -1,5 +1,7 @@
 import type { EvidenceRecord } from "./evidence-registry"
 import { factDeduplicator } from "./fact-deduplicator"
+import { genericSemanticClaims } from "./generic-semantic-claims"
+
 
 export type ExtractedFact = {
   claim: string
@@ -276,11 +278,15 @@ function buildClaims(topic: string, evidence: EvidenceRecord): string[] {
     .map(cleanSentence)
     .filter(isUsefulSentence)
 
-  for (const sentence of sentences.slice(0, 20)) {
-    for (const claim of aiAutomationClaims(sentence)) {
-      claims.add(claim)
+    for (const sentence of sentences.slice(0, 20)) {
+      for (const claim of aiAutomationClaims(sentence)) {
+        claims.add(claim)
+      }
+    
+      for (const claim of genericSemanticClaims(sentence)) {
+        claims.add(claim)
+      }
     }
-  }
 
   return Array.from(claims).slice(0, 12)
 }
