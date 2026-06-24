@@ -67,7 +67,7 @@ function isUsefulClaim(claim: string): boolean {
   return !blockedPhrases.some((phrase) => normalized.includes(phrase))
 }
 
-function canonicalClaims(sentence: string): string[] {
+function aiAutomationClaims(sentence: string): string[] {
   const text = sentence.toLowerCase()
   const claims = new Set<string>()
 
@@ -277,7 +277,7 @@ function buildClaims(topic: string, evidence: EvidenceRecord): string[] {
     .filter(isUsefulSentence)
 
   for (const sentence of sentences.slice(0, 20)) {
-    for (const claim of canonicalClaims(sentence)) {
+    for (const claim of aiAutomationClaims(sentence)) {
       claims.add(claim)
     }
   }
