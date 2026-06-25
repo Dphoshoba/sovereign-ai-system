@@ -1,7 +1,7 @@
 import type { EvidenceRecord } from "./evidence-registry"
 import { factDeduplicator } from "./fact-deduplicator"
 import { genericSemanticClaims } from "./generic-semantic-claims"
-
+import { bibleExtractor } from "./bible-extractor"
 
 export type ExtractedFact = {
   claim: string
@@ -103,11 +103,7 @@ function aiAutomationClaims(sentence: string): string[] {
     claims.add("AI can improve content production efficiency for creators.")
   }
 
-  if (
-    text.includes("outline") ||
-    text.includes("planning") ||
-    text.includes("structure")
-  ) {
+  if (text.includes("outline") || text.includes("planning") || text.includes("structure")) {
     claims.add("AI tools can support content planning and outlining.")
   }
 
@@ -176,6 +172,40 @@ function aiAutomationClaims(sentence: string): string[] {
     text.includes("accountability")
   ) {
     claims.add("Human review remains important before publishing AI-assisted content.")
+  }
+
+  return Array.from(claims).filter(isUsefulClaim)
+}
+
+function bibleClaims(sentence: string): string[] {
+  const text = sentence.toLowerCase()
+  const claims = new Set<string>()
+
+  if (text.includes("david") && text.includes("goliath")) {
+    claims.add("The account of David and Goliath centers on David confronting Goliath.")
+  }
+
+  if (text.includes("philistine") || text.includes("philistines")) {
+    claims.add("The David and Goliath account involves conflict with the Philistines.")
+   
+    return Array.from(claims).filter(isUsefulClaim)
+  }
+
+  if (text.includes("israel") || text.includes("israelites")) {
+    claims.add("The David and Goliath account involves Israel in a time of conflict.")
+  }
+
+  if (
+    text.includes("faith") ||
+    text.includes("trust") ||
+    text.includes("lord") ||
+    text.includes("god")
+  ) {
+    claims.add("The David and Goliath account highlights trust in God.")
+  }
+
+  if (text.includes("stone") || text.includes("sling")) {
+    claims.add("David used simple weapons in the confrontation with Goliath.")
   }
 
   return Array.from(claims).filter(isUsefulClaim)
@@ -265,12 +295,25 @@ function isUsefulSentence(sentence: string) {
     /\boutline\b/,
     /\bresponsible\b/,
     /\btrust\b/,
+    /\bdavid\b/,
+    /\bgoliath\b/,
+    /\bphilistines?\b/,
+    /\bisraelites?\b/,
+    /\blord\b/,
+    /\bgod\b/,
+    /\bfaith\b/,
+    /\bsling\b/,
+    /\bstone\b/,
   ]
 
   return usefulPatterns.some((pattern) => pattern.test(text))
 }
 
-function buildClaims(topic: string, evidence: EvidenceRecord): string[] {
+function buildClaims(
+  topic: string,
+  evidence: EvidenceRecord,
+  category = "ai-tools"
+): string[] {
   const claims = new Set<string>()
 
   const sentences = evidence.extractedText
@@ -278,25 +321,51 @@ function buildClaims(topic: string, evidence: EvidenceRecord): string[] {
     .map(cleanSentence)
     .filter(isUsefulSentence)
 
-    for (const sentence of sentences.slice(0, 20)) {
+    console.log("Bible evidence sentences:", sentences.slice(0, 10))
+
+  const isAiCategory =
+    category.includes("ai") || category.includes("automation")
+
+  const isBibleCategory = category.includes("bible")
+
+  for (const sentence of sentences.slice(0, 20)) {
+    if (isAiCategory) {
       for (const claim of aiAutomationClaims(sentence)) {
         claims.add(claim)
       }
+    }
+
+    if (isBibleCategory) {
+      const bibleResult = bibleExtractor(sentence)
     
-      for (const claim of genericSemanticClaims(sentence)) {
+      for (const claim of bibleResult.claims) {
         claims.add(claim)
       }
+    
+      for (const event of bibleResult.events) {
+        claims.add(event)
+      }
+    
+      for (const theme of bibleResult.themes) {
+        claims.add(`The passage includes the theme of ${theme}.`)
+      }
     }
+
+    for (const claim of genericSemanticClaims(sentence)) {
+      claims.add(claim)
+    }
+  }
 
   return Array.from(claims).slice(0, 12)
 }
 
 export function factExtractor(
   topic: string,
-  evidenceRecords: EvidenceRecord[]
+  evidenceRecords: EvidenceRecord[],
+  category = "ai-tools"
 ): FactExtractionResult {
   const facts = evidenceRecords.flatMap((evidence) =>
-    buildClaims(topic, evidence).map((claim) => ({
+    buildClaims(topic, evidence, category).map((claim) => ({
       claim,
       evidenceId: evidence.id,
       sourceTitle: evidence.sourceTitle,

@@ -36,7 +36,13 @@ function isGenericJunk(sentence: string): boolean {
     "data transparency",
     "independent, rigorous measurement",
     "technologies from generative ai",
-    "applied to the right ai use cases"
+    "applied to the right ai use cases",
+    "&#8220;",
+    "&#8221;",
+    "&#8217;",
+    "your servant",
+    "you are just a boy",
+    "verse",
   ]
 
   return junk.some((item) => text.includes(item))

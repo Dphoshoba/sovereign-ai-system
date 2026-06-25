@@ -119,13 +119,13 @@ export async function POST(request: Request) {
       ? body.manualSources
       : []
 
-    const sourceCollection = await sourceCollector(topic, manualSources)
+      const sourceCollection = await sourceCollector(topic, manualSources, category)
     const evidence = await evidenceRegistry(
       topic,
       sourceCollection.collectedSources
     )
 
-    const factExtraction = factExtractor(topic, evidence.evidence)
+    const factExtraction = factExtractor(topic, evidence.evidence, category)
     const factVerification = factVerificationEngine(factExtraction.facts)
     const consensus = consensusEngine(factVerification.verifiedFacts)
     const publicationDecision = publicationGate(consensus)

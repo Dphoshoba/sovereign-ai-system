@@ -107,12 +107,13 @@ function normalizeSources(sources: SourceRecord[]): SourceRecord[] {
 
 export async function sourceCollector(
   topic: string,
-  manualSources: SourceRecord[] = []
+  manualSources: SourceRecord[] = [],
+  category = "ai-tools"
 ): Promise<SourceCollectionResult> {
   const searchResults = await searchAdapter(topic)
 
   const searchedSources =
-    searchResults.length > 0 ? searchResults : fallbackSources(topic)
+    searchResults.length > 0 ? searchResults : fallbackSources(topic, category)
 
   const collectedSources = normalizeSources([
     ...manualSources,

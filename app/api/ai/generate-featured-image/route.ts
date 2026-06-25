@@ -48,16 +48,42 @@ export async function POST(request: Request) {
       )
     }
 
+    const category = article.category?.toLowerCase() || ""
+
+    const fallbackPrompt = category.includes("bible")
+      ? `Create a cinematic biblical blog cover image for this article: ${article.title}. Ancient Israel atmosphere, warm golden light, dramatic landscape, reverent spiritual tone, realistic but tasteful, no text, no logos, no watermarks.`
+      : category.includes("history")
+        ? `Create a cinematic history blog cover image for this article: ${article.title}. Historical atmosphere, documentary style, warm dramatic lighting, tasteful and realistic, no text, no logos, no watermarks.`
+        : category.includes("health")
+          ? `Create a clean health and wellness blog cover image for this article: ${article.title}. Calm professional medical wellness style, warm natural light, human-centered, no text, no logos, no watermarks.`
+          : category.includes("space")
+            ? `Create a cinematic space blog cover image for this article: ${article.title}. Deep space atmosphere, stars, planets, cosmic lighting, realistic premium editorial style, no text, no logos, no watermarks.`
+            : category.includes("motivation")
+              ? `Create an inspiring motivation blog cover image for this article: ${article.title}. Warm sunrise light, person overcoming challenge, hopeful cinematic tone, no text, no logos, no watermarks.`
+              : `Create a cinematic blog cover image for this article: ${article.title}. Modern AI automation, warm professional lighting, human-centered technology, elegant premium SaaS feel, abstract creator workspace, no text, no logos, no watermarks.`
+
     const prompt =
       article.featuredImage && !article.featuredImage.startsWith("/")
         ? article.featuredImage
-        : `Create a cinematic blog cover image for this article: ${article.title}. Modern AI automation, warm professional lighting, human-centered technology, elegant premium SaaS feel, abstract creator workspace, no text, no logos, no watermarks.`
+        : fallbackPrompt
 
-    const image = await getOpenAI().images.generate({
-      model: "gpt-image-2",
-      prompt,
-      size: "1024x1024",
-    })
+        let image
+
+        try {
+          image = await getOpenAI().images.generate({
+            model: "gpt-image-2",
+            prompt,
+            size: "1024x1024",
+          })
+        } catch (error) {
+          console.error("Featured image generation failed:", error)
+        
+          return NextResponse.json({
+            ok: true,
+            warning: "Featured image generation failed. Article remains saved without a generated image.",
+            article,
+          })
+        }
 
     const base64 = image.data?.[0]?.b64_json
 
