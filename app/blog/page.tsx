@@ -1,5 +1,6 @@
 import Link from "next/link"
 import type { Metadata } from "next"
+import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
 
 export const metadata: Metadata = {
@@ -21,6 +22,8 @@ export default async function BlogPage({
 }: {
   searchParams: Promise<{ q?: string; category?: string }>
 }) {
+  await connection()
+
   const { q = "", category = "" } = await searchParams
 
   const articles = await prisma.article.findMany({

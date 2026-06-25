@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
+import { connection } from "next/server"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { prisma } from "@/lib/prisma"
@@ -79,6 +80,8 @@ export default async function BlogArticlePage({
 }: {
   params: Promise<{ slug: string }>
 }) {
+  await connection()
+
   const { slug } = await params
 
   const article = await prisma.article.findFirst({

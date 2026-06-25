@@ -1,4 +1,5 @@
 import Image from "next/image"
+import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
 import CopyButton from "./CopyButton"
 import UploadButton from "./UploadButton"
@@ -7,6 +8,8 @@ import ActionButton from "./ActionButton"
 import SceneTimelineViewer from "./SceneTimelineViewer"
 
 export default async function AdminYouTubePage() {
+  await connection()
+
   const posts = await prisma.youTubePost.findMany({
     orderBy: {
       createdAt: "desc",

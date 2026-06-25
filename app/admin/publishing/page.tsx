@@ -1,9 +1,12 @@
+import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
 import PublishButton from "./PublishButton"
 import RetryButton from "./RetryButton"
 import ScheduleButton from "./ScheduleButton"
 
 export default async function PublishingQueuePage() {
+  await connection()
+
   const queue = await prisma.publishingQueue.findMany({
     orderBy: {
       createdAt: "desc",

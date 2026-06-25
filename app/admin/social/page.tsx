@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { PublishSocialButton } from "./PublishSocialButton"
 import { SocialReviewActions } from "./SocialReviewActions"
@@ -23,6 +24,8 @@ export default async function AdminSocialPage({
 }: {
   searchParams: Promise<{ status?: string; platform?: string }>
 }) {
+  await connection()
+
   const { status: statusParam, platform: platformParam } = await searchParams
 
   const activeFilter =

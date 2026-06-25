@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { NewsletterActions } from "@/components/newsletter/NewsletterActions"
 
@@ -14,6 +15,8 @@ export default async function AdminNewslettersPage({
 }: {
   searchParams: Promise<{ status?: string }>
 }) {
+  await connection()
+
   const { status: statusParam } = await searchParams
 
   const activeFilter =

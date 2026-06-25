@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { GenerateTopicButton } from "./GenerateTopicButton"
 import { RunAutonomousButton } from "./RunAutonomousButton"
@@ -19,6 +20,8 @@ function statusColor(status: string) {
 }
 
 export default async function DiscoveryAdminPage() {
+  await connection()
+
   const topics = await prisma.discoveredTopic.findMany({
     orderBy: [
       { status: "asc" },

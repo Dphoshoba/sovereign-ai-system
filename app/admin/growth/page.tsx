@@ -1,3 +1,4 @@
+import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
 
 async function getGrowthData() {
@@ -31,6 +32,8 @@ async function getGrowthIntelligence() {
 }
 
 export default async function GrowthPage() {
+  await connection()
+
   const data = await getGrowthData()
   const metrics = data.metrics
 

@@ -1,7 +1,10 @@
+import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
 import LeadMagnetForm from "@/components/lead-magnets/LeadMagnetForm"
 
 export default async function LeadMagnetsPage() {
+  await connection()
+
   const leadMagnets = await prisma.leadMagnet.findMany({
     orderBy: {
       createdAt: "desc",

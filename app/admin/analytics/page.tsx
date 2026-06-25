@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { DashboardCharts } from "@/components/analytics/DashboardCharts"
 
@@ -7,6 +8,8 @@ function startOfMonth(date: Date) {
 }
 
 export default async function AdminAnalyticsPage() {
+  await connection()
+
   const now = new Date()
   const monthStart = startOfMonth(now)
 

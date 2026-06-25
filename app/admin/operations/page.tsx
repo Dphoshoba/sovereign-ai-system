@@ -1,8 +1,11 @@
 import Link from "next/link"
+import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
 import OperationsActions from "@/components/operations/OperationsActions"
 
 export default async function OperationsPage() {
+  await connection()
+
   const [articles, newsletters, socialPosts, subscribers] =
     await Promise.all([
       prisma.article.findMany(),

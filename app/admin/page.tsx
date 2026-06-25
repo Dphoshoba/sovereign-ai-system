@@ -1,7 +1,10 @@
 import Link from "next/link"
+import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
 
 export default async function AiCommandCenterPage() {
+  await connection()
+
   const articles = await prisma.article.findMany({
     orderBy: { createdAt: "desc" },
   })

@@ -1,3 +1,4 @@
+import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { SubscriberActions } from "@/components/subscribers/SubscriberActions"
 
@@ -15,6 +16,8 @@ function startOfMonth(date: Date) {
 }
 
 export default async function AdminSubscribersPage() {
+  await connection()
+
   const now = new Date()
   const weekStart = startOfWeek(now)
   const monthStart = startOfMonth(now)

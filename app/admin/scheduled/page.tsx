@@ -1,6 +1,9 @@
+import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
 
 export default async function ScheduledPage() {
+  await connection()
+
   const articles = await prisma.article.findMany({
     where: {
       status: "scheduled",

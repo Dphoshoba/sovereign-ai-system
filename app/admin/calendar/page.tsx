@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
 
 function formatDate(date: Date | null) {
@@ -14,6 +15,8 @@ function formatDate(date: Date | null) {
 }
 
 export default async function EditorialCalendarPage() {
+  await connection()
+
   const articles = await prisma.article.findMany({
     where: {
       OR: [

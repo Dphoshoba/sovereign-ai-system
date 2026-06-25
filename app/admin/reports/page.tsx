@@ -1,9 +1,12 @@
+import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
 import ExecutiveIntelligence from "@/components/reports/ExecutiveIntelligence"
 import GrowthTrends from "@/components/reports/GrowthTrends"
 import ContentPlanning from "@/components/reports/ContentPlanning"
 
 export default async function ReportsPage() {
+  await connection()
+
   const now = new Date()
 
   const [
