@@ -243,14 +243,25 @@ const GENERAL_THEME = "General Findings"
 
 function classifyTheme(claim: string): string {
   const text = claim.toLowerCase()
+  let bestTheme = GENERAL_THEME
+  let bestScore = 0
 
   for (const { theme, keywords } of THEMES) {
-    if (keywords.some((keyword) => text.includes(keyword))) {
-      return theme
+    const score = keywords.reduce((total, keyword) => {
+      if (!text.includes(keyword)) {
+        return total
+      }
+
+      return total + (keyword.includes(" ") ? 2 : 1)
+    }, 0)
+
+    if (score > bestScore) {
+      bestTheme = theme
+      bestScore = score
     }
   }
 
-  return GENERAL_THEME
+  return bestTheme
 }
 
 function themeBody(theme: string): string {
