@@ -323,39 +323,43 @@ function buildClaims(
 
     console.log("Bible evidence sentences:", sentences.slice(0, 10))
 
-  const isAiCategory =
+    const isAiCategory =
     category.includes("ai") || category.includes("automation")
-
+  
   const isBibleCategory = category.includes("bible")
-
+  
   for (const sentence of sentences.slice(0, 20)) {
     if (isAiCategory) {
       for (const claim of aiAutomationClaims(sentence)) {
         claims.add(claim)
       }
     }
-
+  
     if (isBibleCategory) {
       const bibleResult = bibleExtractor(sentence)
-    
+  
       for (const claim of bibleResult.claims) {
         claims.add(claim)
       }
-    
+  
       for (const event of bibleResult.events) {
         claims.add(event)
       }
-    
+  
       for (const theme of bibleResult.themes) {
         claims.add(`The passage includes the theme of ${theme}.`)
       }
+  
+      for (const application of bibleResult.applications) {
+        claims.add(application)
+      }
     }
-
+  
     for (const claim of genericSemanticClaims(sentence)) {
       claims.add(claim)
     }
   }
-
+  
   return Array.from(claims).slice(0, 12)
 }
 

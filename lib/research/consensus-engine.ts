@@ -26,6 +26,64 @@ export type ConsensusResult = {
 
 const THEMES: { theme: string; keywords: string[]; body: string }[] = [
   {
+    theme: "Faith and Courage",
+    keywords: [
+      "faith",
+      "trust in god",
+      "trust",
+      "courage",
+      "fear",
+      "bold",
+      "confidence",
+      "lord",
+      "god",
+    ],
+    body: "The evidence highlights faith in God and courageous action.",
+  },
+  {
+    theme: "Conflict",
+    keywords: [
+      "battle",
+      "fight",
+      "war",
+      "army",
+      "philistine",
+      "goliath",
+      "enemy",
+      "military",
+      "conflict",
+      "confront",
+    ],
+    body: "The evidence describes conflict and confrontation between opposing forces.",
+  },
+  {
+    theme: "Leadership",
+    keywords: [
+      "saul",
+      "king",
+      "leader",
+      "leadership",
+      "shepherd",
+      "david",
+      "ability",
+    ],
+    body: "The evidence highlights leadership, calling, and responsibility.",
+  },
+  {
+    theme: "Calling and Obedience",
+    keywords: [
+      "calling",
+      "obedience",
+      "obey",
+      "volunteer",
+      "serve",
+      "servant",
+      "mission",
+      "willingness",
+    ],
+    body: "The evidence highlights willingness to obey and respond to God's calling.",
+  },
+  {
     theme: "Automation",
     keywords: [
       "automat",
