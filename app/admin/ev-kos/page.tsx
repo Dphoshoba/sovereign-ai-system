@@ -1,7 +1,9 @@
 import { buildEVKOSOperatorDashboard } from "../../../lib/ev-kos/operator-dashboard"
+import { buildOperatorActionDashboard } from "../../../lib/ev-kos/operator-action-preview"
 
 export default function EVKOSOperatorDashboardPage() {
   const dashboard = buildEVKOSOperatorDashboard()
+  const actionDashboard = buildOperatorActionDashboard()
 
   return (
     <main style={pageStyle}>
@@ -56,6 +58,78 @@ export default function EVKOSOperatorDashboardPage() {
             </dl>
           </article>
         ))}
+      </section>
+
+      <section style={wideSectionStyle}>
+        <article style={cardStyle}>
+          <div style={cardHeaderStyle}>
+            <h2 style={cardTitleStyle}>Operator Actions</h2>
+            <StatusBadge status="PREVIEW ONLY" />
+          </div>
+          <p style={bodyTextStyle}>
+            Governed action previews show what would be checked before any
+            future operator execution path. No action can be executed from this
+            dashboard.
+          </p>
+
+          <section style={summaryGridStyle}>
+            <MetricCard
+              label="Available"
+              value={actionDashboard.summary.total}
+              detail="Registered previews"
+            />
+            <MetricCard
+              label="Ready"
+              value={actionDashboard.summary.ready}
+              detail="Preview-ready"
+            />
+            <MetricCard
+              label="Approval"
+              value={actionDashboard.summary.requiringApproval}
+              detail="Human approval required"
+            />
+            <MetricCard
+              label="Blocked"
+              value={actionDashboard.summary.blocked}
+              detail="Validation blocked"
+            />
+          </section>
+
+          <div style={actionGridStyle}>
+            {actionDashboard.availableActions.map((preview) => {
+              const action = preview.actionSummary
+
+              if (!action || !preview.validation) return null
+
+              return (
+                <article key={action.id} style={actionCardStyle}>
+                  <div style={cardHeaderStyle}>
+                    <h3 style={actionTitleStyle}>{action.name}</h3>
+                    <StatusBadge status={preview.validation.status} />
+                  </div>
+                  <p style={bodyTextStyle}>{action.description}</p>
+                  <dl style={metricListStyle}>
+                    <div style={metricRowStyle}>
+                      <dt style={metricLabelStyle}>Risk</dt>
+                      <dd style={metricValueStyle}>{action.riskLevel}</dd>
+                    </div>
+                    <div style={metricRowStyle}>
+                      <dt style={metricLabelStyle}>Mode</dt>
+                      <dd style={metricValueStyle}>{action.executionMode}</dd>
+                    </div>
+                    <div style={metricRowStyle}>
+                      <dt style={metricLabelStyle}>Approvals</dt>
+                      <dd style={metricValueStyle}>
+                        {action.requiredApprovals.length}
+                      </dd>
+                    </div>
+                  </dl>
+                  <p style={bodyTextStyle}>{preview.expectedOutcome}</p>
+                </article>
+              )
+            })}
+          </div>
+        </article>
       </section>
 
       <section style={sectionGridStyle}>
@@ -168,6 +242,17 @@ const sectionGridStyle: React.CSSProperties = {
   marginTop: 18,
 }
 
+const wideSectionStyle: React.CSSProperties = {
+  marginTop: 18,
+}
+
+const actionGridStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+  gap: 12,
+  marginTop: 18,
+}
+
 const cardStyle: React.CSSProperties = {
   border: "1px solid var(--border)",
   background: "var(--card-background)",
@@ -180,6 +265,13 @@ const metricCardStyle: React.CSSProperties = {
   minHeight: 132,
 }
 
+const actionCardStyle: React.CSSProperties = {
+  border: "1px solid var(--border)",
+  borderRadius: 8,
+  padding: 16,
+  background: "var(--background)",
+}
+
 const cardHeaderStyle: React.CSSProperties = {
   display: "flex",
   justifyContent: "space-between",
@@ -190,6 +282,12 @@ const cardHeaderStyle: React.CSSProperties = {
 const cardTitleStyle: React.CSSProperties = {
   margin: 0,
   fontSize: 17,
+  letterSpacing: 0,
+}
+
+const actionTitleStyle: React.CSSProperties = {
+  margin: 0,
+  fontSize: 15,
   letterSpacing: 0,
 }
 
