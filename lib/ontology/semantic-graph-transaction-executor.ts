@@ -4,6 +4,16 @@ import { prisma } from "../prisma"
 import type { GovernedIngestionPlan } from "./governed-ingestion"
 import type { GovernedIngestionDecision } from "../governance/ingestion-governance"
 
+export const SEMANTIC_GRAPH_EXPLICIT_TEST_WRITE_MODE = "explicit-test-write"
+export const SEMANTIC_GRAPH_CONTROLLED_TEST_SOURCE_TYPE =
+  "transaction-controlled-test"
+export const SEMANTIC_GRAPH_CONTROLLED_TEST_SOURCE_ID_PREFIX =
+  "phase-4c-controlled-write:"
+export const SEMANTIC_GRAPH_CONTROLLED_TEST_TITLE_PREFIX =
+  "Semantic Graph Controlled Write Test"
+export const SEMANTIC_GRAPH_CONTROLLED_TEST_METADATA_TAG =
+  "phase-4c-controlled-test-write"
+
 export type SemanticGraphTransactionMode =
   | "dry-run-preview"
   | "blocked"
@@ -12,6 +22,7 @@ export type SemanticGraphTransactionMode =
 export type SemanticGraphTransactionRequest = {
   plan: GovernedIngestionPlan
   dryRun?: boolean
+  writeMode?: string | null
   explicitWriteEnabled?: boolean
   actorId?: string | null
   organizationId?: string | null
@@ -61,6 +72,68 @@ export type SemanticGraphTransactionResult = {
   preview: SemanticGraphTransactionPreview
   createdIds?: SemanticGraphTransactionCreatedIds
   summary: string
+}
+
+export type ControlledTestWriteCleanupPreview = {
+  ok: true
+  writesToPrisma: false
+  deletesFromPrisma: false
+  sourceType: typeof SEMANTIC_GRAPH_CONTROLLED_TEST_SOURCE_TYPE
+  sourceIdPrefix: typeof SEMANTIC_GRAPH_CONTROLLED_TEST_SOURCE_ID_PREFIX
+  titlePrefix: typeof SEMANTIC_GRAPH_CONTROLLED_TEST_TITLE_PREFIX
+  records: Array<{
+    id: string
+    organizationId: string | null
+    workspaceId: string | null
+    title: string
+    sourceType: string | null
+    sourceId: string | null
+    metadata: unknown
+    createdAt: Date
+  }>
+  embeddingIndexes: Array<{
+    id: string
+    knowledgeId: string
+    vectorHash: string | null
+    metadata: unknown
+    createdAt: Date
+  }>
+  nodes: Array<{
+    id: string
+    name: string
+    nodeType: string
+    sourceRecordId: string | null
+    metadata: unknown
+    createdAt: Date
+  }>
+  edges: Array<{
+    id: string
+    sourceNodeId: string
+    targetNodeId: string
+    relationType: string
+    evidence: unknown
+    createdAt: Date
+  }>
+  audits: Array<{
+    id: string
+    eventType: string
+    actor: string | null
+    targetType: string | null
+    targetId: string | null
+    action: string
+    outcome: string
+    details: unknown
+    createdAt: Date
+  }>
+  summary: {
+    records: number
+    embeddingIndexes: number
+    nodes: number
+    edges: number
+    audits: number
+    cleanupEligible: boolean
+    note: string
+  }
 }
 
 type TenantScopeValidation = {
@@ -222,7 +295,15 @@ export function validateTransactionRequest(
   }
 
   if (request.explicitWriteEnabled !== true) {
-    errors.push("explicitWriteEnabled must be true when dryRun is false.")
+    errors.push(
+      "explicitWriteEnabled must be true when dryRun is false; implicit or inherited write permission is not accepted."
+    )
+  }
+
+  if (request.writeMode !== SEMANTIC_GRAPH_EXPLICIT_TEST_WRITE_MODE) {
+    errors.push(
+      `writeMode must be "${SEMANTIC_GRAPH_EXPLICIT_TEST_WRITE_MODE}" when dryRun is false.`
+    )
   }
 
   if (
@@ -237,15 +318,15 @@ export function validateTransactionRequest(
   }
 
   if (!request.actorId?.trim()) {
-    errors.push("actorId is required when dryRun is false.")
+    errors.push("actorId is required when dryRun is false for audit attribution.")
   }
 
   if (!request.organizationId?.trim()) {
-    errors.push("organizationId is required when dryRun is false.")
+    errors.push("organizationId is required when dryRun is false for tenant isolation.")
   }
 
   if (!request.workspaceId?.trim()) {
-    errors.push("workspaceId is required when dryRun is false.")
+    errors.push("workspaceId is required when dryRun is false for workspace isolation.")
   }
 
   if (request.plan.executionPlan.databaseAccess !== false) {
@@ -271,6 +352,129 @@ export function validateTransactionRequest(
     valid: errors.length === 0,
     errors,
     warnings,
+  }
+}
+
+export async function previewControlledTestWriteCleanup(): Promise<ControlledTestWriteCleanupPreview> {
+  const records = await prisma.semanticKnowledgeRecord.findMany({
+    where: {
+      sourceType: SEMANTIC_GRAPH_CONTROLLED_TEST_SOURCE_TYPE,
+      OR: [
+        { sourceId: { startsWith: SEMANTIC_GRAPH_CONTROLLED_TEST_SOURCE_ID_PREFIX } },
+        { title: { startsWith: SEMANTIC_GRAPH_CONTROLLED_TEST_TITLE_PREFIX } },
+        { title: { startsWith: "Phase 4C Slice 3 Controlled Semantic Graph Write" } },
+      ],
+    },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      organizationId: true,
+      workspaceId: true,
+      title: true,
+      sourceType: true,
+      sourceId: true,
+      metadata: true,
+      createdAt: true,
+    },
+    take: 100,
+  })
+  const recordIds = records.map((record) => record.id)
+
+  const [embeddingIndexes, nodes, audits] =
+    recordIds.length > 0
+      ? await Promise.all([
+          prisma.semanticEmbeddingIndex.findMany({
+            where: { knowledgeId: { in: recordIds } },
+            orderBy: { createdAt: "desc" },
+            select: {
+              id: true,
+              knowledgeId: true,
+              vectorHash: true,
+              metadata: true,
+              createdAt: true,
+            },
+            take: 200,
+          }),
+          prisma.knowledgeGraphNode.findMany({
+            where: { sourceRecordId: { in: recordIds } },
+            orderBy: { createdAt: "desc" },
+            select: {
+              id: true,
+              name: true,
+              nodeType: true,
+              sourceRecordId: true,
+              metadata: true,
+              createdAt: true,
+            },
+            take: 300,
+          }),
+          prisma.governanceAuditTrail.findMany({
+            where: {
+              eventType: "semantic-graph-ingestion",
+              targetType: "SemanticKnowledgeRecord",
+              targetId: { in: recordIds },
+              action: "semantic-graph.write",
+            },
+            orderBy: { createdAt: "desc" },
+            select: {
+              id: true,
+              eventType: true,
+              actor: true,
+              targetType: true,
+              targetId: true,
+              action: true,
+              outcome: true,
+              details: true,
+              createdAt: true,
+            },
+            take: 200,
+          }),
+        ])
+      : [[], [], []]
+  const nodeIds = nodes.map((node) => node.id)
+  const edges =
+    nodeIds.length > 0
+      ? await prisma.knowledgeGraphEdge.findMany({
+          where: {
+            OR: [
+              { sourceNodeId: { in: nodeIds } },
+              { targetNodeId: { in: nodeIds } },
+            ],
+          },
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            sourceNodeId: true,
+            targetNodeId: true,
+            relationType: true,
+            evidence: true,
+            createdAt: true,
+          },
+          take: 400,
+        })
+      : []
+
+  return {
+    ok: true,
+    writesToPrisma: false,
+    deletesFromPrisma: false,
+    sourceType: SEMANTIC_GRAPH_CONTROLLED_TEST_SOURCE_TYPE,
+    sourceIdPrefix: SEMANTIC_GRAPH_CONTROLLED_TEST_SOURCE_ID_PREFIX,
+    titlePrefix: SEMANTIC_GRAPH_CONTROLLED_TEST_TITLE_PREFIX,
+    records,
+    embeddingIndexes,
+    nodes,
+    edges,
+    audits,
+    summary: {
+      records: records.length,
+      embeddingIndexes: embeddingIndexes.length,
+      nodes: nodes.length,
+      edges: edges.length,
+      audits: audits.length,
+      cleanupEligible: records.length > 0,
+      note: "Preview only. This helper identifies controlled Phase 4C test-write data but does not delete or mutate anything.",
+    },
   }
 }
 
@@ -492,7 +696,8 @@ async function writeSemanticGraphTransaction(
         metadata: withGovernedMetadata(
           recordPayload.metadata,
           request,
-          actorId
+          actorId,
+          recordPayload.sourceId ?? null
         ) as any,
         status: "active",
       },
@@ -509,9 +714,14 @@ async function writeSemanticGraphTransaction(
         contentPreview: record.content.slice(0, 280),
         metadata: {
           note: "Vector hash placeholder. Replace with real embeddings in a later embeddings phase.",
-          source: "phase-4c-guarded-write-executor",
-          requestId: request.plan.requestId,
-        },
+        source: "phase-4c-guarded-write-executor",
+        requestId: request.plan.requestId,
+        controlledTestWrite: controlledTestWriteMetadata(
+          request,
+          actorId,
+          recordPayload.sourceId ?? null
+        ),
+      },
         status: "indexed",
       },
     })
@@ -532,7 +742,8 @@ async function writeSemanticGraphTransaction(
           metadata: withGovernedMetadata(
             nodePayload.metadata,
             request,
-            actorId
+            actorId,
+            recordPayload.sourceId ?? null
           ) as any,
           status: "active",
         },
@@ -575,7 +786,8 @@ async function writeSemanticGraphTransaction(
           evidence: withGovernedMetadata(
             edgePayload.evidence,
             request,
-            actorId
+            actorId,
+            recordPayload.sourceId ?? null
           ) as any,
           status: "active",
         },
@@ -608,6 +820,11 @@ async function writeSemanticGraphTransaction(
           edgesCreated: edgeIds.length,
           embeddingIndexCreated: Boolean(embeddingIndex.id),
           reason: request.reason ?? null,
+          controlledTestWrite: controlledTestWriteMetadata(
+            request,
+            actorId,
+            recordPayload.sourceId ?? null
+          ),
         },
       },
     })
@@ -649,7 +866,8 @@ function blockedResult(input: {
 function withGovernedMetadata(
   metadata: Record<string, unknown>,
   request: SemanticGraphTransactionRequest,
-  actorId: string
+  actorId: string,
+  sourceId: string | null
 ) {
   return {
     ...metadata,
@@ -662,6 +880,23 @@ function withGovernedMetadata(
       relationshipConfidence: request.plan.relationshipConfidence,
       actorId,
     },
+    controlledTestWrite: controlledTestWriteMetadata(request, actorId, sourceId),
+  }
+}
+
+function controlledTestWriteMetadata(
+  request: SemanticGraphTransactionRequest,
+  actorId: string,
+  sourceId: string | null
+) {
+  return {
+    tag: SEMANTIC_GRAPH_CONTROLLED_TEST_METADATA_TAG,
+    writeMode: request.writeMode ?? null,
+    sourceType: SEMANTIC_GRAPH_CONTROLLED_TEST_SOURCE_TYPE,
+    sourceId,
+    requestId: request.plan.requestId,
+    actorId,
+    cleanupEligible: true,
   }
 }
 

@@ -6,6 +6,9 @@ import {
   type GovernedIngestionRequest,
 } from "../../../../lib/ontology/governed-ingestion"
 import {
+  SEMANTIC_GRAPH_CONTROLLED_TEST_SOURCE_ID_PREFIX,
+  SEMANTIC_GRAPH_CONTROLLED_TEST_SOURCE_TYPE,
+  SEMANTIC_GRAPH_EXPLICIT_TEST_WRITE_MODE,
   executeSemanticGraphTransaction,
   summarizeTransactionResult,
 } from "../../../../lib/ontology/semantic-graph-transaction-executor"
@@ -74,11 +77,13 @@ export async function GET() {
   const blockedWrite = await executeSemanticGraphTransaction({
     plan: governedPlan,
     dryRun: false,
+    writeMode: null,
     explicitWriteEnabled: false,
   })
   const explicitGatePreview = await executeSemanticGraphTransaction({
     plan: governedPlan,
     dryRun: true,
+    writeMode: SEMANTIC_GRAPH_EXPLICIT_TEST_WRITE_MODE,
     explicitWriteEnabled: true,
     actorId: "phase-4c-slice-1-example-actor",
     organizationId: "example-organization",
@@ -104,13 +109,13 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
 
-    if (body.writeMode !== "explicit-test-write") {
+    if (body.writeMode !== SEMANTIC_GRAPH_EXPLICIT_TEST_WRITE_MODE) {
       return NextResponse.json(
         {
           ok: false,
           writesToPrisma: false,
           databaseAccess: false,
-          error: 'writeMode must be "explicit-test-write".',
+          error: `writeMode must be "${SEMANTIC_GRAPH_EXPLICIT_TEST_WRITE_MODE}".`,
         },
         { status: 400 }
       )
@@ -145,10 +150,10 @@ export async function POST(request: Request) {
     const ontology: OntologyExtractionResult = {
       ...ontologyExample,
       title: body.title || `Semantic Graph Controlled Write Test ${now}`,
-      sourceType: "transaction-controlled-test",
+      sourceType: SEMANTIC_GRAPH_CONTROLLED_TEST_SOURCE_TYPE,
       sourceId:
         body.sourceId ||
-        `phase-4c-controlled-write:${now.replace(/[^0-9a-z]/gi, "-")}`,
+        `${SEMANTIC_GRAPH_CONTROLLED_TEST_SOURCE_ID_PREFIX}${now.replace(/[^0-9a-z]/gi, "-")}`,
     }
 
     const governedPlan = buildGovernedExecutionPlan({
@@ -168,6 +173,7 @@ export async function POST(request: Request) {
     const result = await executeSemanticGraphTransaction({
       plan: governedPlan,
       dryRun: false,
+      writeMode: SEMANTIC_GRAPH_EXPLICIT_TEST_WRITE_MODE,
       explicitWriteEnabled: true,
       actorId: body.actorId,
       organizationId: body.organizationId,
