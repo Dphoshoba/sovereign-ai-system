@@ -68,17 +68,17 @@ const ontologyExample: OntologyExtractionResult = {
 export async function GET() {
   const governedPlan = buildGovernedExecutionPlan(buildGovernedRequest())
 
-  const dryRunPreview = executeSemanticGraphTransaction({
+  const dryRunPreview = await executeSemanticGraphTransaction({
     plan: governedPlan,
   })
-  const blockedWrite = executeSemanticGraphTransaction({
+  const blockedWrite = await executeSemanticGraphTransaction({
     plan: governedPlan,
     dryRun: false,
     explicitWriteEnabled: false,
   })
-  const allowedButNotExecuted = executeSemanticGraphTransaction({
+  const explicitGatePreview = await executeSemanticGraphTransaction({
     plan: governedPlan,
-    dryRun: false,
+    dryRun: true,
     explicitWriteEnabled: true,
     actorId: "phase-4c-slice-1-example-actor",
     organizationId: "example-organization",
@@ -91,13 +91,114 @@ export async function GET() {
     databaseAccess: false,
     dryRunPreview,
     blockedWrite,
-    allowedButNotExecuted,
+    explicitGatePreview,
     summaries: {
       dryRunPreview: summarizeTransactionResult(dryRunPreview),
       blockedWrite: summarizeTransactionResult(blockedWrite),
-      allowedButNotExecuted: summarizeTransactionResult(allowedButNotExecuted),
+      explicitGatePreview: summarizeTransactionResult(explicitGatePreview),
     },
   })
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json()
+
+    if (body.writeMode !== "explicit-test-write") {
+      return NextResponse.json(
+        {
+          ok: false,
+          writesToPrisma: false,
+          databaseAccess: false,
+          error: 'writeMode must be "explicit-test-write".',
+        },
+        { status: 400 }
+      )
+    }
+
+    if (body.explicitWriteEnabled !== true || body.dryRun !== false) {
+      return NextResponse.json(
+        {
+          ok: false,
+          writesToPrisma: false,
+          databaseAccess: false,
+          error:
+            "explicitWriteEnabled must be true and dryRun must be false for test writes.",
+        },
+        { status: 400 }
+      )
+    }
+
+    if (!body.actorId || !body.organizationId || !body.workspaceId) {
+      return NextResponse.json(
+        {
+          ok: false,
+          writesToPrisma: false,
+          databaseAccess: false,
+          error: "actorId, organizationId, and workspaceId are required.",
+        },
+        { status: 400 }
+      )
+    }
+
+    const now = new Date().toISOString()
+    const ontology: OntologyExtractionResult = {
+      ...ontologyExample,
+      title: body.title || `Semantic Graph Controlled Write Test ${now}`,
+      sourceType: "transaction-controlled-test",
+      sourceId:
+        body.sourceId ||
+        `phase-4c-controlled-write:${now.replace(/[^0-9a-z]/gi, "-")}`,
+    }
+
+    const governedPlan = buildGovernedExecutionPlan({
+      requestId:
+        body.requestId ||
+        `phase-4c-controlled-write:${ontology.sourceId}`,
+      payload: buildSemanticGraphPayload(ontology, {
+        organizationId: body.organizationId,
+        workspaceId: body.workspaceId,
+      }),
+      requestedBy: body.actorId,
+      source: "phase-4c-guarded-write-executor",
+      reason: body.reason || "Explicit controlled semantic graph write test.",
+      dryRun: true,
+    })
+
+    const result = await executeSemanticGraphTransaction({
+      plan: governedPlan,
+      dryRun: false,
+      explicitWriteEnabled: true,
+      actorId: body.actorId,
+      organizationId: body.organizationId,
+      workspaceId: body.workspaceId,
+      reason: body.reason || "Explicit controlled semantic graph write test.",
+    })
+
+    return NextResponse.json(
+      {
+        ok: result.ok,
+        writesToPrisma: result.writesToPrisma,
+        databaseAccess: result.databaseAccess,
+        result,
+        summary: summarizeTransactionResult(result),
+      },
+      { status: result.ok ? 200 : 400 }
+    )
+  } catch (error) {
+    return NextResponse.json(
+      {
+        ok: false,
+        writesToPrisma: false,
+        databaseAccess: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Semantic graph transaction test write failed.",
+      },
+      { status: 500 }
+    )
+  }
 }
 
 function buildGovernedRequest(): GovernedIngestionRequest {
