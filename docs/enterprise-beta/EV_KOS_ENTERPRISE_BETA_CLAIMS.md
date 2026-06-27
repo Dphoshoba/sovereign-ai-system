@@ -1,28 +1,25 @@
-# EV-KOS Enterprise Beta Tenant Claims
+# EV-KOS Enterprise Beta Claims (EB-6)
 
-Tenant claims define the minimum identity context required before any enterprise
-runtime action can be considered.
+EB-6 defines report-only claim readiness for future provider-backed sessions.
 
-## Required Claims
+## Required Claim Set
 
-- `actorId`
 - `organizationId`
-- `workspaceIds`
-- `role`
-- `approvalScopes`
+- `workspaceId`
+- `environment`
+- `membershipRole`
+- `entitlementTier`
+- `actorId`
 
-## Claim Sources
+## Claim Rules
 
-Claims may come from the future identity provider, membership store, and policy
-engine. EB-1 does not assert or validate these claims at runtime.
+- Claims are mandatory for tenant-safe enterprise access.
+- Claim validation remains planning-only in EB-6.
+- Claim propagation to middleware/session runtime is deferred.
 
-## Boundary Rule
+## Hard Constraints
 
-Every future enterprise route must be able to answer:
-
-- Who is the actor?
-- Which organization is scoped?
-- Which workspace is scoped?
-- Which role and permissions apply?
-- Which approval scopes are available?
-- Which audit record will explain the decision?
+- No JWT issuance.
+- No provider claim wiring.
+- No runtime authorization integration.
+- No database writes or persistence activation.

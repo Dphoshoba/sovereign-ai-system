@@ -1,25 +1,30 @@
-# EV-KOS Enterprise Beta Session Contract
+# EV-KOS Enterprise Beta Sessions (EB-6)
 
-EB-1 defines session requirements without creating sessions or issuing JWTs.
+EB-6 defines report-only session implementation checkpoints and keeps runtime
+sessions disabled.
 
-## Required Session Capabilities
+## Session Lifecycle Checkpoints
 
-- Tenant-scoped session.
-- Workspace-scoped access.
-- Risk and approval state.
-- Operator identity reference.
-- Permission context.
+- Issue
+- Refresh
+- Revalidate
+- Revoke
+- Expire
 
-## Non-Goals
+Each checkpoint requires tenant scope and operator scope planning, with audit
+linkage defined as a future integration boundary.
 
-- No session storage.
-- No cookies.
-- No JWT issuance.
-- No middleware.
-- No auth provider integration.
-- No runtime authorization.
+## Governance Checkpoints
 
-## Beta Requirement
+- Maximum lifetime policy.
+- Tenant-context invalidation policy.
+- Elevated-action re-auth checkpoint.
+- Audit persistence linkage checkpoint.
 
-Sessions must remain blocked until the provider, tenant claims, route guards,
-rate limits, and audit persistence strategy are approved.
+## Hard Constraints
+
+- No sessions are created.
+- No JWT tokens are generated.
+- No cookies or middleware are added.
+- No provider runtime integration occurs.
+- No persistence implementation is activated.
