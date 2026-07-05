@@ -1,0 +1,15 @@
+{
+  "missions": [
+    {
+      "slug": "womanhood",
+      "title": "Research Mission 001 — Womanhood",
+      "domain": "theology",
+      "status": "active",
+      "phase": "Discovery"
+    }
+  ],
+  "generated": "2026-07-05T07:15:25.400Z",
+  "count": 1,
+  "preview": true,
+  "readonly": true
+}
