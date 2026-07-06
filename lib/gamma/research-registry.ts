@@ -3,6 +3,18 @@ import { join } from "path"
 import { getResearchWorkspace } from "./markdown-reader"
 import { ResearchWorkspace, ConfidenceLevel } from "../research-workspace/types"
 
+const REGISTRY_GENERATED_ISO = "2026-07-06T00:00:00.000Z"
+
+function deterministicRegistryDate(): Date {
+  const epoch = Date.parse(REGISTRY_GENERATED_ISO)
+  return {
+    getTime: () => epoch,
+    toISOString: () => REGISTRY_GENERATED_ISO,
+    toString: () => REGISTRY_GENERATED_ISO,
+    valueOf: () => epoch,
+  } as unknown as Date
+}
+
 /**
  * Mission Registry Card - Lightweight summary for dashboard listing
  * Used by browse page to show all available missions
@@ -241,7 +253,7 @@ export async function getResearchRegistry(): Promise<{
       status: m.status,
       phase: m.phase,
     })),
-    generated: new Date(),
+    generated: deterministicRegistryDate(),
     count: missions.length,
   }
 }

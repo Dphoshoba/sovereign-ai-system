@@ -13,6 +13,18 @@ import {
   WorkspaceStatus,
 } from "../research-workspace/types"
 
+function fixedDate(isoDate: string): Date {
+  const epoch = Date.parse(`${isoDate}T00:00:00.000Z`)
+  return {
+    getTime: () => epoch,
+    toISOString: () => `${isoDate}T00:00:00.000Z`,
+    toJSON: () => `${isoDate}T00:00:00.000Z`,
+    toLocaleDateString: () => isoDate,
+    toString: () => isoDate,
+    valueOf: () => epoch,
+  } as unknown as Date
+}
+
 /**
  * Reads a markdown file from gamma/research/{slug}
  * Pure file reading - no transformations
@@ -106,7 +118,10 @@ function parseDiscoveries(slug: string): DiscoveryItem[] {
     if (lines.length === 0) return
 
     const title = lines[0].replace(/^\d+\s*/, "")
-    const sourceCount = Math.floor(Math.random() * 8) + 2
+    const seed = slug.length + idx + title.length
+    const sourceCount = 2 + (seed % 8)
+    const day = Math.min(idx + 1, 3)
+    const dayString = String(day).padStart(2, "0")
 
     discoveries.push({
       id: `discovery-${idx}`,
@@ -128,7 +143,7 @@ function parseDiscoveries(slug: string): DiscoveryItem[] {
       ],
       sourceCount,
       relatedTo: [],
-      timestamp: new Date(2026, 6, Math.min(idx + 1, 3)),
+      timestamp: fixedDate(`2026-07-${dayString}`),
     })
   })
 
@@ -144,7 +159,7 @@ function parseDiscoveries(slug: string): DiscoveryItem[] {
           confidence: "moderate",
           sourceCount: 5,
           relatedTo: [],
-          timestamp: new Date(2026, 6, 3),
+          timestamp: fixedDate("2026-07-03"),
         },
       ]
 }
@@ -166,6 +181,8 @@ function parseQuestions(slug: string): ResearchQuestion[] {
         "partial",
         "unanswered",
       ]
+      const day = Math.min(Math.floor(idx / 3) + 1, 3)
+      const dayString = String(day).padStart(2, "0")
 
       questions.push({
         id: `question-${idx}`,
@@ -186,7 +203,7 @@ function parseQuestions(slug: string): ResearchQuestion[] {
         confidence: (["low", "moderate", "high", "very-high"] as const)[
           idx % 4
         ],
-        timestamp: new Date(2026, 6, Math.min(Math.floor(idx / 3) + 1, 3)),
+        timestamp: fixedDate(`2026-07-${dayString}`),
       })
     }
   })
@@ -201,7 +218,7 @@ function parseQuestions(slug: string): ResearchQuestion[] {
           discoveries: [],
           domain: "science",
           confidence: "moderate",
-          timestamp: new Date(2026, 6, 2),
+          timestamp: fixedDate("2026-07-02"),
         },
       ]
 }
@@ -286,7 +303,7 @@ function generateMissionCards(
     scriptureReferences: [],
     status: "active" as const,
     confidence: "high" as ConfidenceLevel,
-    startDate: new Date(2026, 5, 28 + idx),
+    startDate: (["2026-06-28", "2026-06-29", "2026-06-30", "2026-07-01", "2026-07-02"].map((d) => fixedDate(d)))[idx],
   }))
 }
 
@@ -326,35 +343,35 @@ function generateTimelineEntries(): TimelineEntry[] {
   const entries: TimelineEntry[] = [
     {
       event: "Research mission established",
-      timestamp: new Date(2026, 6, 1),
+      timestamp: fixedDate("2026-07-01"),
       status: "completed",
       discoveryCount: 0,
       questionsAnswered: 0,
     },
     {
       event: "Initial discoveries documented",
-      timestamp: new Date(2026, 6, 2),
+      timestamp: fixedDate("2026-07-02"),
       status: "completed",
       discoveryCount: 3,
       questionsAnswered: 1,
     },
     {
       event: "Research questions formulated",
-      timestamp: new Date(2026, 6, 3),
+      timestamp: fixedDate("2026-07-03"),
       status: "in-progress",
       discoveryCount: 2,
       questionsAnswered: 1,
     },
     {
       event: "Scripture connections identified",
-      timestamp: new Date(2026, 6, 2),
+      timestamp: fixedDate("2026-07-02"),
       status: "completed",
       discoveryCount: 1,
       questionsAnswered: 0,
     },
     {
       event: "Science domain research initiated",
-      timestamp: new Date(2026, 6, 1),
+      timestamp: fixedDate("2026-07-01"),
       status: "in-progress",
       discoveryCount: 0,
       questionsAnswered: 0,
@@ -388,8 +405,8 @@ export async function getResearchWorkspace(slug: string): Promise<ResearchWorksp
     name: missionData.title,
     description: missionData.purpose,
     status: "active",
-    createdAt: new Date(2026, 0, 15),
-    lastUpdated: new Date(2026, 6, 3),
+    createdAt: fixedDate("2026-01-15"),
+    lastUpdated: fixedDate("2026-07-03"),
 
     // Metrics
     overallProgress: 62,

@@ -1,0 +1,93 @@
+{
+  "mission": "womanhood",
+  "connections": [
+    {
+      "source": "discoveries.md",
+      "target": "articles.md",
+      "relationship": "supports",
+      "sourceWorkspace": "research",
+      "targetWorkspace": "creator",
+      "notes": "Core discoveries directly support creator article development."
+    },
+    {
+      "source": "discoveries.md",
+      "target": "teachings.md",
+      "relationship": "teaches",
+      "sourceWorkspace": "research",
+      "targetWorkspace": "ministry",
+      "notes": "Research insights become teaching tracks."
+    },
+    {
+      "source": "hormones.md",
+      "target": "questions.md",
+      "relationship": "answers",
+      "sourceWorkspace": "research",
+      "targetWorkspace": "research",
+      "notes": "Hormone evidence answers open mission questions."
+    },
+    {
+      "source": "scriptures.md",
+      "target": "sermon-series.md",
+      "relationship": "references",
+      "sourceWorkspace": "research",
+      "targetWorkspace": "ministry",
+      "notes": "Scripture references anchor sermon outline content."
+    },
+    {
+      "source": "discoveries.md",
+      "target": "frameworks.md",
+      "relationship": "distills",
+      "sourceWorkspace": "research",
+      "targetWorkspace": "shared-knowledge",
+      "notes": "Findings are distilled into reusable frameworks."
+    },
+    {
+      "source": "articles.md",
+      "target": "priorities.md",
+      "relationship": "informs",
+      "sourceWorkspace": "creator",
+      "targetWorkspace": "executive",
+      "notes": "Creator themes shape executive focus and sequencing."
+    },
+    {
+      "source": "sermon-series.md",
+      "target": "workshop.md",
+      "relationship": "packages",
+      "sourceWorkspace": "ministry",
+      "targetWorkspace": "agency",
+      "notes": "Teaching assets are converted into client workshop formats."
+    },
+    {
+      "source": "priorities.md",
+      "target": "roadmap.md",
+      "relationship": "prioritizes",
+      "sourceWorkspace": "executive",
+      "targetWorkspace": "agency",
+      "notes": "Executive priorities drive delivery roadmap design."
+    },
+    {
+      "source": "workshop.md",
+      "target": "taxonomy.md",
+      "relationship": "codifies",
+      "sourceWorkspace": "agency",
+      "targetWorkspace": "shared-knowledge",
+      "notes": "Delivery artifacts are codified for reuse."
+    },
+    {
+      "source": "frameworks.md",
+      "target": "knowledge-intelligence",
+      "relationship": "synthesizes",
+      "sourceWorkspace": "shared-knowledge",
+      "targetWorkspace": "knowledge-intelligence",
+      "notes": "Frameworks feed mission-level intelligence synthesis."
+    },
+    {
+      "source": "knowledge-intelligence",
+      "target": "second-brain",
+      "relationship": "amplifies",
+      "sourceWorkspace": "knowledge-intelligence",
+      "targetWorkspace": "second-brain",
+      "notes": "Intelligence layer strengthens second-brain review loops."
+    }
+  ]
+}

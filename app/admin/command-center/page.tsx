@@ -333,8 +333,8 @@ export default function CommandCenterPage() {
                   </p>
                 ) : (
                   <ul style={listStyle}>
-                    {briefing.topRisks.map((item) => (
-                      <li key={item.title}>
+                    {briefing.topRisks.map((item: any, index: number) => (
+                      <li key={`${item.title}-${index}`}>
                         <strong>{item.title}</strong>{" "}
                         <span
                           style={{
