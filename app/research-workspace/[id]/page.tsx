@@ -1,4 +1,4 @@
-import { getMission } from "../../../lib/gamma/research-registry"
+﻿import { getMission } from "../../../lib/gamma/research-registry"
 import type {
   ResearchWorkspace,
   MissionCard,
@@ -10,6 +10,8 @@ import type {
   KnowledgeDomain,
   ConfidenceLevel,
 } from "../../../lib/research-workspace/types"
+
+export const dynamic = "force-dynamic"
 
 export default async function ResearchWorkspacePage({
   params,
@@ -84,7 +86,7 @@ export default async function ResearchWorkspacePage({
         <MetricCard
           label="Status"
           value="Read-Only"
-          detail="No database writes • No execution"
+          detail="No database writes â€¢ No execution"
           type="status"
         />
       </section>
@@ -234,7 +236,7 @@ export default async function ResearchWorkspacePage({
                 {(entry.discoveryCount || entry.questionsAnswered) && (
                   <p style={bodyTextStyle}>
                     {entry.discoveryCount ? `+${entry.discoveryCount} discoveries` : ""}{" "}
-                    {entry.discoveryCount && entry.questionsAnswered ? "• " : ""}
+                    {entry.discoveryCount && entry.questionsAnswered ? "â€¢ " : ""}
                     {entry.questionsAnswered ? `+${entry.questionsAnswered} answered` : ""}
                   </p>
                 )}
@@ -901,3 +903,4 @@ function MetricCard({
     </article>
   )
 }
+
