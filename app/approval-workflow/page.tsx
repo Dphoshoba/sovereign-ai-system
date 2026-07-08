@@ -81,7 +81,7 @@ export default async function ApprovalWorkflowPage() {
                 <div className="flex gap-2 flex-wrap text-xs">
                   <span className="bg-slate-600/50 text-slate-200 px-2 py-1 rounded">{approval.completedApprovals}/{approval.requiredApprovals} approved</span>
                   {approval.riskLevel !== 'low' && (
-                    <span className={approval.riskLevel === 'critical' ? 'bg-red-600/50 text-red-200' : approval.riskLevel === 'high' ? 'bg-orange-600/50 text-orange-200' : 'bg-amber-600/50 text-amber-200'} + ' px-2 py-1 rounded'>
+                    <span className={`${approval.riskLevel === 'critical' ? 'bg-red-600/50 text-red-200' : approval.riskLevel === 'high' ? 'bg-orange-600/50 text-orange-200' : 'bg-amber-600/50 text-amber-200'} px-2 py-1 rounded`}>
                       {approval.riskLevel} risk
                     </span>
                   )}
