@@ -4006,3 +4006,195 @@ model DiscoveredTopic {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// ============================================================================
+// Phase XV: Live Connector Framework Models
+// ============================================================================
+
+model Connector {
+  id              String   @id @default(cuid())
+  key             String   @unique              // "gmail", "calendar", "github"
+  name            String                        // "Gmail"
+  provider        String                        // "google"
+  category        String                        // "email", "calendar", "vcs"
+  description     String?
+  authType        String                        // "oauth2", "api_key", "bot_token"
+  enabled         Boolean  @default(true)
+  status          String   @default("active")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  connections     ConnectorConnection[]
+  actions         ConnectorAction[]
+  executions      ConnectorExecution[]
+  audits          ConnectorAudit[]
+
+  @@index([provider])
+  @@index([category])
+  @@index([enabled])
+}
+
+model ConnectorConnection {
+  id              String   @id @default(cuid())
+  connectorId     String
+  connector       Connector @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+
+  userId          String                        // User who connected
+  displayName     String?                       // "Gmail Account: user@gmail.com"
+  accountId       String                        // External account ID
+  email           String?                       // "user@gmail.com"
+  
+  // OAuth tokens (encrypted in DB, never exposed to client)
+  accessToken     String    @db.Text           // Encrypted
+  refreshToken    String?   @db.Text           // Encrypted (nullable)
+  expiresAt       DateTime?                     // Access token expiry
+  
+  status          String    @default("active")  // active, expired, revoked
+  lastUsedAt      DateTime?
+  lastSyncedAt    DateTime?
+  
+  metadata        Json?     // Provider-specific data
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  executions      ConnectorExecution[]
+  audits          ConnectorAudit[]
+
+  @@unique([connectorId, userId, accountId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model ConnectorAction {
+  id              String   @id @default(cuid())
+  connectorId     String
+  connector       Connector @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+
+  name            String                        // "read_messages", "send_email"
+  displayName     String                        // "Read Messages"
+  description     String?
+  scope           String?                       // OAuth scope required
+  riskLevel       String   @default("low")     // low, medium, high
+  requiresApproval Boolean @default(false)
+  
+  inputSchema     Json                          // JSON schema
+  outputSchema    Json                          // JSON schema
+  
+  status          String   @default("active")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([connectorId, name])
+  @@index([riskLevel])
+}
+
+model ConnectorExecution {
+  id              String   @id @default(cuid())
+  
+  connectorId     String
+  connector       Connector @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+  
+  connectionId    String
+  connection      ConnectorConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  
+  actionName      String                        // "read_messages"
+  actionParams    Json                          // Input parameters
+  
+  status          String   @default("pending")  // pending, preview, approved, queued, executing, completed, failed
+  
+  // Preview
+  preview         Json?                         // What would happen
+  previewedAt     DateTime?
+  
+  // Approval
+  approvalStatus  String   @default("pending")  // pending, approved, rejected
+  approvedBy      String?
+  approvalNote    String?
+  approvedAt      DateTime?
+  
+  // Execution
+  result          Json?
+  error           String?
+  executedAt      DateTime?
+  
+  // Timing
+  queuedAt        DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  approvals       ConnectorApproval[]
+  audits          ConnectorAudit[]
+
+  @@index([status])
+  @@index([approvalStatus])
+  @@index([actionName])
+  @@index([createdAt])
+}
+
+model ConnectorApproval {
+  id              String   @id @default(cuid())
+  executionId     String
+  execution       ConnectorExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  
+  reviewer        String
+  decision        String                        // "approved", "rejected", "requested_changes"
+  reason          String?
+  requestedChange String?
+  
+  createdAt       DateTime @default(now())
+
+  @@index([executionId])
+  @@index([reviewer])
+  @@index([decision])
+}
+
+model ConnectorAudit {
+  id              String   @id @default(cuid())
+  
+  connectorId     String
+  connector       Connector @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+  
+  connectionId    String
+  connection      ConnectorConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  
+  executionId     String
+  execution       ConnectorExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  
+  operator        String
+  action          String                        // "oauth_connect", "send_email", "read_messages"
+  riskLevel       String   @default("medium")
+  
+  input           Json?                         // Sanitized, no secrets
+  output          Json?                         // Sanitized, no secrets
+  
+  status          String                        // "success", "failed"
+  errorMessage    String?
+  
+  approvalPath    String?                       // Approval gate summary
+  
+  timestamp       DateTime @default(now())      // Fixed UTC timestamp
+  createdAt       DateTime @default(now())
+
+  @@index([connectorId])
+  @@index([action])
+  @@index([operator])
+  @@index([status])
+  @@index([timestamp])
+}
+
+model ConnectorCredential {
+  id              String   @id @default(cuid())
+  key             String   @unique              // "GMAIL_CLIENT_ID", "GITHUB_APP_SECRET"
+  value           String   @db.Text             // Encrypted
+  environment     String   @default("dev")      // dev, staging, production
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([key])
+  @@index([environment])
+}
