@@ -1,0 +1,81 @@
+import type { OrganizationWorkspace } from "./types"
+
+const FIXED_TIMESTAMP = 1751990400000
+
+export const ORGANIZATION_ASSETS: OrganizationWorkspace = {
+  organizations: [
+    {
+      id: "org-001",
+      name: "Covenant Church",
+      type: "church",
+      status: "active",
+      memberCount: 850,
+      dataIsolated: true,
+      region: "us-east",
+      createdAt: FIXED_TIMESTAMP,
+    },
+    {
+      id: "org-002",
+      name: "Apex Business Solutions",
+      type: "business",
+      status: "active",
+      memberCount: 320,
+      dataIsolated: true,
+      region: "us-west",
+      createdAt: FIXED_TIMESTAMP,
+    },
+    {
+      id: "org-003",
+      name: "Kingdom Ministry International",
+      type: "ministry",
+      status: "active",
+      memberCount: 1200,
+      dataIsolated: true,
+      region: "global",
+      createdAt: FIXED_TIMESTAMP,
+    },
+    {
+      id: "org-004",
+      name: "Horizon Academy",
+      type: "school",
+      status: "active",
+      memberCount: 540,
+      dataIsolated: true,
+      region: "us-central",
+      createdAt: FIXED_TIMESTAMP,
+    },
+    {
+      id: "org-005",
+      name: "City Innovation Department",
+      type: "government",
+      status: "active",
+      memberCount: 180,
+      dataIsolated: true,
+      region: "us-east",
+      createdAt: FIXED_TIMESTAMP,
+    },
+    {
+      id: "org-006",
+      name: "Community Impact Foundation",
+      type: "nonprofit",
+      status: "active",
+      memberCount: 95,
+      dataIsolated: true,
+      region: "us-south",
+      createdAt: FIXED_TIMESTAMP,
+    },
+  ],
+  metrics: {
+    totalOrganizations: 6,
+    activeOrganizations: 6,
+    byType: {
+      church: 1,
+      business: 1,
+      ministry: 1,
+      school: 1,
+      government: 1,
+      nonprofit: 1,
+    },
+    healthScore: 96,
+  },
+}
