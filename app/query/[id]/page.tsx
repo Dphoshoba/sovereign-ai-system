@@ -1,5 +1,7 @@
-import Link from "next/link"
+﻿import Link from "next/link"
 import { getMissionQueryWorkspace } from "../../../lib/gamma/query-reader"
+
+export const dynamic = "force-dynamic"
 
 export default async function MissionQueryPage({
   params,
@@ -181,3 +183,4 @@ const scoreRowStyle: React.CSSProperties = { borderTop: "1px solid var(--border)
 const listStyle: React.CSSProperties = { margin: "8px 0 0", paddingLeft: 18 }
 const listItemStyle: React.CSSProperties = { marginBottom: 8 }
 const linkStyle: React.CSSProperties = { color: "#0284c7", textDecoration: "none", fontWeight: 600 }
+

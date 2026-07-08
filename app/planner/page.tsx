@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { getPlannerRegistry } from "../../lib/gamma/planner-reader"
 
+export const dynamic = "force-dynamic"
+
 export default async function PlannerPage() {
   const registry = await getPlannerRegistry()
 

@@ -1,5 +1,7 @@
-import Link from "next/link"
+﻿import Link from "next/link"
 import { getResearchMissions } from "../../lib/gamma/research-registry"
+
+export const dynamic = "force-dynamic"
 
 export default async function ResearchWorkspacesPage() {
   const missions = await getResearchMissions()
@@ -482,3 +484,4 @@ const smallLabelStyle: React.CSSProperties = {
   fontSize: 11,
   color: "var(--muted)",
 }
+

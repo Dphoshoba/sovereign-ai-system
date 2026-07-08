@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { getMissionGapAnalysis } from "../../../lib/gamma/gap-analysis-reader"
 
+export const dynamic = "force-dynamic"
+
 export default async function MissionGapAnalysisPage({
   params,
 }: {

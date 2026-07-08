@@ -1,5 +1,7 @@
-import Link from "next/link"
+﻿import Link from "next/link"
 import { getAdvisorRegistry } from "../../lib/gamma/advisor-reader"
+
+export const dynamic = "force-dynamic"
 
 export default async function AdvisorPage() {
   const registry = await getAdvisorRegistry()

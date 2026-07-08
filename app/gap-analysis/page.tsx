@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { getGapAnalysisRegistry } from "../../lib/gamma/gap-analysis-reader"
 
+export const dynamic = "force-dynamic"
+
 export default async function GapAnalysisPage() {
   const registry = await getGapAnalysisRegistry()
 

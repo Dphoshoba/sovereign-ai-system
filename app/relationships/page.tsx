@@ -1,5 +1,7 @@
-import Link from "next/link"
+﻿import Link from "next/link"
 import { getRelationshipRegistry } from "../../lib/gamma/relationship-reader"
+
+export const dynamic = "force-dynamic"
 
 export default async function RelationshipsPage() {
   const registry = await getRelationshipRegistry()
@@ -74,3 +76,4 @@ const gridStyle: React.CSSProperties = { display: "grid", gap: 12, gridTemplateC
 const cardStyle: React.CSSProperties = { border: "1px solid var(--border)", borderRadius: 10, padding: 16, background: "var(--card-background)" }
 const cardTitleStyle: React.CSSProperties = { margin: "4px 0 10px", fontSize: 20 }
 const linkStyle: React.CSSProperties = { color: "#0284c7", textDecoration: "none", fontWeight: 600 }
+

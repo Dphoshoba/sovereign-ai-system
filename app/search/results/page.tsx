@@ -1,5 +1,7 @@
-import Link from "next/link"
+﻿import Link from "next/link"
 import { getGammaSearchResults } from "../../../lib/gamma/search-reader"
+
+export const dynamic = "force-dynamic"
 
 export default async function SearchResultsPage({
   searchParams,
@@ -72,3 +74,4 @@ const stackStyle: React.CSSProperties = { display: "flex", flexDirection: "colum
 const itemStyle: React.CSSProperties = { borderTop: "1px solid var(--border)", paddingTop: 8 }
 const snippetStyle: React.CSSProperties = { margin: "6px 0 0", lineHeight: 1.5 }
 const linkStyle: React.CSSProperties = { color: "#0284c7", textDecoration: "none", fontWeight: 600 }
+

@@ -1,5 +1,7 @@
-import Link from "next/link"
+﻿import Link from "next/link"
 import { getMissionExecutiveDashboard } from "../../../lib/gamma/executive-dashboard-reader"
+
+export const dynamic = "force-dynamic"
 
 export default async function MissionExecutiveDashboardPage({
   params,

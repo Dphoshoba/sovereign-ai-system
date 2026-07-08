@@ -1,5 +1,7 @@
-import Link from "next/link"
+﻿import Link from "next/link"
 import { getInferenceRegistry } from "../../lib/gamma/inference-reader"
+
+export const dynamic = "force-dynamic"
 
 export default async function InferencePage() {
   const registry = await getInferenceRegistry()
@@ -63,3 +65,4 @@ const metricLabelStyle: React.CSSProperties = { margin: 0, fontSize: 12, color: 
 const metricValueStyle: React.CSSProperties = { margin: "6px 0 0", fontWeight: 700, fontSize: 20 }
 const gridStyle: React.CSSProperties = { display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }
 const linkStyle: React.CSSProperties = { color: "#0284c7", textDecoration: "none", fontWeight: 600 }
+

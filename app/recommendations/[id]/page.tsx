@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { getMissionRecommendations } from "../../../lib/gamma/recommendation-reader"
 
+export const dynamic = "force-dynamic"
+
 export default async function MissionRecommendationsPage({
   params,
 }: {

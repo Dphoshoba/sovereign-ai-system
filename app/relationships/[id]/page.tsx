@@ -1,5 +1,7 @@
-import Link from "next/link"
+﻿import Link from "next/link"
 import { getMissionRelationships } from "../../../lib/gamma/relationship-reader"
+
+export const dynamic = "force-dynamic"
 
 export default async function MissionRelationshipsPage({
   params,
@@ -117,3 +119,4 @@ const twoColStyle: React.CSSProperties = { display: "grid", gridTemplateColumns:
 const stackStyle: React.CSSProperties = { display: "flex", flexDirection: "column", gap: 8, marginTop: 10 }
 const rowStyle: React.CSSProperties = { display: "grid", gap: 10, gridTemplateColumns: "1fr auto 1fr", borderTop: "1px solid var(--border)", paddingTop: 8, alignItems: "center" }
 const linkStyle: React.CSSProperties = { color: "#0284c7", textDecoration: "none", fontWeight: 600, display: "inline-block", marginTop: 10 }
+

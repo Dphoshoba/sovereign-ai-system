@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { getKnowledgeIntelligenceWorkspace } from "../../../lib/gamma/knowledge-intelligence-reader"
 
+export const dynamic = "force-dynamic"
+
 export default async function KnowledgeIntelligenceMissionPage({
   params,
 }: {

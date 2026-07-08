@@ -1,5 +1,7 @@
-import Link from "next/link"
+﻿import Link from "next/link"
 import { getMissionReview } from "../../../lib/gamma/review-reader"
+
+export const dynamic = "force-dynamic"
 
 export default async function MissionReviewPage({
   params,

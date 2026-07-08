@@ -1,5 +1,7 @@
-import Link from "next/link"
+﻿import Link from "next/link"
 import { getMissionInference } from "../../../lib/gamma/inference-reader"
+
+export const dynamic = "force-dynamic"
 
 export default async function MissionInferencePage({
   params,
@@ -176,3 +178,4 @@ const listStyle: React.CSSProperties = { margin: "8px 0 0", paddingLeft: 18 }
 const listItemStyle: React.CSSProperties = { marginBottom: 8 }
 const timelineRowStyle: React.CSSProperties = { borderTop: "1px solid var(--border)", paddingTop: 8, display: "grid", gridTemplateColumns: "110px 1fr auto", gap: 10 }
 const linkStyle: React.CSSProperties = { color: "#0284c7", textDecoration: "none", fontWeight: 600 }
+

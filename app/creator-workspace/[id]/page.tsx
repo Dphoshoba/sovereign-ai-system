@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { getCreatorWorkspace } from "../../../lib/gamma/creator-output-reader"
 
+export const dynamic = "force-dynamic"
+
 export default async function CreatorWorkspaceMissionPage({
   params,
 }: {

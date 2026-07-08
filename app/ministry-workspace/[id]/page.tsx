@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { getMinistryWorkspace } from "../../../lib/gamma/ministry-reader"
 
+export const dynamic = "force-dynamic"
+
 export default async function MinistryWorkspaceMissionPage({
   params,
 }: {

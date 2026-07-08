@@ -1,5 +1,7 @@
-import Link from "next/link"
+﻿import Link from "next/link"
 import { getSecondBrainWorkspace } from "../../../lib/gamma/second-brain-reader"
+
+export const dynamic = "force-dynamic"
 
 export default async function SecondBrainMissionPage({
   params,
@@ -184,3 +186,4 @@ const pillStyle: React.CSSProperties = { border: "1px solid var(--border)", bord
 const pillLabelStyle: React.CSSProperties = { fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5, color: "var(--muted)" }
 const pillValueStyle: React.CSSProperties = { fontSize: 12, fontWeight: 600 }
 const badgeStyle: React.CSSProperties = { border: "1px solid var(--border)", borderRadius: 999, padding: "4px 8px", fontSize: 11, color: "#16a34a" }
+

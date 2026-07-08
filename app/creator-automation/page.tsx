@@ -2,6 +2,8 @@
 import Link from "next/link"
 import StarterPackForm from "./StarterPackForm"
 
+export const dynamic = "force-dynamic"
+
 export const metadata = {
   title: "AI Systems For Creators | Echoes & Visions",
   description:

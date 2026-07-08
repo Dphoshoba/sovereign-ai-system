@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { getRecommendationRegistry } from "../../lib/gamma/recommendation-reader"
 
+export const dynamic = "force-dynamic"
+
 export default async function RecommendationsPage() {
   const registry = await getRecommendationRegistry()
 

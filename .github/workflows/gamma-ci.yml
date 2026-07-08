@@ -1,0 +1,91 @@
+name: Gamma CI
+
+on:
+  push:
+    branches:
+      - gamma
+  pull_request:
+    branches:
+      - gamma
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run build
+        run: npm run build
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+      
+      - name: Run unit tests
+        run: npm run test
+      
+      - name: Check determinism constraints
+        run: npm run test:determinism
+      
+      - name: Check route manifest
+        run: tsx scripts/check-route-manifest.ts
+      
+      - name: Start dev server for smoke tests
+        run: npm run dev -- -p 3000 &
+        timeout-minutes: 2
+      
+      - name: Wait for dev server to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -f http://localhost:3000/api/health > /dev/null 2>&1; then
+              echo "Dev server is ready"
+              exit 0
+            fi
+            echo "Waiting for dev server... ($i/30)"
+            sleep 2
+          done
+          echo "Dev server failed to start"
+          exit 1
+      
+      - name: Run smoke tests
+        run: npm run smoke:v1
+        env:
+          BASE_URL: http://localhost:3000
+      
+      - name: Generate coverage report
+        run: npm run test:coverage
+        continue-on-error: true
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/coverage-final.json
+          flags: unittests
+          name: codecov-umbrella
+        continue-on-error: true
+      
+      - name: Comment on PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ Build, tests, and smoke validation passed'
+            })
+        continue-on-error: true

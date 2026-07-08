@@ -1,5 +1,7 @@
-import Link from "next/link"
+﻿import Link from "next/link"
 import { getQueryRegistry } from "../../lib/gamma/query-reader"
+
+export const dynamic = "force-dynamic"
 
 export default async function QueryPage() {
   const registry = await getQueryRegistry()
@@ -67,3 +69,4 @@ const metricLabelStyle: React.CSSProperties = { margin: 0, fontSize: 12, color: 
 const metricValueStyle: React.CSSProperties = { margin: "6px 0 0", fontWeight: 700, fontSize: 20 }
 const gridStyle: React.CSSProperties = { display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }
 const linkStyle: React.CSSProperties = { color: "#0284c7", textDecoration: "none", fontWeight: 600 }
+

@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { getMissionKnowledgeGraph } from "../../../lib/gamma/graph-reader"
 
+export const dynamic = "force-dynamic"
+
 export default async function MissionKnowledgeGraphPage({
   params,
 }: {
