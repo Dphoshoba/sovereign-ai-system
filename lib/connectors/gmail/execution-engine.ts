@@ -2,6 +2,10 @@
  * Gmail Execution Engine
  * Controlled execution with strict safety gates
  * Only approved, queued drafts can execute
+ *
+ * Feature Flag: ENABLE_REAL_EXECUTION
+ * - false (default): Simulate Gmail responses (safe mode)
+ * - true: Execute real Gmail API calls
  */
 
 import {
@@ -19,9 +23,36 @@ export class ExecutionEngine {
   private executions: Map<string, ExecutionContext> = new Map();
   private idempotencyKeys: Set<string> = new Set();
   private policy: SafetyPolicy;
+  private enableRealExecution: boolean;
 
-  constructor(policy: SafetyPolicy = DEFAULT_SAFETY_POLICY) {
+  constructor(policy: SafetyPolicy = DEFAULT_SAFETY_POLICY, enableRealExecution?: boolean) {
     this.policy = policy;
+    // Default to simulation mode (false) unless explicitly enabled
+    this.enableRealExecution = enableRealExecution ?? this.getFeatureFlagFromEnv();
+  }
+
+  /**
+   * Get feature flag from environment
+   */
+  private getFeatureFlagFromEnv(): boolean {
+    if (typeof process === 'undefined' || !process.env) {
+      return false;
+    }
+    return process.env.ENABLE_REAL_EXECUTION === 'true';
+  }
+
+  /**
+   * Check if real execution is enabled
+   */
+  isRealExecutionEnabled(): boolean {
+    return this.enableRealExecution;
+  }
+
+  /**
+   * Get execution mode (for logging/debugging)
+   */
+  getExecutionMode(): 'simulation' | 'real' {
+    return this.enableRealExecution ? 'real' : 'simulation';
   }
 
   /**
@@ -75,16 +106,56 @@ export class ExecutionEngine {
       this.executions.set(executionId, context);
       this.idempotencyKeys.add(request.idempotencyKey);
 
-      return {
-        success: true,
-        execution: context,
-      };
+      // Execute or simulate
+      if (this.enableRealExecution) {
+        return this.executeReal(context);
+      } else {
+        return this.simulateExecution(context);
+      }
     } catch (error) {
       return {
         success: false,
         error: String(error),
       };
     }
+  }
+
+  /**
+   * Simulate Gmail execution (safe mode, no actual sends)
+   */
+  private simulateExecution(context: ExecutionContext): ExecutionResponse {
+    // Simulate Gmail message ID generation
+    const simulatedMessageId = `msg_sim_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
+    // Mark as completed immediately
+    context.executionState = 'completed';
+    context.completedAt = new Date();
+    context.gmailMessageId = simulatedMessageId;
+
+    // Add simulation note to audit details
+    if (!context.safetyCheckDetails.details) {
+      context.safetyCheckDetails.details = {};
+    }
+    context.safetyCheckDetails.details.simulationMode = true;
+    context.safetyCheckDetails.details.simulatedMessageId = simulatedMessageId;
+
+    return {
+      success: true,
+      execution: context,
+      gmailMessageId: simulatedMessageId,
+    };
+  }
+
+  /**
+   * Execute real Gmail API call (only when feature flag enabled)
+   */
+  private executeReal(context: ExecutionContext): ExecutionResponse {
+    // TODO: Implement real Gmail API call in Build 136
+    // For now, return error indicating real execution not yet implemented
+    return {
+      success: false,
+      error: 'Real Gmail execution not yet implemented (Build 136)',
+    };
   }
 
   /**

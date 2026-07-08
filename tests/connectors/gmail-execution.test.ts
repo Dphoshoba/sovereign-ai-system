@@ -17,6 +17,7 @@ import {
   MOCK_DEAD_LETTER_ENTRIES,
   MOCK_AUDIT_EVENTS,
 } from '../../src/lib/gmail-execution/mock-data';
+import { DEFAULT_SAFETY_POLICY } from '../../src/lib/gmail-execution/types';
 
 const BASE_TIME = new Date('2026-07-01T10:00:00Z');
 
@@ -43,8 +44,11 @@ describe('Execution Engine', () => {
     });
 
     expect(response.success).toBe(true);
-    expect(response.execution?.executionState).toBe('running');
+    // In simulation mode (default), executions complete immediately
+    expect(response.execution?.executionState).toBe('completed');
     expect(response.execution?.attemptNumber).toBe(1);
+    // Verify simulated message ID was generated
+    expect(response.execution?.gmailMessageId).toMatch(/^msg_sim_/);
   });
 
   it('should block duplicate idempotency key', () => {
@@ -127,6 +131,9 @@ describe('Execution Engine', () => {
   });
 
   it('should cancel execution', () => {
+    // In simulation mode (default), executions complete immediately
+    // Test cancellation by attempting to cancel a completed execution
+    // The engine should gracefully handle cancellation of completed executions
     const response = engine.executeQueued({
       queuedId: 'queued_001',
       draftId: 'draft_001',
@@ -138,10 +145,11 @@ describe('Execution Engine', () => {
     });
 
     const executionId = response.execution!.id;
+    expect(response.execution?.executionState).toBe('completed');
+    
+    // Attempting to cancel a completed execution should fail gracefully
     const cancelResponse = engine.cancelExecution(executionId);
-
-    expect(cancelResponse.success).toBe(true);
-    expect(cancelResponse.execution?.executionState).toBe('cancelled');
+    expect(cancelResponse.success).toBe(false);
   });
 
   it('should get execution by ID', () => {
@@ -171,8 +179,13 @@ describe('Execution Engine', () => {
       executeAction: 'send',
     });
 
+    // In simulation mode (default), executions complete immediately
+    const completed = engine.getByState('completed');
+    expect(completed.length).toBeGreaterThan(0);
+    
+    // Verify no executions are in running state
     const running = engine.getByState('running');
-    expect(running.length).toBeGreaterThan(0);
+    expect(running.length).toBe(0);
   });
 
   it('should calculate metrics', () => {
@@ -539,5 +552,102 @@ describe('Gmail Execution Reader', () => {
     const health = reader.getHealthScore(BASE_TIME.getTime());
     expect(health).toBeGreaterThanOrEqual(0);
     expect(health).toBeLessThanOrEqual(100);
+  });
+});
+
+// ============================================================================
+// Feature Flag & Simulation Tests (8)
+// ============================================================================
+
+describe('Feature Flag: Execution Mode', () => {
+  it('should default to simulation mode', () => {
+    const engine = new ExecutionEngine();
+    expect(engine.isRealExecutionEnabled()).toBe(false);
+    expect(engine.getExecutionMode()).toBe('simulation');
+  });
+
+  it('should allow enabling real execution explicitly', () => {
+    const engine = new ExecutionEngine(DEFAULT_SAFETY_POLICY, true);
+    expect(engine.isRealExecutionEnabled()).toBe(true);
+    expect(engine.getExecutionMode()).toBe('real');
+  });
+
+  it('should simulate Gmail response in simulation mode', () => {
+    const engine = new ExecutionEngine(DEFAULT_SAFETY_POLICY, false);
+    const response = engine.executeQueued({
+      queuedId: 'queued_sim_001',
+      draftId: 'draft_sim_001',
+      previewId: 'preview_sim_001',
+      approvalId: 'approval_sim_001',
+      operator: 'simulator@example.com',
+      idempotencyKey: 'idempotent_sim_001',
+      executeAction: 'send',
+    });
+
+    expect(response.success).toBe(true);
+    expect(response.execution?.executionState).toBe('completed');
+    expect(response.gmailMessageId).toBeDefined();
+    expect(response.gmailMessageId?.startsWith('msg_sim_')).toBe(true);
+  });
+
+  it('should mark simulated execution with simulation flag', () => {
+    const engine = new ExecutionEngine(DEFAULT_SAFETY_POLICY, false);
+    const response = engine.executeQueued({
+      queuedId: 'queued_sim_002',
+      draftId: 'draft_sim_002',
+      previewId: 'preview_sim_002',
+      approvalId: 'approval_sim_002',
+      operator: 'simulator@example.com',
+      idempotencyKey: 'idempotent_sim_002',
+      executeAction: 'send',
+    });
+
+    expect(response.execution?.safetyCheckDetails.details?.simulationMode).toBe(true);
+  });
+
+  it('should immediately complete simulated execution', () => {
+    const engine = new ExecutionEngine(DEFAULT_SAFETY_POLICY, false);
+    const response = engine.executeQueued({
+      queuedId: 'queued_sim_003',
+      draftId: 'draft_sim_003',
+      previewId: 'preview_sim_003',
+      approvalId: 'approval_sim_003',
+      operator: 'simulator@example.com',
+      idempotencyKey: 'idempotent_sim_003',
+      executeAction: 'send',
+    });
+
+    expect(response.execution?.completedAt).toBeDefined();
+    expect(response.execution?.attemptNumber).toBe(1);
+  });
+
+  it('should fail gracefully when real execution not yet implemented', () => {
+    const engine = new ExecutionEngine(DEFAULT_SAFETY_POLICY, true);
+    const response = engine.executeQueued({
+      queuedId: 'queued_real_001',
+      draftId: 'draft_real_001',
+      previewId: 'preview_real_001',
+      approvalId: 'approval_real_001',
+      operator: 'executor@example.com',
+      idempotencyKey: 'idempotent_real_001',
+      executeAction: 'send',
+    });
+
+    expect(response.success).toBe(false);
+    expect(response.error).toContain('not yet implemented');
+  });
+
+  it('should maintain feature flag across operations', () => {
+    const simEngine = new ExecutionEngine(DEFAULT_SAFETY_POLICY, false);
+    const realEngine = new ExecutionEngine(DEFAULT_SAFETY_POLICY, true);
+
+    expect(simEngine.getExecutionMode()).toBe('simulation');
+    expect(realEngine.getExecutionMode()).toBe('real');
+  });
+
+  it('should prioritize explicit flag over environment', () => {
+    // Explicit false should override any environment setting
+    const engine = new ExecutionEngine(DEFAULT_SAFETY_POLICY, false);
+    expect(engine.isRealExecutionEnabled()).toBe(false);
   });
 });

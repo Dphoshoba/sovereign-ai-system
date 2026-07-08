@@ -455,7 +455,103 @@ BASE_TIME = new Date('2026-07-01T10:00:00Z')
 
 ---
 
-## 11. Known Limitations & Build 136 Preview
+## 11. Runtime Feature Flag: ENABLE_REAL_EXECUTION
+
+### Safe Simulation Mode (Default)
+
+By default, Build 135 runs in **simulation mode** for safe development and testing:
+
+```bash
+# In .env or environment
+ENABLE_REAL_EXECUTION=false  # Default - safe simulation mode
+```
+
+### Simulation Behavior
+
+When `ENABLE_REAL_EXECUTION=false`:
+
+```typescript
+// Engine execution flow
+engine.executeQueued({...})
+  ↓
+✅ All 8 safety gates pass
+  ↓
+🔄 Instead of calling Gmail API...
+  ↓
+⏱️  Immediately completes execution
+  ↓
+✅ Generates simulated message ID: msg_sim_{timestamp}_{random}
+  ↓
+📝 Marks execution as COMPLETED
+  ↓
+✅ Writes audit log event
+  ↓
+✅ Returns success response with simulated ID
+```
+
+### Example Simulated Response
+
+```typescript
+{
+  success: true,
+  execution: {
+    id: 'exec_9f41a2d9',
+    executionState: 'completed',
+    gmailMessageId: 'msg_sim_1720099200000_a7b2f9c1',
+    safetyCheckDetails: {
+      details: {
+        simulationMode: true,
+        simulatedMessageId: 'msg_sim_1720099200000_a7b2f9c1'
+      }
+    },
+    completedAt: 2026-07-01T10:00:00Z
+  },
+  gmailMessageId: 'msg_sim_1720099200000_a7b2f9c1'
+}
+```
+
+### Enabling Real Execution (Build 136)
+
+To enable real Gmail API execution (when Build 136 Gmail integration is complete):
+
+```bash
+ENABLE_REAL_EXECUTION=true
+```
+
+### Feature Flag Implementation
+
+```typescript
+// Constructor accepts optional parameter
+const engine = new ExecutionEngine(DEFAULT_SAFETY_POLICY, true);
+
+// OR read from environment variable
+engine = new ExecutionEngine();
+// Checks process.env.ENABLE_REAL_EXECUTION === 'true'
+// Defaults to false for safety
+```
+
+### Methods for Checking Mode
+
+```typescript
+// Check if real execution is enabled
+engine.isRealExecutionEnabled()  // boolean
+
+// Get current mode
+engine.getExecutionMode()  // 'simulation' | 'real'
+```
+
+### Safety Properties
+
+- ✅ **Safe by Default**: Simulation mode enabled without any configuration
+- ✅ **Explicit Opt-In**: Real execution requires explicit `ENABLE_REAL_EXECUTION=true`
+- ✅ **Constructor Override**: Passing `true` parameter overrides environment variable
+- ✅ **No Accidental Sends**: Simulation mode prevents unintended Gmail API calls
+- ✅ **Complete Audit Trail**: All simulated executions logged like real executions
+- ✅ **Realistic Responses**: Simulated message IDs follow Gmail format conventions
+
+---
+
+## 12. Known Limitations & Build 136 Preview
 
 ### Current Limitations
 
@@ -499,7 +595,7 @@ BASE_TIME = new Date('2026-07-01T10:00:00Z')
 
 ---
 
-## 12. Success Criteria - ALL MET ✅
+## 13. Success Criteria - ALL MET ✅
 
 - ✅ Approved queued drafts can execute
 - ✅ Rejected drafts cannot execute
@@ -518,7 +614,7 @@ BASE_TIME = new Date('2026-07-01T10:00:00Z')
 
 ---
 
-## 13. Files Summary
+## 14. Files Summary
 
 **Created** (10):
 ```
