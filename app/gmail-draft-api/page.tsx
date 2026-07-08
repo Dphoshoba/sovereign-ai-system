@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { GmailDraftApiReader } from '@/lib/gamma/gmail-draft-api-reader';
-import { DraftReceipt } from '@/src/lib/gmail-api/types';
+import { GmailDraftApiReader } from '../../lib/gamma/gmail-draft-api-reader';
+import { DraftReceipt } from '@/lib/gmail-api/types';
 
 export default function GmailDraftApiPage() {
   const [drafts, setDrafts] = useState<DraftReceipt[]>([]);

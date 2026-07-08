@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { DraftReceipt } from '@/src/lib/gmail-api/types';
+import { DraftReceipt } from '@/lib/gmail-api/types';
 
 export default function GmailDraftDetailPage() {
   const params = useParams();
