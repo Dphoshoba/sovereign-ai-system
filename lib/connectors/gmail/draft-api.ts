@@ -57,21 +57,19 @@ export class DraftApi {
 
     try {
       // Record audit event: create started
-      await this.auditLog.recordEvent({
-        id: `audit_${Date.now()}`,
-        type: 'gmail_draft_create_started',
+      this.auditLog.recordEvent(
         executionId,
-        draftReceiptId: receiptId,
+        'gmail_draft_create_started' as any,
         operator,
-        timestamp: new Date(),
-        details: {
+        new Date(),
+        {
+          draftReceiptId: receiptId,
           to: request.to,
           cc: request.cc || [],
           bcc: request.bcc || [],
           subject: request.subject,
-        },
-        readonly: true,
-      });
+        }
+      );
 
       if (this.enableRealExecution) {
         return this.createDraftReal(request, executionId, receiptId, accessToken, operator);
@@ -81,19 +79,17 @@ export class DraftApi {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
 
-      await this.auditLog.recordEvent({
-        id: `audit_${Date.now()}`,
-        type: 'gmail_api_failed',
+      this.auditLog.recordEvent(
         executionId,
-        draftReceiptId: receiptId,
+        'gmail_api_failed' as any,
         operator,
-        timestamp: new Date(),
-        details: {
+        new Date(),
+        {
+          draftReceiptId: receiptId,
           error: errorMessage,
           subject: request.subject,
-        },
-        readonly: true,
-      });
+        }
+      );
 
       return {
         success: false,
@@ -155,19 +151,17 @@ export class DraftApi {
       this.draftCount++;
 
       // Record success audit event
-      await this.auditLog.recordEvent({
-        id: `audit_${Date.now()}`,
-        type: 'gmail_draft_created',
+      this.auditLog.recordEvent(
         executionId,
-        draftReceiptId: receiptId,
+        'gmail_draft_created' as any,
         operator,
-        timestamp: new Date(),
-        details: {
+        new Date(),
+        {
+          draftReceiptId: receiptId,
           gmailDraftId: response.id,
           latencyMs,
-        },
-        readonly: true,
-      });
+        }
+      );
 
       return {
         success: true,
@@ -212,21 +206,19 @@ export class DraftApi {
     this.draftCount++;
 
     // Record simulation audit event
-    await this.auditLog.recordEvent({
-      id: `audit_${Date.now()}`,
-      type: 'gmail_draft_simulated',
+    this.auditLog.recordEvent(
       executionId,
-      draftReceiptId: receiptId,
+      'gmail_draft_simulated' as any,
       operator,
-      timestamp: new Date(),
-      details: {
+      new Date(),
+      {
+        draftReceiptId: receiptId,
         simulatedDraftId,
         to: request.to,
         subject: request.subject,
         latencyMs: simulatedLatency,
-      },
-      readonly: true,
-    });
+      }
+    );
 
     return {
       success: true,
@@ -327,18 +319,16 @@ export class DraftApi {
         if (receipt.gmailDraftId === gmailDraftId) {
           this.draftCache.delete(key);
 
-          await this.auditLog.recordEvent({
-            id: `audit_${Date.now()}`,
-            type: 'gmail_draft_deleted',
-            executionId: receipt.executionId,
-            draftReceiptId: key,
-            operator: 'system',
-            timestamp: new Date(),
-            details: {
+          this.auditLog.recordEvent(
+            receipt.executionId,
+            'gmail_draft_deleted' as any,
+            'system',
+            new Date(),
+            {
+              draftReceiptId: key,
               gmailDraftId,
-            },
-            readonly: true,
-          });
+            }
+          );
 
           break;
         }

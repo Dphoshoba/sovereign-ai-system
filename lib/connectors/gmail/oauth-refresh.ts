@@ -60,19 +60,17 @@ export class OAuthRefreshManager {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
 
-      await this.auditLog.recordEvent({
-        id: `audit_${Date.now()}`,
-        type: 'gmail_api_failed',
+      this.auditLog.recordEvent(
         executionId,
-        draftReceiptId: `receipt_${Date.now()}`,
-        operator: 'system',
-        timestamp: new Date(),
-        details: {
+        'gmail_api_failed' as any,
+        'system',
+        new Date(),
+        {
+          draftReceiptId: `receipt_${Date.now()}`,
           operation: 'oauth_refresh',
           error: errorMessage,
-        },
-        readonly: true,
-      });
+        }
+      );
 
       throw error;
     }
@@ -127,20 +125,18 @@ export class OAuthRefreshManager {
       this.nextRefreshTime = new Date(Date.now() + data.expiresIn * 1000 - 5 * 60 * 1000);
 
       // Record audit event
-      await this.auditLog.recordEvent({
-        id: `audit_${Date.now()}`,
-        type: 'gmail_token_refreshed',
+      this.auditLog.recordEvent(
         executionId,
-        draftReceiptId: `receipt_${Date.now()}`,
-        operator: 'system',
-        timestamp: new Date(),
-        details: {
+        'gmail_token_refreshed' as any,
+        'system',
+        new Date(),
+        {
+          draftReceiptId: `receipt_${Date.now()}`,
           accountId: token.accountId,
           expiresIn: data.expiresIn,
           latencyMs,
-        },
-        readonly: true,
-      });
+        }
+      );
 
       return newToken;
     } catch (error) {
@@ -177,21 +173,19 @@ export class OAuthRefreshManager {
     this.nextRefreshTime = new Date(Date.now() + 3600 * 1000 - 5 * 60 * 1000);
 
     // Record audit event
-    await this.auditLog.recordEvent({
-      id: `audit_${Date.now()}`,
-      type: 'gmail_token_refreshed',
+    this.auditLog.recordEvent(
       executionId,
-      draftReceiptId: `receipt_${Date.now()}`,
-      operator: 'system',
-      timestamp: new Date(),
-      details: {
+      'gmail_token_refreshed' as any,
+      'system',
+      new Date(),
+      {
+        draftReceiptId: `receipt_${Date.now()}`,
         accountId: token.accountId,
         expiresIn: 3600,
         latencyMs,
         simulated: true,
-      },
-      readonly: true,
-    });
+      }
+    );
 
     return newToken;
   }

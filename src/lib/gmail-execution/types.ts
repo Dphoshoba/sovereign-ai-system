@@ -74,6 +74,7 @@ export interface SafetyCheckResult {
   allChecksPassed: boolean;
   failureReason?: string;
   checkedAt: Date;
+  details?: Record<string, any>;
 }
 
 /**

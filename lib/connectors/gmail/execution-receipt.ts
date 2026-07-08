@@ -32,20 +32,18 @@ export class ExecutionReceiptManager {
     this.receiptCount++;
 
     // Record in audit log for tracking
-    await this.auditLog.recordEvent({
-      id: `audit_${Date.now()}`,
-      type: receipt.mode === 'simulation' ? 'gmail_draft_simulated' : 'gmail_draft_created',
-      executionId: receipt.executionId,
-      draftReceiptId: receipt.id,
-      operator: 'system',
-      timestamp: new Date(),
-      details: {
+    this.auditLog.recordEvent(
+      receipt.executionId,
+      (receipt.mode === 'simulation' ? 'gmail_draft_simulated' : 'gmail_draft_created') as any,
+      'system',
+      new Date(),
+      {
+        draftReceiptId: receipt.id,
         status: receipt.status,
         mode: receipt.mode,
         gmailDraftId: receipt.gmailDraftId,
-      },
-      readonly: true,
-    });
+      }
+    );
 
     return receipt.id;
   }
@@ -120,19 +118,17 @@ export class ExecutionReceiptManager {
       receipt.error = error;
     }
 
-    await this.auditLog.recordEvent({
-      id: `audit_${Date.now()}`,
-      type: 'gmail_draft_created',
-      executionId: receipt.executionId,
-      draftReceiptId: receiptId,
-      operator: 'system',
-      timestamp: new Date(),
-      details: {
+    this.auditLog.recordEvent(
+      receipt.executionId,
+      'gmail_draft_created' as any,
+      'system',
+      new Date(),
+      {
+        draftReceiptId: receiptId,
         newStatus,
         previousStatus: receipt.status,
-      },
-      readonly: true,
-    });
+      }
+    );
 
     return true;
   }
@@ -146,18 +142,16 @@ export class ExecutionReceiptManager {
 
     this.receipts.delete(receiptId);
 
-    await this.auditLog.recordEvent({
-      id: `audit_${Date.now()}`,
-      type: 'gmail_draft_deleted',
-      executionId: receipt.executionId,
-      draftReceiptId: receiptId,
-      operator: 'system',
-      timestamp: new Date(),
-      details: {
+    this.auditLog.recordEvent(
+      receipt.executionId,
+      'gmail_draft_deleted' as any,
+      'system',
+      new Date(),
+      {
+        draftReceiptId: receiptId,
         gmailDraftId: receipt.gmailDraftId,
-      },
-      readonly: true,
-    });
+      }
+    );
 
     return true;
   }
