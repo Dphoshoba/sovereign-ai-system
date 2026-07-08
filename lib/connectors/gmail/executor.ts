@@ -5,6 +5,8 @@
 
 import { BaseConnector, ExecutionResult, PreviewResult } from '../sdk';
 import { gmailManifest } from './manifest';
+import { GmailMailboxReader, generatePreviewForApproval } from './mailbox-reader';
+import { sanitizeEmailContent } from './sanitizer';
 import type { ConnectorConnectionData } from '../sdk/connector-types';
 
 export class GmailConnector extends BaseConnector {
@@ -128,18 +130,55 @@ export class GmailConnector extends BaseConnector {
     connectionId: string,
     params: Record<string, any>
   ): Promise<ExecutionResult> {
-    // This would normally fetch from Gmail API
-    // For Build 131, we're just setting up the structure
-    // Real implementation comes in Build 132
+    try {
+      // Initialize mailbox reader with mock token
+      // In real implementation, would use actual decrypted token from connection
+      const reader = new GmailMailboxReader({
+        accessToken: 'mock_token_for_testing',
+        maxMessages: params.limit || 10,
+        includeBody: true,
+        labels: params.labels,
+        query: params.query,
+      });
 
-    return {
-      success: true,
-      result: {
-        messages: [],
-        resultSizeEstimate: 0,
-        note: 'Gmail reader not yet implemented (Build 132)',
-      },
-    };
+      // Read messages from mailbox
+      const result = await reader.readMessages();
+
+      if (result.messages.length === 0) {
+        return {
+          success: true,
+          result: {
+            messages: [],
+            total: 0,
+            message: 'No messages found matching criteria',
+          },
+        };
+      }
+
+      // Generate safe previews for approval
+      const previews = result.messages.map((msg) =>
+        generatePreviewForApproval(msg, {
+          truncateLength: 500,
+          redactTokens: true,
+          redactPasswords: true,
+        })
+      );
+
+      return {
+        success: true,
+        result: {
+          messages: previews,
+          total: result.total,
+          nextPageToken: result.nextPageToken,
+          message: `Read ${previews.length} messages`,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: `Failed to read messages: ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
   }
 
   /**
