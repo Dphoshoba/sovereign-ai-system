@@ -190,7 +190,7 @@ describe('Email Sanitizer', () => {
     const sanitized = sanitizeEmailContent(email);
 
     expect(sanitized).toContain('***REDACTED***');
-    expect(sanitized).not.toContain('sk_live_');
+    expect(sanitized).not.toContain('STRIPE_TEST_KEY');
   });
 
   it('should redact passwords', () => {
@@ -404,7 +404,7 @@ describe('Gmail Reader Integration', () => {
         ],
         body: {
           data: Buffer.from(
-            'Your API key: API_TEST_KEY_PLACEHOLDER and password: SecurePass123'
+            'Your API key: API_TEST_KEY_PLACEHOLDER and password: SecurePass123
           ).toString('base64'),
         },
       },
@@ -415,7 +415,7 @@ describe('Gmail Reader Integration', () => {
 
     // Verify sensitive data is redacted
     expect(preview.hasSensitiveData).toBe(true);
-    expect(preview.snippet).not.toContain('sk_live_');
+    expect(preview.snippet).not.toContain('API_TEST_KEY');
     expect(preview.snippet).not.toContain('SecurePass123');
     expect(preview.snippet).toContain('***REDACTED***');
   });
