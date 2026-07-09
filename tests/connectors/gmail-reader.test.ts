@@ -186,11 +186,11 @@ describe('Email Sanitizer', () => {
   });
 
   it('should redact API keys', () => {
-    const email = 'Your Stripe API key is: STRIPE_TEST_KEY_PLACEHOLDER';
+    const email = 'Your Stripe API key is: sk_test_1234567890abcdef';
     const sanitized = sanitizeEmailContent(email);
 
     expect(sanitized).toContain('***REDACTED***');
-    expect(sanitized).not.toContain('STRIPE_TEST_KEY');
+    expect(sanitized).not.toContain('sk_test_1234567890abcdef');
   });
 
   it('should redact passwords', () => {
@@ -404,7 +404,7 @@ describe('Gmail Reader Integration', () => {
         ],
         body: {
           data: Buffer.from(
-            'Your API key: API_TEST_KEY_PLACEHOLDER and password: SecurePass123
+            'Your API key: API_TEST_KEY_PLACEHOLDER and password: SecurePass123'
           ).toString('base64'),
         },
       },
