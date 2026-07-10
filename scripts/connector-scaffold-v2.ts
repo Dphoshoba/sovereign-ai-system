@@ -85,19 +85,19 @@ export const ${Name}Fixtures = {
 
   validToken: () => ({
     accessToken: 'access_token_valid_1234567890',
-    expiresAt: new Date(BASE_TIME.getTime() + 3600000),
+    expiresAt: new Date(new Date().getTime() + 3600000),
     scopes: ['${connectorName}.readonly'],
   }),
 
   expiredToken: () => ({
     accessToken: 'access_token_expired_1234567890',
-    expiresAt: new Date(BASE_TIME.getTime() - 1000),
+    expiresAt: new Date(new Date().getTime() - 1000),
     scopes: [],
   }),
 
   expiringToken: () => ({
     accessToken: 'access_token_expiring_1234567890',
-    expiresAt: new Date(BASE_TIME.getTime() + 5 * 60 * 1000),
+    expiresAt: new Date(new Date().getTime() + 5 * 60 * 1000),
     scopes: [],
   }),
 
@@ -263,8 +263,9 @@ describe('${Name} Connector', () => {
     });
 
     it('should filter', () => {
-      reader.set('1', ${Name}Fixtures.validResource());
-      const found = reader.filter(r => r.id === '1');
+      const resource = ${Name}Fixtures.validResource();
+      reader.set(resource.id, resource);
+      const found = reader.filter(r => r.id === resource.id);
       expect(found.length).toBeGreaterThan(0);
     });
 
@@ -699,7 +700,7 @@ console.log('\n🌐 API Routes:');
 writeFile(path.join(API_DIR, 'status', 'route.ts'), apiRoute);
 
 console.log('\n📚 Documentation:');
-writeFile(path.join(DOCS_DIR, `${connectorName}.md`), `# ${serviceName}\n\n**Status**: SCAFFOLDED\n**Generated**: ${new Date().toISOString()}\n\nImplement the 4 adapters to activate.`);
+writeFile(path.join(DOCS_DIR, `${connectorName}.md`), `# ${serviceName}\n\n**Status**: SCAFFOLDED\n**Generated**: 2026-07-10\n\nImplement the 4 adapters to activate.`);
 writeFile(path.join(DOCS_DIR, `${connectorName}-architecture.md`), architectureDoc);
 writeFile(path.join(DOCS_DIR, `${connectorName}-operations.md`), operationsDoc);
 
