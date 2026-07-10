@@ -1,0 +1,167 @@
+{
+  "id": "slack",
+  "name": "Slack",
+  "description": "Slack team communication platform connector",
+  "service": "Slack",
+  "version": "1.0.0",
+  "baseUrl": "https://slack.com/api",
+  
+  "authentication": {
+    "type": "oauth2",
+    "scopes": [
+      "chat:write",
+      "conversations:read",
+      "conversations:history",
+      "users:read",
+      "team:read"
+    ],
+    "tokenExpiry": 43200
+  },
+  
+  "resources": [
+    {
+      "id": "channels",
+      "name": "Channels",
+      "description": "Slack channels and conversations",
+      "endpoint": "/conversations.list",
+      "fields": {
+        "id": "string",
+        "name": "string",
+        "created": "datetime",
+        "is_private": "boolean",
+        "is_archived": "boolean",
+        "member_count": "number",
+        "topic": "string"
+      }
+    },
+    {
+      "id": "messages",
+      "name": "Messages",
+      "description": "Channel messages",
+      "endpoint": "/conversations.history",
+      "fields": {
+        "type": "string",
+        "text": "string",
+        "user": "string",
+        "ts": "string",
+        "thread_ts": "string",
+        "reply_count": "number"
+      }
+    },
+    {
+      "id": "users",
+      "name": "Users",
+      "description": "Workspace users",
+      "endpoint": "/users.list",
+      "fields": {
+        "id": "string",
+        "name": "string",
+        "real_name": "string",
+        "email": "string",
+        "is_bot": "boolean",
+        "is_admin": "boolean",
+        "profile": "object"
+      }
+    },
+    {
+      "id": "threads",
+      "name": "Threads",
+      "description": "Message threads",
+      "endpoint": "/conversations.replies",
+      "fields": {
+        "ts": "string",
+        "thread_ts": "string",
+        "reply_count": "number",
+        "subscribed": "boolean"
+      }
+    }
+  ],
+  
+  "actions": [
+    {
+      "id": "read",
+      "name": "Read",
+      "description": "Read channels, messages, and users",
+      "methods": ["GET"],
+      "riskLevel": "low",
+      "requiresApproval": false
+    },
+    {
+      "id": "write_message",
+      "name": "Write Message",
+      "description": "Post a message to a channel",
+      "methods": ["POST"],
+      "riskLevel": "medium",
+      "requiresApproval": true,
+      "featureFlag": "ENABLE_SLACK_WRITE"
+    },
+    {
+      "id": "update_message",
+      "name": "Update Message",
+      "description": "Edit an existing message",
+      "methods": ["PATCH"],
+      "riskLevel": "medium",
+      "requiresApproval": true,
+      "featureFlag": "ENABLE_SLACK_UPDATE"
+    },
+    {
+      "id": "thread_reply",
+      "name": "Reply in Thread",
+      "description": "Post a reply in a message thread",
+      "methods": ["POST"],
+      "riskLevel": "medium",
+      "requiresApproval": true,
+      "featureFlag": "ENABLE_SLACK_THREADS"
+    }
+  ],
+  
+  "quotas": [
+    {
+      "name": "read_rate",
+      "limit": 1000,
+      "window": "day",
+      "action": "read"
+    },
+    {
+      "name": "write_rate",
+      "limit": 500,
+      "window": "day",
+      "action": "write_message"
+    },
+    {
+      "name": "thread_rate",
+      "limit": 300,
+      "window": "day",
+      "action": "thread_reply"
+    }
+  ],
+  
+  "rateLimit": {
+    "normal": 70,
+    "elevated": 85,
+    "warning": 95,
+    "limited": 100
+  },
+  
+  "compliance": {
+    "requiresApproval": true,
+    "auditTrail": true,
+    "dataEncryption": true,
+    "ipWhitelist": false
+  },
+  
+  "hardening": {
+    "tokenMasking": true,
+    "expiryThreshold": 600,
+    "validateTLS": true,
+    "rateLimitHeaders": true
+  },
+  
+  "metadata": {
+    "tags": ["communication", "team", "slack", "gamma-connector", "phase-xvii"],
+    "category": "collaboration",
+    "provider": "Slack Inc",
+    "support": "community",
+    "icon": "slack.png"
+  }
+}

@@ -25,7 +25,11 @@
     "connector:validate": "tsx scripts/connector-validate.ts",
     "connector:scaffold": "tsx scripts/connector-scaffold.ts",
     "connector:scaffold:v2": "tsx scripts/connector-scaffold-v2.ts",
-    "platform:metrics": "tsx scripts/platform-audit.ts"
+    "platform:metrics": "tsx scripts/platform-audit.ts",
+    "connector:generate": "tsx scripts/connector-generate-autonomous.ts",
+    "connector:generate-batch": "tsx scripts/connector-generate-batch.ts",
+    "connector:list": "tsx scripts/connector-list.ts",
+    "phase:xvii": "tsx scripts/phase-xvii-init.ts"
   },
   "dependencies": {
     "@mdx-js/react": "^3.1.1",
