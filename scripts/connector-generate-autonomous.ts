@@ -770,9 +770,20 @@ export default function ResourceDetails({ params }: Props) {
 
 // Usage
 async function main() {
-  const definitionPath = process.argv[2];
+  let definitionPath = process.argv[2];
+  
+  // Handle --definition=path format
+  if (definitionPath && definitionPath.startsWith('--definition=')) {
+    definitionPath = definitionPath.split('=')[1];
+  } else if (!definitionPath) {
+    const defArg = process.argv.find(arg => arg.startsWith('--definition='));
+    if (defArg) {
+      definitionPath = defArg.split('=')[1];
+    }
+  }
+  
   if (!definitionPath) {
-    console.error("Usage: ts-node connector-generate-autonomous.ts <definition.json>");
+    console.error("Usage: npm run connector:generate -- --definition=<definition.json>");
     process.exit(1);
   }
 
