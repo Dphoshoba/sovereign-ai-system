@@ -1,0 +1,21 @@
+name: Calendar Connector Validation
+
+on:
+  push:
+    paths:
+      - 'lib/connectors/calendar/**'
+      - 'tests/connectors/calendar.test.ts'
+  pull_request:
+    paths:
+      - 'lib/connectors/calendar/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+      - run: bun install
+      - run: npm run build
+      - run: npm test -- tests/connectors/calendar.test.ts
+      - run: npm run connector:validate -- --name=calendar

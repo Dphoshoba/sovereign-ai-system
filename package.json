@@ -24,6 +24,7 @@
     "platform:health": "tsx scripts/platform-health.ts",
     "connector:validate": "tsx scripts/connector-validate.ts",
     "connector:scaffold": "tsx scripts/connector-scaffold.ts",
+    "connector:scaffold:v2": "tsx scripts/connector-scaffold-v2.ts",
     "platform:metrics": "tsx scripts/platform-audit.ts"
   },
   "dependencies": {
