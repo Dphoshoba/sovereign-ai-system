@@ -19,7 +19,12 @@
     "smoke:v1": "tsx scripts/smoke-test-sovereign-v1.ts",
     "graph:build": "tsx scripts/build-knowledge-graph.ts",
     "seed:executive-intelligence": "tsx scripts/seed-executive-intelligence.ts",
-    "activate:executive-ops": "tsx scripts/activate-executive-operations.ts"
+    "activate:executive-ops": "tsx scripts/activate-executive-operations.ts",
+    "audit": "tsx scripts/platform-audit.ts",
+    "platform:health": "tsx scripts/platform-health.ts",
+    "connector:validate": "tsx scripts/connector-validate.ts",
+    "connector:scaffold": "tsx scripts/connector-scaffold.ts",
+    "platform:metrics": "tsx scripts/platform-audit.ts"
   },
   "dependencies": {
     "@mdx-js/react": "^3.1.1",
