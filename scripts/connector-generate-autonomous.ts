@@ -408,7 +408,12 @@ export const ${id}QueueSystem = new ${Name}QueueSystem();
   }
 
   private generateComplianceModule(): string {
-    const { id, compliance = {} } = this.definition;
+    const compliance = this.definition.compliance || {
+      requiresApproval: true,
+      auditTrail: true,
+      dataEncryption: true,
+      ipWhitelist: false,
+    };
 
     return `// Auto-generated Compliance Module for ${this.definition.name}
 // Phase XVII: Autonomous Generation
@@ -495,7 +500,12 @@ export const compliance = new ${this.definition.name.replace(/\s+/g, "")}Complia
   }
 
   private generateHardeningModule(): string {
-    const { id, hardening = {} } = this.definition;
+    const hardening = this.definition.hardening || {
+      tokenMasking: true,
+      expiryThreshold: 600,
+      validateTLS: true,
+      rateLimitHeaders: true,
+    };
 
     return `// Auto-generated Hardening Module for ${this.definition.name}
 // Phase XVII: Autonomous Generation

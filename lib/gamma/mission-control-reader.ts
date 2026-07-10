@@ -60,6 +60,7 @@ export async function getMissionControlRegistry(): Promise<{
   knowledgeDebt: number
   riskScore: number
   opportunityScore: number
+  timestamp: number
   missions: Array<MissionControlWorkspace>
 }> {
   return {
@@ -69,6 +70,7 @@ export async function getMissionControlRegistry(): Promise<{
     knowledgeDebt: 18,
     riskScore: 12,
     opportunityScore: 75,
+    timestamp: 1751328000000,
     missions: [
       {
         mission: "research-001",

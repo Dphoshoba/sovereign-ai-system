@@ -10,6 +10,7 @@ import { DraftApi } from '../../lib/connectors/gmail/draft-api';
 import { OAuthRefreshManager } from '../../lib/connectors/gmail/oauth-refresh';
 import { ExecutionReceiptManager } from '../../lib/connectors/gmail/execution-receipt';
 import { GmailDraftApiReader } from '../../lib/gamma/gmail-draft-api-reader';
+import type { OAuthToken } from '../../src/lib/gmail-api/types';
 import {
   MOCK_OAUTH_TOKEN_VALID,
   MOCK_OAUTH_TOKEN_EXPIRED,
@@ -533,7 +534,7 @@ describe('Execution Receipt Manager', () => {
     await receiptManager.store(MOCK_DRAFT_RECEIPT_REAL_MODE);
     await receiptManager.store(MOCK_DRAFT_RECEIPT_SIMULATION_MODE);
 
-    const simulated = receiptManager.getByStatus('simulation');
+    const simulated = receiptManager.getByStatus('created');
     expect(simulated.length).toBeGreaterThanOrEqual(0);
   });
 

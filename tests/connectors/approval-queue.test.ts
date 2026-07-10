@@ -9,7 +9,6 @@ import { ApprovalEngine } from '../../lib/connectors/gmail/approval-engine';
 import { QueueEngine } from '../../lib/connectors/gmail/queue-engine';
 import { DraftPreviewReader } from '../../lib/gamma/draft-preview-reader';
 import { ApprovalQueueReader } from '../../lib/gamma/approval-queue-reader';
-import { MOCK_GMAIL_DRAFTS } from '../../src/lib/gmail-drafts/mock-data';
 import { MOCK_DRAFT_PREVIEWS, MOCK_APPROVAL_DECISIONS } from '../../src/lib/draft-preview/mock-data';
 import { MOCK_QUEUED_DRAFTS } from '../../src/lib/approval-queue/mock-data';
 import type { DraftComposition } from '../../src/lib/gmail-drafts/types';
@@ -52,12 +51,34 @@ const createValidDraft = (
         suggestion: 'Consider compressing before sending',
       },
     ],
+    attachmentCount: options?.withAttachments ? 1 : 0,
+    recipientCount: 3,
+    confidence: 95,
   },
   mime: {
-    data: 'mime data',
-    size: 256,
+    mimeString: 'From: sender@example.com\nTo: recipient@example.com\nSubject: Test Draft\n\nTest',
+    headers: { 'content-type': 'text/plain' },
+    bodyPreview: 'This is a test draft.',
+    structure: {
+      type: 'text/plain' as const,
+      charset: 'UTF-8',
+      size: 256,
+    },
   },
-  preview: undefined,
+  preview: {
+    id: id,
+    to: ['recipient@example.com'],
+    cc: ['cc@example.com'],
+    bcc: ['bcc@example.com'],
+    subject: 'Test Draft',
+    bodyPreview: 'This is a test draft.',
+    attachments: [],
+    estimatedSize: 256,
+    riskLevel: 'low' as const,
+    warnings: [],
+    safetyChecks: [],
+    recipientValidation: [],
+  },
   riskAssessment: {
     score: 10,
     riskLevel: 'low' as const,
@@ -454,7 +475,7 @@ describe('Draft Preview Reader', () => {
     reader.store(MOCK_DRAFT_PREVIEWS.simple);
     reader.store(MOCK_DRAFT_PREVIEWS.expired);
 
-    const active = reader.getActive();
+    const active = reader.getActive(new Date());
     expect(active.length).toBe(1);
     expect(active[0].status).toBe('active');
   });
@@ -495,7 +516,7 @@ describe('Approval Queue Reader', () => {
   it('should get queue statistics', () => {
     reader.store({
       queued: MOCK_QUEUED_DRAFTS.waiting,
-      draft: MOCK_GMAIL_DRAFTS.simple,
+      draft: createValidDraft(),
       preview: MOCK_DRAFT_PREVIEWS.simple,
       approval: MOCK_APPROVAL_DECISIONS.approved,
     });
@@ -508,14 +529,14 @@ describe('Approval Queue Reader', () => {
   it('should get state distribution', () => {
     reader.store({
       queued: MOCK_QUEUED_DRAFTS.waiting,
-      draft: MOCK_GMAIL_DRAFTS.simple,
+      draft: createValidDraft(),
       preview: MOCK_DRAFT_PREVIEWS.simple,
       approval: MOCK_APPROVAL_DECISIONS.approved,
     });
 
     reader.store({
       queued: MOCK_QUEUED_DRAFTS.completed,
-      draft: MOCK_GMAIL_DRAFTS.simple,
+      draft: createValidDraft(),
       preview: MOCK_DRAFT_PREVIEWS.simple,
       approval: MOCK_APPROVAL_DECISIONS.approved,
     });
@@ -528,7 +549,7 @@ describe('Approval Queue Reader', () => {
   it('should get health score', () => {
     reader.store({
       queued: MOCK_QUEUED_DRAFTS.waiting,
-      draft: MOCK_GMAIL_DRAFTS.simple,
+      draft: createValidDraft(),
       preview: MOCK_DRAFT_PREVIEWS.simple,
       approval: MOCK_APPROVAL_DECISIONS.approved,
     });

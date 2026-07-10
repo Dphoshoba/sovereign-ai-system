@@ -488,7 +488,7 @@ describe('Execution Audit Log', () => {
   it('should get events by type', () => {
     audit.recordEvent('exec_001', 'execution_started', 'executor@example.com', BASE_TIME);
     audit.recordEvent('exec_002', 'execution_started', 'executor@example.com', BASE_TIME);
-    audit.recordEvent('exec_003', 'execution_completed', 'executor@example.com', BASE_TIME);
+    audit.recordEvent('exec_003', 'gmail_send_completed', 'executor@example.com', BASE_TIME);
 
     const started = audit.getEventsByType('execution_started');
     expect(started.length).toBe(2);
@@ -505,7 +505,7 @@ describe('Execution Audit Log', () => {
 
   it('should generate compliance report', () => {
     audit.recordEvent('exec_001', 'execution_started', 'executor@example.com', BASE_TIME);
-    audit.recordEvent('exec_002', 'execution_completed', 'executor@example.com', BASE_TIME);
+    audit.recordEvent('exec_002', 'gmail_send_completed', 'executor@example.com', BASE_TIME);
 
     const report = audit.generateComplianceReport(new Date(BASE_TIME.getTime() - 60000), new Date(BASE_TIME.getTime() + 60000));
     expect(report.totalEvents).toBeGreaterThanOrEqual(2);
