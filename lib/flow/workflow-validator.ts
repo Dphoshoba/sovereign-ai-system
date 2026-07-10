@@ -24,6 +24,23 @@ export function validateWorkflow(definition: WorkflowDefinition): WorkflowValida
   let connectorCoverage = 0;
   let approvalCoverage = 0;
 
+  // Null check
+  if (!definition || !definition.steps || !definition.edges || !definition.trigger) {
+    return {
+      valid: false,
+      errors: [{
+        code: 'INVALID_DEFINITION',
+        message: 'Workflow definition is null, undefined, or missing required fields',
+        severity: 'critical',
+      }],
+      warnings,
+      safetyScore: 0,
+      readinessScore: 0,
+      connectorCoverage: 0,
+      approvalCoverage: 0,
+    };
+  }
+
   // 1. Schema validation
   const schemaErrors = validateWorkflowSchema(definition);
   errors.push(...schemaErrors);

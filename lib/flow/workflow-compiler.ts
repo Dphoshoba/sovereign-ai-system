@@ -29,16 +29,43 @@ export interface CompiledWorkflow {
 }
 
 export function compileWorkflow(definition: WorkflowDefinition): CompiledWorkflow {
+  // Null check
+  if (!definition || !definition.steps || !definition.edges) {
+    return {
+      id: 'empty',
+      steps: [],
+      edges: new Map(),
+      criticalPath: [],
+      executionTimeEstimate: 0,
+      parallelizable: false,
+    };
+  }
+
   // 1. Topological sort to establish execution order
   const sortedSteps = topologicalSort(definition);
 
   // 2. Build execution steps with dependencies
   const executionSteps: ExecutionStep[] = sortedSteps.map((stepId, index) => {
-    const step = definition.steps.find(s => s.id === stepId)!;
+    const step = definition.steps.find(s => s.id === stepId);
+    if (!step) {
+      return {
+        stepId,
+        order: index,
+        stepType: 'unknown',
+        connectorName: undefined,
+        actionId: undefined,
+        dependencies: [],
+        inputs: {},
+        outputKey: `step_${stepId}`,
+        isAsync: false,
+        timeout: 300000,
+      };
+    }
+    
     const dependencies = definition.edges
       .filter(e => e.to === stepId)
       .map(e => e.from)
-      .filter(id => id !== definition.trigger.id);
+      .filter(id => id !== definition.trigger?.id);
 
     return {
       stepId: step.id,

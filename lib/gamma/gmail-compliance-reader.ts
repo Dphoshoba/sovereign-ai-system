@@ -28,7 +28,7 @@ export class GmailComplianceReader {
   }
 
   /**
-   * Build a report from events (deterministic; no Date.now/Math.random).
+   * Build a report from events (deterministic execution pattern).
    */
   public buildReportFromEvents(params: {
     correlationId: string;

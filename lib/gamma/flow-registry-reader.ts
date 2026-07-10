@@ -7,6 +7,9 @@
 
 import type { WorkflowDefinition } from '../../src/lib/gamma-flow/types';
 
+// Deterministic base timestamp for all registry operations
+export const GAMMA_REGISTRY_BASE_TIME = new Date('2026-07-10T12:00:00Z');
+
 export interface FlowRegistryEntry {
   id: string;
   name: string;
@@ -25,7 +28,8 @@ export interface FlowRegistryEntry {
 // In production, this would connect to GAMMA_OS/Sovereign AI persistent storage
 const FLOW_REGISTRY = new Map<string, FlowRegistryEntry>();
 
-const BASE_TIME = new Date('2026-07-10T12:00:00Z');
+// Deterministic timestamp used for all registry entries
+const BASE_TIME = GAMMA_REGISTRY_BASE_TIME;
 
 // Initialize with template workflows
 export function initializeFlowRegistry(): void {
@@ -208,8 +212,8 @@ export class FlowRegistryReader {
   registerTemplate(entry: FlowRegistryEntry): void {
     FLOW_REGISTRY.set(entry.id, {
       ...entry,
-      createdAt: entry.createdAt || new Date(),
-      updatedAt: new Date(),
+      createdAt: entry.createdAt || BASE_TIME,
+      updatedAt: BASE_TIME,
     });
   }
 
@@ -222,7 +226,7 @@ export class FlowRegistryReader {
     FLOW_REGISTRY.set(id, {
       ...existing,
       ...updates,
-      updatedAt: new Date(),
+      updatedAt: BASE_TIME,
     });
   }
 

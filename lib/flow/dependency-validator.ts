@@ -9,6 +9,16 @@ import type { WorkflowDefinition, ValidationError } from '../../src/lib/gamma-fl
 export function validateWorkflowSchema(definition: WorkflowDefinition): ValidationError[] {
   const errors: ValidationError[] = [];
 
+  // Null/undefined check
+  if (!definition || !definition.steps || !definition.edges || !definition.trigger) {
+    errors.push({
+      code: 'INVALID_DEFINITION',
+      message: 'Workflow definition is missing required fields',
+      severity: 'critical',
+    });
+    return errors;
+  }
+
   // Check unique node IDs
   const stepIds = definition.steps.map((s: any) => s.id);
   const uniqueIds = new Set(stepIds);
