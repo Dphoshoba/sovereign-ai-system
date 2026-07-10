@@ -60,7 +60,7 @@ describe('Flow Registry Reader', () => {
         expect(template.id).toBeDefined();
         expect(template.name).toBeDefined();
         expect(template.description).toBeDefined();
-        expect(template.baseWorkflow).toBeDefined();
+        expect(template.definition).toBeDefined();
       }
     });
 
@@ -71,9 +71,9 @@ describe('Flow Registry Reader', () => {
       const templates = registry.getTemplates();
       if (templates.length > 0) {
         const template = templates[0];
-        expect(template.baseWorkflow.steps).toBeDefined();
-        expect(template.baseWorkflow.edges).toBeDefined();
-        expect(template.baseWorkflow.trigger).toBeDefined();
+        expect(template.definition.steps).toBeDefined();
+        expect(template.definition.edges).toBeDefined();
+        expect(template.definition.trigger).toBeDefined();
       }
     });
   });
@@ -120,7 +120,7 @@ describe('Flow Registry Reader', () => {
       if (templates.length > 0) {
         const template = templates[0];
         expect(template.createdAt).toBeInstanceOf(Date);
-        expect(template.baseWorkflow.createdAt.getTime()).toBeGreaterThan(0);
+        expect(template.definition.createdAt.getTime()).toBeGreaterThan(0);
       }
     });
   });

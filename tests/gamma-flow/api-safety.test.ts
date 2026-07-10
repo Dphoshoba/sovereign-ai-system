@@ -92,11 +92,11 @@ describe('API Safety & Validation', () => {
       expect(result.metrics?.approvalPointCount).toBeGreaterThanOrEqual(0);
     });
 
-    it('should enforce approval gates in preview', () => {
+    it('should track approvals in validation', () => {
       const def = MOCK_WORKFLOW_DEFINITIONS.gmail_triage_preview;
-      const result = previewWorkflow(def, 'exec_approval_001');
+      const result = validateWorkflow(def);
 
-      expect(result.approvalCheckpoints).toBeDefined();
+      expect(result.approvalCoverage).toBeDefined();
     });
   });
 

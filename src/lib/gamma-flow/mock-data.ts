@@ -13,7 +13,7 @@ import type {
   WorkflowAuditEvent,
 } from './types';
 
-const BASE_TIME = new Date('2026-07-10T12:00:00Z');
+export const BASE_TIME = new Date('2026-07-10T12:00:00Z');
 
 export const MOCK_WORKFLOW_DEFINITIONS: Record<string, WorkflowDefinition> = {
   gmail_triage_preview: {
