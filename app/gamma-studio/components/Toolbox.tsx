@@ -1,38 +1,24 @@
 "use client";
 
+import { ConnectorIcon } from "./ConnectorIcon";
+
 export type ConnectorDefinition = {
   id: string;
   name: string;
   category: string;
+  nodeType?: string;
+  actions?: string[];
 };
 
 type ToolboxProps = {
   connectors: ConnectorDefinition[];
 };
 
-const CONNECTOR_ICONS: Record<string, string> = {
-  gmail: "📧",
-  calendar: "📅",
-  slack: "💬",
-  github: "🐙",
-  drive: "🗂️",
-  office365: "🧩",
-  notion: "📝",
-  discord: "🎮",
-  approval: "✅",
-  trigger: "⚡",
-  queue: "📬",
-};
-
-export function getConnectorIcon(connectorId: string): string {
-  return CONNECTOR_ICONS[connectorId] ?? "🔌";
-}
-
 export default function Toolbox({ connectors }: ToolboxProps) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-      <h2 className="text-lg font-medium mb-3">Connector Palette</h2>
-      <div className="space-y-2">
+    <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4">
+      <h2 className="mb-3 text-lg font-medium">Connector Palette</h2>
+      <div className="grid max-h-[360px] grid-cols-1 gap-2 overflow-y-auto pr-1">
         {connectors.map((connector) => (
           <div
             key={connector.id}
@@ -40,15 +26,20 @@ export default function Toolbox({ connectors }: ToolboxProps) {
             onDragStart={(event) => {
               event.dataTransfer.setData(
                 "application/gamma-connector",
-                JSON.stringify(connector)
+                JSON.stringify({
+                  id: connector.id,
+                  name: connector.name,
+                  type: connector.nodeType ?? "connector",
+                  actionId: connector.actions?.[0],
+                })
               );
             }}
-            className="rounded-md border border-slate-700 bg-slate-800 px-3 py-2 cursor-grab active:cursor-grabbing flex items-center gap-2"
+            className="flex cursor-grab items-center gap-2 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 active:cursor-grabbing"
           >
-            <span aria-hidden>{getConnectorIcon(connector.id)}</span>
+            <ConnectorIcon id={connector.id} />
             <div>
               <div className="font-medium">{connector.name}</div>
-              <div className="text-xs text-slate-400">{connector.category}</div>
+              <div className="text-xs text-zinc-400">{connector.category}</div>
             </div>
           </div>
         ))}

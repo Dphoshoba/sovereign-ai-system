@@ -36,6 +36,7 @@ export interface StudioConnector {
   id: string;
   name: string;
   category: string;
+  nodeType?: StudioNodeKind;
   actions: string[];
   supportsPreview: boolean;
   mutatingActions: string[];

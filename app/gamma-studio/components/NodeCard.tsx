@@ -1,7 +1,7 @@
 "use client";
 
 import type { StudioNode } from "../../../src/lib/gamma-studio/types";
-import { getConnectorIcon } from "./Toolbox";
+import { ConnectorIcon } from "./ConnectorIcon";
 
 type NodeCardProps = {
   node: StudioNode;
@@ -28,8 +28,8 @@ export default function NodeCard({
         active
           ? "border-emerald-400 bg-emerald-950/50 shadow-[0_0_20px_rgba(16,185,129,0.45)]"
           : selected
-          ? "border-cyan-400 bg-cyan-950/40"
-          : "border-slate-700 bg-slate-800 hover:border-slate-500"
+            ? "border-cyan-400 bg-cyan-950/40"
+            : "border-zinc-700 bg-zinc-900 hover:border-zinc-500"
       }`}
       style={{
         left: node.position.x,
@@ -38,10 +38,10 @@ export default function NodeCard({
       }}
     >
       <div className="flex items-center gap-2 text-sm font-semibold">
-        <span aria-hidden>{getConnectorIcon(iconKey)}</span>
+        <ConnectorIcon id={iconKey} />
         <span>{node.name}</span>
       </div>
-      <div className="text-xs text-slate-400">{node.connectorName ?? node.type}</div>
+      <div className="text-xs text-zinc-400">{node.connectorName ?? node.type}</div>
     </button>
   );
 }

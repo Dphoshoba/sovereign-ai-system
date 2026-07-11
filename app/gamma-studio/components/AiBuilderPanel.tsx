@@ -1,5 +1,7 @@
 "use client";
 
+import { WandSparkles } from "lucide-react";
+
 type AiBuilderPanelProps = {
   prompt: string;
   onChangePrompt: (value: string) => void;
@@ -16,33 +18,26 @@ export default function AiBuilderPanel({
   const failure = generatedLabel.toLowerCase().includes("no deterministic intent match");
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-      <h3 className="text-base font-semibold mb-1">AI Builder</h3>
-      <p className="text-xs text-amber-300 mb-3">
-        Prototype only — deterministic local intent matching. No external AI calls.
-      </p>
+    <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4">
+      <h3 className="mb-3 text-base font-semibold">AI Builder</h3>
       <textarea
         value={prompt}
-        onChange={(e) => onChangePrompt(e.target.value)}
+        onChange={(event) => onChangePrompt(event.target.value)}
         rows={4}
-        className="w-full rounded bg-slate-800 p-2 text-xs border border-slate-700"
+        className="w-full rounded-md border border-zinc-700 bg-zinc-900 p-2 text-xs"
         placeholder="Describe workflow..."
       />
       <button
         type="button"
         onClick={onGenerate}
-        className="mt-2 rounded bg-cyan-600 px-3 py-1 text-xs font-medium"
+        className="mt-2 inline-flex items-center gap-2 rounded-md bg-cyan-600 px-3 py-1 text-xs font-medium text-white hover:bg-cyan-500"
       >
-        Generate (Deterministic)
+        <WandSparkles className="h-3.5 w-3.5" aria-hidden="true" />
+        Generate
       </button>
-      <div className={`mt-2 text-xs ${failure ? "text-rose-300" : "text-slate-300"}`}>
+      <div className={`mt-2 text-xs ${failure ? "text-rose-300" : "text-zinc-300"}`}>
         Generated: {generatedLabel || "None"}
       </div>
-      {failure ? (
-        <div className="mt-1 text-[11px] text-rose-300">
-          Unsupported intent handled safely. No workflow mutation was applied.
-        </div>
-      ) : null}
     </div>
   );
 }

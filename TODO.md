@@ -53,25 +53,25 @@
   - [x] `docs/phase-xv/CONNECTOR_REFERENCE_ARCHITECTURE.md`
 
 ## Phase XVIII - Gamma Studio
-- [ ] Milestone 1 - Visual Workflow Canvas
-  - [ ] Create `app/gamma-studio/page.tsx`
-  - [ ] Create components:
-    - [ ] `app/gamma-studio/components/Canvas.tsx`
-    - [ ] `app/gamma-studio/components/Toolbox.tsx`
-    - [ ] `app/gamma-studio/components/Inspector.tsx`
-    - [ ] `app/gamma-studio/components/NodeCard.tsx`
-    - [ ] `app/gamma-studio/components/EdgeRenderer.tsx`
-  - [ ] Support drag/drop node placement (Gmail, Slack, Calendar, Approval)
-  - [ ] Support node connections and save action
-- [ ] Milestone 2 - Connector Palette (dynamic registration)
-- [ ] Milestone 3 - Workflow Inspector details
-- [ ] Milestone 4 - Live Validation rules and save-blocking
-- [ ] Milestone 5 - Visual Simulator (preview-only run)
-- [ ] Milestone 6 - Execution Timeline visualization
-- [ ] Milestone 7 - Marketplace templates install UI
-- [ ] Milestone 8 - AI Builder prompt-to-workflow generation (mock)
-- [ ] Milestone 9 - Multi-user collaboration UI (placeholder)
-- [ ] Milestone 10 - Gamma Studio v1.0 shell navigation sections
+- [x] Milestone 1 - Visual Workflow Canvas
+  - [x] Create `app/gamma-studio/page.tsx`
+  - [x] Create components:
+    - [x] `app/gamma-studio/components/Canvas.tsx`
+    - [x] `app/gamma-studio/components/Toolbox.tsx`
+    - [x] `app/gamma-studio/components/Inspector.tsx`
+    - [x] `app/gamma-studio/components/NodeCard.tsx`
+    - [x] `app/gamma-studio/components/EdgeRenderer.tsx`
+  - [x] Support drag/drop node placement (Gmail, Slack, Calendar, Approval)
+  - [x] Support node connections and save action
+- [x] Milestone 2 - Connector Palette (dynamic registration)
+- [x] Milestone 3 - Workflow Inspector details
+- [x] Milestone 4 - Live Validation rules and save-blocking
+- [x] Milestone 5 - Visual Simulator (preview-only run)
+- [x] Milestone 6 - Execution Timeline visualization
+- [x] Milestone 7 - Marketplace templates install UI
+- [x] Milestone 8 - AI Builder prompt-to-workflow generation (mock)
+- [x] Milestone 9 - Multi-user collaboration UI (placeholder)
+- [x] Milestone 10 - Gamma Studio v1.0 shell navigation sections
 
 ## Final Verification
 - [x] Run: `npm run build`

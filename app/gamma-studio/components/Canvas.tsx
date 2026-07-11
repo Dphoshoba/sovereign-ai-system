@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { GitBranch, Save, Trash2, Undo2 } from "lucide-react";
 import EdgeRenderer from "./EdgeRenderer";
 import NodeCard from "./NodeCard";
 import type { StudioEdge, StudioNode } from "../../../src/lib/gamma-studio/types";
@@ -26,6 +27,9 @@ type CanvasProps = {
   onCreateEdge: (from: string, to: string) => void;
   onDeleteNode: (nodeId: string) => void;
   onDeleteEdge: (edgeId: string) => void;
+  onSaveWorkflow: () => void;
+  saveDisabled?: boolean;
+  saveReceipt?: string;
 };
 
 export default function Canvas({
@@ -41,6 +45,9 @@ export default function Canvas({
   onCreateEdge,
   onDeleteNode,
   onDeleteEdge,
+  onSaveWorkflow,
+  saveDisabled = false,
+  saveReceipt,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const [zoom, setZoom] = useState(1);
@@ -57,7 +64,7 @@ export default function Canvas({
   return (
     <div
       ref={canvasRef}
-      className="relative h-[600px] rounded-xl border border-slate-800 bg-slate-900 overflow-hidden"
+      className="relative h-[600px] overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950"
       onWheel={(event) => {
         event.preventDefault();
         setZoom((z) => Math.max(0.5, Math.min(1.8, z + (event.deltaY > 0 ? -0.08 : 0.08))));
@@ -121,7 +128,7 @@ export default function Canvas({
         className="absolute inset-0 opacity-20"
         style={{
           backgroundImage:
-            "linear-gradient(to right, #334155 1px, transparent 1px), linear-gradient(to bottom, #334155 1px, transparent 1px)",
+            "linear-gradient(to right, #3f3f46 1px, transparent 1px), linear-gradient(to bottom, #3f3f46 1px, transparent 1px)",
           backgroundSize: `${24 * zoom}px ${24 * zoom}px`,
           backgroundPosition: `${offset.x}px ${offset.y}px`,
         }}
@@ -163,10 +170,12 @@ export default function Canvas({
         />
       ))}
 
-      <div className="absolute bottom-3 right-3 flex gap-2">
+      <div className="absolute bottom-3 right-3 flex flex-wrap justify-end gap-2">
         <button
           type="button"
-          className="rounded-md bg-slate-700 px-3 py-2 text-sm"
+          title="Connect last two nodes"
+          aria-label="Connect last two nodes"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-zinc-800 text-zinc-100 hover:bg-zinc-700"
           onClick={() => {
             if (nodes.length >= 2) {
               const from = nodes[nodes.length - 2].id;
@@ -175,57 +184,57 @@ export default function Canvas({
             }
           }}
         >
-          Connect Last Two
+          <GitBranch className="h-4 w-4" aria-hidden="true" />
         </button>
         <button
           type="button"
-          className="rounded-md bg-rose-700 px-3 py-2 text-sm"
+          title="Delete selected node"
+          aria-label="Delete selected node"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-rose-700 text-white hover:bg-rose-600"
           onClick={() => {
             if (!selectedNodeId) return;
             onDeleteNode(selectedNodeId);
           }}
         >
-          Delete Selected
+          <Trash2 className="h-4 w-4" aria-hidden="true" />
         </button>
         <button
           type="button"
-          className="rounded-md bg-slate-700 px-3 py-2 text-sm"
+          title="Reset view"
+          aria-label="Reset view"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-zinc-800 text-zinc-100 hover:bg-zinc-700"
           onClick={() => {
             setZoom(1);
             setOffset({ x: 0, y: 0 });
           }}
         >
-          Reset View
+          <Undo2 className="h-4 w-4" aria-hidden="true" />
         </button>
         <button
           type="button"
-          className="rounded-md bg-cyan-600 px-3 py-2 text-sm font-medium"
-          onClick={() => {
-            const payload = { nodes, edges, savedAt: "2026-07-10T12:00:00.000Z", previewOnly: true };
-            localStorage.setItem("gamma-studio-workflow", JSON.stringify(payload));
-          }}
+          title="Save workflow"
+          aria-label="Save workflow"
+          disabled={saveDisabled}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-cyan-600 text-white hover:bg-cyan-500 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
+          onClick={onSaveWorkflow}
         >
-          Save Workflow
-        </button>
-        <button
-          type="button"
-          className="hidden"
-          onClick={() => {
-            onChangeNodes(nodes);
-            onChangeEdges(edges);
-          }}
-        >
-          sync
+          <Save className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
 
-      <div className="absolute right-3 top-3 w-40 rounded border border-slate-700 bg-slate-950/90 p-2">
-        <div className="mb-1 text-[10px] text-slate-400">Minimap</div>
-        <div className="relative h-24 w-full rounded bg-slate-900">
+      {saveReceipt ? (
+        <div className="absolute bottom-14 right-3 rounded-md border border-emerald-700 bg-emerald-950/90 px-3 py-2 text-xs text-emerald-200">
+          {saveReceipt}
+        </div>
+      ) : null}
+
+      <div className="absolute right-3 top-3 w-40 rounded-md border border-zinc-700 bg-zinc-950/90 p-2">
+        <div className="mb-1 text-[10px] text-zinc-400">Minimap</div>
+        <div className="relative h-24 w-full rounded-md bg-zinc-900">
           {nodes.map((n) => (
             <div
               key={`${n.id}_mini`}
-              className={`absolute h-2 w-3 rounded ${selectedNodeId === n.id ? "bg-cyan-400" : "bg-slate-400"}`}
+              className={`absolute h-2 w-3 rounded-sm ${selectedNodeId === n.id ? "bg-cyan-400" : "bg-zinc-400"}`}
               style={{ left: `${Math.min(95, (n.position.x / 900) * 100)}%`, top: `${Math.min(85, (n.position.y / 600) * 100)}%` }}
             />
           ))}

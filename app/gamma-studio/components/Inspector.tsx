@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import type { StudioNode } from "../../../src/lib/gamma-studio/types";
-import { getConnectorIcon } from "./Toolbox";
+import { ConnectorIcon } from "./ConnectorIcon";
 
 type InspectorProps = {
   node: StudioNode | null;
@@ -20,16 +20,16 @@ function Section({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="rounded border border-slate-700">
+    <div className="rounded-md border border-zinc-700">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-3 py-2 text-xs bg-slate-800"
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full items-center justify-between bg-zinc-900 px-3 py-2 text-xs"
       >
         <span>{title}</span>
-        <span>{open ? "−" : "+"}</span>
+        <span>{open ? "-" : "+"}</span>
       </button>
-      {open ? <div className="px-3 py-2 text-xs text-slate-300">{children}</div> : null}
+      {open ? <div className="px-3 py-2 text-xs text-zinc-300">{children}</div> : null}
     </div>
   );
 }
@@ -37,8 +37,8 @@ function Section({
 export default function Inspector({ node }: InspectorProps) {
   if (!node) {
     return (
-      <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 text-sm text-slate-400">
-        Select a node to inspect connector details.
+      <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 text-sm text-zinc-400">
+        No node selected.
       </div>
     );
   }
@@ -46,10 +46,10 @@ export default function Inspector({ node }: InspectorProps) {
   const iconKey = (node.connectorName ?? node.type ?? "").toLowerCase();
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 space-y-3">
+    <div className="space-y-3 rounded-lg border border-zinc-800 bg-zinc-950 p-4">
       <h2 className="text-lg font-medium">Workflow Inspector</h2>
-      <div className="text-sm flex items-center gap-2">
-        <span aria-hidden>{getConnectorIcon(iconKey)}</span>
+      <div className="flex items-center gap-2 text-sm">
+        <ConnectorIcon id={iconKey} />
         <span>
           <strong>Connector:</strong> {node.connectorName ?? node.type}
         </span>
@@ -67,7 +67,9 @@ export default function Inspector({ node }: InspectorProps) {
         {node.health ?? "healthy"}
       </Section>
       <Section title="Configuration" defaultOpen>
-        {Object.keys(node.config ?? {}).length === 0 ? "Default configuration" : JSON.stringify(node.config)}
+        {Object.keys(node.config ?? {}).length === 0
+          ? "Default configuration"
+          : JSON.stringify(node.config)}
       </Section>
       <Section title="Output Preview" defaultOpen>
         {node.outputPreview ?? "Preview available"}
