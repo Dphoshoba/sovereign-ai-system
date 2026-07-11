@@ -10,7 +10,7 @@ describe("Gamma 2 Stage 5 OpenAPI document", () => {
     expect(openapi.openapi).toBe("3.1.0");
     expect(openapi.info.title).toBe("Gamma 2 Stage 5 API");
     expect(openapi.servers).toEqual([{ url: PRODUCTION_APP_URL }]);
-    expect(Object.keys(openapi.paths)).toHaveLength(25);
+    expect(Object.keys(openapi.paths)).toHaveLength(26);
     expect(openapi.paths["/api/gamma/stage-5/openapi"].get.operationId).toBe(
       "getStage5Openapi"
     );
@@ -56,6 +56,9 @@ describe("Gamma 2 Stage 5 OpenAPI document", () => {
     );
     expect(openapi.paths["/api/gamma/stage-5/release-exception-register"].get.operationId).toBe(
       "getStage5ReleaseExceptionRegister"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/release-governance-map"].get.operationId).toBe(
+      "getStage5ReleaseGovernanceMap"
     );
   });
 

@@ -141,6 +141,9 @@
 - [x] Add Stage 5 release exception register: `/api/gamma/stage-5/release-exception-register`
 - [x] Add Stage 5 release exception register tests
 - [x] Wire Stage 5 release exception register into manifest, smoke, dashboard, and release evidence
+- [x] Add Stage 5 release governance map: `/api/gamma/stage-5/release-governance-map`
+- [x] Add Stage 5 release governance map tests
+- [x] Wire Stage 5 release governance map into manifest, smoke, dashboard, and release evidence
 
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`

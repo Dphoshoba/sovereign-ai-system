@@ -120,6 +120,10 @@ const API_ENDPOINT_METADATA: Record<
     audience: "release-client",
     sourceContract: "src/lib/gamma-2/stage-5-release-exception-register.ts",
   },
+  "/api/gamma/stage-5/release-governance-map": {
+    audience: "operator",
+    sourceContract: "src/lib/gamma-2/stage-5-release-governance-map.ts",
+  },
 };
 
 export function buildGammaStage5ApiManifest(): GammaStage5ApiManifest {
