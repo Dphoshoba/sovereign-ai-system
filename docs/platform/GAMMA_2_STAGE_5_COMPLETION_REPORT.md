@@ -49,7 +49,7 @@ Verified at completion:
 - `npm test` - 56 files passed, 880 tests passed, 3 skipped
 - `npm run test:determinism` - passed with non-critical legacy warnings
 - `npm run build` - passed
-- `npm run smoke:v1` - 22 routes passed, 0 failed
+- `npm run smoke:v1` - 24 routes passed, 0 failed
 
 ## Completion Commits
 
