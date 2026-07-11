@@ -11,7 +11,7 @@ describe("Gamma 2 Stage 5 release governance map", () => {
     expect(map.status).toBe("ready-for-governance-review");
     expect(map.branch).toBe("gamma");
     expect(map.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(map.apiSurfaceCount).toBe(31);
+    expect(map.apiSurfaceCount).toBe(32);
     expect(map.governanceLaneCount).toBe(5);
     expect(map.openExceptionCount).toBe(0);
     expect(map.operatorRequiredCount).toBe(4);
@@ -74,7 +74,7 @@ describe("Gamma 2 Stage 5 release governance map", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_governance_map");
-    expect(body.apiSurfaceCount).toBe(31);
+    expect(body.apiSurfaceCount).toBe(32);
     expect(body.governanceLaneCount).toBe(5);
     expect(body.openExceptionCount).toBe(0);
   });
