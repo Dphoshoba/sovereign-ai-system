@@ -9,8 +9,8 @@ describe("Gamma 2 Stage 5 health", () => {
     expect(health.id).toBe("gamma_2_stage_5_health");
     expect(health.status).toBe("healthy");
     expect(health.phaseCount).toBe(11);
-    expect(health.apiSurfaceCount).toBe(17);
-    expect(health.smoke).toBe("40 routes passed, 0 failed");
+    expect(health.apiSurfaceCount).toBe(18);
+    expect(health.smoke).toBe("41 routes passed, 0 failed");
     expect(health.operatorActionsRemaining).toBe(2);
   });
 

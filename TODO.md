@@ -124,6 +124,8 @@
 - [x] Add Stage 5 audit ledger tests
 - [x] Add Stage 5 deployment receipt: `/api/gamma/stage-5/deployment-receipt`
 - [x] Add Stage 5 deployment receipt tests
+- [x] Add Stage 5 promotion journal: `/api/gamma/stage-5/promotion-journal`
+- [x] Add Stage 5 promotion journal tests
 
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`

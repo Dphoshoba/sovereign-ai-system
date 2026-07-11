@@ -49,7 +49,7 @@ Verified at completion:
 - `npm test` - 56 files passed, 880 tests passed, 3 skipped
 - `npm run test:determinism` - passed with non-critical legacy warnings
 - `npm run build` - passed
-- `npm run smoke:v1` - 40 routes passed, 0 failed
+- `npm run smoke:v1` - 41 routes passed, 0 failed
 
 ## Completion Commits
 
@@ -88,6 +88,7 @@ Verified at completion:
 - Stage 5 operator handoff is exposed at `/api/gamma/stage-5/operator-handoff`.
 - Stage 5 audit ledger is exposed at `/api/gamma/stage-5/audit-ledger`.
 - Stage 5 deployment receipt is exposed at `/api/gamma/stage-5/deployment-receipt`.
+- Stage 5 promotion journal is exposed at `/api/gamma/stage-5/promotion-journal`.
 - Stage 5 readiness is visible at `/gamma-stage-5`.
 - Determinism warnings are legacy, non-critical findings outside the new Gamma 2 Stage 5 contracts.
 - The next useful workstream is productizing these contracts into visible operator surfaces, API adapters, and release dashboards.
