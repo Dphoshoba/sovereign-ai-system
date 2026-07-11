@@ -130,6 +130,8 @@
 - [x] Add Stage 5 operator signoff tests
 - [x] Add Stage 5 evidence index: `/api/gamma/stage-5/evidence-index`
 - [x] Add Stage 5 evidence index tests
+- [x] Add Stage 5 release bundle: `/api/gamma/stage-5/release-bundle`
+- [x] Add Stage 5 release bundle tests
 
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`

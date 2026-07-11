@@ -58,6 +58,7 @@ export function buildGammaStage5DeploymentSummary(): GammaStage5DeploymentSummar
       "/api/gamma/stage-5/promotion-journal",
       "/api/gamma/stage-5/operator-signoff",
       "/api/gamma/stage-5/evidence-index",
+      "/api/gamma/stage-5/release-bundle",
     ],
     operatorRequiredCount,
     tags: [...evidence.tags, "gamma-2-stage-5-promotion-checklist"],
