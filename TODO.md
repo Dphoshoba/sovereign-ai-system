@@ -11,7 +11,7 @@
 - [x] Harden Slack against the Phase XV production connector contract
 - [x] Harden Notion against the Phase XV production connector contract
 - [x] Harden Microsoft 365 against the Phase XV production connector contract
-- [ ] Harden Discord against the Phase XV production connector contract
+- [x] Harden Discord against the Phase XV production connector contract
 - [ ] Harden Stripe against the Phase XV production connector contract
 - [ ] Harden Salesforce against the Phase XV production connector contract
 - [ ] Harden HubSpot against the Phase XV production connector contract
