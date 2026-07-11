@@ -69,8 +69,9 @@ Batch 1 production readiness coverage is complete for:
 - Stripe
 - Salesforce
 - HubSpot
+- Dropbox
 
-Dropbox is the next connector in the Phase XV priority queue.
+OneDrive is the next connector in the Phase XV priority queue.
 
 ## Gamma Factory Rule
 Every connector after Gmail should be generated through Gamma Factory by default.
