@@ -106,6 +106,8 @@
 - [x] Add Stage 5 health tests
 - [x] Add Stage 5 release dashboard API: `/api/gamma/stage-5/release-dashboard`
 - [x] Add Stage 5 release dashboard tests
+- [x] Add Stage 5 API manifest: `/api/gamma/stage-5/api-manifest`
+- [x] Add Stage 5 API manifest tests
 
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`

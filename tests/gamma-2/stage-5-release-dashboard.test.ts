@@ -11,7 +11,7 @@ describe("Gamma 2 Stage 5 release dashboard", () => {
     expect(dashboard.status).toBe("ready-for-dashboard-review");
     expect(dashboard.productionUrl).toBe(PRODUCTION_APP_URL);
     expect(dashboard.health.phaseCount).toBe(11);
-    expect(dashboard.health.apiSurfaceCount).toBe(8);
+    expect(dashboard.health.apiSurfaceCount).toBe(9);
     expect(dashboard.releaseChecks).toEqual({ passed: 3, operatorRequired: 2, total: 5 });
     expect(dashboard.promotionSteps).toEqual({ complete: 3, operatorRequired: 2, total: 5 });
     expect(dashboard.operatorActions).toHaveLength(2);
@@ -21,7 +21,7 @@ describe("Gamma 2 Stage 5 release dashboard", () => {
     const dashboard = buildGammaStage5ReleaseDashboard();
 
     expect(dashboard.apiSurface).toContain("/api/gamma/stage-5/release-dashboard");
-    expect(dashboard.apiSurface).toHaveLength(8);
+    expect(dashboard.apiSurface).toHaveLength(9);
     expect(dashboard.dashboardRule).toBe(
       "single-dashboard-contract-for-stage-5-release-operations"
     );
