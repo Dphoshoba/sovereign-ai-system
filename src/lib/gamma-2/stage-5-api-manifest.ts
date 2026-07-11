@@ -60,6 +60,10 @@ const API_ENDPOINT_METADATA: Record<
     audience: "release-client",
     sourceContract: "src/lib/gamma-2/stage-5-openapi.ts",
   },
+  "/api/gamma/stage-5/sdk": {
+    audience: "release-client",
+    sourceContract: "src/lib/gamma-2/stage-5-sdk.ts",
+  },
 };
 
 export function buildGammaStage5ApiManifest(): GammaStage5ApiManifest {

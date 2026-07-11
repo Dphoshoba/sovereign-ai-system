@@ -110,6 +110,8 @@
 - [x] Add Stage 5 API manifest tests
 - [x] Add Stage 5 OpenAPI document: `/api/gamma/stage-5/openapi`
 - [x] Add Stage 5 OpenAPI tests
+- [x] Add Stage 5 SDK descriptor: `/api/gamma/stage-5/sdk`
+- [x] Add Stage 5 SDK descriptor tests
 
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`

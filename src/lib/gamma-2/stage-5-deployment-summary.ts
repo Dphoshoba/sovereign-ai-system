@@ -48,6 +48,7 @@ export function buildGammaStage5DeploymentSummary(): GammaStage5DeploymentSummar
       "/api/gamma/stage-5/release-dashboard",
       "/api/gamma/stage-5/api-manifest",
       "/api/gamma/stage-5/openapi",
+      "/api/gamma/stage-5/sdk",
     ],
     operatorRequiredCount,
     tags: [...evidence.tags, "gamma-2-stage-5-promotion-checklist"],
