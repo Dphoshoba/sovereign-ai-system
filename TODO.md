@@ -150,6 +150,9 @@
 - [x] Add Stage 5 release approval packet: `/api/gamma/stage-5/release-approval-packet`
 - [x] Add Stage 5 release approval packet tests
 - [x] Wire Stage 5 release approval packet into manifest, smoke, dashboard, and release evidence
+- [x] Add Stage 5 release promotion plan: `/api/gamma/stage-5/release-promotion-plan`
+- [x] Add Stage 5 release promotion plan tests
+- [x] Wire Stage 5 release promotion plan into manifest, smoke, dashboard, and release evidence
 
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`
