@@ -16,6 +16,14 @@
 - [x] Add Mission Automation tests
 - [x] Write docs: `docs/platform/GAMMA_2_PHASE_XVII_MISSION_AUTOMATION.md`
 
+## Phase XVIII - Marketplace
+- [x] Add governed marketplace install contract
+- [x] Add install preview and approval boundary
+- [x] Block unversioned or non-previewable artifacts
+- [x] Add Phase XVIII readiness projection
+- [x] Add Marketplace tests
+- [x] Write docs: `docs/platform/GAMMA_2_PHASE_XVIII_MARKETPLACE.md`
+
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`
 - [x] Add Stage 5 Runtime State Machine
