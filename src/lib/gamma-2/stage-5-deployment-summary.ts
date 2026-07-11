@@ -60,6 +60,7 @@ export function buildGammaStage5DeploymentSummary(): GammaStage5DeploymentSummar
       "/api/gamma/stage-5/evidence-index",
       "/api/gamma/stage-5/release-bundle",
       "/api/gamma/stage-5/release-archive-manifest",
+      "/api/gamma/stage-5/release-retention-policy",
     ],
     operatorRequiredCount,
     tags: [...evidence.tags, "gamma-2-stage-5-promotion-checklist"],

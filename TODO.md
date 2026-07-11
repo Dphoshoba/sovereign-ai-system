@@ -134,6 +134,8 @@
 - [x] Add Stage 5 release bundle tests
 - [x] Add Stage 5 release archive manifest: `/api/gamma/stage-5/release-archive-manifest`
 - [x] Add Stage 5 release archive manifest tests
+- [x] Add Stage 5 release retention policy: `/api/gamma/stage-5/release-retention-policy`
+- [x] Add Stage 5 release retention policy tests
 
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`

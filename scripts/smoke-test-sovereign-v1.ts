@@ -28,6 +28,7 @@ const ROUTES: { group: string; path: string }[] = [
   { group: "gamma", path: "/api/gamma/stage-5/evidence-index" },
   { group: "gamma", path: "/api/gamma/stage-5/release-bundle" },
   { group: "gamma", path: "/api/gamma/stage-5/release-archive-manifest" },
+  { group: "gamma", path: "/api/gamma/stage-5/release-retention-policy" },
   { group: "executive", path: "/api/executive/health" },
   { group: "executive", path: "/api/executive/runtime" },
   { group: "executive", path: "/api/executive/command-center" },
