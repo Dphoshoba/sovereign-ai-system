@@ -67,8 +67,9 @@ Batch 1 production readiness coverage is complete for:
 - Microsoft 365
 - Discord
 - Stripe
+- Salesforce
 
-Salesforce is the next connector in the Phase XV priority queue.
+HubSpot is the next connector in the Phase XV priority queue.
 
 ## Gamma Factory Rule
 Every connector after Gmail should be generated through Gamma Factory by default.
