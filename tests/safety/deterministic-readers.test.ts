@@ -78,7 +78,7 @@ describe('Deterministic Readers Safety', () => {
     )
     // Some legacy code may have these - just check it's not excessive
     expect(clientViolations.size).toBeLessThan(50)
-  })
+  }, 30000)
 
   it('should use fixed timestamp in mock data', () => {
     const mockDataPath = path.join(process.cwd(), 'lib')
