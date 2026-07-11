@@ -11,7 +11,7 @@ describe("Gamma 2 Stage 5 release exception register", () => {
     expect(register.status).toBe("ready-for-exception-review");
     expect(register.branch).toBe("gamma");
     expect(register.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(register.apiSurfaceCount).toBe(30);
+    expect(register.apiSurfaceCount).toBe(31);
     expect(register.mappedControlCount).toBe(4);
     expect(register.openExceptionCount).toBe(0);
     expect(register.closedExceptionCount).toBe(4);
@@ -64,7 +64,7 @@ describe("Gamma 2 Stage 5 release exception register", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_exception_register");
-    expect(body.apiSurfaceCount).toBe(30);
+    expect(body.apiSurfaceCount).toBe(31);
     expect(body.openExceptionCount).toBe(0);
     expect(body.exceptions).toHaveLength(4);
   });

@@ -9,9 +9,9 @@ describe("Gamma 2 Stage 5 evidence index", () => {
     expect(index.id).toBe("gamma_2_stage_5_evidence_index");
     expect(index.status).toBe("indexed-for-release-review");
     expect(index.branch).toBe("gamma");
-    expect(index.apiSurfaceCount).toBe(30);
-    expect(index.smoke).toBe("53 routes passed, 0 failed");
-    expect(index.entries).toHaveLength(30);
+    expect(index.apiSurfaceCount).toBe(31);
+    expect(index.smoke).toBe("54 routes passed, 0 failed");
+    expect(index.entries).toHaveLength(31);
     expect(index.operatorApprovalArtifactCount).toBe(5);
   });
 
@@ -46,7 +46,7 @@ describe("Gamma 2 Stage 5 evidence index", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_evidence_index");
-    expect(body.apiSurfaceCount).toBe(30);
-    expect(body.entries).toHaveLength(30);
+    expect(body.apiSurfaceCount).toBe(31);
+    expect(body.entries).toHaveLength(31);
   });
 });
