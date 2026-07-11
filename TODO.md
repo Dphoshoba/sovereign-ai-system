@@ -128,6 +128,8 @@
 - [x] Add Stage 5 promotion journal tests
 - [x] Add Stage 5 operator signoff: `/api/gamma/stage-5/operator-signoff`
 - [x] Add Stage 5 operator signoff tests
+- [x] Add Stage 5 evidence index: `/api/gamma/stage-5/evidence-index`
+- [x] Add Stage 5 evidence index tests
 
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`

@@ -15,7 +15,7 @@ describe("Gamma 2 Stage 5 SDK descriptor", () => {
     expect(sdk.baseUrl).toBe(PRODUCTION_APP_URL);
     expect(sdk.requiredEnv).toEqual(["NEXT_PUBLIC_APP_URL", "NEXT_PUBLIC_BASE_URL"]);
     expect(sdk.requiredPlatformSdks).toEqual(PHASE_XXIV_REQUIRED_SDKS);
-    expect(sdk.endpointCount).toBe(19);
+    expect(sdk.endpointCount).toBe(20);
   });
 
   it("keeps generated clients behind the manifest and OpenAPI boundary", () => {
@@ -75,6 +75,12 @@ describe("Gamma 2 Stage 5 SDK descriptor", () => {
       operationId: "getStage5OperatorSignoff",
       audience: "operator",
     });
+    expect(sdk.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/evidence-index",
+      method: "GET",
+      operationId: "getStage5EvidenceIndex",
+      audience: "release-client",
+    });
     expect(sdk.sdkGovernance).toEqual({
       semver: true,
       docsRequired: true,
@@ -94,7 +100,7 @@ describe("Gamma 2 Stage 5 SDK descriptor", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_sdk");
-    expect(body.endpointCount).toBe(19);
+    expect(body.endpointCount).toBe(20);
     expect(body.sdkRule).toBe("generated-client-must-use-stage-5-manifest-and-openapi");
   });
 });
