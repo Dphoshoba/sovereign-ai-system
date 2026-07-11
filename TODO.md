@@ -74,9 +74,9 @@
 - [ ] Milestone 10 - Gamma Studio v1.0 shell navigation sections
 
 ## Final Verification
-- [ ] Run: `npm run build`
-- [ ] Run: `npm test`
-- [ ] Run: `npm run test:determinism`
-- [ ] Run: `npm run smoke:v1`
+- [x] Run: `npm run build`
+- [x] Run: `npm test`
+- [x] Run: `npm run test:determinism`
+- [x] Run: `npm run smoke:v1`
 - [ ] Create tag + push frozen branch
 - [ ] Provide final metrics + commit hashes + test counts + smoke results + hydration warnings.
