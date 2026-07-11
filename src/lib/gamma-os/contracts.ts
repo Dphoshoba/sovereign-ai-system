@@ -162,3 +162,65 @@ export interface OrchestrationPlan {
   warnings: string[];
   blockers: string[];
 }
+
+export type RuntimeSessionStatus =
+  | "blocked"
+  | "preview-ready"
+  | "awaiting-approval"
+  | "awaiting-audit"
+  | "completed";
+
+export type RuntimeCheckpointRoute = "preview" | "approval" | "audit" | "blocker";
+
+export type RuntimeCheckpointStatus = "pending" | "satisfied" | "blocked";
+
+export interface RuntimeCheckpoint {
+  checkpointId: string;
+  route: RuntimeCheckpointRoute;
+  status: RuntimeCheckpointStatus;
+  reason?: string;
+  obligations: string[];
+}
+
+export type RuntimeEventType =
+  | "preview-acknowledged"
+  | "approval-checkpoint-satisfied"
+  | "audit-checkpoint-satisfied"
+  | "session-blocked";
+
+export interface RuntimeEvent {
+  eventId: string;
+  type: RuntimeEventType;
+  actor: string;
+  occurredAt: string;
+  checkpointId?: string;
+  reason?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface RuntimeSession {
+  sessionId: string;
+  requestId: string;
+  workflowId: string;
+  status: RuntimeSessionStatus;
+  organizationContext: OrganizationContext;
+  planStatus: OrchestrationPlan["status"];
+  checkpoints: RuntimeCheckpoint[];
+  eventLog: RuntimeEvent[];
+  warnings: string[];
+  blockers: string[];
+  executionAllowed: false;
+}
+
+export interface RuntimeSnapshot {
+  snapshotId: string;
+  sessionId: string;
+  requestId: string;
+  workflowId: string;
+  status: RuntimeSessionStatus;
+  checkpointSummary: Record<RuntimeCheckpointStatus, number>;
+  eventCount: number;
+  blockers: string[];
+  immutableProjection: true;
+  executionAllowed: false;
+}

@@ -6,3 +6,20 @@ export { CalendarClient } from './api-client';
 export { CalendarParser } from './resource-parser';
 export type { CalendarResource } from './resource-parser';
 export { CalendarActions } from './action-set';
+export {
+  certifyCalendarProductionConnector,
+  createCalendarAuditProjection,
+  createCalendarQueueProjection,
+  getCalendarProductionReadiness,
+  getCalendarRetryPolicy,
+  projectCalendarHealth,
+  projectCalendarMetrics,
+} from './production-readiness';
+export type {
+  CalendarAuditProjection,
+  CalendarCertificationProjection,
+  CalendarHealthProjection,
+  CalendarMetricsProjection,
+  CalendarQueueProjection,
+  CalendarRetryPolicy,
+} from './production-readiness';

@@ -3,6 +3,10 @@ import type {
   ExecutionRequest,
   ExecutionResult,
   GovernanceDecision,
+  OrchestrationPlan,
+  RuntimeEvent,
+  RuntimeSession,
+  RuntimeSnapshot,
   ServiceDescriptor,
   WorkflowRequest,
 } from "./contracts";
@@ -35,4 +39,19 @@ export interface OrchestrationPort {
   validateRequest(request: WorkflowRequest): GovernanceDecision;
   planExecution(request: WorkflowRequest): ExecutionRequest;
   coordinateExecution(request: ExecutionRequest): ExecutionResult;
+}
+
+export interface RuntimeStateMachinePort {
+  initializeSession(params: {
+    sessionId: string;
+    plan: OrchestrationPlan;
+  }): RuntimeSession;
+  applyEvent(params: {
+    session: RuntimeSession;
+    event: RuntimeEvent;
+  }): RuntimeSession;
+  createSnapshot(params: {
+    snapshotId: string;
+    session: RuntimeSession;
+  }): RuntimeSnapshot;
 }
