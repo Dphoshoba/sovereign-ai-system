@@ -12,9 +12,9 @@ describe("Gamma 2 Stage 5 release archive manifest", () => {
     expect(manifest.branch).toBe("gamma");
     expect(manifest.productionUrl).toBe(PRODUCTION_APP_URL);
     expect(manifest.digestFingerprint).toMatch(/^[a-f0-9]{64}$/);
-    expect(manifest.apiSurfaceCount).toBe(26);
+    expect(manifest.apiSurfaceCount).toBe(27);
     expect(manifest.bundleArtifactCount).toBe(5);
-    expect(manifest.indexedArtifactCount).toBe(26);
+    expect(manifest.indexedArtifactCount).toBe(27);
   });
 
   it("declares retention boundaries and archived items", () => {
@@ -49,7 +49,7 @@ describe("Gamma 2 Stage 5 release archive manifest", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_archive_manifest");
-    expect(body.apiSurfaceCount).toBe(26);
+    expect(body.apiSurfaceCount).toBe(27);
     expect(body.archiveItems).toHaveLength(5);
   });
 });

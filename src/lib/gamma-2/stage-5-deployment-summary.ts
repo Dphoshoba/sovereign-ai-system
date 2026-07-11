@@ -64,6 +64,7 @@ export function buildGammaStage5DeploymentSummary(): GammaStage5DeploymentSummar
       "/api/gamma/stage-5/release-compliance-matrix",
       "/api/gamma/stage-5/release-exception-register",
       "/api/gamma/stage-5/release-governance-map",
+      "/api/gamma/stage-5/release-decision-record",
     ],
     operatorRequiredCount,
     tags: [...evidence.tags, "gamma-2-stage-5-promotion-checklist"],

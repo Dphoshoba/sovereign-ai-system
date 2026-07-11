@@ -124,6 +124,10 @@ const API_ENDPOINT_METADATA: Record<
     audience: "operator",
     sourceContract: "src/lib/gamma-2/stage-5-release-governance-map.ts",
   },
+  "/api/gamma/stage-5/release-decision-record": {
+    audience: "operator",
+    sourceContract: "src/lib/gamma-2/stage-5-release-decision-record.ts",
+  },
 };
 
 export function buildGammaStage5ApiManifest(): GammaStage5ApiManifest {

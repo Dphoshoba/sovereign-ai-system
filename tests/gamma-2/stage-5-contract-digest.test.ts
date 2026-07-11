@@ -9,7 +9,7 @@ describe("Gamma 2 Stage 5 contract digest", () => {
     expect(digest.id).toBe("gamma_2_stage_5_contract_digest");
     expect(digest.status).toBe("stable-contract-fingerprint");
     expect(digest.algorithm).toBe("sha256");
-    expect(digest.endpointCount).toBe(26);
+    expect(digest.endpointCount).toBe(27);
     expect(digest.fingerprint).toMatch(/^[a-f0-9]{64}$/);
     expect(digest.sources).toEqual([
       "src/lib/gamma-2/stage-5-api-manifest.ts",
@@ -28,7 +28,7 @@ describe("Gamma 2 Stage 5 contract digest", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_contract_digest");
-    expect(body.endpointCount).toBe(26);
+    expect(body.endpointCount).toBe(27);
     expect(body.digestRule).toBe("fingerprint-manifest-openapi-and-sdk-descriptor");
   });
 });
