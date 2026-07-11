@@ -117,3 +117,48 @@ export interface ServiceDescriptor {
   owner: string;
   description?: string;
 }
+
+export interface OrchestrationPlan {
+  requestId: string;
+  workflowId: string;
+  organizationContext: OrganizationContext;
+  resolvedBindings: string[];
+  requiredCapabilities: string[];
+  capabilityMap: Record<string, string[]>;
+  governanceDecision: {
+    blocked: boolean;
+    approved: boolean;
+    previewOnly: boolean;
+    evaluatedPolicyIds: string[];
+    violations: string[];
+    obligations: string[];
+  };
+  dependencyGraph: Record<string, string[]>;
+  executionOrder: string[];
+  previewRoute: {
+    route: "preview";
+    status: "ready" | "blocked";
+    reason?: string;
+    metadata: {
+      deterministic: true;
+      mode: "preview-only";
+    };
+  };
+  approvalRoute: {
+    route: "approval";
+    status: "ready" | "blocked";
+    checkpoints: string[];
+    requiresHumanReview: boolean;
+    reason?: string;
+  };
+  auditRoute: {
+    route: "audit";
+    status: "ready" | "blocked";
+    references: string[];
+    immutableProjection: true;
+    reason?: string;
+  };
+  status: "planned" | "blocked";
+  warnings: string[];
+  blockers: string[];
+}
