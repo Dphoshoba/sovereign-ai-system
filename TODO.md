@@ -40,6 +40,14 @@
 - [x] Add Enterprise tests
 - [x] Write docs: `docs/platform/GAMMA_2_PHASE_XX_ENTERPRISE.md`
 
+## Phase XXI - Knowledge Network
+- [x] Add deterministic knowledge network contract
+- [x] Add layered memory model
+- [x] Add explainable answer synthesis
+- [x] Add Phase XXI readiness projection
+- [x] Add Knowledge Network tests
+- [x] Write docs: `docs/platform/GAMMA_2_PHASE_XXI_KNOWLEDGE_NETWORK.md`
+
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`
 - [x] Add Stage 5 Runtime State Machine
