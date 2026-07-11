@@ -92,6 +92,8 @@
 - [x] Add Stage 5 readiness tests
 - [x] Document readiness API in completion report
 - [x] Add operator readiness page: `/gamma-stage-5`
+- [x] Add Stage 5 evidence bundle API: `/api/gamma/stage-5/evidence`
+- [x] Add Stage 5 evidence tests
 
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`

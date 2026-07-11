@@ -49,7 +49,7 @@ Verified at completion:
 - `npm test` - 56 files passed, 880 tests passed, 3 skipped
 - `npm run test:determinism` - passed with non-critical legacy warnings
 - `npm run build` - passed
-- `npm run smoke:v1` - 24 routes passed, 0 failed
+- `npm run smoke:v1` - 25 routes passed, 0 failed
 
 ## Completion Commits
 
@@ -72,6 +72,7 @@ Verified at completion:
 - The local app was verified against `http://localhost:3000`.
 - The canonical production domain remains `https://sovereign-ai-executive.vercel.app`.
 - Stage 5 readiness is exposed at `/api/gamma/stage-5/readiness`.
+- Stage 5 evidence is exposed at `/api/gamma/stage-5/evidence`.
 - Stage 5 readiness is visible at `/gamma-stage-5`.
 - Determinism warnings are legacy, non-critical findings outside the new Gamma 2 Stage 5 contracts.
 - The next useful workstream is productizing these contracts into visible operator surfaces, API adapters, and release dashboards.

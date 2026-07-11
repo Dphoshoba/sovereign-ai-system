@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   CheckCircle2,
+  ClipboardCheck,
   FileText,
   GitBranch,
   Network,
@@ -9,6 +10,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { buildGammaStage5ReadinessSnapshot } from "../../src/lib/gamma-2/stage-5-readiness";
+import { buildGammaStage5EvidenceBundle } from "../../src/lib/gamma-2/stage-5-evidence";
 
 export const metadata: Metadata = {
   title: "Gamma 2 Stage 5 Readiness",
@@ -19,6 +21,7 @@ const statusTone = "border-emerald-500/40 bg-emerald-500/10 text-emerald-100";
 
 export default function GammaStage5Page() {
   const snapshot = buildGammaStage5ReadinessSnapshot();
+  const evidence = buildGammaStage5EvidenceBundle();
   const verification = [
     ["Tests", snapshot.verification.tests],
     ["Determinism", snapshot.verification.determinism],
@@ -90,6 +93,40 @@ export default function GammaStage5Page() {
               ))}
             </div>
           </section>
+
+          <section aria-labelledby="evidence-bundle">
+            <div className="mb-3 flex items-center gap-2">
+              <ClipboardCheck className="h-5 w-5 text-emerald-300" aria-hidden="true" />
+              <h2 id="evidence-bundle" className="text-lg font-semibold text-white">
+                Evidence Bundle
+              </h2>
+            </div>
+            <div className="rounded-md border border-zinc-800 bg-zinc-900/80">
+              <div className="grid gap-3 border-b border-zinc-800 p-4 md:grid-cols-3">
+                <div>
+                  <div className="text-xs font-medium uppercase text-zinc-500">Status</div>
+                  <div className="mt-1 text-sm text-emerald-100">{evidence.status}</div>
+                </div>
+                <div>
+                  <div className="text-xs font-medium uppercase text-zinc-500">Tags</div>
+                  <div className="mt-1 text-sm text-zinc-200">{evidence.tags.length}</div>
+                </div>
+                <div>
+                  <div className="text-xs font-medium uppercase text-zinc-500">Evidence</div>
+                  <div className="mt-1 text-sm text-zinc-200">
+                    {evidence.phaseEvidence.length} phases
+                  </div>
+                </div>
+              </div>
+              <div className="grid gap-2 p-4 text-xs text-zinc-400 md:grid-cols-2">
+                {evidence.verificationCommands.map((command) => (
+                  <code key={command} className="rounded-md bg-zinc-950 px-2 py-1 text-zinc-200">
+                    {command}
+                  </code>
+                ))}
+              </div>
+            </div>
+          </section>
         </div>
 
         <aside className="space-y-6 lg:col-span-4">
@@ -140,6 +177,12 @@ export default function GammaStage5Page() {
                 className="rounded-md border border-zinc-800 px-3 py-2 text-zinc-200 hover:border-cyan-500 hover:text-cyan-100"
               >
                 Readiness API
+              </Link>
+              <Link
+                href="/api/gamma/stage-5/evidence"
+                className="rounded-md border border-zinc-800 px-3 py-2 text-zinc-200 hover:border-cyan-500 hover:text-cyan-100"
+              >
+                Evidence API
               </Link>
               <Link
                 href="/gamma-studio"
