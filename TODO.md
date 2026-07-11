@@ -96,6 +96,8 @@
 - [x] Add Stage 5 evidence tests
 - [x] Add Stage 5 release gate API: `/api/gamma/stage-5/release-gate`
 - [x] Add Stage 5 release gate tests
+- [x] Add Stage 5 promotion checklist API: `/api/gamma/stage-5/promotion-checklist`
+- [x] Add Stage 5 promotion checklist tests
 
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`

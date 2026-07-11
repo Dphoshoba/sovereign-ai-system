@@ -5,6 +5,7 @@ import {
   ClipboardCheck,
   FileText,
   GitBranch,
+  ListChecks,
   Network,
   RadioTower,
   Rocket,
@@ -13,6 +14,7 @@ import {
 import { buildGammaStage5ReadinessSnapshot } from "../../src/lib/gamma-2/stage-5-readiness";
 import { buildGammaStage5EvidenceBundle } from "../../src/lib/gamma-2/stage-5-evidence";
 import { buildGammaStage5ReleaseGate } from "../../src/lib/gamma-2/stage-5-release-gate";
+import { buildGammaStage5PromotionChecklist } from "../../src/lib/gamma-2/stage-5-promotion-checklist";
 
 export const metadata: Metadata = {
   title: "Gamma 2 Stage 5 Readiness",
@@ -25,6 +27,7 @@ export default function GammaStage5Page() {
   const snapshot = buildGammaStage5ReadinessSnapshot();
   const evidence = buildGammaStage5EvidenceBundle();
   const releaseGate = buildGammaStage5ReleaseGate();
+  const promotionChecklist = buildGammaStage5PromotionChecklist();
   const verification = [
     ["Tests", snapshot.verification.tests],
     ["Determinism", snapshot.verification.determinism],
@@ -173,6 +176,44 @@ export default function GammaStage5Page() {
               </div>
             </div>
           </section>
+
+          <section aria-labelledby="promotion-checklist">
+            <div className="mb-3 flex items-center gap-2">
+              <ListChecks className="h-5 w-5 text-emerald-300" aria-hidden="true" />
+              <h2 id="promotion-checklist" className="text-lg font-semibold text-white">
+                Promotion Checklist
+              </h2>
+            </div>
+            <div className="rounded-md border border-zinc-800 bg-zinc-900/80">
+              <div className="border-b border-zinc-800 p-4">
+                <div className="text-xs font-medium uppercase text-zinc-500">Status</div>
+                <div className="mt-1 text-sm text-emerald-100">{promotionChecklist.status}</div>
+              </div>
+              <div className="grid gap-2 p-4">
+                {promotionChecklist.steps.map((step) => (
+                  <div
+                    key={step.id}
+                    className="grid gap-3 rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 md:grid-cols-[32px_1fr_auto]"
+                  >
+                    <div className="text-sm font-semibold text-zinc-400">{step.order}</div>
+                    <div>
+                      <div className="text-sm text-zinc-200">{step.title}</div>
+                      <div className="mt-1 text-xs text-zinc-500">{step.evidence}</div>
+                    </div>
+                    <span
+                      className={`h-fit rounded-md border px-2 py-1 text-xs ${
+                        step.status === "complete"
+                          ? statusTone
+                          : "border-amber-500/40 bg-amber-500/10 text-amber-100"
+                      }`}
+                    >
+                      {step.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
         </div>
 
         <aside className="space-y-6 lg:col-span-4">
@@ -235,6 +276,12 @@ export default function GammaStage5Page() {
                 className="rounded-md border border-zinc-800 px-3 py-2 text-zinc-200 hover:border-cyan-500 hover:text-cyan-100"
               >
                 Release Gate API
+              </Link>
+              <Link
+                href="/api/gamma/stage-5/promotion-checklist"
+                className="rounded-md border border-zinc-800 px-3 py-2 text-zinc-200 hover:border-cyan-500 hover:text-cyan-100"
+              >
+                Promotion Checklist API
               </Link>
               <Link
                 href="/gamma-studio"
