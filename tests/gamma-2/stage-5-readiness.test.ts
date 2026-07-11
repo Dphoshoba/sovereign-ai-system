@@ -33,7 +33,7 @@ describe("Gamma 2 Stage 5 readiness snapshot", () => {
     const snapshot = buildGammaStage5ReadinessSnapshot();
 
     expect(snapshot.generatedAt).toEqual(GAMMA_STAGE_5_COMPLETION_TIME);
-    expect(snapshot.verification.smoke).toBe("28 routes passed, 0 failed");
+    expect(snapshot.verification.smoke).toBe("29 routes passed, 0 failed");
     expect(snapshot.governanceBoundaries).toContain("no-self-modifying-code");
     expect(snapshot.governanceBoundaries).toContain("shared-governance-for-every-product");
   });

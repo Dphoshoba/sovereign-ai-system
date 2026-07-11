@@ -100,6 +100,8 @@
 - [x] Add Stage 5 promotion checklist tests
 - [x] Add Stage 5 deployment summary API: `/api/gamma/stage-5/deployment-summary`
 - [x] Add Stage 5 deployment summary tests
+- [x] Add Stage 5 operator brief API: `/api/gamma/stage-5/operator-brief`
+- [x] Add Stage 5 operator brief tests
 
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`

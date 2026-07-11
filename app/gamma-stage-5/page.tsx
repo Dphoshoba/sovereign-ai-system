@@ -8,6 +8,7 @@ import {
   ListChecks,
   Network,
   PanelTop,
+  ScrollText,
   RadioTower,
   Rocket,
   ShieldCheck,
@@ -17,6 +18,7 @@ import { buildGammaStage5EvidenceBundle } from "../../src/lib/gamma-2/stage-5-ev
 import { buildGammaStage5ReleaseGate } from "../../src/lib/gamma-2/stage-5-release-gate";
 import { buildGammaStage5PromotionChecklist } from "../../src/lib/gamma-2/stage-5-promotion-checklist";
 import { buildGammaStage5DeploymentSummary } from "../../src/lib/gamma-2/stage-5-deployment-summary";
+import { buildGammaStage5OperatorBrief } from "../../src/lib/gamma-2/stage-5-operator-brief";
 
 export const metadata: Metadata = {
   title: "Gamma 2 Stage 5 Readiness",
@@ -31,6 +33,7 @@ export default function GammaStage5Page() {
   const releaseGate = buildGammaStage5ReleaseGate();
   const promotionChecklist = buildGammaStage5PromotionChecklist();
   const deploymentSummary = buildGammaStage5DeploymentSummary();
+  const operatorBrief = buildGammaStage5OperatorBrief();
   const verification = [
     ["Tests", snapshot.verification.tests],
     ["Determinism", snapshot.verification.determinism],
@@ -220,6 +223,25 @@ export default function GammaStage5Page() {
         </div>
 
         <aside className="space-y-6 lg:col-span-4">
+          <section aria-labelledby="operator-brief" className="rounded-md border border-zinc-800 bg-zinc-900/80 p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <ScrollText className="h-5 w-5 text-emerald-300" aria-hidden="true" />
+              <h2 id="operator-brief" className="text-lg font-semibold text-white">
+                Operator Brief
+              </h2>
+            </div>
+            <div className="space-y-3">
+              <p className="text-sm leading-6 text-zinc-200">{operatorBrief.headline}</p>
+              <div className="grid gap-2 text-xs text-zinc-400">
+                {operatorBrief.summary.map((item) => (
+                  <div key={item} className="rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2">
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
           <section aria-labelledby="deployment-summary" className="rounded-md border border-zinc-800 bg-zinc-900/80 p-4">
             <div className="mb-3 flex items-center gap-2">
               <PanelTop className="h-5 w-5 text-cyan-300" aria-hidden="true" />
@@ -314,6 +336,12 @@ export default function GammaStage5Page() {
                 className="rounded-md border border-zinc-800 px-3 py-2 text-zinc-200 hover:border-cyan-500 hover:text-cyan-100"
               >
                 Deployment Summary API
+              </Link>
+              <Link
+                href="/api/gamma/stage-5/operator-brief"
+                className="rounded-md border border-zinc-800 px-3 py-2 text-zinc-200 hover:border-cyan-500 hover:text-cyan-100"
+              >
+                Operator Brief API
               </Link>
               <Link
                 href="/gamma-studio"
