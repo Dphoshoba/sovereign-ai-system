@@ -12,7 +12,7 @@ describe("Gamma 2 Stage 5 promotion journal", () => {
     expect(journal.branch).toBe("gamma");
     expect(journal.productionUrl).toBe(PRODUCTION_APP_URL);
     expect(journal.digestFingerprint).toMatch(/^[a-f0-9]{64}$/);
-    expect(journal.apiSurfaceCount).toBe(23);
+    expect(journal.apiSurfaceCount).toBe(24);
     expect(journal.receiptStatus).toBe("ready-for-post-promotion-record");
     expect(journal.auditEntryCount).toBe(4);
     expect(journal.rollbackTag).toBe("gamma-2-roadmap-complete");
@@ -28,7 +28,7 @@ describe("Gamma 2 Stage 5 promotion journal", () => {
     });
     expect(journal.entries[4]).toMatchObject({
       checkpoint: "Promotion surface verified",
-      evidence: "46 routes passed, 0 failed",
+      evidence: "47 routes passed, 0 failed",
       source: "/api/gamma/stage-5/deployment-summary",
     });
     expect(journal.journalArtifacts).toEqual([
@@ -53,7 +53,7 @@ describe("Gamma 2 Stage 5 promotion journal", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_promotion_journal");
-    expect(body.apiSurfaceCount).toBe(23);
+    expect(body.apiSurfaceCount).toBe(24);
     expect(body.entries).toHaveLength(5);
   });
 });
