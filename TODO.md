@@ -24,6 +24,14 @@
 - [x] Add Marketplace tests
 - [x] Write docs: `docs/platform/GAMMA_2_PHASE_XVIII_MARKETPLACE.md`
 
+## Phase XIX - Multi-Agent Collaboration
+- [x] Add deterministic agent collaboration contract
+- [x] Add governed handoff planning
+- [x] Block single-agent collaboration requests
+- [x] Enforce no-agent-publishes boundary
+- [x] Add Multi-Agent Collaboration tests
+- [x] Write docs: `docs/platform/GAMMA_2_PHASE_XIX_MULTI_AGENT_COLLABORATION.md`
+
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`
 - [x] Add Stage 5 Runtime State Machine
