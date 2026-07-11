@@ -78,5 +78,5 @@
 - [x] Run: `npm test`
 - [x] Run: `npm run test:determinism`
 - [x] Run: `npm run smoke:v1`
-- [ ] Create tag + push frozen branch
-- [ ] Provide final metrics + commit hashes + test counts + smoke results + hydration warnings.
+- [x] Create tag + push frozen branch
+- [x] Provide final metrics + commit hashes + test counts + smoke results + hydration warnings.
