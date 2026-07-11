@@ -56,6 +56,14 @@
 - [x] Add Learning Engine tests
 - [x] Write docs: `docs/platform/GAMMA_2_PHASE_XXII_LEARNING_ENGINE.md`
 
+## Phase XXIII - Executive Intelligence
+- [x] Add deterministic executive intelligence contract
+- [x] Answer blocked, overdue, ROI, risk, and today questions
+- [x] Filter completed work out of executive pressure
+- [x] Add answer-first readiness projection
+- [x] Add Executive Intelligence tests
+- [x] Write docs: `docs/platform/GAMMA_2_PHASE_XXIII_EXECUTIVE_INTELLIGENCE.md`
+
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`
 - [x] Add Stage 5 Runtime State Machine
