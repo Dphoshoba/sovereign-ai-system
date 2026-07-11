@@ -72,6 +72,14 @@
 - [x] Add Developer Platform tests
 - [x] Write docs: `docs/platform/GAMMA_2_PHASE_XXIV_DEVELOPER_PLATFORM.md`
 
+## Phase XXV - Gamma Intelligence Network
+- [x] Add deterministic Gamma Intelligence Network contract
+- [x] Add required network node model
+- [x] Add full product layer integration model
+- [x] Enforce shared governance, orchestration, runtime, knowledge, and mission systems
+- [x] Add Gamma Intelligence Network tests
+- [x] Write docs: `docs/platform/GAMMA_2_PHASE_XXV_GAMMA_INTELLIGENCE_NETWORK.md`
+
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`
 - [x] Add Stage 5 Runtime State Machine
