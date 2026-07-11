@@ -17,7 +17,7 @@
 - [x] Harden HubSpot against the Phase XV production connector contract
 - [x] Harden Dropbox against the Phase XV production connector contract
 - [x] Harden OneDrive against the Phase XV production connector contract
-- [ ] Harden SharePoint against the Phase XV production connector contract
+- [x] Harden SharePoint against the Phase XV production connector contract
 
 ## Build 138 - Gmail Compliance Audit Framework
 - [x] Inspect existing connector runtime/audit infrastructure (Build 137) for integration points.

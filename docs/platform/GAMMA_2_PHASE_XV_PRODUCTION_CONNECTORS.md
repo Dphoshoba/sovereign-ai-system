@@ -71,8 +71,9 @@ Batch 1 production readiness coverage is complete for:
 - HubSpot
 - Dropbox
 - OneDrive
+- SharePoint
 
-SharePoint is the next connector in the Phase XV priority queue.
+The Phase XV priority connector queue is complete.
 
 ## Gamma Factory Rule
 Every connector after Gmail should be generated through Gamma Factory by default.
