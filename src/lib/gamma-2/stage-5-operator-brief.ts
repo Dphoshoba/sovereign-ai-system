@@ -31,7 +31,9 @@ export function buildGammaStage5OperatorBrief(): GammaStage5OperatorBrief {
       `${deploymentSummary.operatorRequiredCount} operator-required checks remain`,
     ],
     nextOperatorActions,
-    apiSurface: [...deploymentSummary.apiSurface, "/api/gamma/stage-5/operator-brief"],
+    apiSurface: Array.from(
+      new Set([...deploymentSummary.apiSurface, "/api/gamma/stage-5/operator-brief"])
+    ),
     briefRule: "single-operator-brief-for-stage-5-handoff",
   };
 }

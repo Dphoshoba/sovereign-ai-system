@@ -44,6 +44,7 @@ export function buildGammaStage5DeploymentSummary(): GammaStage5DeploymentSummar
       "/api/gamma/stage-5/promotion-checklist",
       "/api/gamma/stage-5/deployment-summary",
       "/api/gamma/stage-5/operator-brief",
+      "/api/gamma/stage-5/health",
     ],
     operatorRequiredCount,
     tags: [...evidence.tags, "gamma-2-stage-5-promotion-checklist"],

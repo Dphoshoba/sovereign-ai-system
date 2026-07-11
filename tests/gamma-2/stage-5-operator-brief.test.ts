@@ -12,7 +12,7 @@ describe("Gamma 2 Stage 5 operator brief", () => {
       "Gamma 2 Stage 5 is verified and ready for controlled promotion."
     );
     expect(brief.summary).toContain("11 roadmap phases complete");
-    expect(brief.summary).toContain("29 routes passed, 0 failed");
+    expect(brief.summary).toContain("30 routes passed, 0 failed");
   });
 
   it("keeps only remaining operator actions in the action list", () => {
