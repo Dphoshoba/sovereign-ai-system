@@ -5,6 +5,8 @@ const BASE_URL = (process.env.BASE_URL || "http://localhost:3000").replace(
 
 const ROUTES: { group: string; path: string }[] = [
   { group: "public", path: "/api/health" },
+  { group: "gamma", path: "/gamma-stage-5" },
+  { group: "gamma", path: "/api/gamma/stage-5/readiness" },
   { group: "executive", path: "/api/executive/health" },
   { group: "executive", path: "/api/executive/runtime" },
   { group: "executive", path: "/api/executive/command-center" },
