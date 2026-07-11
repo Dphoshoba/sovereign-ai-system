@@ -52,6 +52,7 @@ export function buildGammaStage5DeploymentSummary(): GammaStage5DeploymentSummar
       "/api/gamma/stage-5/contract-digest",
       "/api/gamma/stage-5/release-attestation",
       "/api/gamma/stage-5/rollback-plan",
+      "/api/gamma/stage-5/operator-handoff",
     ],
     operatorRequiredCount,
     tags: [...evidence.tags, "gamma-2-stage-5-promotion-checklist"],

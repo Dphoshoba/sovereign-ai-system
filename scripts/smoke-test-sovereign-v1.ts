@@ -20,6 +20,7 @@ const ROUTES: { group: string; path: string }[] = [
   { group: "gamma", path: "/api/gamma/stage-5/contract-digest" },
   { group: "gamma", path: "/api/gamma/stage-5/release-attestation" },
   { group: "gamma", path: "/api/gamma/stage-5/rollback-plan" },
+  { group: "gamma", path: "/api/gamma/stage-5/operator-handoff" },
   { group: "executive", path: "/api/executive/health" },
   { group: "executive", path: "/api/executive/runtime" },
   { group: "executive", path: "/api/executive/command-center" },

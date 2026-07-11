@@ -76,6 +76,10 @@ const API_ENDPOINT_METADATA: Record<
     audience: "operator",
     sourceContract: "src/lib/gamma-2/stage-5-rollback-plan.ts",
   },
+  "/api/gamma/stage-5/operator-handoff": {
+    audience: "operator",
+    sourceContract: "src/lib/gamma-2/stage-5-operator-handoff.ts",
+  },
 };
 
 export function buildGammaStage5ApiManifest(): GammaStage5ApiManifest {
