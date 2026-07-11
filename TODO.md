@@ -8,6 +8,14 @@
 - [x] Add Intelligence Mesh tests
 - [x] Write docs: `docs/platform/GAMMA_2_PHASE_XVI_INTELLIGENCE_MESH.md`
 
+## Phase XVII - Mission Automation
+- [x] Add deterministic mission automation contract
+- [x] Decompose Launch MenWise360 Course mission into governed work packages
+- [x] Enforce preview-only, approval, queue, and audit boundaries
+- [x] Add Phase XVII readiness projection
+- [x] Add Mission Automation tests
+- [x] Write docs: `docs/platform/GAMMA_2_PHASE_XVII_MISSION_AUTOMATION.md`
+
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`
 - [x] Add Stage 5 Runtime State Machine
