@@ -1,5 +1,13 @@
 # TODO - Gamma 2.0 Phase XV Production Connectors
 
+## Phase XVI - Intelligence Mesh
+- [x] Add deterministic mesh signal contract
+- [x] Add Gamma-owned recommendation synthesizer
+- [x] Add preview-only execution boundary
+- [x] Add Phase XVI readiness projection
+- [x] Add Intelligence Mesh tests
+- [x] Write docs: `docs/platform/GAMMA_2_PHASE_XVI_INTELLIGENCE_MESH.md`
+
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`
 - [x] Add Stage 5 Runtime State Machine
