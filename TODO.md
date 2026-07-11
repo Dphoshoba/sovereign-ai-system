@@ -1,5 +1,26 @@
 # TODO - Gmail Connector Completion Sprint (Build 138-140)
 
+## Phase XVIII — Gamma Studio
+- [ ] Milestone 1 — Visual Workflow Canvas
+  - [ ] Create `app/gamma-studio/page.tsx`
+  - [ ] Create components:
+    - [ ] `app/gamma-studio/components/Canvas.tsx`
+    - [ ] `app/gamma-studio/components/Toolbox.tsx`
+    - [ ] `app/gamma-studio/components/Inspector.tsx`
+    - [ ] `app/gamma-studio/components/NodeCard.tsx`
+    - [ ] `app/gamma-studio/components/EdgeRenderer.tsx`
+  - [ ] Support drag/drop node placement (Gmail, Slack, Calendar, Approval)
+  - [ ] Support node connections and save action
+- [ ] Milestone 2 — Connector Palette (dynamic registration)
+- [ ] Milestone 3 — Workflow Inspector details
+- [ ] Milestone 4 — Live Validation rules and save-blocking
+- [ ] Milestone 5 — Visual Simulator (preview-only run)
+- [ ] Milestone 6 — Execution Timeline visualization
+- [ ] Milestone 7 — Marketplace templates install UI
+- [ ] Milestone 8 — AI Builder prompt-to-workflow generation (mock)
+- [ ] Milestone 9 — Multi-user collaboration UI (placeholder)
+- [ ] Milestone 10 — Gamma Studio v1.0 shell navigation sections
+
 ## Build 138 — Gmail Compliance Audit Framework
 - [ ] Inspect existing connector runtime/audit infrastructure (Build 137) for integration points.
 - [ ] Implement connector-agnostic compliance model types + mock data.
