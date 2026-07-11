@@ -120,6 +120,8 @@
 - [x] Add Stage 5 rollback plan tests
 - [x] Add Stage 5 operator handoff: `/api/gamma/stage-5/operator-handoff`
 - [x] Add Stage 5 operator handoff tests
+- [x] Add Stage 5 audit ledger: `/api/gamma/stage-5/audit-ledger`
+- [x] Add Stage 5 audit ledger tests
 
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`
