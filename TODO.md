@@ -104,6 +104,8 @@
 - [x] Add Stage 5 operator brief tests
 - [x] Add Stage 5 health API: `/api/gamma/stage-5/health`
 - [x] Add Stage 5 health tests
+- [x] Add Stage 5 release dashboard API: `/api/gamma/stage-5/release-dashboard`
+- [x] Add Stage 5 release dashboard tests
 
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`
