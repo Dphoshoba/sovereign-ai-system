@@ -47,7 +47,7 @@ export interface GammaStage5ReadinessSnapshot {
     tests: "56 files passed, 880 tests passed, 3 skipped";
     determinism: "passed with non-critical legacy warnings";
     build: "passed";
-    smoke: "44 routes passed, 0 failed";
+    smoke: "45 routes passed, 0 failed";
   };
   readiness: {
     phaseXV: {
@@ -170,7 +170,7 @@ export function buildGammaStage5ReadinessSnapshot(): GammaStage5ReadinessSnapsho
       tests: "56 files passed, 880 tests passed, 3 skipped",
       determinism: "passed with non-critical legacy warnings",
       build: "passed",
-      smoke: "44 routes passed, 0 failed",
+      smoke: "45 routes passed, 0 failed",
     },
     readiness: {
       phaseXV: {
