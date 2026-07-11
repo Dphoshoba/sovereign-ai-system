@@ -72,6 +72,10 @@ const API_ENDPOINT_METADATA: Record<
     audience: "release-client",
     sourceContract: "src/lib/gamma-2/stage-5-release-attestation.ts",
   },
+  "/api/gamma/stage-5/rollback-plan": {
+    audience: "operator",
+    sourceContract: "src/lib/gamma-2/stage-5-rollback-plan.ts",
+  },
 };
 
 export function buildGammaStage5ApiManifest(): GammaStage5ApiManifest {

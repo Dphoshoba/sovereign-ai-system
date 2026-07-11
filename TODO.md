@@ -116,6 +116,8 @@
 - [x] Add Stage 5 contract digest tests
 - [x] Add Stage 5 release attestation: `/api/gamma/stage-5/release-attestation`
 - [x] Add Stage 5 release attestation tests
+- [x] Add Stage 5 rollback plan: `/api/gamma/stage-5/rollback-plan`
+- [x] Add Stage 5 rollback plan tests
 
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`

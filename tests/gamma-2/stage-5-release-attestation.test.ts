@@ -13,8 +13,8 @@ describe("Gamma 2 Stage 5 release attestation", () => {
     expect(attestation.productionUrl).toBe(PRODUCTION_APP_URL);
     expect(attestation.digest.algorithm).toBe("sha256");
     expect(attestation.digest.fingerprint).toMatch(/^[a-f0-9]{64}$/);
-    expect(attestation.digest.endpointCount).toBe(13);
-    expect(attestation.verification.smoke).toBe("36 routes passed, 0 failed");
+    expect(attestation.digest.endpointCount).toBe(14);
+    expect(attestation.verification.smoke).toBe("37 routes passed, 0 failed");
     expect(attestation.releaseChecks).toEqual({ pass: 3, operatorRequired: 2, total: 5 });
   });
 
@@ -39,7 +39,7 @@ describe("Gamma 2 Stage 5 release attestation", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_attestation");
-    expect(body.digest.endpointCount).toBe(13);
+    expect(body.digest.endpointCount).toBe(14);
     expect(body.operatorRule).toBe("human-approval-before-production");
   });
 });
