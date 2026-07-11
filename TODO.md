@@ -14,7 +14,7 @@
 - [x] Harden Discord against the Phase XV production connector contract
 - [x] Harden Stripe against the Phase XV production connector contract
 - [x] Harden Salesforce against the Phase XV production connector contract
-- [ ] Harden HubSpot against the Phase XV production connector contract
+- [x] Harden HubSpot against the Phase XV production connector contract
 - [ ] Harden Dropbox against the Phase XV production connector contract
 - [ ] Harden OneDrive against the Phase XV production connector contract
 - [ ] Harden SharePoint against the Phase XV production connector contract
