@@ -32,6 +32,14 @@
 - [x] Add Multi-Agent Collaboration tests
 - [x] Write docs: `docs/platform/GAMMA_2_PHASE_XIX_MULTI_AGENT_COLLABORATION.md`
 
+## Phase XX - Enterprise
+- [x] Add deterministic enterprise readiness contract
+- [x] Add required enterprise capability set
+- [x] Enforce tenant isolation, audit, and regional governance boundaries
+- [x] Add Phase XX readiness projection
+- [x] Add Enterprise tests
+- [x] Write docs: `docs/platform/GAMMA_2_PHASE_XX_ENTERPRISE.md`
+
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`
 - [x] Add Stage 5 Runtime State Machine
