@@ -10,13 +10,16 @@ describe("Gamma 2 Stage 5 OpenAPI document", () => {
     expect(openapi.openapi).toBe("3.1.0");
     expect(openapi.info.title).toBe("Gamma 2 Stage 5 API");
     expect(openapi.servers).toEqual([{ url: PRODUCTION_APP_URL }]);
-    expect(Object.keys(openapi.paths)).toHaveLength(12);
+    expect(Object.keys(openapi.paths)).toHaveLength(13);
     expect(openapi.paths["/api/gamma/stage-5/openapi"].get.operationId).toBe(
       "getStage5Openapi"
     );
     expect(openapi.paths["/api/gamma/stage-5/sdk"].get.operationId).toBe("getStage5Sdk");
     expect(openapi.paths["/api/gamma/stage-5/contract-digest"].get.operationId).toBe(
       "getStage5ContractDigest"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/release-attestation"].get.operationId).toBe(
+      "getStage5ReleaseAttestation"
     );
   });
 
