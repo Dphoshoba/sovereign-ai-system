@@ -63,8 +63,9 @@ Batch 1 production readiness coverage is complete for:
 - Drive
 - GitHub
 - Slack
+- Notion
 
-Notion is the next connector in the Phase XV priority queue.
+Microsoft 365 is the next connector in the Phase XV priority queue.
 
 ## Gamma Factory Rule
 Every connector after Gmail should be generated through Gamma Factory by default.
