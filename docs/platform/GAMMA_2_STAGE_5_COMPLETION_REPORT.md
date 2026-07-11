@@ -72,5 +72,6 @@ Verified at completion:
 - The local app was verified against `http://localhost:3000`.
 - The canonical production domain remains `https://sovereign-ai-executive.vercel.app`.
 - Stage 5 readiness is exposed at `/api/gamma/stage-5/readiness`.
+- Stage 5 readiness is visible at `/gamma-stage-5`.
 - Determinism warnings are legacy, non-critical findings outside the new Gamma 2 Stage 5 contracts.
 - The next useful workstream is productizing these contracts into visible operator surfaces, API adapters, and release dashboards.
