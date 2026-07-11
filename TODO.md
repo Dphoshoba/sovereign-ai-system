@@ -156,6 +156,7 @@
 - [x] Add Stage 5 release cutover checklist: `/api/gamma/stage-5/release-cutover-checklist`
 - [x] Add Stage 5 release traffic shift plan: `/api/gamma/stage-5/release-traffic-shift-plan`
 - [x] Add Stage 5 release monitoring plan: `/api/gamma/stage-5/release-monitoring-plan`
+- [x] Add Stage 5 release post-promotion review: `/api/gamma/stage-5/release-post-promotion-review`
 - [x] Add Stage 5 release cutover checklist tests
 - [x] Wire Stage 5 release cutover checklist into manifest, smoke, dashboard, and release evidence
 

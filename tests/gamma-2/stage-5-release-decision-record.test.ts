@@ -11,7 +11,7 @@ describe("Gamma 2 Stage 5 release decision record", () => {
     expect(record.status).toBe("pending-operator-approval");
     expect(record.branch).toBe("gamma");
     expect(record.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(record.apiSurfaceCount).toBe(32);
+    expect(record.apiSurfaceCount).toBe(33);
     expect(record.passCheckCount).toBe(3);
     expect(record.operatorRequiredCount).toBe(4);
     expect(record.openExceptionCount).toBe(0);
@@ -70,7 +70,7 @@ describe("Gamma 2 Stage 5 release decision record", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_decision_record");
-    expect(body.apiSurfaceCount).toBe(32);
+    expect(body.apiSurfaceCount).toBe(33);
     expect(body.status).toBe("pending-operator-approval");
     expect(body.decisionEvidence).toHaveLength(5);
   });

@@ -70,6 +70,7 @@ export function buildGammaStage5DeploymentSummary(): GammaStage5DeploymentSummar
       "/api/gamma/stage-5/release-cutover-checklist",
       "/api/gamma/stage-5/release-traffic-shift-plan",
       "/api/gamma/stage-5/release-monitoring-plan",
+      "/api/gamma/stage-5/release-post-promotion-review",
     ],
     operatorRequiredCount,
     tags: [...evidence.tags, "gamma-2-stage-5-promotion-checklist"],

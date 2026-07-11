@@ -8,7 +8,7 @@ describe("Gamma 2 Stage 5 API manifest", () => {
 
     expect(manifest.id).toBe("gamma_2_stage_5_api_manifest");
     expect(manifest.status).toBe("ready-for-client-adapters");
-    expect(manifest.endpointCount).toBe(32);
+    expect(manifest.endpointCount).toBe(33);
     expect(manifest.endpoints.every((endpoint) => endpoint.method === "GET")).toBe(true);
     expect(manifest.endpoints).toContainEqual({
       path: "/api/gamma/stage-5/api-manifest",
@@ -154,6 +154,12 @@ describe("Gamma 2 Stage 5 API manifest", () => {
       audience: "monitor",
       sourceContract: "src/lib/gamma-2/stage-5-release-monitoring-plan.ts",
     });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-post-promotion-review",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-release-post-promotion-review.ts",
+    });
   });
 
   it("assigns monitoring to the compact health endpoint", () => {
@@ -175,7 +181,7 @@ describe("Gamma 2 Stage 5 API manifest", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_api_manifest");
-    expect(body.endpointCount).toBe(32);
+    expect(body.endpointCount).toBe(33);
     expect(body.adapterRule).toBe("single-discovery-manifest-for-stage-5-api-clients");
   });
 });

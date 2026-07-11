@@ -38,6 +38,7 @@ const ROUTES: { group: string; path: string }[] = [
   { group: "gamma", path: "/api/gamma/stage-5/release-cutover-checklist" },
   { group: "gamma", path: "/api/gamma/stage-5/release-traffic-shift-plan" },
   { group: "gamma", path: "/api/gamma/stage-5/release-monitoring-plan" },
+  { group: "gamma", path: "/api/gamma/stage-5/release-post-promotion-review" },
   { group: "executive", path: "/api/executive/health" },
   { group: "executive", path: "/api/executive/runtime" },
   { group: "executive", path: "/api/executive/command-center" },

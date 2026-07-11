@@ -11,7 +11,7 @@ describe("Gamma 2 Stage 5 release cutover checklist", () => {
     expect(checklist.status).toBe("pending-operator-cutover");
     expect(checklist.branch).toBe("gamma");
     expect(checklist.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(checklist.apiSurfaceCount).toBe(32);
+    expect(checklist.apiSurfaceCount).toBe(33);
     expect(checklist.cutoverCheckCount).toBe(5);
     expect(checklist.promotionStepCount).toBe(5);
     expect(checklist.rollbackStepCount).toBe(4);
@@ -74,7 +74,7 @@ describe("Gamma 2 Stage 5 release cutover checklist", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_cutover_checklist");
-    expect(body.apiSurfaceCount).toBe(32);
+    expect(body.apiSurfaceCount).toBe(33);
     expect(body.status).toBe("pending-operator-cutover");
     expect(body.checks).toHaveLength(5);
   });
