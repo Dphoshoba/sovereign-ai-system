@@ -122,6 +122,8 @@
 - [x] Add Stage 5 operator handoff tests
 - [x] Add Stage 5 audit ledger: `/api/gamma/stage-5/audit-ledger`
 - [x] Add Stage 5 audit ledger tests
+- [x] Add Stage 5 deployment receipt: `/api/gamma/stage-5/deployment-receipt`
+- [x] Add Stage 5 deployment receipt tests
 
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`
