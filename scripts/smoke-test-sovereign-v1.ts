@@ -17,6 +17,7 @@ const ROUTES: { group: string; path: string }[] = [
   { group: "gamma", path: "/api/gamma/stage-5/api-manifest" },
   { group: "gamma", path: "/api/gamma/stage-5/openapi" },
   { group: "gamma", path: "/api/gamma/stage-5/sdk" },
+  { group: "gamma", path: "/api/gamma/stage-5/contract-digest" },
   { group: "executive", path: "/api/executive/health" },
   { group: "executive", path: "/api/executive/runtime" },
   { group: "executive", path: "/api/executive/command-center" },

@@ -8,7 +8,7 @@ describe("Gamma 2 Stage 5 API manifest", () => {
 
     expect(manifest.id).toBe("gamma_2_stage_5_api_manifest");
     expect(manifest.status).toBe("ready-for-client-adapters");
-    expect(manifest.endpointCount).toBe(11);
+    expect(manifest.endpointCount).toBe(12);
     expect(manifest.endpoints.every((endpoint) => endpoint.method === "GET")).toBe(true);
     expect(manifest.endpoints).toContainEqual({
       path: "/api/gamma/stage-5/api-manifest",
@@ -27,6 +27,12 @@ describe("Gamma 2 Stage 5 API manifest", () => {
       method: "GET",
       audience: "release-client",
       sourceContract: "src/lib/gamma-2/stage-5-sdk.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/contract-digest",
+      method: "GET",
+      audience: "release-client",
+      sourceContract: "src/lib/gamma-2/stage-5-contract-digest.ts",
     });
   });
 
@@ -49,7 +55,7 @@ describe("Gamma 2 Stage 5 API manifest", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_api_manifest");
-    expect(body.endpointCount).toBe(11);
+    expect(body.endpointCount).toBe(12);
     expect(body.adapterRule).toBe("single-discovery-manifest-for-stage-5-api-clients");
   });
 });
