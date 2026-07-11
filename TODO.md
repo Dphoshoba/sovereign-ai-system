@@ -48,6 +48,14 @@
 - [x] Add Knowledge Network tests
 - [x] Write docs: `docs/platform/GAMMA_2_PHASE_XXI_KNOWLEDGE_NETWORK.md`
 
+## Phase XXII - Learning Engine
+- [x] Add deterministic learning engine contract
+- [x] Add governed learning loop stages
+- [x] Enforce policy review before recommendation promotion
+- [x] Enforce no-code-mutation boundary
+- [x] Add Learning Engine tests
+- [x] Write docs: `docs/platform/GAMMA_2_PHASE_XXII_LEARNING_ENGINE.md`
+
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`
 - [x] Add Stage 5 Runtime State Machine
