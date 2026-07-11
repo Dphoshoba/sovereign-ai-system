@@ -64,6 +64,14 @@
 - [x] Add Executive Intelligence tests
 - [x] Write docs: `docs/platform/GAMMA_2_PHASE_XXIII_EXECUTIVE_INTELLIGENCE.md`
 
+## Phase XXIV - Developer Platform
+- [x] Add deterministic developer platform release contract
+- [x] Add required SDK catalog
+- [x] Enforce semver, docs, sandbox, and governance review
+- [x] Add Phase XXIV readiness projection
+- [x] Add Developer Platform tests
+- [x] Write docs: `docs/platform/GAMMA_2_PHASE_XXIV_DEVELOPER_PLATFORM.md`
+
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`
 - [x] Add Stage 5 Runtime State Machine
