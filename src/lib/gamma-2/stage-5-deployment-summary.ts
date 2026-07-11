@@ -67,6 +67,7 @@ export function buildGammaStage5DeploymentSummary(): GammaStage5DeploymentSummar
       "/api/gamma/stage-5/release-decision-record",
       "/api/gamma/stage-5/release-approval-packet",
       "/api/gamma/stage-5/release-promotion-plan",
+      "/api/gamma/stage-5/release-cutover-checklist",
     ],
     operatorRequiredCount,
     tags: [...evidence.tags, "gamma-2-stage-5-promotion-checklist"],
