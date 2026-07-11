@@ -126,6 +126,8 @@
 - [x] Add Stage 5 deployment receipt tests
 - [x] Add Stage 5 promotion journal: `/api/gamma/stage-5/promotion-journal`
 - [x] Add Stage 5 promotion journal tests
+- [x] Add Stage 5 operator signoff: `/api/gamma/stage-5/operator-signoff`
+- [x] Add Stage 5 operator signoff tests
 
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`
