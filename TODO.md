@@ -138,6 +138,9 @@
 - [x] Add Stage 5 release retention policy tests
 - [x] Add Stage 5 release compliance matrix: `/api/gamma/stage-5/release-compliance-matrix`
 - [x] Add Stage 5 release compliance matrix tests
+- [x] Add Stage 5 release exception register: `/api/gamma/stage-5/release-exception-register`
+- [x] Add Stage 5 release exception register tests
+- [x] Wire Stage 5 release exception register into manifest, smoke, dashboard, and release evidence
 
 ## Phase XV Readiness Gate
 - [x] Add Gamma 2.0 master roadmap: `docs/platform/GAMMA_2_MASTER_ROADMAP.md`
