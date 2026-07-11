@@ -66,8 +66,9 @@ Batch 1 production readiness coverage is complete for:
 - Notion
 - Microsoft 365
 - Discord
+- Stripe
 
-Stripe is the next connector in the Phase XV priority queue.
+Salesforce is the next connector in the Phase XV priority queue.
 
 ## Gamma Factory Rule
 Every connector after Gmail should be generated through Gamma Factory by default.
