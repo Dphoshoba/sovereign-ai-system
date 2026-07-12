@@ -1,3 +1,4 @@
+import { buildGammaStage5ReleaseApprovalPacketSource } from "./stage-5-release-approval-packet";
 import { buildGammaStage5ReleaseCutoverChecklistSource } from "./stage-5-release-cutover-checklist";
 import { buildGammaStage5ReleaseMonitoringPlanSource } from "./stage-5-release-monitoring-plan";
 import { buildGammaStage5ReleaseProductionAuthorizationLedgerSource } from "./stage-5-release-production-authorization-ledger";
@@ -5,6 +6,7 @@ import { buildGammaStage5ReleaseTrafficShiftPlanSource } from "./stage-5-release
 import { buildGammaStage5RollbackPlanSource } from "./stage-5-rollback-plan";
 
 export interface GammaStage5SharedReleaseGraphProjectionSet {
+  approvalPacket: ReturnType<typeof buildGammaStage5ReleaseApprovalPacketSource>;
   authorizationLedger: ReturnType<typeof buildGammaStage5ReleaseProductionAuthorizationLedgerSource>;
   cutoverChecklist: ReturnType<typeof buildGammaStage5ReleaseCutoverChecklistSource>;
   trafficShiftPlan: ReturnType<typeof buildGammaStage5ReleaseTrafficShiftPlanSource>;
@@ -26,6 +28,9 @@ export function buildGammaStage5SharedReleaseGraph(): GammaStage5SharedReleaseGr
   const projections = Object.freeze({
     get authorizationLedger() {
       return buildGammaStage5ReleaseProductionAuthorizationLedgerSource();
+    },
+    get approvalPacket() {
+      return buildGammaStage5ReleaseApprovalPacketSource();
     },
     get cutoverChecklist() {
       return buildGammaStage5ReleaseCutoverChecklistSource();

@@ -1,5 +1,5 @@
 import { PRODUCTION_APP_URL } from "../site-config";
-import { buildGammaStage5ReleaseApprovalPacket } from "./stage-5-release-approval-packet";
+import { buildGammaStage5ReleaseApprovalPacketSource } from "./stage-5-release-approval-packet";
 import { buildGammaStage5ReleaseCutoverChecklistSource } from "./stage-5-release-cutover-checklist";
 import { buildGammaStage5ReleaseMonitoringPlanSource } from "./stage-5-release-monitoring-plan";
 import { buildGammaStage5ReleasePostPromotionReview } from "./stage-5-release-post-promotion-review";
@@ -36,7 +36,7 @@ export interface GammaStage5ReleaseOperationsIndex {
 }
 
 export function buildGammaStage5ReleaseOperationsIndex(): GammaStage5ReleaseOperationsIndex {
-  const approvalPacket = buildGammaStage5ReleaseApprovalPacket();
+  const approvalPacket = buildGammaStage5ReleaseApprovalPacketSource();
   const promotionPlan = buildGammaStage5ReleasePromotionPlan();
   const cutoverChecklist = buildGammaStage5ReleaseCutoverChecklistSource();
   const trafficShiftPlan = buildGammaStage5ReleaseTrafficShiftPlanSource();

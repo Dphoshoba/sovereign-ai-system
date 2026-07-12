@@ -1,4 +1,5 @@
 import { PRODUCTION_APP_URL } from "../site-config";
+import type { GammaStage5ReleaseApprovalPacket } from "./stage-5-release-approval-packet";
 import type { GammaStage5ReleaseCutoverChecklist } from "./stage-5-release-cutover-checklist";
 import type { GammaStage5ReleaseMonitoringPlan } from "./stage-5-release-monitoring-plan";
 import type { GammaStage5ReleaseProductionAuthorizationLedger } from "./stage-5-release-production-authorization-ledger";
@@ -21,34 +22,41 @@ export const GAMMA_STAGE_5_RELEASE_PROJECTION_REGISTRY: readonly GammaStage5Rele
     },
     {
       order: 2,
+      id: "release-approval-packet",
+      source: "src/lib/gamma-2/stage-5-release-approval-packet.ts",
+      graphBacked: true,
+      status: "migrated",
+    },
+    {
+      order: 3,
       id: "release-cutover-checklist",
       source: "src/lib/gamma-2/stage-5-release-cutover-checklist.ts",
       graphBacked: true,
       status: "migrated",
     },
     {
-      order: 3,
+      order: 4,
       id: "release-traffic-shift-plan",
       source: "src/lib/gamma-2/stage-5-release-traffic-shift-plan.ts",
       graphBacked: true,
       status: "migrated",
     },
     {
-      order: 4,
+      order: 5,
       id: "release-monitoring-plan",
       source: "src/lib/gamma-2/stage-5-release-monitoring-plan.ts",
       graphBacked: true,
       status: "migrated",
     },
     {
-      order: 5,
+      order: 6,
       id: "release-production-authorization-ledger",
       source: "src/lib/gamma-2/stage-5-release-production-authorization-ledger.ts",
       graphBacked: true,
       status: "migrated",
     },
     {
-      order: 6,
+      order: 7,
       id: "release-production-cutover-packet",
       source: "src/lib/gamma-2/stage-5-release-production-cutover-packet.ts",
       graphBacked: true,
@@ -68,6 +76,12 @@ export function projectGammaStage5RollbackPlan(
   context: GammaStage5ReleaseProjectionContext
 ): GammaStage5RollbackPlan {
   return cloneProjection(context.graph.projections.rollbackPlan);
+}
+
+export function projectGammaStage5ReleaseApprovalPacket(
+  context: GammaStage5ReleaseProjectionContext
+): GammaStage5ReleaseApprovalPacket {
+  return cloneProjection(context.graph.projections.approvalPacket);
 }
 
 export function projectGammaStage5ReleaseCutoverChecklist(

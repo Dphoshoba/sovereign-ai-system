@@ -1,6 +1,6 @@
 import { PRODUCTION_APP_URL } from "../site-config";
 import { buildGammaStage5PromotionChecklist } from "./stage-5-promotion-checklist";
-import { buildGammaStage5ReleaseApprovalPacket } from "./stage-5-release-approval-packet";
+import { buildGammaStage5ReleaseApprovalPacketSource } from "./stage-5-release-approval-packet";
 import { buildGammaStage5ReleaseDecisionRecord } from "./stage-5-release-decision-record";
 import { buildGammaStage5ReleaseGate } from "./stage-5-release-gate";
 import { buildGammaStage5RollbackPlanSource } from "./stage-5-rollback-plan";
@@ -29,7 +29,7 @@ export interface GammaStage5ReleasePromotionPlan {
 }
 
 export function buildGammaStage5ReleasePromotionPlan(): GammaStage5ReleasePromotionPlan {
-  const approvalPacket = buildGammaStage5ReleaseApprovalPacket();
+  const approvalPacket = buildGammaStage5ReleaseApprovalPacketSource();
   const decisionRecord = buildGammaStage5ReleaseDecisionRecord();
   const releaseGate = buildGammaStage5ReleaseGate();
   const checklist = buildGammaStage5PromotionChecklist();

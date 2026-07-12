@@ -100,13 +100,14 @@ describe("Gamma 2 Stage 5 surface registry", () => {
 
     expect(registry.map((entry) => entry.id)).toEqual([
       "rollback-plan",
+      "release-approval-packet",
       "release-cutover-checklist",
       "release-traffic-shift-plan",
       "release-monitoring-plan",
       "release-production-authorization-ledger",
       "release-production-cutover-packet",
     ]);
-    expect(registry.map((entry) => entry.order)).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(registry.map((entry) => entry.order)).toEqual([1, 2, 3, 4, 5, 6, 7]);
     expect(Object.isFrozen(context)).toBe(true);
     expect(context.graph.sourceArtifactCount).toBe(5);
     expect(context.graph.projectionCount).toBe(5);
@@ -122,6 +123,10 @@ describe("Gamma 2 Stage 5 surface registry", () => {
       {
         file: join(process.cwd(), "src", "lib", "gamma-2", "stage-5-rollback-plan.ts"),
         name: "buildGammaStage5RollbackPlan",
+      },
+      {
+        file: join(process.cwd(), "src", "lib", "gamma-2", "stage-5-release-approval-packet.ts"),
+        name: "buildGammaStage5ReleaseApprovalPacket",
       },
       {
         file: join(process.cwd(), "src", "lib", "gamma-2", "stage-5-release-cutover-checklist.ts"),

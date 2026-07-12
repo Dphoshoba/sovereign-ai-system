@@ -4,6 +4,8 @@ import { buildGammaStage5OperatorSignoff } from "./stage-5-operator-signoff";
 import { buildGammaStage5ReleaseAttestation } from "./stage-5-release-attestation";
 import { buildGammaStage5ReleaseDecisionRecord } from "./stage-5-release-decision-record";
 import { buildGammaStage5ReleaseGovernanceMap } from "./stage-5-release-governance-map";
+import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
+import { projectGammaStage5ReleaseApprovalPacket } from "./stage-5-release-projection-registry";
 
 export interface GammaStage5ReleaseApprovalArtifact {
   id: string;
@@ -26,7 +28,7 @@ export interface GammaStage5ReleaseApprovalPacket {
   approvalRule: "stage-5-release-approval-packet-requires-human-signoff-before-promotion";
 }
 
-export function buildGammaStage5ReleaseApprovalPacket(): GammaStage5ReleaseApprovalPacket {
+export function buildGammaStage5ReleaseApprovalPacketSource(): GammaStage5ReleaseApprovalPacket {
   const decisionRecord = buildGammaStage5ReleaseDecisionRecord();
   const signoff = buildGammaStage5OperatorSignoff();
   const handoff = buildGammaStage5OperatorHandoff();
@@ -79,4 +81,8 @@ export function buildGammaStage5ReleaseApprovalPacket(): GammaStage5ReleaseAppro
     approvalArtifacts,
     approvalRule: "stage-5-release-approval-packet-requires-human-signoff-before-promotion",
   };
+}
+
+export function buildGammaStage5ReleaseApprovalPacket(): GammaStage5ReleaseApprovalPacket {
+  return projectGammaStage5ReleaseApprovalPacket(buildGammaStage5ReleaseProjectionContext());
 }

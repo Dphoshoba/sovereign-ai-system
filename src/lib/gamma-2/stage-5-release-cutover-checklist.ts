@@ -1,6 +1,6 @@
 import { PRODUCTION_APP_URL } from "../site-config";
 import { buildGammaStage5DeploymentReceipt } from "./stage-5-deployment-receipt";
-import { buildGammaStage5ReleaseApprovalPacket } from "./stage-5-release-approval-packet";
+import { buildGammaStage5ReleaseApprovalPacketSource } from "./stage-5-release-approval-packet";
 import { buildGammaStage5ReleaseDecisionRecord } from "./stage-5-release-decision-record";
 import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
 import { projectGammaStage5ReleaseCutoverChecklist } from "./stage-5-release-projection-registry";
@@ -31,7 +31,7 @@ export interface GammaStage5ReleaseCutoverChecklist {
 
 export function buildGammaStage5ReleaseCutoverChecklistSource(): GammaStage5ReleaseCutoverChecklist {
   const promotionPlan = buildGammaStage5ReleasePromotionPlan();
-  const approvalPacket = buildGammaStage5ReleaseApprovalPacket();
+  const approvalPacket = buildGammaStage5ReleaseApprovalPacketSource();
   const decisionRecord = buildGammaStage5ReleaseDecisionRecord();
   const rollbackPlan = buildGammaStage5RollbackPlanSource();
   const deploymentReceipt = buildGammaStage5DeploymentReceipt();

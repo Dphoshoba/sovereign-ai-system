@@ -2,6 +2,7 @@ import type { GammaStage5SharedReleaseGraph } from "./stage-5-shared-release-gra
 
 export type GammaStage5ReleaseProjectionId =
   | "rollback-plan"
+  | "release-approval-packet"
   | "release-cutover-checklist"
   | "release-traffic-shift-plan"
   | "release-monitoring-plan"
