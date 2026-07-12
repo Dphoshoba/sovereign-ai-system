@@ -12,15 +12,16 @@ This answers: Where is the current engineering effort?
 | Release Candidate | gamma-2-stage-5-projection-migration-complete |
 | General Availability | gamma-stage5-ga-v1 |
 | Platform Baseline | gamma-platform-v1.0.0 |
-| Current Stage | Stage 5 Productization |
-| Progress | #################### 100% |
-| Current Milestone | Phase XV Production Connectors Master Plan |
-| Next | Gmail operational production certification |
-| Status | GA Certified |
+| Current Stage | Roadmap Truth Audit |
+| Current Release Completion | #################### 100% |
+| Strategic Roadmap Completion | ########------------ 38% |
+| Current Milestone | Gamma 2.0 Roadmap Truth Audit |
+| Next | Gmail operational production certification remediation |
+| Status | Audit Complete |
 | Branch | gamma |
-| Last Commit | gamma-phase-xv-master-plan |
-| Current Tag | gamma-phase-xv-master-plan |
-| Known Blockers | None |
+| Last Commit | gamma-2-roadmap-truth-audit |
+| Current Tag | gamma-2-roadmap-truth-audit |
+| Known Blockers | Live connector verification requires explicit operator approval and supplied credentials |
 
 ## Strategic Roadmap
 
@@ -31,30 +32,32 @@ This never resets.
 | Foundation | #################### | 100% |
 | Runtime | #################### | 100% |
 | Governance | #################### | 100% |
-| Production Integration Platform | ########------------ | 40% |
-| Marketplace | ####---------------- | 20% |
-| Mission Automation | ####---------------- | 20% |
-| Enterprise | ######-------------- | 30% |
-| Intelligence Network | ####---------------- | 20% |
-| Current Release Productization | #################### | 100% |
+| Production Integration Platform | ####---------------- | 18% |
+| Mission Automation | ##------------------ | 8% |
+| Marketplace | #------------------- | 6% |
+| Multi-Agent Intelligence | #------------------- | 7% |
+| Enterprise | ##------------------ | 12% |
+| Intelligence Network | #------------------- | 5% |
+| Strategic Gamma 2.0 Completion | ########------------ | 38% |
 | Current Stage 5 release completion | #################### | 100% |
 
 ## Platform Statistics
 
 | Metric | Value |
 | --- | ---: |
-| Git commits | 679 |
-| Tags | 105 |
+| Git commits | 680 |
+| Tags | 106 |
 | Connectors | 9 |
 | Workflows | 47 |
 | Policies | 62 |
 | Bindings | 34 |
 | API Endpoints | 45 |
 | Test files | 118 |
-| Documentation | 266 files |
+| Documentation | 267 files |
 | Architecture Score | 10/10 |
 | Governance Score | 10/10 |
-| Readiness | 100% |
+| Foundation Readiness | 100% |
+| Strategic Roadmap Readiness | 38% |
 
 ## Current Release
 
@@ -67,7 +70,8 @@ This never resets.
 | Immutable Baseline | gamma-stage5-ga-v1 |
 | Platform Vision | COMPLETE |
 | Master Plan | COMPLETE |
-| Next Phase | Gmail operational production certification |
+| Roadmap Truth Audit | COMPLETE |
+| Next Phase | Gmail operational production certification remediation |
 
 ## Architecture Maturity
 
@@ -76,23 +80,24 @@ This never resets.
 | Foundation | 100% |
 | Governance | 100% |
 | Runtime | 100% |
-| Connectors | 40% |
-| Marketplace | 20% |
-| Mission Automation | 20% |
-| Enterprise | 30% |
-| Intelligence Network | 20% |
+| Connectors | 18% |
+| Marketplace | 6% |
+| Mission Automation | 8% |
+| Multi-Agent Intelligence | 7% |
+| Enterprise | 12% |
+| Intelligence Network | 5% |
 | Performance | 91% |
 | Developer Experience | 86% |
 | Documentation | 100% |
-| Operational Readiness | 100% |
+| Foundation Operational Readiness | 100% |
 
 ## Current Focus
 
 | Focus | Value |
 | --- | --- |
-| Primary Goal | Build the Production Integration Platform |
-| Working On | Phase XV master implementation blueprint |
-| After That | Gmail operational production certification |
+| Primary Goal | Build the Production Integration Platform from evidence-backed connector certification |
+| Working On | Roadmap truth correction and Gmail certification remediation |
+| After That | Gmail operational production certification without live sends |
 | After That | Calendar certified integration |
 | Not Planned Yet | Runtime architecture changes |
 
@@ -105,6 +110,7 @@ Latest architectural decisions:
 - Adapter-first integration is preserved.
 - No connector execution runs inside Gamma OS.
 - Human approval is required for production.
+- Continuous execution does not authorize live external actions without explicit operator approval and supplied credentials.
 
 No pending architecture decisions.
 
@@ -142,31 +148,36 @@ No pending architecture decisions.
 | Phase XV Handover | PASS |
 | Platform Vision | PASS |
 | Phase XV Master Plan | PASS |
+| Roadmap Truth Audit | PASS |
 
 ## Technical Debt
 
 - Stage 5 GA has no blocking technical debt.
-- Remaining debt is tracked in `docs/platform/GAMMA_TECHNICAL_DEBT.md`.
-- The primary immediate risk is stale local smoke targets when multiple local servers are running.
+- Future-phase roadmap percentages have been corrected to reflect implementation evidence.
+- Remaining debt is tracked in `docs/platform/GAMMA_TECHNICAL_DEBT.md` and `docs/platform/GAMMA_2_ROADMAP_TRUTH_AUDIT.md`.
+- Primary immediate debt: Gmail is simulation-complete but live execution still throws not implemented in core execution/action paths.
+- Secondary debt: Calendar, Drive, and GitHub connector API clients and OAuth adapters are scaffolded but not implemented.
 
 ## Risk Register
 
 | Risk | Severity | Mitigation |
 | --- | --- | --- |
 | Stale local server smoke target | Low | Run smoke against a fresh production server for certification. |
-| Phase XV integration boundary drift | Medium | Use the master implementation plan and certification checklist before integration certification. |
+| Phase XV integration boundary drift | Medium | Use the master implementation plan and roadmap truth audit before integration certification. |
 | Late release artifact cost | Medium | Keep projections deterministic; defer deeper optimization until after GA baseline. |
+| Dashboard overclaiming future phases | Medium | Keep future-phase percentages evidence-backed by source, tests, routes, and live capability status. |
+| Live external action boundary | High | Stop before real messages, calendar writes, file sharing, repository changes, customer charges, public publishing, infrastructure changes, or unsupplied credentials. |
 
 ## Architecture Health
 
 - Constitution compliance: good; human approval remains required before production.
 - Boundary compliance: good; no production secrets or external write actions are used.
 - Governance compliance: good; release records are deterministic and auditable.
-- Recommended refactors: none before GA; connector certification automation can begin in Phase XV.
+- Recommended refactors: align old Phase XVII-XXV source numbering with the approved Phase XVI-XX roadmap in a documentation-first pass before public contract changes.
 
 ## Next Phase
 
-Phase XV - Production Integration Platform is now governed by `docs/platform/PHASE_XV_PRODUCTION_CONNECTORS_MASTER_PLAN.md`. Initial integration scope starts with Gmail operational production certification, then Calendar, Drive, GitHub, Slack, and Notion under the Stage 5 boundary and governance model.
+Phase XV - Production Integration Platform is governed by `docs/platform/PHASE_XV_PRODUCTION_CONNECTORS_MASTER_PLAN.md` and corrected by `docs/platform/GAMMA_2_ROADMAP_TRUTH_AUDIT.md`. Initial integration scope starts with Gmail operational production certification remediation, then Calendar, Drive, GitHub, Slack, and Notion under the Stage 5 boundary and governance model.
 
 Future Gamma phases use the release-engineering lifecycle:
 
