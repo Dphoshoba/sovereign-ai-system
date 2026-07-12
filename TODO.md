@@ -245,3 +245,4 @@
 - [x] Provide final metrics + commit hashes + test counts + smoke results + hydration warnings.
 - [x] Add Stage 5 release completion certificate: `/api/gamma/stage-5/release-completion-certificate`
 - [x] Add Stage 5 release finalization index: `/api/gamma/stage-5/release-finalization-index`
+- [x] Add Stage 5 release operator registry: `/api/gamma/stage-5/release-operator-registry`

@@ -76,6 +76,7 @@ export function buildGammaStage5DeploymentSummary(): GammaStage5DeploymentSummar
       "/api/gamma/stage-5/release-closure-ledger",
       "/api/gamma/stage-5/release-completion-certificate",
       "/api/gamma/stage-5/release-finalization-index",
+      "/api/gamma/stage-5/release-operator-registry",
     ],
     operatorRequiredCount,
     tags: [...evidence.tags, "gamma-2-stage-5-promotion-checklist"],
