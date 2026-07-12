@@ -12,8 +12,8 @@ describe("Gamma 2 Stage 5 operator brief", () => {
       "Gamma 2 Stage 5 is verified and ready for controlled promotion."
     );
     expect(brief.summary).toContain("11 roadmap phases complete");
-    expect(brief.summary).toContain("60 routes passed, 0 failed");
-    expect(brief.summary).toContain("37 Stage 5 API endpoints available");
+    expect(brief.summary).toContain("61 routes passed, 0 failed");
+    expect(brief.summary).toContain("38 Stage 5 API endpoints available");
   });
 
   it("keeps only remaining operator actions in the action list", () => {
@@ -54,6 +54,7 @@ describe("Gamma 2 Stage 5 operator brief", () => {
     expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-closeout-packet");
     expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-closure-ledger");
     expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-completion-certificate");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-finalization-index");
   });
 
   it("is deterministic for repeated calls", () => {
