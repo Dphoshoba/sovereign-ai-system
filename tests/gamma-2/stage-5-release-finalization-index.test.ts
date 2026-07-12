@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/release-finalization-index/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5ReleaseFinalizationIndex } from "../../src/lib/gamma-2/stage-5-release-finalization-index";
@@ -11,7 +12,7 @@ describe("Gamma 2 Stage 5 release finalization index", () => {
     expect(index.status).toBe("pending-final-operator-review");
     expect(index.branch).toBe("gamma");
     expect(index.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(index.apiSurfaceCount).toBe(45);
+    expect(index.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(index.finalizationEntryCount).toBe(5);
     expect(index.closureEntryCount).toBe(6);
     expect(index.certificateEvidenceCount).toBe(5);
@@ -19,7 +20,7 @@ describe("Gamma 2 Stage 5 release finalization index", () => {
     expect(index.auditEntryCount).toBe(4);
     expect(index.receiptArtifactCount).toBe(4);
     expect(index.openExceptionCount).toBe(0);
-    expect(index.smoke).toBe("68 routes passed, 0 failed");
+    expect(index.smoke).toBe(GAMMA_STAGE_5_SMOKE_SUMMARY);
   }, 30000);
 
   it("orders the final release evidence records", () => {
@@ -86,7 +87,7 @@ describe("Gamma 2 Stage 5 release finalization index", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_finalization_index");
-    expect(body.apiSurfaceCount).toBe(45);
+    expect(body.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(body.status).toBe("pending-final-operator-review");
     expect(body.entries).toHaveLength(5);
   }, 30000);

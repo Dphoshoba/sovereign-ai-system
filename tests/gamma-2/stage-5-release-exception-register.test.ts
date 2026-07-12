@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/release-exception-register/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5ReleaseExceptionRegister } from "../../src/lib/gamma-2/stage-5-release-exception-register";
@@ -11,7 +12,7 @@ describe("Gamma 2 Stage 5 release exception register", () => {
     expect(register.status).toBe("ready-for-exception-review");
     expect(register.branch).toBe("gamma");
     expect(register.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(register.apiSurfaceCount).toBe(45);
+    expect(register.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(register.mappedControlCount).toBe(4);
     expect(register.openExceptionCount).toBe(0);
     expect(register.closedExceptionCount).toBe(4);
@@ -64,7 +65,7 @@ describe("Gamma 2 Stage 5 release exception register", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_exception_register");
-    expect(body.apiSurfaceCount).toBe(45);
+    expect(body.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(body.openExceptionCount).toBe(0);
     expect(body.exceptions).toHaveLength(4);
   });

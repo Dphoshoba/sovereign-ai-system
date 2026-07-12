@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/api-manifest/route";
 import { buildGammaStage5ApiManifest } from "../../src/lib/gamma-2/stage-5-api-manifest";
 
@@ -8,7 +9,7 @@ describe("Gamma 2 Stage 5 API manifest", () => {
 
     expect(manifest.id).toBe("gamma_2_stage_5_api_manifest");
     expect(manifest.status).toBe("ready-for-client-adapters");
-    expect(manifest.endpointCount).toBe(45);
+    expect(manifest.endpointCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(manifest.endpoints.every((endpoint) => endpoint.method === "GET")).toBe(true);
     expect(manifest.endpoints).toContainEqual({
       path: "/api/gamma/stage-5/api-manifest",
@@ -253,7 +254,7 @@ describe("Gamma 2 Stage 5 API manifest", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_api_manifest");
-    expect(body.endpointCount).toBe(45);
+    expect(body.endpointCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(body.adapterRule).toBe("single-discovery-manifest-for-stage-5-api-clients");
   });
 });

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/release-bundle/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5ReleaseBundle } from "../../src/lib/gamma-2/stage-5-release-bundle";
@@ -12,8 +13,8 @@ describe("Gamma 2 Stage 5 release bundle", () => {
     expect(bundle.branch).toBe("gamma");
     expect(bundle.productionUrl).toBe(PRODUCTION_APP_URL);
     expect(bundle.digestFingerprint).toMatch(/^[a-f0-9]{64}$/);
-    expect(bundle.apiSurfaceCount).toBe(45);
-    expect(bundle.indexedArtifactCount).toBe(45);
+    expect(bundle.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
+    expect(bundle.indexedArtifactCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(bundle.operatorApprovalArtifactCount).toBe(5);
   });
 
@@ -42,7 +43,7 @@ describe("Gamma 2 Stage 5 release bundle", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_bundle");
-    expect(body.apiSurfaceCount).toBe(45);
+    expect(body.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(body.artifacts).toHaveLength(5);
   });
 });

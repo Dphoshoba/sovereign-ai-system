@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/audit-ledger/route";
 import { buildGammaStage5AuditLedger } from "../../src/lib/gamma-2/stage-5-audit-ledger";
 
@@ -10,9 +11,9 @@ describe("Gamma 2 Stage 5 audit ledger", () => {
     expect(ledger.status).toBe("audit-ready");
     expect(ledger.branch).toBe("gamma");
     expect(ledger.digestFingerprint).toMatch(/^[a-f0-9]{64}$/);
-    expect(ledger.apiSurfaceCount).toBe(45);
+    expect(ledger.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(ledger.entries.map((entry) => entry.order)).toEqual([1, 2, 3, 4]);
-    expect(ledger.entries[0].evidence).toBe("68 routes passed, 0 failed");
+    expect(ledger.entries[0].evidence).toBe(GAMMA_STAGE_5_SMOKE_SUMMARY);
   });
 
   it("lists required release evidence artifacts", () => {
@@ -38,7 +39,7 @@ describe("Gamma 2 Stage 5 audit ledger", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_audit_ledger");
-    expect(body.apiSurfaceCount).toBe(45);
+    expect(body.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(body.auditRule).toBe("ordered-ledger-for-stage-5-release-evidence");
   });
 });

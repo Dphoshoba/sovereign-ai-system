@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/operator-brief/route";
 import { buildGammaStage5OperatorBrief } from "../../src/lib/gamma-2/stage-5-operator-brief";
 
@@ -12,8 +13,8 @@ describe("Gamma 2 Stage 5 operator brief", () => {
       "Gamma 2 Stage 5 is verified and ready for controlled promotion."
     );
     expect(brief.summary).toContain("11 roadmap phases complete");
-    expect(brief.summary).toContain("68 routes passed, 0 failed");
-    expect(brief.summary).toContain("45 Stage 5 API endpoints available");
+    expect(brief.summary).toContain(GAMMA_STAGE_5_SMOKE_SUMMARY);
+    expect(brief.summary).toContain(`${GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints} Stage 5 API endpoints available`);
   });
 
   it("keeps only remaining operator actions in the action list", () => {

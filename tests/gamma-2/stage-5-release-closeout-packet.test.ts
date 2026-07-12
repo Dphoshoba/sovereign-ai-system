@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/release-closeout-packet/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5ReleaseCloseoutPacket } from "../../src/lib/gamma-2/stage-5-release-closeout-packet";
@@ -11,7 +12,7 @@ describe("Gamma 2 Stage 5 release closeout packet", () => {
     expect(packet.status).toBe("pending-operator-closeout");
     expect(packet.branch).toBe("gamma");
     expect(packet.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(packet.apiSurfaceCount).toBe(45);
+    expect(packet.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(packet.closeoutItemCount).toBe(6);
     expect(packet.operationsStepCount).toBe(6);
     expect(packet.postPromotionReviewItemCount).toBe(5);
@@ -19,7 +20,7 @@ describe("Gamma 2 Stage 5 release closeout packet", () => {
     expect(packet.archiveItemCount).toBe(5);
     expect(packet.retentionRuleCount).toBe(4);
     expect(packet.rollbackStepCount).toBe(4);
-    expect(packet.smoke).toBe("68 routes passed, 0 failed");
+    expect(packet.smoke).toBe(GAMMA_STAGE_5_SMOKE_SUMMARY);
   }, 30000);
 
   it("keeps closeout items pending operator confirmation", () => {
@@ -100,7 +101,7 @@ describe("Gamma 2 Stage 5 release closeout packet", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_closeout_packet");
-    expect(body.apiSurfaceCount).toBe(45);
+    expect(body.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(body.status).toBe("pending-operator-closeout");
     expect(body.items).toHaveLength(6);
   }, 30000);

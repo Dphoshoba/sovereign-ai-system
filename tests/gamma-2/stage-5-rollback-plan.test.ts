@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/rollback-plan/route";
 import { buildGammaStage5RollbackPlan } from "../../src/lib/gamma-2/stage-5-rollback-plan";
 
@@ -11,7 +12,7 @@ describe("Gamma 2 Stage 5 rollback plan", () => {
     expect(plan.branch).toBe("gamma");
     expect(plan.protectedTag).toBe("gamma-2-roadmap-complete");
     expect(plan.digestFingerprint).toMatch(/^[a-f0-9]{64}$/);
-    expect(plan.apiSurfaceCount).toBe(45);
+    expect(plan.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(plan.steps).toHaveLength(4);
   });
 
@@ -37,7 +38,7 @@ describe("Gamma 2 Stage 5 rollback plan", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_rollback_plan");
-    expect(body.apiSurfaceCount).toBe(45);
+    expect(body.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(body.rollbackRule).toBe("operator-approved-rollback-to-last-attested-stage-5-tag");
   });
 });

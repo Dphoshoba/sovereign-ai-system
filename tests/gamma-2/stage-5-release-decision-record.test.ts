@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/release-decision-record/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5ReleaseDecisionRecord } from "../../src/lib/gamma-2/stage-5-release-decision-record";
@@ -11,7 +12,7 @@ describe("Gamma 2 Stage 5 release decision record", () => {
     expect(record.status).toBe("pending-operator-approval");
     expect(record.branch).toBe("gamma");
     expect(record.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(record.apiSurfaceCount).toBe(45);
+    expect(record.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(record.passCheckCount).toBe(3);
     expect(record.operatorRequiredCount).toBe(4);
     expect(record.openExceptionCount).toBe(0);
@@ -70,7 +71,7 @@ describe("Gamma 2 Stage 5 release decision record", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_decision_record");
-    expect(body.apiSurfaceCount).toBe(45);
+    expect(body.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(body.status).toBe("pending-operator-approval");
     expect(body.decisionEvidence).toHaveLength(5);
   });

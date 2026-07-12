@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/release-completion-certificate/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5ReleaseCompletionCertificate } from "../../src/lib/gamma-2/stage-5-release-completion-certificate";
@@ -11,14 +12,14 @@ describe("Gamma 2 Stage 5 release completion certificate", () => {
     expect(certificate.status).toBe("pending-operator-certification");
     expect(certificate.branch).toBe("gamma");
     expect(certificate.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(certificate.apiSurfaceCount).toBe(45);
+    expect(certificate.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(certificate.phaseCount).toBe(11);
     expect(certificate.closureEntryCount).toBe(6);
     expect(certificate.closeoutItemCount).toBe(6);
     expect(certificate.retentionRuleCount).toBe(4);
     expect(certificate.passCheckCount).toBe(3);
     expect(certificate.openExceptionCount).toBe(0);
-    expect(certificate.smoke).toBe("68 routes passed, 0 failed");
+    expect(certificate.smoke).toBe(GAMMA_STAGE_5_SMOKE_SUMMARY);
   }, 120000);
 
   it("binds the release completion evidence sequence", () => {
@@ -85,7 +86,7 @@ describe("Gamma 2 Stage 5 release completion certificate", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_completion_certificate");
-    expect(body.apiSurfaceCount).toBe(45);
+    expect(body.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(body.status).toBe("pending-operator-certification");
     expect(body.evidence).toHaveLength(5);
   }, 120000);

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/openapi/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5OpenApiDocument } from "../../src/lib/gamma-2/stage-5-openapi";
@@ -10,7 +11,7 @@ describe("Gamma 2 Stage 5 OpenAPI document", () => {
     expect(openapi.openapi).toBe("3.1.0");
     expect(openapi.info.title).toBe("Gamma 2 Stage 5 API");
     expect(openapi.servers).toEqual([{ url: PRODUCTION_APP_URL }]);
-    expect(Object.keys(openapi.paths)).toHaveLength(45);
+    expect(Object.keys(openapi.paths)).toHaveLength(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(openapi.paths["/api/gamma/stage-5/openapi"].get.operationId).toBe(
       "getStage5Openapi"
     );

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/release-dashboard/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5ReleaseDashboard } from "../../src/lib/gamma-2/stage-5-release-dashboard";
@@ -11,7 +12,7 @@ describe("Gamma 2 Stage 5 release dashboard", () => {
     expect(dashboard.status).toBe("ready-for-dashboard-review");
     expect(dashboard.productionUrl).toBe(PRODUCTION_APP_URL);
     expect(dashboard.health.phaseCount).toBe(11);
-    expect(dashboard.health.apiSurfaceCount).toBe(45);
+    expect(dashboard.health.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(dashboard.releaseChecks).toEqual({ passed: 3, operatorRequired: 2, total: 5 });
     expect(dashboard.promotionSteps).toEqual({ complete: 3, operatorRequired: 2, total: 5 });
     expect(dashboard.operatorActions).toHaveLength(2);
@@ -21,7 +22,7 @@ describe("Gamma 2 Stage 5 release dashboard", () => {
     const dashboard = buildGammaStage5ReleaseDashboard();
 
     expect(dashboard.apiSurface).toContain("/api/gamma/stage-5/release-dashboard");
-    expect(dashboard.apiSurface).toHaveLength(45);
+    expect(dashboard.apiSurface).toHaveLength(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(dashboard.dashboardRule).toBe(
       "single-dashboard-contract-for-stage-5-release-operations"
     );

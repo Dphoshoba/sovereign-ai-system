@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/release-operator-approval-receipt/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5ReleaseOperatorApprovalReceipt } from "../../src/lib/gamma-2/stage-5-release-operator-approval-receipt";
@@ -11,12 +12,12 @@ describe("Gamma 2 Stage 5 release operator approval receipt", () => {
     expect(receipt.status).toBe("receipt-ready-pending-human-production-approval");
     expect(receipt.branch).toBe("gamma");
     expect(receipt.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(receipt.apiSurfaceCount).toBe(45);
+    expect(receipt.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(receipt.receiptRecordCount).toBe(4);
     expect(receipt.auditEntryCount).toBe(5);
     expect(receipt.approvalRequirementCount).toBe(4);
     expect(receipt.queueItemCount).toBe(5);
-    expect(receipt.smoke).toBe("68 routes passed, 0 failed");
+    expect(receipt.smoke).toBe(GAMMA_STAGE_5_SMOKE_SUMMARY);
     expect(receipt.approvalBoundary).toBe("human-approval-before-production");
   }, 120000);
 
@@ -55,7 +56,7 @@ describe("Gamma 2 Stage 5 release operator approval receipt", () => {
         id: "smoke-evidence-received",
         label: "Smoke verification received",
         source: "/api/gamma/stage-5/health",
-        evidence: "68 routes passed, 0 failed",
+        evidence: GAMMA_STAGE_5_SMOKE_SUMMARY,
         status: "receipt-ready",
       },
     ]);
@@ -76,7 +77,7 @@ describe("Gamma 2 Stage 5 release operator approval receipt", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_operator_approval_receipt");
-    expect(body.apiSurfaceCount).toBe(45);
+    expect(body.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(body.status).toBe("receipt-ready-pending-human-production-approval");
     expect(body.records).toHaveLength(4);
   }, 120000);

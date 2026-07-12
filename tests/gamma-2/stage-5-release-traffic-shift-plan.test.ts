@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/release-traffic-shift-plan/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5ReleaseTrafficShiftPlan } from "../../src/lib/gamma-2/stage-5-release-traffic-shift-plan";
@@ -11,12 +12,12 @@ describe("Gamma 2 Stage 5 release traffic shift plan", () => {
     expect(plan.status).toBe("pending-operator-traffic-shift");
     expect(plan.branch).toBe("gamma");
     expect(plan.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(plan.apiSurfaceCount).toBe(45);
+    expect(plan.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(plan.trafficShiftStepCount).toBe(5);
     expect(plan.cutoverCheckCount).toBe(5);
     expect(plan.rollbackStepCount).toBe(4);
     expect(plan.healthStatus).toBe("healthy");
-    expect(plan.smoke).toBe("68 routes passed, 0 failed");
+    expect(plan.smoke).toBe(GAMMA_STAGE_5_SMOKE_SUMMARY);
   });
 
   it("keeps traffic shift steps pending operator action", () => {
@@ -61,7 +62,7 @@ describe("Gamma 2 Stage 5 release traffic shift plan", () => {
         id: "run-post-shift-smoke",
         title: "Run post-shift smoke verification",
         owner: "operator",
-        evidence: "68 routes passed, 0 failed",
+        evidence: GAMMA_STAGE_5_SMOKE_SUMMARY,
         status: "pending-operator-action",
       },
     ]);
@@ -82,7 +83,7 @@ describe("Gamma 2 Stage 5 release traffic shift plan", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_traffic_shift_plan");
-    expect(body.apiSurfaceCount).toBe(45);
+    expect(body.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(body.status).toBe("pending-operator-traffic-shift");
     expect(body.steps).toHaveLength(5);
   });

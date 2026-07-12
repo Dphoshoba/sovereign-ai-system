@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/release-operator-approval-packet/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5ReleaseOperatorApprovalPacket } from "../../src/lib/gamma-2/stage-5-release-operator-approval-packet";
@@ -11,13 +12,13 @@ describe("Gamma 2 Stage 5 release operator approval packet", () => {
     expect(packet.status).toBe("pending-human-production-approval");
     expect(packet.branch).toBe("gamma");
     expect(packet.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(packet.apiSurfaceCount).toBe(45);
+    expect(packet.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(packet.queueItemCount).toBe(5);
     expect(packet.readyItemCount).toBe(1);
     expect(packet.operatorRequiredItemCount).toBe(4);
     expect(packet.signoffRequirementCount).toBe(4);
     expect(packet.approvalRequirementCount).toBe(4);
-    expect(packet.smoke).toBe("68 routes passed, 0 failed");
+    expect(packet.smoke).toBe(GAMMA_STAGE_5_SMOKE_SUMMARY);
   }, 30000);
 
   it("packages the final human approval requirements", () => {
@@ -75,7 +76,7 @@ describe("Gamma 2 Stage 5 release operator approval packet", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_operator_approval_packet");
-    expect(body.apiSurfaceCount).toBe(45);
+    expect(body.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(body.status).toBe("pending-human-production-approval");
     expect(body.requirements).toHaveLength(4);
   }, 30000);

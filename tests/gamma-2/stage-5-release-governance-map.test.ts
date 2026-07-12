@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/release-governance-map/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5ReleaseGovernanceMap } from "../../src/lib/gamma-2/stage-5-release-governance-map";
@@ -11,7 +12,7 @@ describe("Gamma 2 Stage 5 release governance map", () => {
     expect(map.status).toBe("ready-for-governance-review");
     expect(map.branch).toBe("gamma");
     expect(map.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(map.apiSurfaceCount).toBe(45);
+    expect(map.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(map.governanceLaneCount).toBe(5);
     expect(map.openExceptionCount).toBe(0);
     expect(map.operatorRequiredCount).toBe(4);
@@ -74,7 +75,7 @@ describe("Gamma 2 Stage 5 release governance map", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_governance_map");
-    expect(body.apiSurfaceCount).toBe(45);
+    expect(body.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(body.governanceLaneCount).toBe(5);
     expect(body.openExceptionCount).toBe(0);
   });

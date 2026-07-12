@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/release-post-promotion-review/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5ReleasePostPromotionReview } from "../../src/lib/gamma-2/stage-5-release-post-promotion-review";
@@ -11,12 +12,12 @@ describe("Gamma 2 Stage 5 release post-promotion review", () => {
     expect(review.status).toBe("pending-operator-review");
     expect(review.branch).toBe("gamma");
     expect(review.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(review.apiSurfaceCount).toBe(45);
+    expect(review.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(review.reviewItemCount).toBe(5);
     expect(review.monitoringCheckCount).toBe(5);
     expect(review.openExceptionCount).toBe(0);
     expect(review.healthStatus).toBe("healthy");
-    expect(review.smoke).toBe("68 routes passed, 0 failed");
+    expect(review.smoke).toBe(GAMMA_STAGE_5_SMOKE_SUMMARY);
   });
 
   it("keeps post-promotion review items pending operator review", () => {
@@ -81,7 +82,7 @@ describe("Gamma 2 Stage 5 release post-promotion review", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_post_promotion_review");
-    expect(body.apiSurfaceCount).toBe(45);
+    expect(body.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(body.status).toBe("pending-operator-review");
     expect(body.items).toHaveLength(5);
   });

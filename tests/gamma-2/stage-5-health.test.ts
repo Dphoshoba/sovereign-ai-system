@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/health/route";
 import { buildGammaStage5Health } from "../../src/lib/gamma-2/stage-5-health";
 
@@ -9,8 +10,8 @@ describe("Gamma 2 Stage 5 health", () => {
     expect(health.id).toBe("gamma_2_stage_5_health");
     expect(health.status).toBe("healthy");
     expect(health.phaseCount).toBe(11);
-    expect(health.apiSurfaceCount).toBe(45);
-    expect(health.smoke).toBe("68 routes passed, 0 failed");
+    expect(health.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
+    expect(health.smoke).toBe(GAMMA_STAGE_5_SMOKE_SUMMARY);
     expect(health.operatorActionsRemaining).toBe(2);
   });
 

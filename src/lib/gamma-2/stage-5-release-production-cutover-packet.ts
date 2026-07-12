@@ -1,9 +1,5 @@
 import { PRODUCTION_APP_URL } from "../site-config";
-import { buildGammaStage5ReleaseCutoverChecklist } from "./stage-5-release-cutover-checklist";
-import { buildGammaStage5ReleaseMonitoringPlan } from "./stage-5-release-monitoring-plan";
-import { buildGammaStage5ReleaseProductionAuthorizationLedger } from "./stage-5-release-production-authorization-ledger";
-import { buildGammaStage5ReleaseTrafficShiftPlan } from "./stage-5-release-traffic-shift-plan";
-import { buildGammaStage5RollbackPlan } from "./stage-5-rollback-plan";
+import { buildGammaStage5ReleaseEvidenceContext } from "./stage-5-release-evidence-context";
 
 export interface GammaStage5ReleaseProductionCutoverPacketItem {
   order: number;
@@ -34,11 +30,14 @@ export interface GammaStage5ReleaseProductionCutoverPacket {
 }
 
 export function buildGammaStage5ReleaseProductionCutoverPacket(): GammaStage5ReleaseProductionCutoverPacket {
-  const authorizationLedger = buildGammaStage5ReleaseProductionAuthorizationLedger();
-  const cutoverChecklist = buildGammaStage5ReleaseCutoverChecklist();
-  const trafficShiftPlan = buildGammaStage5ReleaseTrafficShiftPlan();
-  const rollbackPlan = buildGammaStage5RollbackPlan();
-  const monitoringPlan = buildGammaStage5ReleaseMonitoringPlan();
+  const context = buildGammaStage5ReleaseEvidenceContext();
+  const {
+    authorizationLedger,
+    cutoverChecklist,
+    trafficShiftPlan,
+    rollbackPlan,
+    monitoringPlan,
+  } = context;
 
   const items: GammaStage5ReleaseProductionCutoverPacketItem[] = [
     {

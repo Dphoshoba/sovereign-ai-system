@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/release-approval-packet/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5ReleaseApprovalPacket } from "../../src/lib/gamma-2/stage-5-release-approval-packet";
@@ -11,7 +12,7 @@ describe("Gamma 2 Stage 5 release approval packet", () => {
     expect(packet.status).toBe("pending-operator-signoff");
     expect(packet.branch).toBe("gamma");
     expect(packet.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(packet.apiSurfaceCount).toBe(45);
+    expect(packet.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(packet.operatorRequiredCount).toBe(4);
     expect(packet.approvalArtifactCount).toBe(5);
   });
@@ -69,7 +70,7 @@ describe("Gamma 2 Stage 5 release approval packet", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_approval_packet");
-    expect(body.apiSurfaceCount).toBe(45);
+    expect(body.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(body.status).toBe("pending-operator-signoff");
     expect(body.approvalArtifacts).toHaveLength(5);
   });

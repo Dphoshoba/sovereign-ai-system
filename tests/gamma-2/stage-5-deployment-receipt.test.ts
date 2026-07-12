@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/deployment-receipt/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5DeploymentReceipt } from "../../src/lib/gamma-2/stage-5-deployment-receipt";
@@ -12,9 +13,9 @@ describe("Gamma 2 Stage 5 deployment receipt", () => {
     expect(receipt.branch).toBe("gamma");
     expect(receipt.productionUrl).toBe(PRODUCTION_APP_URL);
     expect(receipt.digestFingerprint).toMatch(/^[a-f0-9]{64}$/);
-    expect(receipt.apiSurfaceCount).toBe(45);
+    expect(receipt.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(receipt.auditEntryCount).toBe(4);
-    expect(receipt.verification).toEqual({ build: "passed", smoke: "68 routes passed, 0 failed" });
+    expect(receipt.verification).toEqual({ build: "passed", smoke: GAMMA_STAGE_5_SMOKE_SUMMARY });
   });
 
   it("requires attestation and audit artifacts", () => {
@@ -41,7 +42,7 @@ describe("Gamma 2 Stage 5 deployment receipt", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_deployment_receipt");
-    expect(body.apiSurfaceCount).toBe(45);
+    expect(body.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(body.receiptRule).toBe(
       "post-promotion-record-must-reference-attestation-and-audit-ledger"
     );

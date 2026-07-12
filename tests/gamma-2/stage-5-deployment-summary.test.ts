@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/deployment-summary/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5DeploymentSummary } from "../../src/lib/gamma-2/stage-5-deployment-summary";
@@ -82,6 +83,6 @@ describe("Gamma 2 Stage 5 deployment summary", () => {
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_deployment_summary");
     expect(body.status).toBe("ready-for-controlled-promotion");
-    expect(body.apiSurface).toHaveLength(45);
+    expect(body.apiSurface).toHaveLength(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
   });
 });

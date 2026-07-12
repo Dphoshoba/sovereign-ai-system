@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { PHASE_XV_CONNECTOR_PRIORITY } from "../../src/lib/gamma-2/production-connectors";
 import {
   buildGammaStage5ReadinessSnapshot,
@@ -33,7 +34,7 @@ describe("Gamma 2 Stage 5 readiness snapshot", () => {
     const snapshot = buildGammaStage5ReadinessSnapshot();
 
     expect(snapshot.generatedAt).toEqual(GAMMA_STAGE_5_COMPLETION_TIME);
-    expect(snapshot.verification.smoke).toBe("68 routes passed, 0 failed");
+    expect(snapshot.verification.smoke).toBe(GAMMA_STAGE_5_SMOKE_SUMMARY);
     expect(snapshot.governanceBoundaries).toContain("no-self-modifying-code");
     expect(snapshot.governanceBoundaries).toContain("shared-governance-for-every-product");
   });

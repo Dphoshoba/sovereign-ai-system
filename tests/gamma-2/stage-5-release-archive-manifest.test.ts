@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/release-archive-manifest/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5ReleaseArchiveManifest } from "../../src/lib/gamma-2/stage-5-release-archive-manifest";
@@ -12,9 +13,9 @@ describe("Gamma 2 Stage 5 release archive manifest", () => {
     expect(manifest.branch).toBe("gamma");
     expect(manifest.productionUrl).toBe(PRODUCTION_APP_URL);
     expect(manifest.digestFingerprint).toMatch(/^[a-f0-9]{64}$/);
-    expect(manifest.apiSurfaceCount).toBe(45);
+    expect(manifest.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(manifest.bundleArtifactCount).toBe(5);
-    expect(manifest.indexedArtifactCount).toBe(45);
+    expect(manifest.indexedArtifactCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
   });
 
   it("declares retention boundaries and archived items", () => {
@@ -49,7 +50,7 @@ describe("Gamma 2 Stage 5 release archive manifest", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_archive_manifest");
-    expect(body.apiSurfaceCount).toBe(45);
+    expect(body.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(body.archiveItems).toHaveLength(5);
   });
 });

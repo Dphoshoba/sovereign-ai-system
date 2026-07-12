@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/release-promotion-plan/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5ReleasePromotionPlan } from "../../src/lib/gamma-2/stage-5-release-promotion-plan";
@@ -11,7 +12,7 @@ describe("Gamma 2 Stage 5 release promotion plan", () => {
     expect(plan.status).toBe("pending-operator-approval");
     expect(plan.branch).toBe("gamma");
     expect(plan.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(plan.apiSurfaceCount).toBe(45);
+    expect(plan.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(plan.approvalArtifactCount).toBe(5);
     expect(plan.promotionStepCount).toBe(5);
     expect(plan.rollbackStepCount).toBe(4);
@@ -79,7 +80,7 @@ describe("Gamma 2 Stage 5 release promotion plan", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_promotion_plan");
-    expect(body.apiSurfaceCount).toBe(45);
+    expect(body.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(body.status).toBe("pending-operator-approval");
     expect(body.steps).toHaveLength(5);
   });

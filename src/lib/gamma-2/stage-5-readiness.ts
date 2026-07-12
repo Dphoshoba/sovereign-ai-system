@@ -12,6 +12,7 @@ import { buildPhaseXXIIReadiness } from "./learning-engine";
 import { buildPhaseXXIIIReadiness } from "./executive-intelligence";
 import { buildPhaseXXIVReadiness } from "./developer-platform";
 import { buildPhaseXXVReadiness } from "./intelligence-network";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY } from "./stage-5-surface-registry";
 
 export type GammaStage5Phase =
   | "XV"
@@ -47,7 +48,7 @@ export interface GammaStage5ReadinessSnapshot {
     tests: "56 files passed, 880 tests passed, 3 skipped";
     determinism: "passed with non-critical legacy warnings";
     build: "passed";
-    smoke: "68 routes passed, 0 failed";
+    smoke: typeof GAMMA_STAGE_5_SMOKE_SUMMARY;
   };
   readiness: {
     phaseXV: {
@@ -170,7 +171,7 @@ export function buildGammaStage5ReadinessSnapshot(): GammaStage5ReadinessSnapsho
       tests: "56 files passed, 880 tests passed, 3 skipped",
       determinism: "passed with non-critical legacy warnings",
       build: "passed",
-      smoke: "68 routes passed, 0 failed",
+      smoke: GAMMA_STAGE_5_SMOKE_SUMMARY,
     },
     readiness: {
       phaseXV: {

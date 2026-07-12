@@ -33,7 +33,7 @@ This never resets.
 | Enterprise | #################### | 100% |
 | Intelligence Network | #################### | 100% |
 | Current Release Productization | ###################- | 92% |
-| Overall Gamma 2.0 Roadmap | ##################-- | 90% |
+| Current Stage 5 release completion | ##################-- | 90% |
 
 ## Platform Statistics
 

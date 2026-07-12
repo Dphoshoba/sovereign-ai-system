@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/evidence-index/route";
 import { buildGammaStage5EvidenceIndex } from "../../src/lib/gamma-2/stage-5-evidence-index";
 
@@ -9,9 +10,9 @@ describe("Gamma 2 Stage 5 evidence index", () => {
     expect(index.id).toBe("gamma_2_stage_5_evidence_index");
     expect(index.status).toBe("indexed-for-release-review");
     expect(index.branch).toBe("gamma");
-    expect(index.apiSurfaceCount).toBe(45);
-    expect(index.smoke).toBe("68 routes passed, 0 failed");
-    expect(index.entries).toHaveLength(45);
+    expect(index.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
+    expect(index.smoke).toBe(GAMMA_STAGE_5_SMOKE_SUMMARY);
+    expect(index.entries).toHaveLength(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(index.operatorApprovalArtifactCount).toBe(5);
   });
 
@@ -46,7 +47,7 @@ describe("Gamma 2 Stage 5 evidence index", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_evidence_index");
-    expect(body.apiSurfaceCount).toBe(45);
-    expect(body.entries).toHaveLength(45);
+    expect(body.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
+    expect(body.entries).toHaveLength(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
   });
 });

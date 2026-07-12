@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/release-compliance-matrix/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5ReleaseComplianceMatrix } from "../../src/lib/gamma-2/stage-5-release-compliance-matrix";
@@ -11,7 +12,7 @@ describe("Gamma 2 Stage 5 release compliance matrix", () => {
     expect(matrix.status).toBe("ready-for-compliance-review");
     expect(matrix.branch).toBe("gamma");
     expect(matrix.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(matrix.apiSurfaceCount).toBe(45);
+    expect(matrix.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(matrix.mappedControlCount).toBe(4);
     expect(matrix.operatorApprovalArtifactCount).toBe(5);
   });
@@ -62,7 +63,7 @@ describe("Gamma 2 Stage 5 release compliance matrix", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_compliance_matrix");
-    expect(body.apiSurfaceCount).toBe(45);
+    expect(body.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(body.controls).toHaveLength(4);
   });
 });

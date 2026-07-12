@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/release-retention-policy/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5ReleaseRetentionPolicy } from "../../src/lib/gamma-2/stage-5-release-retention-policy";
@@ -13,7 +14,7 @@ describe("Gamma 2 Stage 5 release retention policy", () => {
     expect(policy.productionUrl).toBe(PRODUCTION_APP_URL);
     expect(policy.protectedTag).toBe("gamma-2-roadmap-complete");
     expect(policy.archiveItemCount).toBe(5);
-    expect(policy.apiSurfaceCount).toBe(45);
+    expect(policy.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
   });
 
   it("declares retention rules for release records", () => {
@@ -44,7 +45,7 @@ describe("Gamma 2 Stage 5 release retention policy", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_retention_policy");
-    expect(body.apiSurfaceCount).toBe(45);
+    expect(body.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(body.retentionRules).toHaveLength(4);
   });
 });

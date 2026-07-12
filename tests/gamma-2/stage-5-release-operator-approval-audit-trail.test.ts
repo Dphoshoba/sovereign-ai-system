@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/release-operator-approval-audit-trail/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5ReleaseOperatorApprovalAuditTrail } from "../../src/lib/gamma-2/stage-5-release-operator-approval-audit-trail";
@@ -11,13 +12,13 @@ describe("Gamma 2 Stage 5 release operator approval audit trail", () => {
     expect(trail.status).toBe("audit-ready-pending-human-approval");
     expect(trail.branch).toBe("gamma");
     expect(trail.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(trail.apiSurfaceCount).toBe(45);
+    expect(trail.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(trail.auditEntryCount).toBe(5);
     expect(trail.queueItemCount).toBe(5);
     expect(trail.approvalRequirementCount).toBe(4);
     expect(trail.operatorRequiredItemCount).toBe(4);
     expect(trail.signoffRequirementCount).toBe(4);
-    expect(trail.smoke).toBe("68 routes passed, 0 failed");
+    expect(trail.smoke).toBe(GAMMA_STAGE_5_SMOKE_SUMMARY);
   }, 120000);
 
   it("records the approval evidence chain", () => {
@@ -67,7 +68,7 @@ describe("Gamma 2 Stage 5 release operator approval audit trail", () => {
         id: "verification-recorded",
         event: "Stage 5 smoke verification recorded",
         source: "/api/gamma/stage-5/health",
-        evidence: "68 routes passed, 0 failed",
+        evidence: GAMMA_STAGE_5_SMOKE_SUMMARY,
         actor: "release-client",
         status: "audit-ready",
       },
@@ -89,7 +90,7 @@ describe("Gamma 2 Stage 5 release operator approval audit trail", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_operator_approval_audit_trail");
-    expect(body.apiSurfaceCount).toBe(45);
+    expect(body.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(body.status).toBe("audit-ready-pending-human-approval");
     expect(body.entries).toHaveLength(5);
   }, 120000);

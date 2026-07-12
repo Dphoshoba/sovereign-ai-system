@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
 import { GET } from "../../app/api/gamma/stage-5/release-cutover-checklist/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5ReleaseCutoverChecklist } from "../../src/lib/gamma-2/stage-5-release-cutover-checklist";
@@ -11,7 +12,7 @@ describe("Gamma 2 Stage 5 release cutover checklist", () => {
     expect(checklist.status).toBe("pending-operator-cutover");
     expect(checklist.branch).toBe("gamma");
     expect(checklist.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(checklist.apiSurfaceCount).toBe(45);
+    expect(checklist.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(checklist.cutoverCheckCount).toBe(5);
     expect(checklist.promotionStepCount).toBe(5);
     expect(checklist.rollbackStepCount).toBe(4);
@@ -74,7 +75,7 @@ describe("Gamma 2 Stage 5 release cutover checklist", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_cutover_checklist");
-    expect(body.apiSurfaceCount).toBe(45);
+    expect(body.apiSurfaceCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
     expect(body.status).toBe("pending-operator-cutover");
     expect(body.checks).toHaveLength(5);
   });
