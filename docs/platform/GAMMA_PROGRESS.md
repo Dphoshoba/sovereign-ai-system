@@ -13,14 +13,14 @@ This answers: Where is the current engineering effort?
 | General Availability | gamma-stage5-ga-v1 |
 | Platform Baseline | gamma-platform-v1.0.0 |
 | Current Stage | Roadmap Truth Audit |
-| Current Release Completion | #####--------------- 24% |
+| Current Release Completion | #####--------------- 26% |
 | Strategic Roadmap Completion | ########------------ 38% |
-| Current Milestone | Gmail live-execution gap closure without live sends |
-| Next | Gmail simulation-safe execution certification |
+| Current Milestone | Gmail simulation-safe execution certification |
+| Next | Calendar certified integration plan remediation |
 | Status | Complete |
 | Branch | gamma |
-| Last Commit | gamma-gmail-live-execution-gap-closure |
-| Current Tag | gamma-gmail-live-execution-gap-closure |
+| Last Commit | gamma-gmail-simulation-safe-execution-certification |
+| Current Tag | gamma-gmail-simulation-safe-execution-certification |
 | Known Blockers | Live connector verification requires explicit operator approval and supplied credentials |
 
 ## Strategic Roadmap
@@ -45,15 +45,15 @@ This never resets.
 
 | Metric | Value |
 | --- | ---: |
-| Git commits | 682 |
-| Tags | 108 |
+| Git commits | 683 |
+| Tags | 109 |
 | Connectors | 9 |
 | Workflows | 47 |
 | Policies | 62 |
 | Bindings | 34 |
 | API Endpoints | 45 |
 | Test files | 119 |
-| Documentation | 269 files |
+| Documentation | 270 files |
 | Architecture Score | 10/10 |
 | Governance Score | 10/10 |
 | Foundation Readiness | 100% |
@@ -97,8 +97,8 @@ This never resets.
 | Focus | Value |
 | --- | --- |
 | Primary Goal | Build the Production Integration Platform from evidence-backed connector certification |
-| Working On | Gmail simulation-safe execution certification |
-| After That | Calendar certified integration plan remediation |
+| Working On | Calendar certified integration plan remediation |
+| After That | Calendar scaffold-to-preview implementation |
 | After That | Calendar certified integration |
 | Not Planned Yet | Runtime architecture changes |
 
@@ -152,6 +152,7 @@ No pending architecture decisions.
 | Roadmap Truth Audit | PASS |
 | Gmail Remediation Packet | PASS |
 | Gmail Live Execution Gap Closure | PASS |
+| Gmail Simulation-Safe Execution Certification | PASS |
 
 ## Technical Debt
 

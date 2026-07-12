@@ -26,11 +26,14 @@ describe("Phase XV Gmail operational certification documentation", () => {
     const remediation = readDoc("docs/phase-xv/GMAIL_OPERATIONAL_CERTIFICATION_REMEDIATION.md");
     const runbook = readDoc("docs/phase-xv/GMAIL_OPERATOR_RUNBOOK.md");
     const specification = readDoc("docs/phase-xv/GMAIL_CONNECTOR_V1.md");
+    const certification = readDoc("docs/phase-xv/GMAIL_SIMULATION_SAFE_EXECUTION_CERTIFICATION.md");
 
     expect(remediation).toContain("Gmail is not yet certified for live production sends.");
     expect(remediation).toContain("This remediation does not authorize live email sends.");
     expect(runbook).toContain("No real email may be sent unless the operator explicitly approves that exact action");
     expect(specification).toContain("SIMULATION-CERTIFIED");
     expect(specification).not.toContain("Recommendation**: Safe to deploy");
+    expect(certification).toContain("Gmail is certified for simulation-safe execution.");
+    expect(certification).toContain("Gmail is not certified for live production execution.");
   });
 });
