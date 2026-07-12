@@ -11,12 +11,12 @@ describe("Gamma 2 Stage 5 release traffic shift plan", () => {
     expect(plan.status).toBe("pending-operator-traffic-shift");
     expect(plan.branch).toBe("gamma");
     expect(plan.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(plan.apiSurfaceCount).toBe(39);
+    expect(plan.apiSurfaceCount).toBe(40);
     expect(plan.trafficShiftStepCount).toBe(5);
     expect(plan.cutoverCheckCount).toBe(5);
     expect(plan.rollbackStepCount).toBe(4);
     expect(plan.healthStatus).toBe("healthy");
-    expect(plan.smoke).toBe("62 routes passed, 0 failed");
+    expect(plan.smoke).toBe("63 routes passed, 0 failed");
   });
 
   it("keeps traffic shift steps pending operator action", () => {
@@ -61,7 +61,7 @@ describe("Gamma 2 Stage 5 release traffic shift plan", () => {
         id: "run-post-shift-smoke",
         title: "Run post-shift smoke verification",
         owner: "operator",
-        evidence: "62 routes passed, 0 failed",
+        evidence: "63 routes passed, 0 failed",
         status: "pending-operator-action",
       },
     ]);
@@ -82,7 +82,7 @@ describe("Gamma 2 Stage 5 release traffic shift plan", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_traffic_shift_plan");
-    expect(body.apiSurfaceCount).toBe(39);
+    expect(body.apiSurfaceCount).toBe(40);
     expect(body.status).toBe("pending-operator-traffic-shift");
     expect(body.steps).toHaveLength(5);
   });

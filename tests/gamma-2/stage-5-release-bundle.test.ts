@@ -12,8 +12,8 @@ describe("Gamma 2 Stage 5 release bundle", () => {
     expect(bundle.branch).toBe("gamma");
     expect(bundle.productionUrl).toBe(PRODUCTION_APP_URL);
     expect(bundle.digestFingerprint).toMatch(/^[a-f0-9]{64}$/);
-    expect(bundle.apiSurfaceCount).toBe(39);
-    expect(bundle.indexedArtifactCount).toBe(39);
+    expect(bundle.apiSurfaceCount).toBe(40);
+    expect(bundle.indexedArtifactCount).toBe(40);
     expect(bundle.operatorApprovalArtifactCount).toBe(5);
   });
 
@@ -42,7 +42,7 @@ describe("Gamma 2 Stage 5 release bundle", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_bundle");
-    expect(body.apiSurfaceCount).toBe(39);
+    expect(body.apiSurfaceCount).toBe(40);
     expect(body.artifacts).toHaveLength(5);
   });
 });

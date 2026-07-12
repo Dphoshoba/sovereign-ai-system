@@ -11,7 +11,7 @@ describe("Gamma 2 Stage 5 release compliance matrix", () => {
     expect(matrix.status).toBe("ready-for-compliance-review");
     expect(matrix.branch).toBe("gamma");
     expect(matrix.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(matrix.apiSurfaceCount).toBe(39);
+    expect(matrix.apiSurfaceCount).toBe(40);
     expect(matrix.mappedControlCount).toBe(4);
     expect(matrix.operatorApprovalArtifactCount).toBe(5);
   });
@@ -62,7 +62,7 @@ describe("Gamma 2 Stage 5 release compliance matrix", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_compliance_matrix");
-    expect(body.apiSurfaceCount).toBe(39);
+    expect(body.apiSurfaceCount).toBe(40);
     expect(body.controls).toHaveLength(4);
   });
 });
