@@ -243,3 +243,4 @@
 - [x] Run: `npm run smoke:v1`
 - [x] Create tag + push frozen branch
 - [x] Provide final metrics + commit hashes + test counts + smoke results + hydration warnings.
+- [x] Add Stage 5 release completion certificate: `/api/gamma/stage-5/release-completion-certificate`

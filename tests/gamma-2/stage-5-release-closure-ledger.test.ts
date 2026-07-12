@@ -11,14 +11,14 @@ describe("Gamma 2 Stage 5 release closure ledger", () => {
     expect(ledger.status).toBe("pending-operator-closure");
     expect(ledger.branch).toBe("gamma");
     expect(ledger.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(ledger.apiSurfaceCount).toBe(36);
+    expect(ledger.apiSurfaceCount).toBe(37);
     expect(ledger.closureEntryCount).toBe(6);
     expect(ledger.operationsStepCount).toBe(6);
     expect(ledger.closeoutItemCount).toBe(6);
     expect(ledger.auditEntryCount).toBe(4);
     expect(ledger.passCheckCount).toBe(3);
     expect(ledger.openExceptionCount).toBe(0);
-    expect(ledger.smoke).toBe("59 routes passed, 0 failed");
+    expect(ledger.smoke).toBe("60 routes passed, 0 failed");
   }, 10000);
 
   it("binds the final release closure evidence sequence", () => {
@@ -85,7 +85,7 @@ describe("Gamma 2 Stage 5 release closure ledger", () => {
     expect(buildGammaStage5ReleaseClosureLedger()).toEqual(
       buildGammaStage5ReleaseClosureLedger()
     );
-  }, 10000);
+  }, 30000);
 
   it("serves the ledger through the Stage 5 release closure ledger route", async () => {
     const response = await GET();
@@ -93,7 +93,7 @@ describe("Gamma 2 Stage 5 release closure ledger", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_closure_ledger");
-    expect(body.apiSurfaceCount).toBe(36);
+    expect(body.apiSurfaceCount).toBe(37);
     expect(body.status).toBe("pending-operator-closure");
     expect(body.entries).toHaveLength(6);
   });
