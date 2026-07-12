@@ -29,7 +29,7 @@ Build numbers are implementation markers. Certification is the release gate.
 
 | Connector | Current Status | Certification Position | Next Release Step |
 | --- | --- | --- | --- |
-| Gmail | Certified reference connector | Certified v1.0, score 93/100 | Operational production activation checklist |
+| Gmail | Simulation-certified reference connector | Operational production certification pending after roadmap truth audit | Complete Gmail remediation packet without live sends |
 | Calendar | Production readiness projection exists | Candidate | Complete Calendar-specific certification package |
 | Drive | Gamma Factory scaffold and readiness projection exist | Candidate | Complete Drive-specific certification package |
 | GitHub | Gamma Factory scaffold and readiness projection exist | Candidate | Complete GitHub-specific certification package |
@@ -46,25 +46,27 @@ Build numbers are implementation markers. Certification is the release gate.
 
 ## Gmail Certification Status
 
-Gmail is the Phase XV reference connector.
+Gmail is the Phase XV reference connector for simulation-safe preview, approval, queue, audit, retry, health, and hardening patterns.
+
+The roadmap truth audit classifies Gmail as `IMPLEMENTED_SIMULATION_ONLY` for live capability. Gmail is not yet authorized for live production sends.
 
 | Area | Status |
 | --- | --- |
 | Specification | Complete |
-| Certification status | Certified |
-| Certification score | 93/100 |
-| Production readiness score | 92/100 |
-| OAuth | Certified |
-| Reader | Certified |
-| Composer | Certified |
-| Preview | Certified |
-| Approval gate | Certified |
-| Queue engine | Certified |
-| Controlled executor | Certified |
-| Health monitor | Certified |
-| Compliance audit | Certified |
-| Hardening | Certified |
-| Documentation | Certified |
+| Certification status | Simulation-certified; operational production certification pending |
+| Certification score | 93/100 for simulation/reference scope |
+| Production readiness score | 92/100 for simulation/reference scope |
+| OAuth | Implemented pattern; credential-backed production verification pending |
+| Reader | Implemented pattern |
+| Composer | Implemented pattern |
+| Preview | Certified as side-effect-free |
+| Approval gate | Certified as required |
+| Queue engine | Certified as required before execution |
+| Controlled executor | Simulation-safe; live execution path not complete |
+| Health monitor | Implemented pattern |
+| Compliance audit | Implemented pattern |
+| Hardening | Implemented pattern |
+| Documentation | Remediated by truth audit and operator runbook |
 
 Gmail establishes the reusable connector pattern:
 
@@ -74,15 +76,16 @@ Read -> Sanitize -> Parse -> Preview -> Approve -> Queue -> Execute -> Audit -> 
 
 ## Remaining Gmail Work
 
-Gmail is certified as the reference implementation. Remaining Gmail work is operationalization, not architecture.
+Gmail is certified as the simulation/reference implementation. Remaining Gmail work is operationalization and live-execution completion, not architecture.
 
 | Work Item | Purpose | Required Before Live Production |
 | --- | --- | --- |
+| Roadmap truth remediation | Align docs with actual simulation-only live status | YES |
+| Operator runbook | Document approve, reject, retry, revoke, rollback, and incident workflows | YES |
 | Production credential review | Confirm OAuth client, scopes, secret handling, and revocation path | YES |
 | Real token refresh validation | Verify refresh behavior against production credentials | YES |
 | Real-send feature flag review | Confirm real execution stays disabled by default and requires approval | YES |
 | Production smoke route | Validate health, scopes, quota, rate limit, and approval surfaces | YES |
-| Operator runbook | Document approve, reject, retry, revoke, and rollback workflows | YES |
 | Audit export review | Confirm audit evidence can be retained and reviewed | YES |
 | Incident rollback plan | Confirm connector disablement and token revocation procedures | YES |
 | Final Gmail release certificate | Freeze Gmail as certified production integration | YES |

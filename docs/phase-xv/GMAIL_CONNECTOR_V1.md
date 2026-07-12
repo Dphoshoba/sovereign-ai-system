@@ -1,7 +1,7 @@
 # Gmail Connector v1.0 — Specification
 
 **Version**: 1.0  
-**Status**: CERTIFIED  
+**Status**: SIMULATION-CERTIFIED; OPERATIONAL PRODUCTION CERTIFICATION PENDING
 **Date**: 2026-07-10  
 **Certification Score**: 93/100  
 
@@ -314,8 +314,8 @@ Gmail   Secrets   MIME    Draft   Display  Human   Queue   Gmail   Logs
 ### Production Readiness
 
 - **Score**: 92/100
-- **Status**: PRODUCTION-READY
-- **Recommendation**: Safe to deploy
+- **Status**: SIMULATION-READY
+- **Recommendation**: Safe to continue operational certification remediation. Live sends remain prohibited until explicitly approved with supplied credentials.
 
 ---
 
@@ -466,10 +466,11 @@ Get overall health status.
 | 0.2 | 2026-06-22 | Internal | Build 136 added draft API |
 | 0.3 | 2026-06-29 | Internal | Build 137-138 added compliance |
 | 0.4 | 2026-07-08 | Beta | Build 139 added hardening |
-| 1.0 | 2026-07-10 | CERTIFIED | Build 140 complete |
+| 1.0 | 2026-07-10 | SIMULATION-CERTIFIED | Build 140 complete |
+| 1.1 | 2026-07-12 | REMEDIATED | Roadmap truth audit clarified live production certification remains pending |
 
 ---
 
-**Status**: GMAIL_CONNECTOR_V1_CERTIFIED ✅
+**Status**: GMAIL_CONNECTOR_V1_SIMULATION_CERTIFIED
 
-**Ready**: For production deployment and reference architecture reuse.
+**Ready**: For reference architecture reuse and simulation-safe validation. Not ready for live sends without explicit operator approval, supplied credentials, and final operational certification.

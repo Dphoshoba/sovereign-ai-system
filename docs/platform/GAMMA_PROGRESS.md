@@ -13,14 +13,14 @@ This answers: Where is the current engineering effort?
 | General Availability | gamma-stage5-ga-v1 |
 | Platform Baseline | gamma-platform-v1.0.0 |
 | Current Stage | Roadmap Truth Audit |
-| Current Release Completion | #################### 100% |
+| Current Release Completion | ####---------------- 20% |
 | Strategic Roadmap Completion | ########------------ 38% |
-| Current Milestone | Gamma 2.0 Roadmap Truth Audit |
-| Next | Gmail operational production certification remediation |
-| Status | Audit Complete |
+| Current Milestone | Gmail operational production certification remediation |
+| Next | Gmail live-execution gap closure without live sends |
+| Status | Remediation Packet Complete |
 | Branch | gamma |
-| Last Commit | gamma-2-roadmap-truth-audit |
-| Current Tag | gamma-2-roadmap-truth-audit |
+| Last Commit | gamma-gmail-operational-remediation |
+| Current Tag | gamma-gmail-operational-remediation |
 | Known Blockers | Live connector verification requires explicit operator approval and supplied credentials |
 
 ## Strategic Roadmap
@@ -45,15 +45,15 @@ This never resets.
 
 | Metric | Value |
 | --- | ---: |
-| Git commits | 680 |
-| Tags | 106 |
+| Git commits | 681 |
+| Tags | 107 |
 | Connectors | 9 |
 | Workflows | 47 |
 | Policies | 62 |
 | Bindings | 34 |
 | API Endpoints | 45 |
-| Test files | 118 |
-| Documentation | 267 files |
+| Test files | 119 |
+| Documentation | 269 files |
 | Architecture Score | 10/10 |
 | Governance Score | 10/10 |
 | Foundation Readiness | 100% |
@@ -71,7 +71,8 @@ This never resets.
 | Platform Vision | COMPLETE |
 | Master Plan | COMPLETE |
 | Roadmap Truth Audit | COMPLETE |
-| Next Phase | Gmail operational production certification remediation |
+| Gmail Remediation Packet | COMPLETE |
+| Next Phase | Gmail live-execution gap closure without live sends |
 
 ## Architecture Maturity
 
@@ -96,8 +97,8 @@ This never resets.
 | Focus | Value |
 | --- | --- |
 | Primary Goal | Build the Production Integration Platform from evidence-backed connector certification |
-| Working On | Roadmap truth correction and Gmail certification remediation |
-| After That | Gmail operational production certification without live sends |
+| Working On | Gmail live-execution gap closure without live sends |
+| After That | Gmail simulation-safe execution certification |
 | After That | Calendar certified integration |
 | Not Planned Yet | Runtime architecture changes |
 
@@ -149,6 +150,7 @@ No pending architecture decisions.
 | Platform Vision | PASS |
 | Phase XV Master Plan | PASS |
 | Roadmap Truth Audit | PASS |
+| Gmail Remediation Packet | PASS |
 
 ## Technical Debt
 
@@ -157,6 +159,7 @@ No pending architecture decisions.
 - Remaining debt is tracked in `docs/platform/GAMMA_TECHNICAL_DEBT.md` and `docs/platform/GAMMA_2_ROADMAP_TRUTH_AUDIT.md`.
 - Primary immediate debt: Gmail is simulation-complete but live execution still throws not implemented in core execution/action paths.
 - Secondary debt: Calendar, Drive, and GitHub connector API clients and OAuth adapters are scaffolded but not implemented.
+- Resolved debt in progress: Gmail docs now distinguish simulation certification from live production certification.
 
 ## Risk Register
 
