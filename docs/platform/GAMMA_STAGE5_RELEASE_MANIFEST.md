@@ -11,6 +11,7 @@ Last updated: 2026-07-12
 | Release candidate commit | 4a05945 |
 | Release candidate tag | gamma-2-stage-5-projection-migration-complete |
 | GA tag | gamma-stage5-ga-v1 |
+| Platform baseline tag | gamma-platform-v1.0.0 |
 | Endpoint count | 45 |
 | Smoke route count | 68 |
 | Projection count | 21 |
@@ -162,10 +163,11 @@ The documentation corpus is every file returned by `rg --files docs` at the GA c
 | `docs/platform/GAMMA_ARCHITECTURE_CERTIFICATION.md` | Architecture certification |
 | `docs/platform/GAMMA_TECHNICAL_DEBT.md` | Technical debt register |
 | `docs/platform/PHASE_XV_CONNECTOR_HANDOVER.md` | Phase XV bridge |
+| `docs/platform/GAMMA_PLATFORM_VISION.md` | Platform North Star |
 | `docs/platform/GAMMA_PROGRESS.md` | Final executive dashboard |
 
 The complete corpus remains immutable at the `gamma-stage5-ga-v1` tag.
 
 ## Manifest Statement
 
-This manifest is the official Stage 5 inventory. Any Phase XV connector work must treat this inventory as the production baseline unless superseded by an approved architectural decision.
+This manifest is the official Stage 5 inventory. Any Phase XV Production Integration Platform work must treat this inventory as the production baseline unless superseded by an approved architectural decision.

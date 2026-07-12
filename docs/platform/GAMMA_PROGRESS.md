@@ -11,14 +11,15 @@ This answers: Where is the current engineering effort?
 | Current Release | Gamma OS Runtime Engine |
 | Release Candidate | gamma-2-stage-5-projection-migration-complete |
 | General Availability | gamma-stage5-ga-v1 |
+| Platform Baseline | gamma-platform-v1.0.0 |
 | Current Stage | Stage 5 Productization |
 | Progress | #################### 100% |
-| Current Milestone | Stage 5 Release Package Closeout Readiness |
-| Next | Phase XV Production Connectors |
+| Current Milestone | Platform Vision and v1.0.0 Baseline |
+| Next | Phase XV - Production Integration Platform |
 | Status | GA Certified |
 | Branch | gamma |
-| Last Commit | gamma-2-stage-5-projection-migration-complete |
-| Current Tag | gamma-stage5-ga-v1 |
+| Last Commit | gamma-platform-v1.0.0 |
+| Current Tag | gamma-platform-v1.0.0 |
 | Known Blockers | None |
 
 ## Strategic Roadmap
@@ -30,7 +31,7 @@ This never resets.
 | Foundation | #################### | 100% |
 | Runtime | #################### | 100% |
 | Governance | #################### | 100% |
-| Production Connectors | ######-------------- | 30% |
+| Production Integration Platform | ######-------------- | 30% |
 | Marketplace | ####---------------- | 20% |
 | Mission Automation | ####---------------- | 20% |
 | Enterprise | ######-------------- | 30% |
@@ -42,15 +43,15 @@ This never resets.
 
 | Metric | Value |
 | --- | ---: |
-| Git commits | 676 |
-| Tags | 103 |
+| Git commits | 678 |
+| Tags | 104 |
 | Connectors | 9 |
 | Workflows | 47 |
 | Policies | 62 |
 | Bindings | 34 |
 | API Endpoints | 45 |
 | Test files | 118 |
-| Documentation | 264 files |
+| Documentation | 265 files |
 | Architecture Score | 10/10 |
 | Governance Score | 10/10 |
 | Readiness | 100% |
@@ -64,7 +65,8 @@ This never resets.
 | General Availability | gamma-stage5-ga-v1 |
 | Certification Package | Complete |
 | Immutable Baseline | gamma-stage5-ga-v1 |
-| Next Phase | Phase XV Production Connectors |
+| Platform Vision | COMPLETE |
+| Next Phase | Phase XV - Production Integration Platform |
 
 ## Architecture Maturity
 
@@ -89,7 +91,7 @@ This never resets.
 | --- | --- |
 | Primary Goal | Certify Stage 5 as production baseline |
 | Working On | GA closeout validation and tag |
-| After That | Phase XV Production Connectors |
+| After That | Phase XV - Production Integration Platform |
 | After That | Connector release engineering lifecycle |
 | Not Planned Yet | Runtime architecture changes |
 
@@ -114,6 +116,7 @@ No pending architecture decisions.
 | Architecture Certification | COMPLETE |
 | Technical Debt Register | COMPLETE |
 | Phase XV Handover | COMPLETE |
+| Platform Vision | COMPLETE |
 | Final Dashboard | COMPLETE |
 | Foundation Freeze | COMPLETE |
 
@@ -135,6 +138,7 @@ No pending architecture decisions.
 | Release Manifest | PASS |
 | Architecture Certification | PASS |
 | Phase XV Handover | PASS |
+| Platform Vision | PASS |
 
 ## Technical Debt
 
@@ -147,7 +151,7 @@ No pending architecture decisions.
 | Risk | Severity | Mitigation |
 | --- | --- | --- |
 | Stale local server smoke target | Low | Run smoke against a fresh production server for certification. |
-| Phase XV connector boundary drift | Medium | Use Phase XV connector handover checklist before connector certification. |
+| Phase XV integration boundary drift | Medium | Use Phase XV connector handover checklist before integration certification. |
 | Late release artifact cost | Medium | Keep projections deterministic; defer deeper optimization until after GA baseline. |
 
 ## Architecture Health
@@ -159,7 +163,7 @@ No pending architecture decisions.
 
 ## Next Phase
 
-Phase XV Production Connectors begins after `gamma-stage5-ga-v1` is created and pushed. Initial connector scope starts with Gmail, Calendar, Drive, and GitHub under the Stage 5 boundary and governance model.
+Phase XV - Production Integration Platform begins after `gamma-stage5-ga-v1` and `gamma-platform-v1.0.0` are created and pushed. Initial integration scope starts with Gmail, Calendar, Drive, GitHub, Slack, and Notion under the Stage 5 boundary and governance model.
 
 Future Gamma phases use the release-engineering lifecycle:
 

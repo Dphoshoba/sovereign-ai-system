@@ -12,6 +12,7 @@ Last updated: 2026-07-12
 | Release candidate commit | 4a05945 |
 | Release candidate tag | gamma-2-stage-5-projection-migration-complete |
 | General availability tag | gamma-stage5-ga-v1 |
+| Platform baseline tag | gamma-platform-v1.0.0 |
 | Branch | gamma |
 | Production origin | https://sovereign-ai-executive.vercel.app |
 
@@ -68,7 +69,7 @@ All measured results are inside the approved closeout thresholds.
 
 Gamma OS Stage 5 is certified as the production baseline for the Gamma OS Runtime Engine. The release package satisfies the Constitution, Boundaries, and governance requirements; preserves adapter-first and governance-first architecture; keeps connector execution outside Gamma OS; and provides deterministic release artifacts, projections, registries, and evidence.
 
-Stage 5 may now serve as the immutable foundation for Phase XV Production Connectors.
+Stage 5 may now serve as the immutable foundation for Phase XV - Production Integration Platform.
 
 ## Release Engineering Rule
 

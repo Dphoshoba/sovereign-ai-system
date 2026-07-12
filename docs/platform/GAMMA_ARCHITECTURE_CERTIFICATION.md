@@ -52,4 +52,4 @@ No projection owns execution authority. No projection imports another projection
 
 ## Certification Statement
 
-The Stage 5 architecture is certified for GA baseline tagging. Phase XV Production Connectors must inherit these boundaries and may not weaken them without a new architectural decision packet.
+The Stage 5 architecture is certified for GA baseline tagging. Phase XV - Production Integration Platform must inherit these boundaries and may not weaken them without a new architectural decision packet.

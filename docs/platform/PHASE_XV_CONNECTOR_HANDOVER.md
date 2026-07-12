@@ -1,10 +1,10 @@
-# Phase XV Connector Handover
+# Phase XV Production Integration Platform Handover
 
 Last updated: 2026-07-12
 
 ## Purpose
 
-This handover bridges Gamma OS Stage 5 into Phase XV Production Connectors. Stage 5 is the certified runtime and governance baseline. Phase XV may build connector readiness, adapter contracts, and production certification flows on top of this baseline, but it may not move connector execution into Gamma OS.
+This handover bridges Gamma OS Stage 5 into Phase XV - Production Integration Platform. Stage 5 is the certified runtime and governance baseline. Phase XV connects Gamma safely to external systems through certified adapters while preserving the governance, determinism, approval, and audit guarantees established in Stage 5.
 
 ## What Stage 5 Guarantees
 
@@ -17,7 +17,7 @@ This handover bridges Gamma OS Stage 5 into Phase XV Production Connectors. Stag
 | Projection baseline | Late release artifacts are backed by the Shared Release Graph and Projection Registry. |
 | Certification baseline | Build, tests, smoke, boundary, stale-count, and projection scans passed at closeout. |
 
-## What Production Connectors May Assume
+## What Certified Integrations May Assume
 
 - Stage 5 endpoint inventory is stable at the GA baseline.
 - Stage 5 release artifacts are read-only governance evidence.
@@ -83,12 +83,12 @@ Every future Gamma phase begins with the same release-engineering lifecycle:
 Plan -> Implement -> Validate -> Certify -> Freeze -> Handover -> Next Phase
 ```
 
-This lifecycle applies to Production Connectors, Mission Automation, Marketplace, Multi-Agent Intelligence, Enterprise, and Intelligence Network work. Build numbers remain useful implementation markers, but release engineering is the governing discipline.
+This lifecycle applies to Production Integration Platform, Mission Automation, Marketplace, Multi-Agent Intelligence, Enterprise, and Intelligence Network work. Build numbers remain useful implementation markers, but release engineering is the governing discipline.
 
 ## Phase XV Initial Connector Scope
 
-Phase XV begins with Production Connectors, including Gmail, Calendar, Drive, GitHub, and subsequent approved connectors. Connector build numbers are subordinate to the release-engineering lifecycle and must not bypass validation, certification, freeze, or handover.
+Phase XV begins with certified production integrations, including Gmail, Calendar, Drive, GitHub, Slack, Notion, and subsequent approved adapters. Connector build numbers are subordinate to the release-engineering lifecycle and must not bypass validation, certification, freeze, or handover.
 
 ## Handover Statement
 
-Stage 5 is handed over as the production baseline. Phase XV work begins only after the `gamma-stage5-ga-v1` tag is created and pushed.
+Stage 5 is handed over as the production baseline. Phase XV work begins only after the `gamma-stage5-ga-v1` and `gamma-platform-v1.0.0` tags are created and pushed.
