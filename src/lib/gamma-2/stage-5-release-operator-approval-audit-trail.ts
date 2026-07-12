@@ -1,6 +1,5 @@
 import { PRODUCTION_APP_URL } from "../site-config";
 import { buildGammaStage5OperatorSignoff } from "./stage-5-operator-signoff";
-import { buildGammaStage5ReleaseOperatorActionQueue } from "./stage-5-release-operator-action-queue";
 import { buildGammaStage5ReleaseOperatorApprovalPacket } from "./stage-5-release-operator-approval-packet";
 
 export interface GammaStage5ReleaseOperatorApprovalAuditEntry {
@@ -27,12 +26,13 @@ export interface GammaStage5ReleaseOperatorApprovalAuditTrail {
   signoffRequirementCount: number;
   smoke: string;
   entries: GammaStage5ReleaseOperatorApprovalAuditEntry[];
+  approvalBoundary: "human-approval-before-production";
+  approvalRule: "stage-5-release-operator-approval-packet-requires-action-queue-signoff-and-human-production-approval";
   auditRule: "stage-5-release-operator-approval-audit-trail-records-packet-queue-signoff-boundary-and-verification";
 }
 
 export function buildGammaStage5ReleaseOperatorApprovalAuditTrail(): GammaStage5ReleaseOperatorApprovalAuditTrail {
   const approvalPacket = buildGammaStage5ReleaseOperatorApprovalPacket();
-  const actionQueue = buildGammaStage5ReleaseOperatorActionQueue();
   const signoff = buildGammaStage5OperatorSignoff();
 
   const entries: GammaStage5ReleaseOperatorApprovalAuditEntry[] = [
@@ -50,7 +50,7 @@ export function buildGammaStage5ReleaseOperatorApprovalAuditTrail(): GammaStage5
       id: "operator-action-queue-recorded",
       event: "Operator action queue prepared",
       source: "/api/gamma/stage-5/release-operator-action-queue",
-      evidence: actionQueue.queueRule,
+      evidence: approvalPacket.queueRule,
       actor: "operator",
       status: "audit-ready",
     },
@@ -97,6 +97,8 @@ export function buildGammaStage5ReleaseOperatorApprovalAuditTrail(): GammaStage5
     signoffRequirementCount: approvalPacket.signoffRequirementCount,
     smoke: approvalPacket.smoke,
     entries,
+    approvalBoundary: approvalPacket.approvalBoundary,
+    approvalRule: approvalPacket.approvalRule,
     auditRule:
       "stage-5-release-operator-approval-audit-trail-records-packet-queue-signoff-boundary-and-verification",
   };

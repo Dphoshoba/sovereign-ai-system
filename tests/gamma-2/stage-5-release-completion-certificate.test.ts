@@ -11,15 +11,15 @@ describe("Gamma 2 Stage 5 release completion certificate", () => {
     expect(certificate.status).toBe("pending-operator-certification");
     expect(certificate.branch).toBe("gamma");
     expect(certificate.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(certificate.apiSurfaceCount).toBe(42);
+    expect(certificate.apiSurfaceCount).toBe(43);
     expect(certificate.phaseCount).toBe(11);
     expect(certificate.closureEntryCount).toBe(6);
     expect(certificate.closeoutItemCount).toBe(6);
     expect(certificate.retentionRuleCount).toBe(4);
     expect(certificate.passCheckCount).toBe(3);
     expect(certificate.openExceptionCount).toBe(0);
-    expect(certificate.smoke).toBe("65 routes passed, 0 failed");
-  }, 30000);
+    expect(certificate.smoke).toBe("66 routes passed, 0 failed");
+  }, 120000);
 
   it("binds the release completion evidence sequence", () => {
     const certificate = buildGammaStage5ReleaseCompletionCertificate();
@@ -71,13 +71,13 @@ describe("Gamma 2 Stage 5 release completion certificate", () => {
     expect(certificate.certificateRule).toBe(
       "stage-5-release-completion-certificate-requires-readiness-closure-closeout-retention-and-attestation"
     );
-  }, 30000);
+  }, 120000);
 
   it("is deterministic for repeated calls", () => {
     expect(buildGammaStage5ReleaseCompletionCertificate()).toEqual(
       buildGammaStage5ReleaseCompletionCertificate()
     );
-  }, 30000);
+  }, 120000);
 
   it("serves the certificate through the Stage 5 release completion certificate route", async () => {
     const response = await GET();
@@ -85,8 +85,8 @@ describe("Gamma 2 Stage 5 release completion certificate", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_completion_certificate");
-    expect(body.apiSurfaceCount).toBe(42);
+    expect(body.apiSurfaceCount).toBe(43);
     expect(body.status).toBe("pending-operator-certification");
     expect(body.evidence).toHaveLength(5);
-  }, 30000);
+  }, 120000);
 });

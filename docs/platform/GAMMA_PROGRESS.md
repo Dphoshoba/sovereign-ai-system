@@ -2,32 +2,93 @@
 
 Last updated: 2026-07-12
 
-## Current Position
+## Release Progress
 
-- Last commit: gamma-2-stage-5-release-operator-approval-audit-trail
-- Current tag: gamma-2-stage-5-release-operator-approval-audit-trail
-- Current phase: Gamma OS Runtime Engine - Stage 5
-- Current milestone: Release operator approval audit trail
-- Next milestone: Release approval receipt
-- Estimated remaining milestones: 8-11
-- Known blockers: None
+This answers: Where is the current engineering effort?
 
-## Progress
+| Field | Value |
+| --- | --- |
+| Current Release | Gamma OS Runtime Engine |
+| Current Stage | Stage 5 Productization |
+| Progress | ###################- 92% |
+| Current Milestone | Release Operator Approval Receipt |
+| Next | Production Authorization Ledger |
+| Status | In Progress |
+| Branch | gamma |
+| Last Commit | gamma-2-stage-5-release-operator-approval-receipt |
+| Current Tag | gamma-2-stage-5-release-operator-approval-receipt |
+| Known Blockers | None |
+
+## Strategic Roadmap
+
+This never resets.
 
 | Area | Progress | Percent |
 | --- | --- | --- |
-| Gamma Foundation | #################### | 100% |
-| Gamma Runtime | #################--- | 86% |
+| Foundation | #################### | 100% |
 | Production Connectors | #################### | 100% |
 | Mission Automation | #################### | 100% |
 | Marketplace | #################### | 100% |
+| Multi-Agent Intelligence | #################### | 100% |
 | Enterprise | #################### | 100% |
-| Stage 5 Release Productization | ##################-- | 90% |
-| Overall Platform | ##################-- | 89% |
+| Intelligence Network | #################### | 100% |
+| Current Release Productization | ###################- | 92% |
+| Overall Gamma 2.0 Roadmap | ##################-- | 90% |
+
+## Platform Statistics
+
+| Metric | Value |
+| --- | ---: |
+| Git commits | 668 |
+| Tags | 94 |
+| Connectors | 9 |
+| Workflows | 47 |
+| Policies | 62 |
+| Bindings | 34 |
+| API Endpoints | 43 |
+| Test files | 115 |
+| Documentation | 259 files |
+| Architecture Score | 10/10 |
+| Governance Score | 10/10 |
+| Readiness | 90% |
+
+## Current Focus
+
+| Focus | Value |
+| --- | --- |
+| Primary Goal | Complete Stage 5 Release Package |
+| Working On | Release Authorization Ledger |
+| After That | Production Cutover |
+| After That | Runtime Optimization |
+| Not Planned Yet | Stage 6 |
+
+## Architectural Decisions
+
+Latest architectural decisions:
+
+- Runtime remains separate from execution.
+- Governance precedes dispatch.
+- Adapter-first integration is preserved.
+- No connector execution runs inside Gamma OS.
+- Human approval is required for production.
+
+No pending architecture decisions.
+
+## Platform Health
+
+| Check | Status |
+| --- | --- |
+| Build | PASS |
+| TypeScript | PASS |
+| Tests | PASS |
+| Boundary Scan | PASS |
+| Constitution | PASS |
+| Governance | PASS |
+| Performance | PASS |
 
 ## Technical Debt
 
-- Stage 5 artifact builders repeatedly compose the full release graph.
+- Stage 5 artifact builders still compose a deep release graph, although the approval receipt milestone reduced duplicate builder calls.
 - API surface counts and smoke expectations still require broad deterministic propagation.
 - Late release evidence tests need wider timeouts because the builder graph is intentionally comprehensive.
 

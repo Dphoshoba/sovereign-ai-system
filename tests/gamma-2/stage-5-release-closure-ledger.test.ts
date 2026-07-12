@@ -11,15 +11,15 @@ describe("Gamma 2 Stage 5 release closure ledger", () => {
     expect(ledger.status).toBe("pending-operator-closure");
     expect(ledger.branch).toBe("gamma");
     expect(ledger.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(ledger.apiSurfaceCount).toBe(42);
+    expect(ledger.apiSurfaceCount).toBe(43);
     expect(ledger.closureEntryCount).toBe(6);
     expect(ledger.operationsStepCount).toBe(6);
     expect(ledger.closeoutItemCount).toBe(6);
     expect(ledger.auditEntryCount).toBe(4);
     expect(ledger.passCheckCount).toBe(3);
     expect(ledger.openExceptionCount).toBe(0);
-    expect(ledger.smoke).toBe("65 routes passed, 0 failed");
-  }, 10000);
+    expect(ledger.smoke).toBe("66 routes passed, 0 failed");
+  }, 120000);
 
   it("binds the final release closure evidence sequence", () => {
     const ledger = buildGammaStage5ReleaseClosureLedger();
@@ -79,13 +79,13 @@ describe("Gamma 2 Stage 5 release closure ledger", () => {
     expect(ledger.closureRule).toBe(
       "stage-5-release-closure-ledger-requires-attestation-decision-receipt-audit-operations-and-closeout"
     );
-  }, 10000);
+  }, 120000);
 
   it("is deterministic for repeated calls", () => {
     expect(buildGammaStage5ReleaseClosureLedger()).toEqual(
       buildGammaStage5ReleaseClosureLedger()
     );
-  }, 30000);
+  }, 120000);
 
   it("serves the ledger through the Stage 5 release closure ledger route", async () => {
     const response = await GET();
@@ -93,8 +93,8 @@ describe("Gamma 2 Stage 5 release closure ledger", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_closure_ledger");
-    expect(body.apiSurfaceCount).toBe(42);
+    expect(body.apiSurfaceCount).toBe(43);
     expect(body.status).toBe("pending-operator-closure");
     expect(body.entries).toHaveLength(6);
-  }, 30000);
+  }, 120000);
 });

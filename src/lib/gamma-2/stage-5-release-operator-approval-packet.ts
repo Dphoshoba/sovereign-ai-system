@@ -26,6 +26,7 @@ export interface GammaStage5ReleaseOperatorApprovalPacket {
   smoke: string;
   requirements: GammaStage5ReleaseOperatorApprovalPacketRequirement[];
   approvalBoundary: "human-approval-before-production";
+  queueRule: "stage-5-release-operator-action-queue-requires-human-review-before-production-approval";
   approvalRule: "stage-5-release-operator-approval-packet-requires-action-queue-signoff-and-human-production-approval";
 }
 
@@ -83,6 +84,7 @@ export function buildGammaStage5ReleaseOperatorApprovalPacket(): GammaStage5Rele
     smoke: queue.smoke,
     requirements,
     approvalBoundary: "human-approval-before-production",
+    queueRule: queue.queueRule,
     approvalRule:
       "stage-5-release-operator-approval-packet-requires-action-queue-signoff-and-human-production-approval",
   };

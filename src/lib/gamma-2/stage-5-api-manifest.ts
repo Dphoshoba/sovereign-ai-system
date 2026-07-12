@@ -188,6 +188,10 @@ const API_ENDPOINT_METADATA: Record<
     audience: "operator",
     sourceContract: "src/lib/gamma-2/stage-5-release-operator-approval-audit-trail.ts",
   },
+  "/api/gamma/stage-5/release-operator-approval-receipt": {
+    audience: "operator",
+    sourceContract: "src/lib/gamma-2/stage-5-release-operator-approval-receipt.ts",
+  },
 };
 
 export function buildGammaStage5ApiManifest(): GammaStage5ApiManifest {
