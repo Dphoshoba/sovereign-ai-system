@@ -11,13 +11,13 @@ describe("Gamma 2 Stage 5 release operator registry", () => {
     expect(registry.status).toBe("ready-for-operator-review");
     expect(registry.branch).toBe("gamma");
     expect(registry.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(registry.apiSurfaceCount).toBe(44);
+    expect(registry.apiSurfaceCount).toBe(45);
     expect(registry.registryRecordCount).toBe(5);
     expect(registry.finalizationEntryCount).toBe(5);
     expect(registry.dashboardCardCount).toBe(4);
     expect(registry.signoffRequirementCount).toBe(4);
     expect(registry.operatorActionCount).toBe(2);
-    expect(registry.smoke).toBe("67 routes passed, 0 failed");
+    expect(registry.smoke).toBe("68 routes passed, 0 failed");
   }, 30000);
 
   it("groups the operator-facing release records", () => {
@@ -90,7 +90,7 @@ describe("Gamma 2 Stage 5 release operator registry", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_operator_registry");
-    expect(body.apiSurfaceCount).toBe(44);
+    expect(body.apiSurfaceCount).toBe(45);
     expect(body.status).toBe("ready-for-operator-review");
     expect(body.records).toHaveLength(5);
   }, 30000);

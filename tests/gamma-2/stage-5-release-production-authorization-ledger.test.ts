@@ -11,12 +11,12 @@ describe("Gamma 2 Stage 5 release production authorization ledger", () => {
     expect(ledger.status).toBe("authorization-pending-human-production-approval");
     expect(ledger.branch).toBe("gamma");
     expect(ledger.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(ledger.apiSurfaceCount).toBe(44);
+    expect(ledger.apiSurfaceCount).toBe(45);
     expect(ledger.authorizationEntryCount).toBe(5);
     expect(ledger.receiptRecordCount).toBe(4);
     expect(ledger.releaseGateCheckCount).toBe(5);
     expect(ledger.operatorRequiredCheckCount).toBe(2);
-    expect(ledger.smoke).toBe("67 routes passed, 0 failed");
+    expect(ledger.smoke).toBe("68 routes passed, 0 failed");
     expect(ledger.approvalBoundary).toBe("human-approval-before-production");
   }, 120000);
 
@@ -62,7 +62,7 @@ describe("Gamma 2 Stage 5 release production authorization ledger", () => {
         id: "verification-bound",
         label: "Bind smoke verification",
         source: "/api/gamma/stage-5/health",
-        evidence: "67 routes passed, 0 failed",
+        evidence: "68 routes passed, 0 failed",
         status: "authorization-pending",
       },
     ]);
@@ -83,7 +83,7 @@ describe("Gamma 2 Stage 5 release production authorization ledger", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_production_authorization_ledger");
-    expect(body.apiSurfaceCount).toBe(44);
+    expect(body.apiSurfaceCount).toBe(45);
     expect(body.status).toBe("authorization-pending-human-production-approval");
     expect(body.entries).toHaveLength(5);
   }, 120000);

@@ -251,3 +251,4 @@
 - [x] Add Stage 5 release operator approval audit trail: `/api/gamma/stage-5/release-operator-approval-audit-trail`
 - [x] Add Stage 5 release operator approval receipt: `/api/gamma/stage-5/release-operator-approval-receipt`
 - [x] Add Stage 5 release production authorization ledger: `/api/gamma/stage-5/release-production-authorization-ledger`
+- [x] Add Stage 5 release production cutover packet: `/api/gamma/stage-5/release-production-cutover-packet`

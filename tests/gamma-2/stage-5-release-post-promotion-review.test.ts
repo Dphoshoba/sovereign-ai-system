@@ -11,12 +11,12 @@ describe("Gamma 2 Stage 5 release post-promotion review", () => {
     expect(review.status).toBe("pending-operator-review");
     expect(review.branch).toBe("gamma");
     expect(review.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(review.apiSurfaceCount).toBe(44);
+    expect(review.apiSurfaceCount).toBe(45);
     expect(review.reviewItemCount).toBe(5);
     expect(review.monitoringCheckCount).toBe(5);
     expect(review.openExceptionCount).toBe(0);
     expect(review.healthStatus).toBe("healthy");
-    expect(review.smoke).toBe("67 routes passed, 0 failed");
+    expect(review.smoke).toBe("68 routes passed, 0 failed");
   });
 
   it("keeps post-promotion review items pending operator review", () => {
@@ -81,7 +81,7 @@ describe("Gamma 2 Stage 5 release post-promotion review", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_post_promotion_review");
-    expect(body.apiSurfaceCount).toBe(44);
+    expect(body.apiSurfaceCount).toBe(45);
     expect(body.status).toBe("pending-operator-review");
     expect(body.items).toHaveLength(5);
   });

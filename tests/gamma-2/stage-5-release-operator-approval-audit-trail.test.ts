@@ -11,13 +11,13 @@ describe("Gamma 2 Stage 5 release operator approval audit trail", () => {
     expect(trail.status).toBe("audit-ready-pending-human-approval");
     expect(trail.branch).toBe("gamma");
     expect(trail.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(trail.apiSurfaceCount).toBe(44);
+    expect(trail.apiSurfaceCount).toBe(45);
     expect(trail.auditEntryCount).toBe(5);
     expect(trail.queueItemCount).toBe(5);
     expect(trail.approvalRequirementCount).toBe(4);
     expect(trail.operatorRequiredItemCount).toBe(4);
     expect(trail.signoffRequirementCount).toBe(4);
-    expect(trail.smoke).toBe("67 routes passed, 0 failed");
+    expect(trail.smoke).toBe("68 routes passed, 0 failed");
   }, 120000);
 
   it("records the approval evidence chain", () => {
@@ -67,7 +67,7 @@ describe("Gamma 2 Stage 5 release operator approval audit trail", () => {
         id: "verification-recorded",
         event: "Stage 5 smoke verification recorded",
         source: "/api/gamma/stage-5/health",
-        evidence: "67 routes passed, 0 failed",
+        evidence: "68 routes passed, 0 failed",
         actor: "release-client",
         status: "audit-ready",
       },
@@ -89,7 +89,7 @@ describe("Gamma 2 Stage 5 release operator approval audit trail", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_operator_approval_audit_trail");
-    expect(body.apiSurfaceCount).toBe(44);
+    expect(body.apiSurfaceCount).toBe(45);
     expect(body.status).toBe("audit-ready-pending-human-approval");
     expect(body.entries).toHaveLength(5);
   }, 120000);

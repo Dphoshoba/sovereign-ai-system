@@ -196,6 +196,10 @@ const API_ENDPOINT_METADATA: Record<
     audience: "operator",
     sourceContract: "src/lib/gamma-2/stage-5-release-production-authorization-ledger.ts",
   },
+  "/api/gamma/stage-5/release-production-cutover-packet": {
+    audience: "operator",
+    sourceContract: "src/lib/gamma-2/stage-5-release-production-cutover-packet.ts",
+  },
 };
 
 export function buildGammaStage5ApiManifest(): GammaStage5ApiManifest {
