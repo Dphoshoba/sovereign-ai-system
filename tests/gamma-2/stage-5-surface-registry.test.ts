@@ -7,6 +7,7 @@ import { buildGammaStage5OpenApiDocument } from "../../src/lib/gamma-2/stage-5-o
 import { buildGammaStage5ReleaseDashboard } from "../../src/lib/gamma-2/stage-5-release-dashboard";
 import { buildGammaStage5ReleaseEvidenceContext } from "../../src/lib/gamma-2/stage-5-release-evidence-context";
 import { buildGammaStage5SdkDescriptor } from "../../src/lib/gamma-2/stage-5-sdk";
+import { buildGammaStage5SharedReleaseGraph } from "../../src/lib/gamma-2/stage-5-shared-release-graph";
 import {
   GAMMA_STAGE_5_SMOKE_SUMMARY,
   GAMMA_STAGE_5_SURFACE_COUNTS,
@@ -69,9 +70,21 @@ describe("Gamma 2 Stage 5 surface registry", () => {
   });
 
   it("keeps the shared release evidence context deterministic", () => {
-    expect(buildGammaStage5ReleaseEvidenceContext()).toEqual(
-      buildGammaStage5ReleaseEvidenceContext()
-    );
+    const graph = buildGammaStage5SharedReleaseGraph();
+    const context = buildGammaStage5ReleaseEvidenceContext();
+
+    expect(graph).toEqual(buildGammaStage5SharedReleaseGraph());
+    expect(Object.isFrozen(graph.projections)).toBe(true);
+    expect(graph.sourceArtifactCount).toBe(5);
+    expect(graph.projectionCount).toBe(5);
+    expect(context.sourceBuilderCount).toBe(1);
+    expect(context.graphProjectionCount).toBe(graph.projectionCount);
+    expect(context.authorizationLedger).toEqual(graph.projections.authorizationLedger);
+    expect(context.cutoverChecklist).toEqual(graph.projections.cutoverChecklist);
+    expect(context.trafficShiftPlan).toEqual(graph.projections.trafficShiftPlan);
+    expect(context.rollbackPlan).toEqual(graph.projections.rollbackPlan);
+    expect(context.monitoringPlan).toEqual(graph.projections.monitoringPlan);
+    expect(context).toEqual(buildGammaStage5ReleaseEvidenceContext());
   }, 240000);
 
   it("does not leave stale hard-coded Stage 5 route counts in code or tests", () => {
