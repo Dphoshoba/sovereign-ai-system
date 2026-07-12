@@ -13,7 +13,7 @@ describe("Gamma 2 Stage 5 release retention policy", () => {
     expect(policy.productionUrl).toBe(PRODUCTION_APP_URL);
     expect(policy.protectedTag).toBe("gamma-2-roadmap-complete");
     expect(policy.archiveItemCount).toBe(5);
-    expect(policy.apiSurfaceCount).toBe(33);
+    expect(policy.apiSurfaceCount).toBe(34);
   });
 
   it("declares retention rules for release records", () => {
@@ -44,7 +44,7 @@ describe("Gamma 2 Stage 5 release retention policy", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_retention_policy");
-    expect(body.apiSurfaceCount).toBe(33);
+    expect(body.apiSurfaceCount).toBe(34);
     expect(body.retentionRules).toHaveLength(4);
   });
 });
