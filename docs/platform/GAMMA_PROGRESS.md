@@ -9,14 +9,16 @@ This answers: Where is the current engineering effort?
 | Field | Value |
 | --- | --- |
 | Current Release | Gamma OS Runtime Engine |
+| Release Candidate | gamma-2-stage-5-projection-migration-complete |
+| General Availability | gamma-stage5-ga-v1 |
 | Current Stage | Stage 5 Productization |
 | Progress | #################### 100% |
-| Current Milestone | Complete Remaining Projection Wrappers + Performance Recovery |
-| Next | Stage 5 release package closeout readiness |
-| Status | Complete |
+| Current Milestone | Stage 5 Release Package Closeout Readiness |
+| Next | Phase XV Production Connectors |
+| Status | GA Certified |
 | Branch | gamma |
 | Last Commit | gamma-2-stage-5-projection-migration-complete |
-| Current Tag | gamma-2-stage-5-projection-migration-complete |
+| Current Tag | gamma-stage5-ga-v1 |
 | Known Blockers | None |
 
 ## Strategic Roadmap
@@ -26,12 +28,13 @@ This never resets.
 | Area | Progress | Percent |
 | --- | --- | --- |
 | Foundation | #################### | 100% |
-| Production Connectors | #################### | 100% |
-| Mission Automation | #################### | 100% |
-| Marketplace | #################### | 100% |
-| Multi-Agent Intelligence | #################### | 100% |
-| Enterprise | #################### | 100% |
-| Intelligence Network | #################### | 100% |
+| Runtime | #################### | 100% |
+| Governance | #################### | 100% |
+| Production Connectors | ######-------------- | 30% |
+| Marketplace | ####---------------- | 20% |
+| Mission Automation | ####---------------- | 20% |
+| Enterprise | ######-------------- | 30% |
+| Intelligence Network | ####---------------- | 20% |
 | Current Release Productization | #################### | 100% |
 | Current Stage 5 release completion | #################### | 100% |
 
@@ -40,17 +43,28 @@ This never resets.
 | Metric | Value |
 | --- | ---: |
 | Git commits | 676 |
-| Tags | 102 |
+| Tags | 103 |
 | Connectors | 9 |
 | Workflows | 47 |
 | Policies | 62 |
 | Bindings | 34 |
 | API Endpoints | 45 |
 | Test files | 118 |
-| Documentation | 259 files |
+| Documentation | 264 files |
 | Architecture Score | 10/10 |
 | Governance Score | 10/10 |
-| Readiness | 96% |
+| Readiness | 100% |
+
+## Current Release
+
+| Field | Value |
+| --- | --- |
+| Release | Gamma OS Runtime Engine Stage 5 |
+| Release Candidate | gamma-2-stage-5-projection-migration-complete |
+| General Availability | gamma-stage5-ga-v1 |
+| Certification Package | Complete |
+| Immutable Baseline | gamma-stage5-ga-v1 |
+| Next Phase | Phase XV Production Connectors |
 
 ## Architecture Maturity
 
@@ -58,21 +72,26 @@ This never resets.
 | --- | ---: |
 | Foundation | 100% |
 | Governance | 100% |
-| Runtime | 98% |
+| Runtime | 100% |
+| Connectors | 30% |
+| Marketplace | 20% |
+| Mission Automation | 20% |
+| Enterprise | 30% |
+| Intelligence Network | 20% |
 | Performance | 91% |
-| Developer Experience | 84% |
+| Developer Experience | 86% |
 | Documentation | 100% |
-| Operational Readiness | 96% |
+| Operational Readiness | 100% |
 
 ## Current Focus
 
 | Focus | Value |
 | --- | --- |
-| Primary Goal | Complete Stage 5 Release Package |
-| Working On | Stage 5 release package closeout readiness |
-| After That | Stage 5 final release report |
-| After That | Stage 6 decision packet |
-| Not Planned Yet | Stage 6 |
+| Primary Goal | Certify Stage 5 as production baseline |
+| Working On | GA closeout validation and tag |
+| After That | Phase XV Production Connectors |
+| After That | Connector release engineering lifecycle |
+| Not Planned Yet | Runtime architecture changes |
 
 ## Architectural Decisions
 
@@ -86,6 +105,18 @@ Latest architectural decisions:
 
 No pending architecture decisions.
 
+## Operational Readiness
+
+| Area | Status |
+| --- | --- |
+| Release Certification | COMPLETE |
+| Immutable Release Manifest | COMPLETE |
+| Architecture Certification | COMPLETE |
+| Technical Debt Register | COMPLETE |
+| Phase XV Handover | COMPLETE |
+| Final Dashboard | COMPLETE |
+| Foundation Freeze | COMPLETE |
+
 ## Platform Health
 
 | Check | Status |
@@ -97,23 +128,39 @@ No pending architecture decisions.
 | Constitution | PASS |
 | Governance | PASS |
 | Performance | PASS |
+| Surface Registry | PASS |
+| Shared Release Graph | PASS |
+| Projection Migration | PASS |
+| Release Certification | PASS |
+| Release Manifest | PASS |
+| Architecture Certification | PASS |
+| Phase XV Handover | PASS |
 
 ## Technical Debt
 
-- Twenty-one Stage 5 release-control artifacts are registered as projection wrappers; the production cutover projection composes from one request-scoped graph.
-- Focused registry tests validate graph metadata and instrumentation without repeatedly materializing the full late release chain.
+- Stage 5 GA has no blocking technical debt.
+- Remaining debt is tracked in `docs/platform/GAMMA_TECHNICAL_DEBT.md`.
+- The primary immediate risk is stale local smoke targets when multiple local servers are running.
 
 ## Risk Register
 
 | Risk | Severity | Mitigation |
 | --- | --- | --- |
-| Deep composed release builders increase validation time | Medium | Keep late artifacts as independent projections and run full validation against the recovered focused-test baseline. |
-| Manual count propagation can drift | Low | Keep Stage 5 API surface metadata centralized in the typed registry. |
-| Operator approval artifacts may look duplicative | Low | Keep each endpoint scoped to a distinct governance record and merge UI presentation later. |
+| Stale local server smoke target | Low | Run smoke against a fresh production server for certification. |
+| Phase XV connector boundary drift | Medium | Use Phase XV connector handover checklist before connector certification. |
+| Late release artifact cost | Medium | Keep projections deterministic; defer deeper optimization until after GA baseline. |
 
 ## Architecture Health
 
 - Constitution compliance: good; human approval remains required before production.
 - Boundary compliance: good; no production secrets or external write actions are used.
 - Governance compliance: good; release records are deterministic and auditable.
-- Recommended refactors: finish full validation, then keep route tests slim once the release package is frozen.
+- Recommended refactors: none before GA; connector certification automation can begin in Phase XV.
+
+## Next Phase
+
+Phase XV Production Connectors begins after `gamma-stage5-ga-v1` is created and pushed. Initial connector scope starts with Gmail, Calendar, Drive, and GitHub under the Stage 5 boundary and governance model.
+
+Future Gamma phases use the release-engineering lifecycle:
+
+`Plan -> Implement -> Validate -> Certify -> Freeze -> Handover -> Next Phase`
