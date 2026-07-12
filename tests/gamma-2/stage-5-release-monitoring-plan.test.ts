@@ -11,11 +11,11 @@ describe("Gamma 2 Stage 5 release monitoring plan", () => {
     expect(plan.status).toBe("pending-post-shift-monitoring");
     expect(plan.branch).toBe("gamma");
     expect(plan.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(plan.apiSurfaceCount).toBe(43);
+    expect(plan.apiSurfaceCount).toBe(44);
     expect(plan.monitoringCheckCount).toBe(5);
     expect(plan.trafficShiftStepCount).toBe(5);
     expect(plan.healthStatus).toBe("healthy");
-    expect(plan.smoke).toBe("66 routes passed, 0 failed");
+    expect(plan.smoke).toBe("67 routes passed, 0 failed");
   });
 
   it("keeps monitoring checks pending post-shift observation", () => {
@@ -35,7 +35,7 @@ describe("Gamma 2 Stage 5 release monitoring plan", () => {
         id: "confirm-post-shift-smoke",
         title: "Confirm post-shift smoke evidence",
         owner: "operator",
-        evidence: "66 routes passed, 0 failed",
+        evidence: "67 routes passed, 0 failed",
         status: "pending-post-shift-observation",
       },
       {
@@ -80,7 +80,7 @@ describe("Gamma 2 Stage 5 release monitoring plan", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_monitoring_plan");
-    expect(body.apiSurfaceCount).toBe(43);
+    expect(body.apiSurfaceCount).toBe(44);
     expect(body.status).toBe("pending-post-shift-monitoring");
     expect(body.checks).toHaveLength(5);
   });

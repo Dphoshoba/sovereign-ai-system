@@ -10,7 +10,7 @@ describe("Gamma 2 Stage 5 OpenAPI document", () => {
     expect(openapi.openapi).toBe("3.1.0");
     expect(openapi.info.title).toBe("Gamma 2 Stage 5 API");
     expect(openapi.servers).toEqual([{ url: PRODUCTION_APP_URL }]);
-    expect(Object.keys(openapi.paths)).toHaveLength(43);
+    expect(Object.keys(openapi.paths)).toHaveLength(44);
     expect(openapi.paths["/api/gamma/stage-5/openapi"].get.operationId).toBe(
       "getStage5Openapi"
     );
@@ -112,6 +112,10 @@ describe("Gamma 2 Stage 5 OpenAPI document", () => {
     expect(
       openapi.paths["/api/gamma/stage-5/release-operator-approval-receipt"].get.operationId
     ).toBe("getStage5ReleaseOperatorApprovalReceipt");
+    expect(
+      openapi.paths["/api/gamma/stage-5/release-production-authorization-ledger"].get
+        .operationId
+    ).toBe("getStage5ReleaseProductionAuthorizationLedger");
   });
 
   it("keeps operation metadata tied to source contracts", () => {

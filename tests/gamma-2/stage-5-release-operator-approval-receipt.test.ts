@@ -11,12 +11,12 @@ describe("Gamma 2 Stage 5 release operator approval receipt", () => {
     expect(receipt.status).toBe("receipt-ready-pending-human-production-approval");
     expect(receipt.branch).toBe("gamma");
     expect(receipt.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(receipt.apiSurfaceCount).toBe(43);
+    expect(receipt.apiSurfaceCount).toBe(44);
     expect(receipt.receiptRecordCount).toBe(4);
     expect(receipt.auditEntryCount).toBe(5);
     expect(receipt.approvalRequirementCount).toBe(4);
     expect(receipt.queueItemCount).toBe(5);
-    expect(receipt.smoke).toBe("66 routes passed, 0 failed");
+    expect(receipt.smoke).toBe("67 routes passed, 0 failed");
     expect(receipt.approvalBoundary).toBe("human-approval-before-production");
   }, 120000);
 
@@ -55,7 +55,7 @@ describe("Gamma 2 Stage 5 release operator approval receipt", () => {
         id: "smoke-evidence-received",
         label: "Smoke verification received",
         source: "/api/gamma/stage-5/health",
-        evidence: "66 routes passed, 0 failed",
+        evidence: "67 routes passed, 0 failed",
         status: "receipt-ready",
       },
     ]);
@@ -76,7 +76,7 @@ describe("Gamma 2 Stage 5 release operator approval receipt", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_operator_approval_receipt");
-    expect(body.apiSurfaceCount).toBe(43);
+    expect(body.apiSurfaceCount).toBe(44);
     expect(body.status).toBe("receipt-ready-pending-human-production-approval");
     expect(body.records).toHaveLength(4);
   }, 120000);

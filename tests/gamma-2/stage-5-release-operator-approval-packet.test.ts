@@ -11,13 +11,13 @@ describe("Gamma 2 Stage 5 release operator approval packet", () => {
     expect(packet.status).toBe("pending-human-production-approval");
     expect(packet.branch).toBe("gamma");
     expect(packet.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(packet.apiSurfaceCount).toBe(43);
+    expect(packet.apiSurfaceCount).toBe(44);
     expect(packet.queueItemCount).toBe(5);
     expect(packet.readyItemCount).toBe(1);
     expect(packet.operatorRequiredItemCount).toBe(4);
     expect(packet.signoffRequirementCount).toBe(4);
     expect(packet.approvalRequirementCount).toBe(4);
-    expect(packet.smoke).toBe("66 routes passed, 0 failed");
+    expect(packet.smoke).toBe("67 routes passed, 0 failed");
   }, 30000);
 
   it("packages the final human approval requirements", () => {
@@ -75,7 +75,7 @@ describe("Gamma 2 Stage 5 release operator approval packet", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_operator_approval_packet");
-    expect(body.apiSurfaceCount).toBe(43);
+    expect(body.apiSurfaceCount).toBe(44);
     expect(body.status).toBe("pending-human-production-approval");
     expect(body.requirements).toHaveLength(4);
   }, 30000);
