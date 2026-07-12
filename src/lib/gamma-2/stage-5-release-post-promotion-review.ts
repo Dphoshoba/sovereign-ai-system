@@ -3,7 +3,7 @@ import { buildGammaStage5AuditLedger } from "./stage-5-audit-ledger";
 import { buildGammaStage5DeploymentReceipt } from "./stage-5-deployment-receipt";
 import { buildGammaStage5OperatorSignoff } from "./stage-5-operator-signoff";
 import { buildGammaStage5ReleaseDecisionRecord } from "./stage-5-release-decision-record";
-import { buildGammaStage5ReleaseMonitoringPlan } from "./stage-5-release-monitoring-plan";
+import { buildGammaStage5ReleaseMonitoringPlanSource } from "./stage-5-release-monitoring-plan";
 
 export interface GammaStage5ReleasePostPromotionReviewItem {
   order: number;
@@ -32,7 +32,7 @@ export interface GammaStage5ReleasePostPromotionReview {
 }
 
 export function buildGammaStage5ReleasePostPromotionReview(): GammaStage5ReleasePostPromotionReview {
-  const monitoringPlan = buildGammaStage5ReleaseMonitoringPlan();
+  const monitoringPlan = buildGammaStage5ReleaseMonitoringPlanSource();
   const signoff = buildGammaStage5OperatorSignoff();
   const auditLedger = buildGammaStage5AuditLedger();
   const deploymentReceipt = buildGammaStage5DeploymentReceipt();

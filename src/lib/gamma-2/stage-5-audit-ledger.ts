@@ -1,7 +1,7 @@
 import { buildGammaStage5DeploymentSummary } from "./stage-5-deployment-summary";
 import { buildGammaStage5OperatorHandoff } from "./stage-5-operator-handoff";
 import { buildGammaStage5ReleaseAttestation } from "./stage-5-release-attestation";
-import { buildGammaStage5RollbackPlan } from "./stage-5-rollback-plan";
+import { buildGammaStage5RollbackPlanSource } from "./stage-5-rollback-plan";
 
 export interface GammaStage5AuditLedgerEntry {
   order: number;
@@ -25,7 +25,7 @@ export interface GammaStage5AuditLedger {
 export function buildGammaStage5AuditLedger(): GammaStage5AuditLedger {
   const deploymentSummary = buildGammaStage5DeploymentSummary();
   const attestation = buildGammaStage5ReleaseAttestation();
-  const rollbackPlan = buildGammaStage5RollbackPlan();
+  const rollbackPlan = buildGammaStage5RollbackPlanSource();
   const handoff = buildGammaStage5OperatorHandoff();
 
   return {

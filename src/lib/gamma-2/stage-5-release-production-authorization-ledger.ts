@@ -1,6 +1,8 @@
 import { PRODUCTION_APP_URL } from "../site-config";
 import { buildGammaStage5ReleaseGate } from "./stage-5-release-gate";
 import { buildGammaStage5ReleaseOperatorApprovalReceipt } from "./stage-5-release-operator-approval-receipt";
+import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
+import { projectGammaStage5ReleaseProductionAuthorizationLedger } from "./stage-5-release-projection-registry";
 
 export interface GammaStage5ReleaseProductionAuthorizationEntry {
   order: number;
@@ -28,7 +30,7 @@ export interface GammaStage5ReleaseProductionAuthorizationLedger {
   authorizationRule: "stage-5-production-authorization-ledger-requires-receipt-release-gate-env-confirmation-and-human-approval";
 }
 
-export function buildGammaStage5ReleaseProductionAuthorizationLedger(): GammaStage5ReleaseProductionAuthorizationLedger {
+export function buildGammaStage5ReleaseProductionAuthorizationLedgerSource(): GammaStage5ReleaseProductionAuthorizationLedger {
   const receipt = buildGammaStage5ReleaseOperatorApprovalReceipt();
   const releaseGate = buildGammaStage5ReleaseGate();
   const operatorRequiredCheckCount = releaseGate.checks.filter(
@@ -95,4 +97,10 @@ export function buildGammaStage5ReleaseProductionAuthorizationLedger(): GammaSta
     authorizationRule:
       "stage-5-production-authorization-ledger-requires-receipt-release-gate-env-confirmation-and-human-approval",
   };
+}
+
+export function buildGammaStage5ReleaseProductionAuthorizationLedger(): GammaStage5ReleaseProductionAuthorizationLedger {
+  return projectGammaStage5ReleaseProductionAuthorizationLedger(
+    buildGammaStage5ReleaseProjectionContext()
+  );
 }

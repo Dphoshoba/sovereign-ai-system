@@ -1,6 +1,6 @@
 import { PRODUCTION_APP_URL } from "../site-config";
 import { buildGammaStage5ReleaseArchiveManifest } from "./stage-5-release-archive-manifest";
-import { buildGammaStage5RollbackPlan } from "./stage-5-rollback-plan";
+import { buildGammaStage5RollbackPlanSource } from "./stage-5-rollback-plan";
 
 export interface GammaStage5ReleaseRetentionPolicyRule {
   id: string;
@@ -24,7 +24,7 @@ export interface GammaStage5ReleaseRetentionPolicy {
 
 export function buildGammaStage5ReleaseRetentionPolicy(): GammaStage5ReleaseRetentionPolicy {
   const archiveManifest = buildGammaStage5ReleaseArchiveManifest();
-  const rollbackPlan = buildGammaStage5RollbackPlan();
+  const rollbackPlan = buildGammaStage5RollbackPlanSource();
 
   return {
     id: "gamma_2_stage_5_release_retention_policy",

@@ -3,7 +3,7 @@ import { buildGammaStage5PromotionChecklist } from "./stage-5-promotion-checklis
 import { buildGammaStage5ReleaseApprovalPacket } from "./stage-5-release-approval-packet";
 import { buildGammaStage5ReleaseDecisionRecord } from "./stage-5-release-decision-record";
 import { buildGammaStage5ReleaseGate } from "./stage-5-release-gate";
-import { buildGammaStage5RollbackPlan } from "./stage-5-rollback-plan";
+import { buildGammaStage5RollbackPlanSource } from "./stage-5-rollback-plan";
 
 export interface GammaStage5ReleasePromotionStep {
   order: number;
@@ -33,7 +33,7 @@ export function buildGammaStage5ReleasePromotionPlan(): GammaStage5ReleasePromot
   const decisionRecord = buildGammaStage5ReleaseDecisionRecord();
   const releaseGate = buildGammaStage5ReleaseGate();
   const checklist = buildGammaStage5PromotionChecklist();
-  const rollbackPlan = buildGammaStage5RollbackPlan();
+  const rollbackPlan = buildGammaStage5RollbackPlanSource();
 
   const steps: GammaStage5ReleasePromotionStep[] = [
     {

@@ -1,8 +1,10 @@
 import { PRODUCTION_APP_URL } from "../site-config";
 import { buildGammaStage5DeploymentReceipt } from "./stage-5-deployment-receipt";
 import { buildGammaStage5Health } from "./stage-5-health";
-import { buildGammaStage5ReleaseCutoverChecklist } from "./stage-5-release-cutover-checklist";
-import { buildGammaStage5RollbackPlan } from "./stage-5-rollback-plan";
+import { buildGammaStage5ReleaseCutoverChecklistSource } from "./stage-5-release-cutover-checklist";
+import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
+import { projectGammaStage5ReleaseTrafficShiftPlan } from "./stage-5-release-projection-registry";
+import { buildGammaStage5RollbackPlanSource } from "./stage-5-rollback-plan";
 
 export interface GammaStage5ReleaseTrafficShiftStep {
   order: number;
@@ -29,10 +31,10 @@ export interface GammaStage5ReleaseTrafficShiftPlan {
   trafficShiftRule: "stage-5-traffic-shift-requires-cutover-checklist-health-and-rollback-evidence";
 }
 
-export function buildGammaStage5ReleaseTrafficShiftPlan(): GammaStage5ReleaseTrafficShiftPlan {
-  const cutoverChecklist = buildGammaStage5ReleaseCutoverChecklist();
+export function buildGammaStage5ReleaseTrafficShiftPlanSource(): GammaStage5ReleaseTrafficShiftPlan {
+  const cutoverChecklist = buildGammaStage5ReleaseCutoverChecklistSource();
   const health = buildGammaStage5Health();
-  const rollbackPlan = buildGammaStage5RollbackPlan();
+  const rollbackPlan = buildGammaStage5RollbackPlanSource();
   const deploymentReceipt = buildGammaStage5DeploymentReceipt();
 
   const steps: GammaStage5ReleaseTrafficShiftStep[] = [
@@ -94,4 +96,8 @@ export function buildGammaStage5ReleaseTrafficShiftPlan(): GammaStage5ReleaseTra
     trafficShiftRule:
       "stage-5-traffic-shift-requires-cutover-checklist-health-and-rollback-evidence",
   };
+}
+
+export function buildGammaStage5ReleaseTrafficShiftPlan(): GammaStage5ReleaseTrafficShiftPlan {
+  return projectGammaStage5ReleaseTrafficShiftPlan(buildGammaStage5ReleaseProjectionContext());
 }

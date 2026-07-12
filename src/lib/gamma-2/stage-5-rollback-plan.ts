@@ -1,4 +1,6 @@
 import { buildGammaStage5DeploymentSummary } from "./stage-5-deployment-summary";
+import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
+import { projectGammaStage5RollbackPlan } from "./stage-5-release-projection-registry";
 import { buildGammaStage5ReleaseAttestation } from "./stage-5-release-attestation";
 
 export interface GammaStage5RollbackStep {
@@ -20,7 +22,7 @@ export interface GammaStage5RollbackPlan {
   rollbackRule: "operator-approved-rollback-to-last-attested-stage-5-tag";
 }
 
-export function buildGammaStage5RollbackPlan(): GammaStage5RollbackPlan {
+export function buildGammaStage5RollbackPlanSource(): GammaStage5RollbackPlan {
   const deploymentSummary = buildGammaStage5DeploymentSummary();
   const attestation = buildGammaStage5ReleaseAttestation();
 
@@ -60,4 +62,8 @@ export function buildGammaStage5RollbackPlan(): GammaStage5RollbackPlan {
     ],
     rollbackRule: "operator-approved-rollback-to-last-attested-stage-5-tag",
   };
+}
+
+export function buildGammaStage5RollbackPlan(): GammaStage5RollbackPlan {
+  return projectGammaStage5RollbackPlan(buildGammaStage5ReleaseProjectionContext());
 }

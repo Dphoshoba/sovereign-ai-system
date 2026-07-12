@@ -1,6 +1,6 @@
 import { buildGammaStage5OperatorBrief } from "./stage-5-operator-brief";
 import { buildGammaStage5ReleaseAttestation } from "./stage-5-release-attestation";
-import { buildGammaStage5RollbackPlan } from "./stage-5-rollback-plan";
+import { buildGammaStage5RollbackPlanSource } from "./stage-5-rollback-plan";
 
 export interface GammaStage5OperatorHandoff {
   id: "gamma_2_stage_5_operator_handoff";
@@ -17,7 +17,7 @@ export interface GammaStage5OperatorHandoff {
 export function buildGammaStage5OperatorHandoff(): GammaStage5OperatorHandoff {
   const brief = buildGammaStage5OperatorBrief();
   const attestation = buildGammaStage5ReleaseAttestation();
-  const rollbackPlan = buildGammaStage5RollbackPlan();
+  const rollbackPlan = buildGammaStage5RollbackPlanSource();
 
   return {
     id: "gamma_2_stage_5_operator_handoff",

@@ -1,10 +1,10 @@
 import { PRODUCTION_APP_URL } from "../site-config";
 import { buildGammaStage5ReleaseApprovalPacket } from "./stage-5-release-approval-packet";
-import { buildGammaStage5ReleaseCutoverChecklist } from "./stage-5-release-cutover-checklist";
-import { buildGammaStage5ReleaseMonitoringPlan } from "./stage-5-release-monitoring-plan";
+import { buildGammaStage5ReleaseCutoverChecklistSource } from "./stage-5-release-cutover-checklist";
+import { buildGammaStage5ReleaseMonitoringPlanSource } from "./stage-5-release-monitoring-plan";
 import { buildGammaStage5ReleasePostPromotionReview } from "./stage-5-release-post-promotion-review";
 import { buildGammaStage5ReleasePromotionPlan } from "./stage-5-release-promotion-plan";
-import { buildGammaStage5ReleaseTrafficShiftPlan } from "./stage-5-release-traffic-shift-plan";
+import { buildGammaStage5ReleaseTrafficShiftPlanSource } from "./stage-5-release-traffic-shift-plan";
 
 export interface GammaStage5ReleaseOperationsStep {
   order: number;
@@ -38,9 +38,9 @@ export interface GammaStage5ReleaseOperationsIndex {
 export function buildGammaStage5ReleaseOperationsIndex(): GammaStage5ReleaseOperationsIndex {
   const approvalPacket = buildGammaStage5ReleaseApprovalPacket();
   const promotionPlan = buildGammaStage5ReleasePromotionPlan();
-  const cutoverChecklist = buildGammaStage5ReleaseCutoverChecklist();
-  const trafficShiftPlan = buildGammaStage5ReleaseTrafficShiftPlan();
-  const monitoringPlan = buildGammaStage5ReleaseMonitoringPlan();
+  const cutoverChecklist = buildGammaStage5ReleaseCutoverChecklistSource();
+  const trafficShiftPlan = buildGammaStage5ReleaseTrafficShiftPlanSource();
+  const monitoringPlan = buildGammaStage5ReleaseMonitoringPlanSource();
   const postPromotionReview = buildGammaStage5ReleasePostPromotionReview();
 
   const steps: GammaStage5ReleaseOperationsStep[] = [

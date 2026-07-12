@@ -10,13 +10,13 @@ This answers: Where is the current engineering effort?
 | --- | --- |
 | Current Release | Gamma OS Runtime Engine |
 | Current Stage | Stage 5 Productization |
-| Progress | ###################- 93% |
-| Current Milestone | Stage 5 Shared Release Graph |
-| Next | Projection Migration |
+| Progress | ###################- 94% |
+| Current Milestone | Projection Migration |
+| Next | Complete Remaining Projection Wrappers |
 | Status | In Progress |
 | Branch | gamma |
-| Last Commit | gamma-2-stage-5-shared-release-graph |
-| Current Tag | gamma-2-stage-5-shared-release-graph |
+| Last Commit | gamma-2-stage-5-projection-migration |
+| Current Tag | gamma-2-stage-5-projection-migration |
 | Known Blockers | None |
 
 ## Strategic Roadmap
@@ -32,15 +32,15 @@ This never resets.
 | Multi-Agent Intelligence | #################### | 100% |
 | Enterprise | #################### | 100% |
 | Intelligence Network | #################### | 100% |
-| Current Release Productization | ###################- | 93% |
+| Current Release Productization | ###################- | 94% |
 | Current Stage 5 release completion | ##################-- | 90% |
 
 ## Platform Statistics
 
 | Metric | Value |
 | --- | ---: |
-| Git commits | 669 |
-| Tags | 95 |
+| Git commits | 670 |
+| Tags | 96 |
 | Connectors | 9 |
 | Workflows | 47 |
 | Policies | 62 |
@@ -58,9 +58,9 @@ This never resets.
 | --- | ---: |
 | Foundation | 100% |
 | Governance | 100% |
-| Runtime | 92% |
-| Performance | 81% |
-| Developer Experience | 76% |
+| Runtime | 94% |
+| Performance | 82% |
+| Developer Experience | 78% |
 | Documentation | 100% |
 | Operational Readiness | 93% |
 
@@ -69,8 +69,8 @@ This never resets.
 | Focus | Value |
 | --- | --- |
 | Primary Goal | Complete Stage 5 Release Package |
-| Working On | Stage 5 Shared Release Graph |
-| After That | Projection Migration |
+| Working On | Projection Migration |
+| After That | Complete Remaining Projection Wrappers |
 | After That | Runtime Optimization |
 | Not Planned Yet | Stage 6 |
 
@@ -100,14 +100,14 @@ No pending architecture decisions.
 
 ## Technical Debt
 
-- Stage 5 release-control artifacts now have a shared graph anchor, but the full projection migration is still incomplete.
+- Six graph-owned Stage 5 release-control artifacts are projection wrappers; the full projection migration is still incomplete.
 - Late release evidence tests need wider timeouts because the builder graph is intentionally comprehensive.
 
 ## Risk Register
 
 | Risk | Severity | Mitigation |
 | --- | --- | --- |
-| Deep composed release builders increase validation time | Medium | Continue migrating release-control builders from direct composition to shared graph projections. |
+| Deep composed release builders increase validation time | Medium | Finish converting remaining late builders from direct composition to graph-backed projection wrappers. |
 | Manual count propagation can drift | Low | Keep Stage 5 API surface metadata centralized in the typed registry. |
 | Operator approval artifacts may look duplicative | Low | Keep each endpoint scoped to a distinct governance record and merge UI presentation later. |
 
@@ -116,4 +116,4 @@ No pending architecture decisions.
 - Constitution compliance: good; human approval remains required before production.
 - Boundary compliance: good; no production secrets or external write actions are used.
 - Governance compliance: good; release records are deterministic and auditable.
-- Recommended refactors: complete the projection migration over the shared Stage 5 release graph, then slim route tests once the release package is frozen.
+- Recommended refactors: complete remaining projection wrappers, then slim route tests once the release package is frozen.

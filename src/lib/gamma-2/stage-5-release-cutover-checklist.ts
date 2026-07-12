@@ -2,8 +2,10 @@ import { PRODUCTION_APP_URL } from "../site-config";
 import { buildGammaStage5DeploymentReceipt } from "./stage-5-deployment-receipt";
 import { buildGammaStage5ReleaseApprovalPacket } from "./stage-5-release-approval-packet";
 import { buildGammaStage5ReleaseDecisionRecord } from "./stage-5-release-decision-record";
+import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
+import { projectGammaStage5ReleaseCutoverChecklist } from "./stage-5-release-projection-registry";
 import { buildGammaStage5ReleasePromotionPlan } from "./stage-5-release-promotion-plan";
-import { buildGammaStage5RollbackPlan } from "./stage-5-rollback-plan";
+import { buildGammaStage5RollbackPlanSource } from "./stage-5-rollback-plan";
 
 export interface GammaStage5ReleaseCutoverCheck {
   order: number;
@@ -27,11 +29,11 @@ export interface GammaStage5ReleaseCutoverChecklist {
   cutoverRule: "stage-5-cutover-checklist-requires-operator-confirmation-before-traffic-shift";
 }
 
-export function buildGammaStage5ReleaseCutoverChecklist(): GammaStage5ReleaseCutoverChecklist {
+export function buildGammaStage5ReleaseCutoverChecklistSource(): GammaStage5ReleaseCutoverChecklist {
   const promotionPlan = buildGammaStage5ReleasePromotionPlan();
   const approvalPacket = buildGammaStage5ReleaseApprovalPacket();
   const decisionRecord = buildGammaStage5ReleaseDecisionRecord();
-  const rollbackPlan = buildGammaStage5RollbackPlan();
+  const rollbackPlan = buildGammaStage5RollbackPlanSource();
   const deploymentReceipt = buildGammaStage5DeploymentReceipt();
 
   const checks: GammaStage5ReleaseCutoverCheck[] = [
@@ -86,4 +88,8 @@ export function buildGammaStage5ReleaseCutoverChecklist(): GammaStage5ReleaseCut
     cutoverRule:
       "stage-5-cutover-checklist-requires-operator-confirmation-before-traffic-shift",
   };
+}
+
+export function buildGammaStage5ReleaseCutoverChecklist(): GammaStage5ReleaseCutoverChecklist {
+  return projectGammaStage5ReleaseCutoverChecklist(buildGammaStage5ReleaseProjectionContext());
 }

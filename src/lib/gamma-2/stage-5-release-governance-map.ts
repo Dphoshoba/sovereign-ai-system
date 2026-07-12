@@ -3,7 +3,7 @@ import { buildGammaStage5OperatorSignoff } from "./stage-5-operator-signoff";
 import { buildGammaStage5ReleaseComplianceMatrix } from "./stage-5-release-compliance-matrix";
 import { buildGammaStage5ReleaseExceptionRegister } from "./stage-5-release-exception-register";
 import { buildGammaStage5ReleaseRetentionPolicy } from "./stage-5-release-retention-policy";
-import { buildGammaStage5RollbackPlan } from "./stage-5-rollback-plan";
+import { buildGammaStage5RollbackPlanSource } from "./stage-5-rollback-plan";
 
 export interface GammaStage5ReleaseGovernanceLane {
   id: string;
@@ -32,7 +32,7 @@ export function buildGammaStage5ReleaseGovernanceMap(): GammaStage5ReleaseGovern
   const complianceMatrix = buildGammaStage5ReleaseComplianceMatrix();
   const exceptionRegister = buildGammaStage5ReleaseExceptionRegister();
   const retentionPolicy = buildGammaStage5ReleaseRetentionPolicy();
-  const rollbackPlan = buildGammaStage5RollbackPlan();
+  const rollbackPlan = buildGammaStage5RollbackPlanSource();
 
   const lanes: GammaStage5ReleaseGovernanceLane[] = [
     {

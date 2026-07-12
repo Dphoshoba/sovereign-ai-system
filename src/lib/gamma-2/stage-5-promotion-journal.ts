@@ -3,7 +3,7 @@ import { buildGammaStage5AuditLedger } from "./stage-5-audit-ledger";
 import { buildGammaStage5DeploymentReceipt } from "./stage-5-deployment-receipt";
 import { buildGammaStage5DeploymentSummary } from "./stage-5-deployment-summary";
 import { buildGammaStage5ReleaseAttestation } from "./stage-5-release-attestation";
-import { buildGammaStage5RollbackPlan } from "./stage-5-rollback-plan";
+import { buildGammaStage5RollbackPlanSource } from "./stage-5-rollback-plan";
 
 export interface GammaStage5PromotionJournalEntry {
   order: number;
@@ -33,7 +33,7 @@ export function buildGammaStage5PromotionJournal(): GammaStage5PromotionJournal 
   const receipt = buildGammaStage5DeploymentReceipt();
   const attestation = buildGammaStage5ReleaseAttestation();
   const auditLedger = buildGammaStage5AuditLedger();
-  const rollbackPlan = buildGammaStage5RollbackPlan();
+  const rollbackPlan = buildGammaStage5RollbackPlanSource();
 
   return {
     id: "gamma_2_stage_5_promotion_journal",

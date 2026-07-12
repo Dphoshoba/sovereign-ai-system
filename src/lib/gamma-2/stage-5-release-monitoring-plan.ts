@@ -3,7 +3,9 @@ import { buildGammaStage5AuditLedger } from "./stage-5-audit-ledger";
 import { buildGammaStage5DeploymentReceipt } from "./stage-5-deployment-receipt";
 import { buildGammaStage5Health } from "./stage-5-health";
 import { buildGammaStage5PromotionJournal } from "./stage-5-promotion-journal";
-import { buildGammaStage5ReleaseTrafficShiftPlan } from "./stage-5-release-traffic-shift-plan";
+import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
+import { projectGammaStage5ReleaseMonitoringPlan } from "./stage-5-release-projection-registry";
+import { buildGammaStage5ReleaseTrafficShiftPlanSource } from "./stage-5-release-traffic-shift-plan";
 
 export interface GammaStage5ReleaseMonitoringCheck {
   order: number;
@@ -30,8 +32,8 @@ export interface GammaStage5ReleaseMonitoringPlan {
   monitoringRule: "stage-5-post-shift-monitoring-requires-health-audit-and-receipt-evidence";
 }
 
-export function buildGammaStage5ReleaseMonitoringPlan(): GammaStage5ReleaseMonitoringPlan {
-  const trafficShiftPlan = buildGammaStage5ReleaseTrafficShiftPlan();
+export function buildGammaStage5ReleaseMonitoringPlanSource(): GammaStage5ReleaseMonitoringPlan {
+  const trafficShiftPlan = buildGammaStage5ReleaseTrafficShiftPlanSource();
   const health = buildGammaStage5Health();
   const auditLedger = buildGammaStage5AuditLedger();
   const deploymentReceipt = buildGammaStage5DeploymentReceipt();
@@ -95,4 +97,8 @@ export function buildGammaStage5ReleaseMonitoringPlan(): GammaStage5ReleaseMonit
     checks,
     monitoringRule: "stage-5-post-shift-monitoring-requires-health-audit-and-receipt-evidence",
   };
+}
+
+export function buildGammaStage5ReleaseMonitoringPlan(): GammaStage5ReleaseMonitoringPlan {
+  return projectGammaStage5ReleaseMonitoringPlan(buildGammaStage5ReleaseProjectionContext());
 }

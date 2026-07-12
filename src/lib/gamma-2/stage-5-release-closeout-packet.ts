@@ -4,7 +4,7 @@ import { buildGammaStage5ReleaseBundle } from "./stage-5-release-bundle";
 import { buildGammaStage5ReleaseOperationsIndex } from "./stage-5-release-operations-index";
 import { buildGammaStage5ReleasePostPromotionReview } from "./stage-5-release-post-promotion-review";
 import { buildGammaStage5ReleaseRetentionPolicy } from "./stage-5-release-retention-policy";
-import { buildGammaStage5RollbackPlan } from "./stage-5-rollback-plan";
+import { buildGammaStage5RollbackPlanSource } from "./stage-5-rollback-plan";
 
 export interface GammaStage5ReleaseCloseoutItem {
   order: number;
@@ -41,7 +41,7 @@ export function buildGammaStage5ReleaseCloseoutPacket(): GammaStage5ReleaseClose
   const releaseBundle = buildGammaStage5ReleaseBundle();
   const archiveManifest = buildGammaStage5ReleaseArchiveManifest();
   const retentionPolicy = buildGammaStage5ReleaseRetentionPolicy();
-  const rollbackPlan = buildGammaStage5RollbackPlan();
+  const rollbackPlan = buildGammaStage5RollbackPlanSource();
 
   const items: GammaStage5ReleaseCloseoutItem[] = [
     {
