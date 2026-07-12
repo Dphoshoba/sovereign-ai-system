@@ -11,7 +11,7 @@ describe("Gamma 2 Stage 5 operator signoff", () => {
     expect(signoff.status).toBe("pending-operator-approval");
     expect(signoff.branch).toBe("gamma");
     expect(signoff.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(signoff.apiSurfaceCount).toBe(35);
+    expect(signoff.apiSurfaceCount).toBe(36);
     expect(signoff.digestFingerprint).toMatch(/^[a-f0-9]{64}$/);
     expect(signoff.operatorRequiredCount).toBe(4);
   });
@@ -46,7 +46,7 @@ describe("Gamma 2 Stage 5 operator signoff", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_operator_signoff");
-    expect(body.apiSurfaceCount).toBe(35);
+    expect(body.apiSurfaceCount).toBe(36);
     expect(body.requirements).toHaveLength(4);
   });
 });

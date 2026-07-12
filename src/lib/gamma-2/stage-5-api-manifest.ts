@@ -160,6 +160,10 @@ const API_ENDPOINT_METADATA: Record<
     audience: "operator",
     sourceContract: "src/lib/gamma-2/stage-5-release-closeout-packet.ts",
   },
+  "/api/gamma/stage-5/release-closure-ledger": {
+    audience: "operator",
+    sourceContract: "src/lib/gamma-2/stage-5-release-closure-ledger.ts",
+  },
 };
 
 export function buildGammaStage5ApiManifest(): GammaStage5ApiManifest {

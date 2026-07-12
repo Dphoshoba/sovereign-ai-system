@@ -159,6 +159,7 @@
 - [x] Add Stage 5 release post-promotion review: `/api/gamma/stage-5/release-post-promotion-review`
 - [x] Add Stage 5 release operations index: `/api/gamma/stage-5/release-operations-index`
 - [x] Add Stage 5 release closeout packet: `/api/gamma/stage-5/release-closeout-packet`
+- [x] Add Stage 5 release closure ledger: `/api/gamma/stage-5/release-closure-ledger`
 - [x] Add Stage 5 release cutover checklist tests
 - [x] Wire Stage 5 release cutover checklist into manifest, smoke, dashboard, and release evidence
 

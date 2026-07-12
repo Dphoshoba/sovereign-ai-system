@@ -579,6 +579,12 @@ export default function GammaStage5Page() {
                 Closeout Packet
               </Link>
               <Link
+                href="/api/gamma/stage-5/release-closure-ledger"
+                className="rounded-md border border-zinc-800 px-3 py-2 text-zinc-200 hover:border-cyan-500 hover:text-cyan-100"
+              >
+                Closure Ledger
+              </Link>
+              <Link
                 href="/gamma-studio"
                 className="rounded-md border border-zinc-800 px-3 py-2 text-zinc-200 hover:border-cyan-500 hover:text-cyan-100"
               >
