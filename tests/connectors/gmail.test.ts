@@ -217,5 +217,33 @@ describe('Gmail Platform SDK Conformance', () => {
       const receipt = await GmailActionSet.execute(approved);
       expect(receipt.status).toBe('queued');
     });
+
+    it('should block live action mode when no live adapter is configured', async () => {
+      const previous = process.env.ENABLE_REAL_EXECUTION;
+      process.env.ENABLE_REAL_EXECUTION = 'true';
+
+      try {
+        const approved: Parameters<typeof GmailActionSet.execute>[0] = {
+          actionId: 'gmail_create_draft',
+          params: {},
+          requestedBy: 'user',
+          requestedAt: BASE,
+          approvedBy: 'admin',
+          approvedAt: BASE,
+          approvalReason: 'Approved for guarded live-mode test',
+          queueId: 'queue_live_blocked_001',
+        };
+        const receipt = await GmailActionSet.execute(approved);
+
+        expect(receipt.status).toBe('failed');
+        expect(receipt.error).toContain('live action blocked');
+      } finally {
+        if (previous === undefined) {
+          delete process.env.ENABLE_REAL_EXECUTION;
+        } else {
+          process.env.ENABLE_REAL_EXECUTION = previous;
+        }
+      }
+    });
   });
 });

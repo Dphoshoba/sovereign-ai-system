@@ -87,7 +87,13 @@ export const GmailActionSet: ActionSet = {
       };
     }
 
-    // Real execution: Build 141
-    throw new Error(`GmailActionSet.execute: real execution not yet implemented (Build 141)`);
+    return {
+      actionId: action.actionId,
+      queueId: action.queueId,
+      status: 'failed',
+      error: 'Gmail live action adapter is not configured; live action blocked',
+      executedAt: action.approvedAt,
+      auditId: `audit_${action.queueId}`,
+    };
   },
 };

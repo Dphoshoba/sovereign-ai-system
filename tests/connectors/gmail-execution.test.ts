@@ -621,7 +621,7 @@ describe('Feature Flag: Execution Mode', () => {
     expect(response.execution?.attemptNumber).toBe(1);
   });
 
-  it('should fail gracefully when real execution not yet implemented', () => {
+  it('should block real execution when no live adapter is configured', () => {
     const engine = new ExecutionEngine(DEFAULT_SAFETY_POLICY, true);
     const response = engine.executeQueued({
       queuedId: 'queued_real_001',
@@ -634,7 +634,37 @@ describe('Feature Flag: Execution Mode', () => {
     });
 
     expect(response.success).toBe(false);
-    expect(response.error).toContain('not yet implemented');
+    expect(response.error).toContain('adapter is not configured');
+    expect(response.execution?.executionState).toBe('failed');
+  });
+
+  it('should route real execution through an injected live adapter without external side effects', () => {
+    const engine = new ExecutionEngine(DEFAULT_SAFETY_POLICY, true, {
+      execute(context) {
+        return {
+          success: true,
+          execution: {
+            ...context,
+            gmailMessageId: 'gmail_mock_live_draft_001',
+          },
+          gmailMessageId: 'gmail_mock_live_draft_001',
+        };
+      },
+    });
+
+    const response = engine.executeQueued({
+      queuedId: 'queued_real_002',
+      draftId: 'draft_real_002',
+      previewId: 'preview_real_002',
+      approvalId: 'approval_real_002',
+      operator: 'executor@example.com',
+      idempotencyKey: 'idempotent_real_002',
+      executeAction: 'create_draft',
+    });
+
+    expect(response.success).toBe(true);
+    expect(response.execution?.executionState).toBe('completed');
+    expect(response.gmailMessageId).toBe('gmail_mock_live_draft_001');
   });
 
   it('should maintain feature flag across operations', () => {

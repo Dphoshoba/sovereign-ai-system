@@ -19,16 +19,26 @@ import {
   AuditEventType,
 } from '../../../src/lib/gmail-execution/types';
 
+export interface GmailLiveExecutionAdapter {
+  execute(context: ExecutionContext): ExecutionResponse;
+}
+
 export class ExecutionEngine {
   private executions: Map<string, ExecutionContext> = new Map();
   private idempotencyKeys: Set<string> = new Set();
   private policy: SafetyPolicy;
   private enableRealExecution: boolean;
+  private liveExecutionAdapter?: GmailLiveExecutionAdapter;
 
-  constructor(policy: SafetyPolicy = DEFAULT_SAFETY_POLICY, enableRealExecution?: boolean) {
+  constructor(
+    policy: SafetyPolicy = DEFAULT_SAFETY_POLICY,
+    enableRealExecution?: boolean,
+    liveExecutionAdapter?: GmailLiveExecutionAdapter,
+  ) {
     this.policy = policy;
     // Default to simulation mode (false) unless explicitly enabled
     this.enableRealExecution = enableRealExecution ?? this.getFeatureFlagFromEnv();
+    this.liveExecutionAdapter = liveExecutionAdapter;
   }
 
   /**
@@ -124,8 +134,7 @@ export class ExecutionEngine {
    * Simulate Gmail execution (safe mode, no actual sends)
    */
   private simulateExecution(context: ExecutionContext): ExecutionResponse {
-    // Simulate Gmail message ID generation
-    const simulatedMessageId = `msg_sim_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    const simulatedMessageId = `msg_sim_${context.id}_${context.attemptNumber}`;
 
     // Mark as completed immediately
     context.executionState = 'completed';
@@ -150,11 +159,40 @@ export class ExecutionEngine {
    * Execute real Gmail API call (only when feature flag enabled)
    */
   private executeReal(context: ExecutionContext): ExecutionResponse {
-    // TODO: Implement real Gmail API call in Build 136
-    // For now, return error indicating real execution not yet implemented
+    if (!this.liveExecutionAdapter) {
+      context.executionState = 'failed';
+      context.completedAt = new Date();
+      context.error = 'Gmail live execution adapter is not configured; live action blocked';
+
+      return {
+        success: false,
+        execution: context,
+        error: context.error,
+      };
+    }
+
+    const response = this.liveExecutionAdapter.execute(context);
+
+    if (!response.success) {
+      context.executionState = 'failed';
+      context.completedAt = new Date();
+      context.error = response.error ?? 'Gmail live execution adapter failed';
+
+      return {
+        ...response,
+        execution: response.execution ?? context,
+        error: context.error,
+      };
+    }
+
+    context.executionState = 'completed';
+    context.completedAt = new Date();
+    context.gmailMessageId = response.gmailMessageId ?? response.execution?.gmailMessageId;
+
     return {
-      success: false,
-      error: 'Real Gmail execution not yet implemented (Build 136)',
+      ...response,
+      execution: context,
+      gmailMessageId: context.gmailMessageId,
     };
   }
 
@@ -258,7 +296,8 @@ export class ExecutionEngine {
       execution.attemptNumber++;
       // Schedule retry (in real implementation, use queue scheduler)
       const delaySeconds = this.policy.retryDelaySeconds[execution.attemptNumber - 1] || 60;
-      execution.retryScheduledAt = new Date(Date.now() + delaySeconds * 1000);
+      const retryBaseTime = execution.startedAt ?? execution.createdAt;
+      execution.retryScheduledAt = new Date(retryBaseTime.getTime() + delaySeconds * 1000);
     } else {
       execution.executionState = 'dead_lettered';
     }

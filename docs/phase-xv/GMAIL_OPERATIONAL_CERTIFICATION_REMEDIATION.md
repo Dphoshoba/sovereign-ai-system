@@ -46,7 +46,7 @@ Codex may continue to build, test, document, and validate Gmail connector capabi
 | --- | --- | --- |
 | Correct certification language | Master plan and connector spec distinguish simulation certification from live production certification | NO |
 | Operator runbook | Approve, reject, retry, revoke, rollback, incident, and evidence workflows documented | NO |
-| Live execution gap inventory | All `not yet implemented` live execution paths are listed and tracked | NO |
+| Live execution gap inventory | Former live execution dead ends are replaced with fail-closed adapter seams | NO |
 | Credential readiness checklist | OAuth client, scopes, redirect URI, secret storage, revocation, and rotation checks documented | NO |
 | Production smoke plan | Health, scopes, quota, rate limit, approval, queue, and audit routes defined for future credential-backed validation | NO |
 | Certification guard test | Tests prevent future docs from claiming live production readiness prematurely | NO |
@@ -58,8 +58,8 @@ Codex may continue to build, test, document, and validate Gmail connector capabi
 
 | File | Current behavior | Required before live certification |
 | --- | --- | --- |
-| `lib/connectors/gmail/execution-engine.ts` | Real mode returns `Real Gmail execution not yet implemented (Build 136)` | Implement adapter-controlled execution or draft creation with audit receipt |
-| `lib/connectors/gmail/action-set.ts` | Real mode throws `GmailActionSet.execute: real execution not yet implemented (Build 141)` | Route approved actions to the controlled executor |
+| `lib/connectors/gmail/execution-engine.ts` | Real mode blocks unless a live adapter is explicitly injected | Implement credential-backed adapter and approved test-account verification |
+| `lib/connectors/gmail/action-set.ts` | Real mode fails closed unless a live action adapter is configured | Route approved actions to the controlled executor after adapter certification |
 | `lib/connectors/gmail/executor.ts` | Legacy mock ids are still used in simulated send/draft paths | Normalize deterministic id generation where production determinism requires it |
 | `docs/phase-xv/GMAIL_CONNECTOR_V1.md` | Historical language overstated production readiness | Corrected to simulation-certified and operational activation pending |
 | `docs/platform/PHASE_XV_PRODUCTION_CONNECTORS_MASTER_PLAN.md` | Historical language overstated Gmail certification position | Corrected to simulation-certified and operational certification pending |
