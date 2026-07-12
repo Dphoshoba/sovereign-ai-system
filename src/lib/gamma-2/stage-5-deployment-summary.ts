@@ -79,6 +79,7 @@ export function buildGammaStage5DeploymentSummary(): GammaStage5DeploymentSummar
       "/api/gamma/stage-5/release-operator-registry",
       "/api/gamma/stage-5/release-operator-action-queue",
       "/api/gamma/stage-5/release-operator-approval-packet",
+      "/api/gamma/stage-5/release-operator-approval-audit-trail",
     ],
     operatorRequiredCount,
     tags: [...evidence.tags, "gamma-2-stage-5-promotion-checklist"],

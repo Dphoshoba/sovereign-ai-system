@@ -11,7 +11,7 @@ describe("Gamma 2 Stage 5 release approval packet", () => {
     expect(packet.status).toBe("pending-operator-signoff");
     expect(packet.branch).toBe("gamma");
     expect(packet.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(packet.apiSurfaceCount).toBe(41);
+    expect(packet.apiSurfaceCount).toBe(42);
     expect(packet.operatorRequiredCount).toBe(4);
     expect(packet.approvalArtifactCount).toBe(5);
   });
@@ -69,7 +69,7 @@ describe("Gamma 2 Stage 5 release approval packet", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_approval_packet");
-    expect(body.apiSurfaceCount).toBe(41);
+    expect(body.apiSurfaceCount).toBe(42);
     expect(body.status).toBe("pending-operator-signoff");
     expect(body.approvalArtifacts).toHaveLength(5);
   });

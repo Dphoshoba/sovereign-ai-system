@@ -59,6 +59,7 @@ describe("Gamma 2 Stage 5 deployment summary", () => {
       "/api/gamma/stage-5/release-operator-registry",
       "/api/gamma/stage-5/release-operator-action-queue",
       "/api/gamma/stage-5/release-operator-approval-packet",
+      "/api/gamma/stage-5/release-operator-approval-audit-trail",
     ]);
     expect(summary.deploymentRule).toBe(
       "single-summary-for-readiness-evidence-release-and-promotion"
@@ -78,6 +79,6 @@ describe("Gamma 2 Stage 5 deployment summary", () => {
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_deployment_summary");
     expect(body.status).toBe("ready-for-controlled-promotion");
-    expect(body.apiSurface).toHaveLength(41);
+    expect(body.apiSurface).toHaveLength(42);
   });
 });

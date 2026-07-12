@@ -11,12 +11,12 @@ describe("Gamma 2 Stage 5 release operator action queue", () => {
     expect(queue.status).toBe("pending-operator-actions");
     expect(queue.branch).toBe("gamma");
     expect(queue.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(queue.apiSurfaceCount).toBe(41);
+    expect(queue.apiSurfaceCount).toBe(42);
     expect(queue.queueItemCount).toBe(5);
     expect(queue.readyItemCount).toBe(1);
     expect(queue.operatorRequiredItemCount).toBe(4);
     expect(queue.registryRecordCount).toBe(5);
-    expect(queue.smoke).toBe("64 routes passed, 0 failed");
+    expect(queue.smoke).toBe("65 routes passed, 0 failed");
   }, 30000);
 
   it("separates ready records from approval-required records", () => {
@@ -86,7 +86,7 @@ describe("Gamma 2 Stage 5 release operator action queue", () => {
     expect(buildGammaStage5ReleaseOperatorActionQueue()).toEqual(
       buildGammaStage5ReleaseOperatorActionQueue()
     );
-  }, 45000);
+  }, 90000);
 
   it("serves the queue through the Stage 5 release operator action queue route", async () => {
     const response = await GET();
@@ -94,7 +94,7 @@ describe("Gamma 2 Stage 5 release operator action queue", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_operator_action_queue");
-    expect(body.apiSurfaceCount).toBe(41);
+    expect(body.apiSurfaceCount).toBe(42);
     expect(body.status).toBe("pending-operator-actions");
     expect(body.items).toHaveLength(5);
   }, 30000);

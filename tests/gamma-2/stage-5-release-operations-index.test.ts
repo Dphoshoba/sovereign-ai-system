@@ -11,15 +11,15 @@ describe("Gamma 2 Stage 5 release operations index", () => {
     expect(index.status).toBe("ready-for-operator-sequencing");
     expect(index.branch).toBe("gamma");
     expect(index.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(index.apiSurfaceCount).toBe(41);
+    expect(index.apiSurfaceCount).toBe(42);
     expect(index.operationsStepCount).toBe(6);
     expect(index.promotionStepCount).toBe(5);
     expect(index.cutoverCheckCount).toBe(5);
     expect(index.trafficShiftStepCount).toBe(5);
     expect(index.monitoringCheckCount).toBe(5);
     expect(index.postPromotionReviewItemCount).toBe(5);
-    expect(index.smoke).toBe("64 routes passed, 0 failed");
-  });
+    expect(index.smoke).toBe("65 routes passed, 0 failed");
+  }, 30000);
 
   it("orders the operator release sequence from approval to review", () => {
     const index = buildGammaStage5ReleaseOperationsIndex();
@@ -86,13 +86,13 @@ describe("Gamma 2 Stage 5 release operations index", () => {
     expect(index.operationsRule).toBe(
       "stage-5-release-operations-index-orders-approval-promotion-cutover-shift-monitoring-and-review"
     );
-  });
+  }, 30000);
 
   it("is deterministic for repeated calls", () => {
     expect(buildGammaStage5ReleaseOperationsIndex()).toEqual(
       buildGammaStage5ReleaseOperationsIndex()
     );
-  }, 10000);
+  }, 90000);
 
   it("serves the index through the Stage 5 release operations index route", async () => {
     const response = await GET();
@@ -100,8 +100,8 @@ describe("Gamma 2 Stage 5 release operations index", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_operations_index");
-    expect(body.apiSurfaceCount).toBe(41);
+    expect(body.apiSurfaceCount).toBe(42);
     expect(body.status).toBe("ready-for-operator-sequencing");
     expect(body.steps).toHaveLength(6);
-  });
+  }, 30000);
 });

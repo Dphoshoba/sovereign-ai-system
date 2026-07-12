@@ -615,6 +615,12 @@ export default function GammaStage5Page() {
                 Approval Packet
               </Link>
               <Link
+                href="/api/gamma/stage-5/release-operator-approval-audit-trail"
+                className="rounded-md border border-zinc-800 px-3 py-2 text-zinc-200 hover:border-cyan-500 hover:text-cyan-100"
+              >
+                Approval Audit
+              </Link>
+              <Link
                 href="/gamma-studio"
                 className="rounded-md border border-zinc-800 px-3 py-2 text-zinc-200 hover:border-cyan-500 hover:text-cyan-100"
               >

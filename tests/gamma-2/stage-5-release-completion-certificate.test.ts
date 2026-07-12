@@ -11,14 +11,14 @@ describe("Gamma 2 Stage 5 release completion certificate", () => {
     expect(certificate.status).toBe("pending-operator-certification");
     expect(certificate.branch).toBe("gamma");
     expect(certificate.productionUrl).toBe(PRODUCTION_APP_URL);
-    expect(certificate.apiSurfaceCount).toBe(41);
+    expect(certificate.apiSurfaceCount).toBe(42);
     expect(certificate.phaseCount).toBe(11);
     expect(certificate.closureEntryCount).toBe(6);
     expect(certificate.closeoutItemCount).toBe(6);
     expect(certificate.retentionRuleCount).toBe(4);
     expect(certificate.passCheckCount).toBe(3);
     expect(certificate.openExceptionCount).toBe(0);
-    expect(certificate.smoke).toBe("64 routes passed, 0 failed");
+    expect(certificate.smoke).toBe("65 routes passed, 0 failed");
   }, 30000);
 
   it("binds the release completion evidence sequence", () => {
@@ -85,7 +85,7 @@ describe("Gamma 2 Stage 5 release completion certificate", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_release_completion_certificate");
-    expect(body.apiSurfaceCount).toBe(41);
+    expect(body.apiSurfaceCount).toBe(42);
     expect(body.status).toBe("pending-operator-certification");
     expect(body.evidence).toHaveLength(5);
   }, 30000);
