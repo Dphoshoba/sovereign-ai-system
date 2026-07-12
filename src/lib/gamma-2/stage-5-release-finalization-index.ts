@@ -1,9 +1,11 @@
 import { PRODUCTION_APP_URL } from "../site-config";
 import { buildGammaStage5AuditLedger } from "./stage-5-audit-ledger";
 import { buildGammaStage5DeploymentReceipt } from "./stage-5-deployment-receipt";
-import { buildGammaStage5OperatorSignoff } from "./stage-5-operator-signoff";
-import { buildGammaStage5ReleaseClosureLedger } from "./stage-5-release-closure-ledger";
-import { buildGammaStage5ReleaseCompletionCertificate } from "./stage-5-release-completion-certificate";
+import { buildGammaStage5OperatorSignoffSource } from "./stage-5-operator-signoff";
+import { buildGammaStage5ReleaseClosureLedgerSource } from "./stage-5-release-closure-ledger";
+import { buildGammaStage5ReleaseCompletionCertificateSource } from "./stage-5-release-completion-certificate";
+import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
+import { projectGammaStage5ReleaseFinalizationIndex } from "./stage-5-release-projection-registry";
 
 export interface GammaStage5ReleaseFinalizationIndexEntry {
   order: number;
@@ -33,10 +35,10 @@ export interface GammaStage5ReleaseFinalizationIndex {
   finalizationRule: "stage-5-release-finalization-index-requires-certificate-closure-signoff-receipt-and-audit-evidence";
 }
 
-export function buildGammaStage5ReleaseFinalizationIndex(): GammaStage5ReleaseFinalizationIndex {
-  const completionCertificate = buildGammaStage5ReleaseCompletionCertificate();
-  const closureLedger = buildGammaStage5ReleaseClosureLedger();
-  const operatorSignoff = buildGammaStage5OperatorSignoff();
+export function buildGammaStage5ReleaseFinalizationIndexSource(): GammaStage5ReleaseFinalizationIndex {
+  const completionCertificate = buildGammaStage5ReleaseCompletionCertificateSource();
+  const closureLedger = buildGammaStage5ReleaseClosureLedgerSource();
+  const operatorSignoff = buildGammaStage5OperatorSignoffSource();
   const deploymentReceipt = buildGammaStage5DeploymentReceipt();
   const auditLedger = buildGammaStage5AuditLedger();
 
@@ -102,4 +104,8 @@ export function buildGammaStage5ReleaseFinalizationIndex(): GammaStage5ReleaseFi
     finalizationRule:
       "stage-5-release-finalization-index-requires-certificate-closure-signoff-receipt-and-audit-evidence",
   };
+}
+
+export function buildGammaStage5ReleaseFinalizationIndex(): GammaStage5ReleaseFinalizationIndex {
+  return projectGammaStage5ReleaseFinalizationIndex(buildGammaStage5ReleaseProjectionContext());
 }

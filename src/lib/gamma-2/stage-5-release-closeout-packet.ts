@@ -1,8 +1,10 @@
 import { PRODUCTION_APP_URL } from "../site-config";
 import { buildGammaStage5ReleaseArchiveManifest } from "./stage-5-release-archive-manifest";
 import { buildGammaStage5ReleaseBundle } from "./stage-5-release-bundle";
-import { buildGammaStage5ReleaseOperationsIndex } from "./stage-5-release-operations-index";
-import { buildGammaStage5ReleasePostPromotionReview } from "./stage-5-release-post-promotion-review";
+import { buildGammaStage5ReleaseOperationsIndexSource } from "./stage-5-release-operations-index";
+import { buildGammaStage5ReleasePostPromotionReviewSource } from "./stage-5-release-post-promotion-review";
+import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
+import { projectGammaStage5ReleaseCloseoutPacket } from "./stage-5-release-projection-registry";
 import { buildGammaStage5ReleaseRetentionPolicy } from "./stage-5-release-retention-policy";
 import { buildGammaStage5RollbackPlanSource } from "./stage-5-rollback-plan";
 
@@ -35,9 +37,9 @@ export interface GammaStage5ReleaseCloseoutPacket {
   closeoutRule: "stage-5-release-closeout-requires-operations-review-bundle-archive-retention-and-rollback-evidence";
 }
 
-export function buildGammaStage5ReleaseCloseoutPacket(): GammaStage5ReleaseCloseoutPacket {
-  const operationsIndex = buildGammaStage5ReleaseOperationsIndex();
-  const postPromotionReview = buildGammaStage5ReleasePostPromotionReview();
+export function buildGammaStage5ReleaseCloseoutPacketSource(): GammaStage5ReleaseCloseoutPacket {
+  const operationsIndex = buildGammaStage5ReleaseOperationsIndexSource();
+  const postPromotionReview = buildGammaStage5ReleasePostPromotionReviewSource();
   const releaseBundle = buildGammaStage5ReleaseBundle();
   const archiveManifest = buildGammaStage5ReleaseArchiveManifest();
   const retentionPolicy = buildGammaStage5ReleaseRetentionPolicy();
@@ -119,4 +121,8 @@ export function buildGammaStage5ReleaseCloseoutPacket(): GammaStage5ReleaseClose
     closeoutRule:
       "stage-5-release-closeout-requires-operations-review-bundle-archive-retention-and-rollback-evidence",
   };
+}
+
+export function buildGammaStage5ReleaseCloseoutPacket(): GammaStage5ReleaseCloseoutPacket {
+  return projectGammaStage5ReleaseCloseoutPacket(buildGammaStage5ReleaseProjectionContext());
 }

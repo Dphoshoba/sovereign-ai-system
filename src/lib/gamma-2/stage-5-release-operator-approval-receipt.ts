@@ -1,5 +1,7 @@
 import { PRODUCTION_APP_URL } from "../site-config";
-import { buildGammaStage5ReleaseOperatorApprovalAuditTrail } from "./stage-5-release-operator-approval-audit-trail";
+import { buildGammaStage5ReleaseOperatorApprovalAuditTrailSource } from "./stage-5-release-operator-approval-audit-trail";
+import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
+import { projectGammaStage5ReleaseOperatorApprovalReceipt } from "./stage-5-release-projection-registry";
 
 export interface GammaStage5ReleaseOperatorApprovalReceiptRecord {
   order: number;
@@ -27,8 +29,8 @@ export interface GammaStage5ReleaseOperatorApprovalReceipt {
   receiptRule: "stage-5-release-operator-approval-receipt-preserves-packet-audit-boundary-and-smoke-evidence";
 }
 
-export function buildGammaStage5ReleaseOperatorApprovalReceipt(): GammaStage5ReleaseOperatorApprovalReceipt {
-  const approvalAuditTrail = buildGammaStage5ReleaseOperatorApprovalAuditTrail();
+export function buildGammaStage5ReleaseOperatorApprovalReceiptSource(): GammaStage5ReleaseOperatorApprovalReceipt {
+  const approvalAuditTrail = buildGammaStage5ReleaseOperatorApprovalAuditTrailSource();
 
   const records: GammaStage5ReleaseOperatorApprovalReceiptRecord[] = [
     {
@@ -82,4 +84,8 @@ export function buildGammaStage5ReleaseOperatorApprovalReceipt(): GammaStage5Rel
     receiptRule:
       "stage-5-release-operator-approval-receipt-preserves-packet-audit-boundary-and-smoke-evidence",
   };
+}
+
+export function buildGammaStage5ReleaseOperatorApprovalReceipt(): GammaStage5ReleaseOperatorApprovalReceipt {
+  return projectGammaStage5ReleaseOperatorApprovalReceipt(buildGammaStage5ReleaseProjectionContext());
 }

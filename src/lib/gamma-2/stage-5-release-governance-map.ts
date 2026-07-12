@@ -1,5 +1,5 @@
 import { PRODUCTION_APP_URL } from "../site-config";
-import { buildGammaStage5OperatorSignoff } from "./stage-5-operator-signoff";
+import { buildGammaStage5OperatorSignoffSource } from "./stage-5-operator-signoff";
 import { buildGammaStage5ReleaseComplianceMatrix } from "./stage-5-release-compliance-matrix";
 import { buildGammaStage5ReleaseExceptionRegister } from "./stage-5-release-exception-register";
 import { buildGammaStage5ReleaseRetentionPolicy } from "./stage-5-release-retention-policy";
@@ -28,7 +28,7 @@ export interface GammaStage5ReleaseGovernanceMap {
 }
 
 export function buildGammaStage5ReleaseGovernanceMap(): GammaStage5ReleaseGovernanceMap {
-  const signoff = buildGammaStage5OperatorSignoff();
+  const signoff = buildGammaStage5OperatorSignoffSource();
   const complianceMatrix = buildGammaStage5ReleaseComplianceMatrix();
   const exceptionRegister = buildGammaStage5ReleaseExceptionRegister();
   const retentionPolicy = buildGammaStage5ReleaseRetentionPolicy();

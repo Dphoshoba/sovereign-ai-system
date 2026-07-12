@@ -1,6 +1,6 @@
 import { PRODUCTION_APP_URL } from "../site-config";
 import { buildGammaStage5EvidenceIndex } from "./stage-5-evidence-index";
-import { buildGammaStage5OperatorSignoff } from "./stage-5-operator-signoff";
+import { buildGammaStage5OperatorSignoffSource } from "./stage-5-operator-signoff";
 import { buildGammaStage5ReleaseRetentionPolicy } from "./stage-5-release-retention-policy";
 
 export interface GammaStage5ReleaseComplianceControl {
@@ -25,7 +25,7 @@ export interface GammaStage5ReleaseComplianceMatrix {
 
 export function buildGammaStage5ReleaseComplianceMatrix(): GammaStage5ReleaseComplianceMatrix {
   const evidenceIndex = buildGammaStage5EvidenceIndex();
-  const signoff = buildGammaStage5OperatorSignoff();
+  const signoff = buildGammaStage5OperatorSignoffSource();
   const retentionPolicy = buildGammaStage5ReleaseRetentionPolicy();
 
   const controls: GammaStage5ReleaseComplianceControl[] = [

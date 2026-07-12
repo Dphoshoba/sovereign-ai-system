@@ -2,8 +2,10 @@ import { PRODUCTION_APP_URL } from "../site-config";
 import { buildGammaStage5ReleaseApprovalPacketSource } from "./stage-5-release-approval-packet";
 import { buildGammaStage5ReleaseCutoverChecklistSource } from "./stage-5-release-cutover-checklist";
 import { buildGammaStage5ReleaseMonitoringPlanSource } from "./stage-5-release-monitoring-plan";
-import { buildGammaStage5ReleasePostPromotionReview } from "./stage-5-release-post-promotion-review";
-import { buildGammaStage5ReleasePromotionPlan } from "./stage-5-release-promotion-plan";
+import { buildGammaStage5ReleasePostPromotionReviewSource } from "./stage-5-release-post-promotion-review";
+import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
+import { projectGammaStage5ReleaseOperationsIndex } from "./stage-5-release-projection-registry";
+import { buildGammaStage5ReleasePromotionPlanSource } from "./stage-5-release-promotion-plan";
 import { buildGammaStage5ReleaseTrafficShiftPlanSource } from "./stage-5-release-traffic-shift-plan";
 
 export interface GammaStage5ReleaseOperationsStep {
@@ -35,13 +37,13 @@ export interface GammaStage5ReleaseOperationsIndex {
   operationsRule: "stage-5-release-operations-index-orders-approval-promotion-cutover-shift-monitoring-and-review";
 }
 
-export function buildGammaStage5ReleaseOperationsIndex(): GammaStage5ReleaseOperationsIndex {
+export function buildGammaStage5ReleaseOperationsIndexSource(): GammaStage5ReleaseOperationsIndex {
   const approvalPacket = buildGammaStage5ReleaseApprovalPacketSource();
-  const promotionPlan = buildGammaStage5ReleasePromotionPlan();
+  const promotionPlan = buildGammaStage5ReleasePromotionPlanSource();
   const cutoverChecklist = buildGammaStage5ReleaseCutoverChecklistSource();
   const trafficShiftPlan = buildGammaStage5ReleaseTrafficShiftPlanSource();
   const monitoringPlan = buildGammaStage5ReleaseMonitoringPlanSource();
-  const postPromotionReview = buildGammaStage5ReleasePostPromotionReview();
+  const postPromotionReview = buildGammaStage5ReleasePostPromotionReviewSource();
 
   const steps: GammaStage5ReleaseOperationsStep[] = [
     {
@@ -119,4 +121,8 @@ export function buildGammaStage5ReleaseOperationsIndex(): GammaStage5ReleaseOper
     operationsRule:
       "stage-5-release-operations-index-orders-approval-promotion-cutover-shift-monitoring-and-review",
   };
+}
+
+export function buildGammaStage5ReleaseOperationsIndex(): GammaStage5ReleaseOperationsIndex {
+  return projectGammaStage5ReleaseOperationsIndex(buildGammaStage5ReleaseProjectionContext());
 }

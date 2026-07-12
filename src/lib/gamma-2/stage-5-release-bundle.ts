@@ -1,6 +1,6 @@
 import { PRODUCTION_APP_URL } from "../site-config";
 import { buildGammaStage5EvidenceIndex } from "./stage-5-evidence-index";
-import { buildGammaStage5OperatorSignoff } from "./stage-5-operator-signoff";
+import { buildGammaStage5OperatorSignoffSource } from "./stage-5-operator-signoff";
 import { buildGammaStage5ReleaseAttestation } from "./stage-5-release-attestation";
 
 export interface GammaStage5ReleaseBundleArtifact {
@@ -25,7 +25,7 @@ export interface GammaStage5ReleaseBundle {
 
 export function buildGammaStage5ReleaseBundle(): GammaStage5ReleaseBundle {
   const evidenceIndex = buildGammaStage5EvidenceIndex();
-  const signoff = buildGammaStage5OperatorSignoff();
+  const signoff = buildGammaStage5OperatorSignoffSource();
   const attestation = buildGammaStage5ReleaseAttestation();
 
   return {

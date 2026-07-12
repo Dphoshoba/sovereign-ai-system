@@ -1,6 +1,6 @@
 import { buildGammaStage5ApiManifest } from "./stage-5-api-manifest";
 import { buildGammaStage5DeploymentSummary } from "./stage-5-deployment-summary";
-import { buildGammaStage5OperatorSignoff } from "./stage-5-operator-signoff";
+import { buildGammaStage5OperatorSignoffSource } from "./stage-5-operator-signoff";
 import { buildGammaStage5ReadinessSnapshot } from "./stage-5-readiness";
 
 export interface GammaStage5EvidenceIndexEntry {
@@ -27,7 +27,7 @@ export function buildGammaStage5EvidenceIndex(): GammaStage5EvidenceIndex {
   const readiness = buildGammaStage5ReadinessSnapshot();
   const deploymentSummary = buildGammaStage5DeploymentSummary();
   const manifest = buildGammaStage5ApiManifest();
-  const signoff = buildGammaStage5OperatorSignoff();
+  const signoff = buildGammaStage5OperatorSignoffSource();
   const operatorArtifacts = new Set(signoff.signoffArtifacts);
   const entries = manifest.endpoints.map((endpoint, index) => ({
     order: index + 1,

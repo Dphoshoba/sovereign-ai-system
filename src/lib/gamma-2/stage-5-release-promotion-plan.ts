@@ -3,6 +3,8 @@ import { buildGammaStage5PromotionChecklist } from "./stage-5-promotion-checklis
 import { buildGammaStage5ReleaseApprovalPacketSource } from "./stage-5-release-approval-packet";
 import { buildGammaStage5ReleaseDecisionRecord } from "./stage-5-release-decision-record";
 import { buildGammaStage5ReleaseGate } from "./stage-5-release-gate";
+import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
+import { projectGammaStage5ReleasePromotionPlan } from "./stage-5-release-projection-registry";
 import { buildGammaStage5RollbackPlanSource } from "./stage-5-rollback-plan";
 
 export interface GammaStage5ReleasePromotionStep {
@@ -28,7 +30,7 @@ export interface GammaStage5ReleasePromotionPlan {
   promotionRule: "stage-5-promotion-plan-requires-approval-packet-before-production-action";
 }
 
-export function buildGammaStage5ReleasePromotionPlan(): GammaStage5ReleasePromotionPlan {
+export function buildGammaStage5ReleasePromotionPlanSource(): GammaStage5ReleasePromotionPlan {
   const approvalPacket = buildGammaStage5ReleaseApprovalPacketSource();
   const decisionRecord = buildGammaStage5ReleaseDecisionRecord();
   const releaseGate = buildGammaStage5ReleaseGate();
@@ -91,4 +93,8 @@ export function buildGammaStage5ReleasePromotionPlan(): GammaStage5ReleasePromot
     steps,
     promotionRule: "stage-5-promotion-plan-requires-approval-packet-before-production-action",
   };
+}
+
+export function buildGammaStage5ReleasePromotionPlan(): GammaStage5ReleasePromotionPlan {
+  return projectGammaStage5ReleasePromotionPlan(buildGammaStage5ReleaseProjectionContext());
 }

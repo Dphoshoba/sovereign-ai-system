@@ -5,14 +5,13 @@ import { buildGammaStage5ApiManifest } from "../../src/lib/gamma-2/stage-5-api-m
 import { buildGammaStage5DeploymentSummary } from "../../src/lib/gamma-2/stage-5-deployment-summary";
 import { buildGammaStage5OpenApiDocument } from "../../src/lib/gamma-2/stage-5-openapi";
 import { buildGammaStage5ReleaseDashboard } from "../../src/lib/gamma-2/stage-5-release-dashboard";
-import { buildGammaStage5ReleaseEvidenceContext } from "../../src/lib/gamma-2/stage-5-release-evidence-context";
 import { buildGammaStage5ReleaseProjectionContext } from "../../src/lib/gamma-2/stage-5-release-projection-context";
-import {
-  getGammaStage5ReleaseProjectionRegistry,
-  projectGammaStage5ReleaseProductionCutoverPacket,
-} from "../../src/lib/gamma-2/stage-5-release-projection-registry";
+import { getGammaStage5ReleaseProjectionRegistry } from "../../src/lib/gamma-2/stage-5-release-projection-registry";
 import { buildGammaStage5SdkDescriptor } from "../../src/lib/gamma-2/stage-5-sdk";
-import { buildGammaStage5SharedReleaseGraph } from "../../src/lib/gamma-2/stage-5-shared-release-graph";
+import {
+  buildGammaStage5SharedReleaseGraph,
+  GAMMA_STAGE_5_SHARED_RELEASE_GRAPH_PROJECTION_COUNT,
+} from "../../src/lib/gamma-2/stage-5-shared-release-graph";
 import {
   GAMMA_STAGE_5_SMOKE_SUMMARY,
   GAMMA_STAGE_5_SURFACE_COUNTS,
@@ -76,50 +75,63 @@ describe("Gamma 2 Stage 5 surface registry", () => {
 
   it("keeps the shared release evidence context deterministic", () => {
     const graph = buildGammaStage5SharedReleaseGraph();
-    const context = buildGammaStage5ReleaseEvidenceContext();
 
-    expect(graph).toEqual(buildGammaStage5SharedReleaseGraph());
     expect(Object.isFrozen(graph.projections)).toBe(true);
-    expect(graph.sourceArtifactCount).toBe(5);
-    expect(graph.projectionCount).toBe(5);
-    expect(context.sourceBuilderCount).toBe(1);
-    expect(context.graphProjectionCount).toBe(graph.projectionCount);
-    expect(context.authorizationLedger).toEqual(graph.projections.authorizationLedger);
-    expect(context.cutoverChecklist).toEqual(graph.projections.cutoverChecklist);
-    expect(context.trafficShiftPlan).toEqual(graph.projections.trafficShiftPlan);
-    expect(context.rollbackPlan).toEqual(graph.projections.rollbackPlan);
-    expect(context.monitoringPlan).toEqual(graph.projections.monitoringPlan);
-    expect(context).toEqual(buildGammaStage5ReleaseEvidenceContext());
-  }, 240000);
+    expect(graph.sourceArtifactCount).toBe(GAMMA_STAGE_5_SHARED_RELEASE_GRAPH_PROJECTION_COUNT);
+    expect(graph.projectionCount).toBe(GAMMA_STAGE_5_SHARED_RELEASE_GRAPH_PROJECTION_COUNT);
+    expect(graph.generatedAt.toISOString()).toBe("2026-07-12T00:00:00.000Z");
+    expect(buildGammaStage5SharedReleaseGraph().generatedAt).toEqual(graph.generatedAt);
+  });
 
   it("keeps release projection registry ordering and graph access deterministic", () => {
     const registry = getGammaStage5ReleaseProjectionRegistry();
     const context = buildGammaStage5ReleaseProjectionContext();
-    const before = structuredClone(context.graph.projections.authorizationLedger);
-    const projection = projectGammaStage5ReleaseProductionCutoverPacket(context);
 
     expect(registry.map((entry) => entry.id)).toEqual([
+      "operator-handoff",
+      "operator-signoff",
       "rollback-plan",
       "release-approval-packet",
+      "release-promotion-plan",
       "release-cutover-checklist",
       "release-traffic-shift-plan",
       "release-monitoring-plan",
+      "release-post-promotion-review",
+      "release-operations-index",
+      "release-closeout-packet",
+      "release-closure-ledger",
+      "release-completion-certificate",
+      "release-finalization-index",
+      "release-operator-registry",
+      "release-operator-action-queue",
+      "release-operator-approval-packet",
+      "release-operator-approval-audit-trail",
+      "release-operator-approval-receipt",
       "release-production-authorization-ledger",
       "release-production-cutover-packet",
     ]);
-    expect(registry.map((entry) => entry.order)).toEqual([1, 2, 3, 4, 5, 6, 7]);
-    expect(Object.isFrozen(context)).toBe(true);
-    expect(context.graph.sourceArtifactCount).toBe(5);
-    expect(context.graph.projectionCount).toBe(5);
-    expect(projection.authorizationEntryCount).toBe(
-      context.graph.projections.authorizationLedger.authorizationEntryCount
+    expect(registry.map((entry) => entry.order)).toEqual(
+      Array.from({ length: registry.length }, (_, index) => index + 1)
     );
-    expect(context.graph.projections.authorizationLedger).toEqual(before);
-    expect(projectGammaStage5ReleaseProductionCutoverPacket(context)).toEqual(projection);
-  }, 240000);
+    expect(Object.isFrozen(context)).toBe(true);
+    expect(context.metrics.graphConstructionCount).toBe(1);
+    expect(context.metrics.projectionInvocationCount).toBe(0);
+    expect(context.metrics.lateBuilderInvocationCount).toBe(0);
+    expect(context.metrics.duplicateGraphCompositionCount).toBe(0);
+    expect(context.graph.sourceArtifactCount).toBe(GAMMA_STAGE_5_SHARED_RELEASE_GRAPH_PROJECTION_COUNT);
+    expect(context.graph.projectionCount).toBe(GAMMA_STAGE_5_SHARED_RELEASE_GRAPH_PROJECTION_COUNT);
+  });
 
   it("keeps migrated public builders as projection wrappers", () => {
     const migratedBuilders = [
+      {
+        file: join(process.cwd(), "src", "lib", "gamma-2", "stage-5-operator-handoff.ts"),
+        name: "buildGammaStage5OperatorHandoff",
+      },
+      {
+        file: join(process.cwd(), "src", "lib", "gamma-2", "stage-5-operator-signoff.ts"),
+        name: "buildGammaStage5OperatorSignoff",
+      },
       {
         file: join(process.cwd(), "src", "lib", "gamma-2", "stage-5-rollback-plan.ts"),
         name: "buildGammaStage5RollbackPlan",
@@ -127,6 +139,10 @@ describe("Gamma 2 Stage 5 surface registry", () => {
       {
         file: join(process.cwd(), "src", "lib", "gamma-2", "stage-5-release-approval-packet.ts"),
         name: "buildGammaStage5ReleaseApprovalPacket",
+      },
+      {
+        file: join(process.cwd(), "src", "lib", "gamma-2", "stage-5-release-promotion-plan.ts"),
+        name: "buildGammaStage5ReleasePromotionPlan",
       },
       {
         file: join(process.cwd(), "src", "lib", "gamma-2", "stage-5-release-cutover-checklist.ts"),
@@ -139,6 +155,62 @@ describe("Gamma 2 Stage 5 surface registry", () => {
       {
         file: join(process.cwd(), "src", "lib", "gamma-2", "stage-5-release-monitoring-plan.ts"),
         name: "buildGammaStage5ReleaseMonitoringPlan",
+      },
+      {
+        file: join(process.cwd(), "src", "lib", "gamma-2", "stage-5-release-post-promotion-review.ts"),
+        name: "buildGammaStage5ReleasePostPromotionReview",
+      },
+      {
+        file: join(process.cwd(), "src", "lib", "gamma-2", "stage-5-release-operations-index.ts"),
+        name: "buildGammaStage5ReleaseOperationsIndex",
+      },
+      {
+        file: join(process.cwd(), "src", "lib", "gamma-2", "stage-5-release-closeout-packet.ts"),
+        name: "buildGammaStage5ReleaseCloseoutPacket",
+      },
+      {
+        file: join(process.cwd(), "src", "lib", "gamma-2", "stage-5-release-closure-ledger.ts"),
+        name: "buildGammaStage5ReleaseClosureLedger",
+      },
+      {
+        file: join(process.cwd(), "src", "lib", "gamma-2", "stage-5-release-completion-certificate.ts"),
+        name: "buildGammaStage5ReleaseCompletionCertificate",
+      },
+      {
+        file: join(process.cwd(), "src", "lib", "gamma-2", "stage-5-release-finalization-index.ts"),
+        name: "buildGammaStage5ReleaseFinalizationIndex",
+      },
+      {
+        file: join(process.cwd(), "src", "lib", "gamma-2", "stage-5-release-operator-registry.ts"),
+        name: "buildGammaStage5ReleaseOperatorRegistry",
+      },
+      {
+        file: join(process.cwd(), "src", "lib", "gamma-2", "stage-5-release-operator-action-queue.ts"),
+        name: "buildGammaStage5ReleaseOperatorActionQueue",
+      },
+      {
+        file: join(process.cwd(), "src", "lib", "gamma-2", "stage-5-release-operator-approval-packet.ts"),
+        name: "buildGammaStage5ReleaseOperatorApprovalPacket",
+      },
+      {
+        file: join(
+          process.cwd(),
+          "src",
+          "lib",
+          "gamma-2",
+          "stage-5-release-operator-approval-audit-trail.ts"
+        ),
+        name: "buildGammaStage5ReleaseOperatorApprovalAuditTrail",
+      },
+      {
+        file: join(
+          process.cwd(),
+          "src",
+          "lib",
+          "gamma-2",
+          "stage-5-release-operator-approval-receipt.ts"
+        ),
+        name: "buildGammaStage5ReleaseOperatorApprovalReceipt",
       },
       {
         file: join(

@@ -1,7 +1,9 @@
 import { PRODUCTION_APP_URL } from "../site-config";
-import { buildGammaStage5OperatorSignoff } from "./stage-5-operator-signoff";
+import { buildGammaStage5OperatorSignoffSource } from "./stage-5-operator-signoff";
 import { buildGammaStage5ReleaseDashboard } from "./stage-5-release-dashboard";
-import { buildGammaStage5ReleaseFinalizationIndex } from "./stage-5-release-finalization-index";
+import { buildGammaStage5ReleaseFinalizationIndexSource } from "./stage-5-release-finalization-index";
+import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
+import { projectGammaStage5ReleaseOperatorRegistry } from "./stage-5-release-projection-registry";
 
 export interface GammaStage5ReleaseOperatorRegistryRecord {
   order: number;
@@ -30,10 +32,10 @@ export interface GammaStage5ReleaseOperatorRegistry {
   registryRule: "stage-5-release-operator-registry-groups-dashboard-finalization-certificate-signoff-and-closeout-records";
 }
 
-export function buildGammaStage5ReleaseOperatorRegistry(): GammaStage5ReleaseOperatorRegistry {
+export function buildGammaStage5ReleaseOperatorRegistrySource(): GammaStage5ReleaseOperatorRegistry {
   const dashboard = buildGammaStage5ReleaseDashboard();
-  const finalizationIndex = buildGammaStage5ReleaseFinalizationIndex();
-  const operatorSignoff = buildGammaStage5OperatorSignoff();
+  const finalizationIndex = buildGammaStage5ReleaseFinalizationIndexSource();
+  const operatorSignoff = buildGammaStage5OperatorSignoffSource();
 
   const records: GammaStage5ReleaseOperatorRegistryRecord[] = [
     {
@@ -102,4 +104,8 @@ export function buildGammaStage5ReleaseOperatorRegistry(): GammaStage5ReleaseOpe
     registryRule:
       "stage-5-release-operator-registry-groups-dashboard-finalization-certificate-signoff-and-closeout-records",
   };
+}
+
+export function buildGammaStage5ReleaseOperatorRegistry(): GammaStage5ReleaseOperatorRegistry {
+  return projectGammaStage5ReleaseOperatorRegistry(buildGammaStage5ReleaseProjectionContext());
 }

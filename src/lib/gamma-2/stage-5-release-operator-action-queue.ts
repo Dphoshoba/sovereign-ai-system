@@ -1,5 +1,7 @@
 import { PRODUCTION_APP_URL } from "../site-config";
-import { buildGammaStage5ReleaseOperatorRegistry } from "./stage-5-release-operator-registry";
+import { buildGammaStage5ReleaseOperatorRegistrySource } from "./stage-5-release-operator-registry";
+import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
+import { projectGammaStage5ReleaseOperatorActionQueue } from "./stage-5-release-projection-registry";
 
 export interface GammaStage5ReleaseOperatorActionQueueItem {
   order: number;
@@ -32,8 +34,8 @@ function actionForStatus(status: "ready" | "operator-required") {
   return status === "ready" ? "review-record" : "confirm-and-approve-record";
 }
 
-export function buildGammaStage5ReleaseOperatorActionQueue(): GammaStage5ReleaseOperatorActionQueue {
-  const registry = buildGammaStage5ReleaseOperatorRegistry();
+export function buildGammaStage5ReleaseOperatorActionQueueSource(): GammaStage5ReleaseOperatorActionQueue {
+  const registry = buildGammaStage5ReleaseOperatorRegistrySource();
   const items = registry.records.map((record): GammaStage5ReleaseOperatorActionQueueItem => ({
     order: record.order,
     id: `${record.id}-action`,
@@ -65,4 +67,8 @@ export function buildGammaStage5ReleaseOperatorActionQueue(): GammaStage5Release
     queueRule:
       "stage-5-release-operator-action-queue-requires-human-review-before-production-approval",
   };
+}
+
+export function buildGammaStage5ReleaseOperatorActionQueue(): GammaStage5ReleaseOperatorActionQueue {
+  return projectGammaStage5ReleaseOperatorActionQueue(buildGammaStage5ReleaseProjectionContext());
 }

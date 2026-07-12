@@ -1,9 +1,11 @@
 import { PRODUCTION_APP_URL } from "../site-config";
 import { buildGammaStage5DeploymentSummary } from "./stage-5-deployment-summary";
-import { buildGammaStage5OperatorHandoff } from "./stage-5-operator-handoff";
+import { buildGammaStage5OperatorHandoffSource } from "./stage-5-operator-handoff";
 import { buildGammaStage5PromotionChecklist } from "./stage-5-promotion-checklist";
 import { buildGammaStage5PromotionJournal } from "./stage-5-promotion-journal";
 import { buildGammaStage5ReleaseGate } from "./stage-5-release-gate";
+import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
+import { projectGammaStage5OperatorSignoff } from "./stage-5-release-projection-registry";
 
 export interface GammaStage5OperatorSignoffRequirement {
   id: string;
@@ -26,11 +28,11 @@ export interface GammaStage5OperatorSignoff {
   signoffRule: "operator-signoff-required-before-production-promotion";
 }
 
-export function buildGammaStage5OperatorSignoff(): GammaStage5OperatorSignoff {
+export function buildGammaStage5OperatorSignoffSource(): GammaStage5OperatorSignoff {
   const deploymentSummary = buildGammaStage5DeploymentSummary();
   const releaseGate = buildGammaStage5ReleaseGate();
   const checklist = buildGammaStage5PromotionChecklist();
-  const handoff = buildGammaStage5OperatorHandoff();
+  const handoff = buildGammaStage5OperatorHandoffSource();
   const journal = buildGammaStage5PromotionJournal();
   const operatorRequiredCount =
     releaseGate.checks.filter((check) => check.status === "operator-required").length +
@@ -80,4 +82,8 @@ export function buildGammaStage5OperatorSignoff(): GammaStage5OperatorSignoff {
     ],
     signoffRule: "operator-signoff-required-before-production-promotion",
   };
+}
+
+export function buildGammaStage5OperatorSignoff(): GammaStage5OperatorSignoff {
+  return projectGammaStage5OperatorSignoff(buildGammaStage5ReleaseProjectionContext());
 }

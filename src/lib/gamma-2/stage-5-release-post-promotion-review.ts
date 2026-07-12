@@ -1,9 +1,11 @@
 import { PRODUCTION_APP_URL } from "../site-config";
 import { buildGammaStage5AuditLedger } from "./stage-5-audit-ledger";
 import { buildGammaStage5DeploymentReceipt } from "./stage-5-deployment-receipt";
-import { buildGammaStage5OperatorSignoff } from "./stage-5-operator-signoff";
+import { buildGammaStage5OperatorSignoffSource } from "./stage-5-operator-signoff";
 import { buildGammaStage5ReleaseDecisionRecord } from "./stage-5-release-decision-record";
 import { buildGammaStage5ReleaseMonitoringPlanSource } from "./stage-5-release-monitoring-plan";
+import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
+import { projectGammaStage5ReleasePostPromotionReview } from "./stage-5-release-projection-registry";
 
 export interface GammaStage5ReleasePostPromotionReviewItem {
   order: number;
@@ -31,9 +33,9 @@ export interface GammaStage5ReleasePostPromotionReview {
   reviewRule: "stage-5-post-promotion-review-requires-monitoring-signoff-audit-and-receipt-evidence";
 }
 
-export function buildGammaStage5ReleasePostPromotionReview(): GammaStage5ReleasePostPromotionReview {
+export function buildGammaStage5ReleasePostPromotionReviewSource(): GammaStage5ReleasePostPromotionReview {
   const monitoringPlan = buildGammaStage5ReleaseMonitoringPlanSource();
-  const signoff = buildGammaStage5OperatorSignoff();
+  const signoff = buildGammaStage5OperatorSignoffSource();
   const auditLedger = buildGammaStage5AuditLedger();
   const deploymentReceipt = buildGammaStage5DeploymentReceipt();
   const decisionRecord = buildGammaStage5ReleaseDecisionRecord();
@@ -98,4 +100,8 @@ export function buildGammaStage5ReleasePostPromotionReview(): GammaStage5Release
     reviewRule:
       "stage-5-post-promotion-review-requires-monitoring-signoff-audit-and-receipt-evidence",
   };
+}
+
+export function buildGammaStage5ReleasePostPromotionReview(): GammaStage5ReleasePostPromotionReview {
+  return projectGammaStage5ReleasePostPromotionReview(buildGammaStage5ReleaseProjectionContext());
 }

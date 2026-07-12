@@ -1,6 +1,8 @@
 import { PRODUCTION_APP_URL } from "../site-config";
-import { buildGammaStage5OperatorSignoff } from "./stage-5-operator-signoff";
-import { buildGammaStage5ReleaseOperatorApprovalPacket } from "./stage-5-release-operator-approval-packet";
+import { buildGammaStage5OperatorSignoffSource } from "./stage-5-operator-signoff";
+import { buildGammaStage5ReleaseOperatorApprovalPacketSource } from "./stage-5-release-operator-approval-packet";
+import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
+import { projectGammaStage5ReleaseOperatorApprovalAuditTrail } from "./stage-5-release-projection-registry";
 
 export interface GammaStage5ReleaseOperatorApprovalAuditEntry {
   order: number;
@@ -31,9 +33,9 @@ export interface GammaStage5ReleaseOperatorApprovalAuditTrail {
   auditRule: "stage-5-release-operator-approval-audit-trail-records-packet-queue-signoff-boundary-and-verification";
 }
 
-export function buildGammaStage5ReleaseOperatorApprovalAuditTrail(): GammaStage5ReleaseOperatorApprovalAuditTrail {
-  const approvalPacket = buildGammaStage5ReleaseOperatorApprovalPacket();
-  const signoff = buildGammaStage5OperatorSignoff();
+export function buildGammaStage5ReleaseOperatorApprovalAuditTrailSource(): GammaStage5ReleaseOperatorApprovalAuditTrail {
+  const approvalPacket = buildGammaStage5ReleaseOperatorApprovalPacketSource();
+  const signoff = buildGammaStage5OperatorSignoffSource();
 
   const entries: GammaStage5ReleaseOperatorApprovalAuditEntry[] = [
     {
@@ -102,4 +104,8 @@ export function buildGammaStage5ReleaseOperatorApprovalAuditTrail(): GammaStage5
     auditRule:
       "stage-5-release-operator-approval-audit-trail-records-packet-queue-signoff-boundary-and-verification",
   };
+}
+
+export function buildGammaStage5ReleaseOperatorApprovalAuditTrail(): GammaStage5ReleaseOperatorApprovalAuditTrail {
+  return projectGammaStage5ReleaseOperatorApprovalAuditTrail(buildGammaStage5ReleaseProjectionContext());
 }

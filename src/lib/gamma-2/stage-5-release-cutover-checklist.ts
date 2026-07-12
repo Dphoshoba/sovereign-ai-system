@@ -4,7 +4,7 @@ import { buildGammaStage5ReleaseApprovalPacketSource } from "./stage-5-release-a
 import { buildGammaStage5ReleaseDecisionRecord } from "./stage-5-release-decision-record";
 import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
 import { projectGammaStage5ReleaseCutoverChecklist } from "./stage-5-release-projection-registry";
-import { buildGammaStage5ReleasePromotionPlan } from "./stage-5-release-promotion-plan";
+import { buildGammaStage5ReleasePromotionPlanSource } from "./stage-5-release-promotion-plan";
 import { buildGammaStage5RollbackPlanSource } from "./stage-5-rollback-plan";
 
 export interface GammaStage5ReleaseCutoverCheck {
@@ -30,7 +30,7 @@ export interface GammaStage5ReleaseCutoverChecklist {
 }
 
 export function buildGammaStage5ReleaseCutoverChecklistSource(): GammaStage5ReleaseCutoverChecklist {
-  const promotionPlan = buildGammaStage5ReleasePromotionPlan();
+  const promotionPlan = buildGammaStage5ReleasePromotionPlanSource();
   const approvalPacket = buildGammaStage5ReleaseApprovalPacketSource();
   const decisionRecord = buildGammaStage5ReleaseDecisionRecord();
   const rollbackPlan = buildGammaStage5RollbackPlanSource();

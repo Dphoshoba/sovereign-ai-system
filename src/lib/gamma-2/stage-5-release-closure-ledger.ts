@@ -2,9 +2,11 @@ import { PRODUCTION_APP_URL } from "../site-config";
 import { buildGammaStage5AuditLedger } from "./stage-5-audit-ledger";
 import { buildGammaStage5DeploymentReceipt } from "./stage-5-deployment-receipt";
 import { buildGammaStage5ReleaseAttestation } from "./stage-5-release-attestation";
-import { buildGammaStage5ReleaseCloseoutPacket } from "./stage-5-release-closeout-packet";
+import { buildGammaStage5ReleaseCloseoutPacketSource } from "./stage-5-release-closeout-packet";
 import { buildGammaStage5ReleaseDecisionRecord } from "./stage-5-release-decision-record";
-import { buildGammaStage5ReleaseOperationsIndex } from "./stage-5-release-operations-index";
+import { buildGammaStage5ReleaseOperationsIndexSource } from "./stage-5-release-operations-index";
+import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
+import { projectGammaStage5ReleaseClosureLedger } from "./stage-5-release-projection-registry";
 
 export interface GammaStage5ReleaseClosureLedgerEntry {
   order: number;
@@ -33,9 +35,9 @@ export interface GammaStage5ReleaseClosureLedger {
   closureRule: "stage-5-release-closure-ledger-requires-attestation-decision-receipt-audit-operations-and-closeout";
 }
 
-export function buildGammaStage5ReleaseClosureLedger(): GammaStage5ReleaseClosureLedger {
-  const closeoutPacket = buildGammaStage5ReleaseCloseoutPacket();
-  const operationsIndex = buildGammaStage5ReleaseOperationsIndex();
+export function buildGammaStage5ReleaseClosureLedgerSource(): GammaStage5ReleaseClosureLedger {
+  const closeoutPacket = buildGammaStage5ReleaseCloseoutPacketSource();
+  const operationsIndex = buildGammaStage5ReleaseOperationsIndexSource();
   const attestation = buildGammaStage5ReleaseAttestation();
   const decisionRecord = buildGammaStage5ReleaseDecisionRecord();
   const deploymentReceipt = buildGammaStage5DeploymentReceipt();
@@ -110,4 +112,8 @@ export function buildGammaStage5ReleaseClosureLedger(): GammaStage5ReleaseClosur
     closureRule:
       "stage-5-release-closure-ledger-requires-attestation-decision-receipt-audit-operations-and-closeout",
   };
+}
+
+export function buildGammaStage5ReleaseClosureLedger(): GammaStage5ReleaseClosureLedger {
+  return projectGammaStage5ReleaseClosureLedger(buildGammaStage5ReleaseProjectionContext());
 }

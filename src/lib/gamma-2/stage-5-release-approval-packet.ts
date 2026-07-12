@@ -1,6 +1,6 @@
 import { PRODUCTION_APP_URL } from "../site-config";
-import { buildGammaStage5OperatorHandoff } from "./stage-5-operator-handoff";
-import { buildGammaStage5OperatorSignoff } from "./stage-5-operator-signoff";
+import { buildGammaStage5OperatorHandoffSource } from "./stage-5-operator-handoff";
+import { buildGammaStage5OperatorSignoffSource } from "./stage-5-operator-signoff";
 import { buildGammaStage5ReleaseAttestation } from "./stage-5-release-attestation";
 import { buildGammaStage5ReleaseDecisionRecord } from "./stage-5-release-decision-record";
 import { buildGammaStage5ReleaseGovernanceMap } from "./stage-5-release-governance-map";
@@ -30,8 +30,8 @@ export interface GammaStage5ReleaseApprovalPacket {
 
 export function buildGammaStage5ReleaseApprovalPacketSource(): GammaStage5ReleaseApprovalPacket {
   const decisionRecord = buildGammaStage5ReleaseDecisionRecord();
-  const signoff = buildGammaStage5OperatorSignoff();
-  const handoff = buildGammaStage5OperatorHandoff();
+  const signoff = buildGammaStage5OperatorSignoffSource();
+  const handoff = buildGammaStage5OperatorHandoffSource();
   const governanceMap = buildGammaStage5ReleaseGovernanceMap();
   const attestation = buildGammaStage5ReleaseAttestation();
 

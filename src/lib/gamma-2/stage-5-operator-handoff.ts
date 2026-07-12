@@ -1,5 +1,7 @@
 import { buildGammaStage5OperatorBrief } from "./stage-5-operator-brief";
 import { buildGammaStage5ReleaseAttestation } from "./stage-5-release-attestation";
+import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
+import { projectGammaStage5OperatorHandoff } from "./stage-5-release-projection-registry";
 import { buildGammaStage5RollbackPlanSource } from "./stage-5-rollback-plan";
 
 export interface GammaStage5OperatorHandoff {
@@ -14,7 +16,7 @@ export interface GammaStage5OperatorHandoff {
   handoffRule: "operator-reviews-brief-attestation-and-rollback-before-promotion";
 }
 
-export function buildGammaStage5OperatorHandoff(): GammaStage5OperatorHandoff {
+export function buildGammaStage5OperatorHandoffSource(): GammaStage5OperatorHandoff {
   const brief = buildGammaStage5OperatorBrief();
   const attestation = buildGammaStage5ReleaseAttestation();
   const rollbackPlan = buildGammaStage5RollbackPlanSource();
@@ -35,4 +37,8 @@ export function buildGammaStage5OperatorHandoff(): GammaStage5OperatorHandoff {
     ],
     handoffRule: "operator-reviews-brief-attestation-and-rollback-before-promotion",
   };
+}
+
+export function buildGammaStage5OperatorHandoff(): GammaStage5OperatorHandoff {
+  return projectGammaStage5OperatorHandoff(buildGammaStage5ReleaseProjectionContext());
 }

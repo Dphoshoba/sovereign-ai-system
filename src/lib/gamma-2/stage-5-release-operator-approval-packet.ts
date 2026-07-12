@@ -1,6 +1,8 @@
 import { PRODUCTION_APP_URL } from "../site-config";
-import { buildGammaStage5OperatorSignoff } from "./stage-5-operator-signoff";
-import { buildGammaStage5ReleaseOperatorActionQueue } from "./stage-5-release-operator-action-queue";
+import { buildGammaStage5OperatorSignoffSource } from "./stage-5-operator-signoff";
+import { buildGammaStage5ReleaseOperatorActionQueueSource } from "./stage-5-release-operator-action-queue";
+import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
+import { projectGammaStage5ReleaseOperatorApprovalPacket } from "./stage-5-release-projection-registry";
 
 export interface GammaStage5ReleaseOperatorApprovalPacketRequirement {
   order: number;
@@ -30,9 +32,9 @@ export interface GammaStage5ReleaseOperatorApprovalPacket {
   approvalRule: "stage-5-release-operator-approval-packet-requires-action-queue-signoff-and-human-production-approval";
 }
 
-export function buildGammaStage5ReleaseOperatorApprovalPacket(): GammaStage5ReleaseOperatorApprovalPacket {
-  const queue = buildGammaStage5ReleaseOperatorActionQueue();
-  const signoff = buildGammaStage5OperatorSignoff();
+export function buildGammaStage5ReleaseOperatorApprovalPacketSource(): GammaStage5ReleaseOperatorApprovalPacket {
+  const queue = buildGammaStage5ReleaseOperatorActionQueueSource();
+  const signoff = buildGammaStage5OperatorSignoffSource();
 
   const requirements: GammaStage5ReleaseOperatorApprovalPacketRequirement[] = [
     {
@@ -88,4 +90,8 @@ export function buildGammaStage5ReleaseOperatorApprovalPacket(): GammaStage5Rele
     approvalRule:
       "stage-5-release-operator-approval-packet-requires-action-queue-signoff-and-human-production-approval",
   };
+}
+
+export function buildGammaStage5ReleaseOperatorApprovalPacket(): GammaStage5ReleaseOperatorApprovalPacket {
+  return projectGammaStage5ReleaseOperatorApprovalPacket(buildGammaStage5ReleaseProjectionContext());
 }

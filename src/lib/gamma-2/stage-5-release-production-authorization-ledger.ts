@@ -1,6 +1,6 @@
 import { PRODUCTION_APP_URL } from "../site-config";
 import { buildGammaStage5ReleaseGate } from "./stage-5-release-gate";
-import { buildGammaStage5ReleaseOperatorApprovalReceipt } from "./stage-5-release-operator-approval-receipt";
+import { buildGammaStage5ReleaseOperatorApprovalReceiptSource } from "./stage-5-release-operator-approval-receipt";
 import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
 import { projectGammaStage5ReleaseProductionAuthorizationLedger } from "./stage-5-release-projection-registry";
 
@@ -31,7 +31,7 @@ export interface GammaStage5ReleaseProductionAuthorizationLedger {
 }
 
 export function buildGammaStage5ReleaseProductionAuthorizationLedgerSource(): GammaStage5ReleaseProductionAuthorizationLedger {
-  const receipt = buildGammaStage5ReleaseOperatorApprovalReceipt();
+  const receipt = buildGammaStage5ReleaseOperatorApprovalReceiptSource();
   const releaseGate = buildGammaStage5ReleaseGate();
   const operatorRequiredCheckCount = releaseGate.checks.filter(
     (check) => check.status === "operator-required"

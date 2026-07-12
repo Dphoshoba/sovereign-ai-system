@@ -1,8 +1,10 @@
 import { PRODUCTION_APP_URL } from "../site-config";
 import { buildGammaStage5ReadinessSnapshot } from "./stage-5-readiness";
 import { buildGammaStage5ReleaseAttestation } from "./stage-5-release-attestation";
-import { buildGammaStage5ReleaseCloseoutPacket } from "./stage-5-release-closeout-packet";
-import { buildGammaStage5ReleaseClosureLedger } from "./stage-5-release-closure-ledger";
+import { buildGammaStage5ReleaseCloseoutPacketSource } from "./stage-5-release-closeout-packet";
+import { buildGammaStage5ReleaseClosureLedgerSource } from "./stage-5-release-closure-ledger";
+import { buildGammaStage5ReleaseProjectionContext } from "./stage-5-release-projection-context";
+import { projectGammaStage5ReleaseCompletionCertificate } from "./stage-5-release-projection-registry";
 import { buildGammaStage5ReleaseRetentionPolicy } from "./stage-5-release-retention-policy";
 
 export interface GammaStage5ReleaseCompletionCertificateEvidence {
@@ -32,10 +34,10 @@ export interface GammaStage5ReleaseCompletionCertificate {
   certificateRule: "stage-5-release-completion-certificate-requires-readiness-closure-closeout-retention-and-attestation";
 }
 
-export function buildGammaStage5ReleaseCompletionCertificate(): GammaStage5ReleaseCompletionCertificate {
+export function buildGammaStage5ReleaseCompletionCertificateSource(): GammaStage5ReleaseCompletionCertificate {
   const readiness = buildGammaStage5ReadinessSnapshot();
-  const closureLedger = buildGammaStage5ReleaseClosureLedger();
-  const closeoutPacket = buildGammaStage5ReleaseCloseoutPacket();
+  const closureLedger = buildGammaStage5ReleaseClosureLedgerSource();
+  const closeoutPacket = buildGammaStage5ReleaseCloseoutPacketSource();
   const retentionPolicy = buildGammaStage5ReleaseRetentionPolicy();
   const attestation = buildGammaStage5ReleaseAttestation();
 
@@ -100,4 +102,8 @@ export function buildGammaStage5ReleaseCompletionCertificate(): GammaStage5Relea
     certificateRule:
       "stage-5-release-completion-certificate-requires-readiness-closure-closeout-retention-and-attestation",
   };
+}
+
+export function buildGammaStage5ReleaseCompletionCertificate(): GammaStage5ReleaseCompletionCertificate {
+  return projectGammaStage5ReleaseCompletionCertificate(buildGammaStage5ReleaseProjectionContext());
 }
