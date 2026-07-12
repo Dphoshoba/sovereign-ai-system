@@ -11,7 +11,7 @@ describe("Gamma 2 Stage 5 rollback plan", () => {
     expect(plan.branch).toBe("gamma");
     expect(plan.protectedTag).toBe("gamma-2-roadmap-complete");
     expect(plan.digestFingerprint).toMatch(/^[a-f0-9]{64}$/);
-    expect(plan.apiSurfaceCount).toBe(40);
+    expect(plan.apiSurfaceCount).toBe(41);
     expect(plan.steps).toHaveLength(4);
   });
 
@@ -37,7 +37,7 @@ describe("Gamma 2 Stage 5 rollback plan", () => {
 
     expect(response.status).toBe(200);
     expect(body.id).toBe("gamma_2_stage_5_rollback_plan");
-    expect(body.apiSurfaceCount).toBe(40);
+    expect(body.apiSurfaceCount).toBe(41);
     expect(body.rollbackRule).toBe("operator-approved-rollback-to-last-attested-stage-5-tag");
   });
 });

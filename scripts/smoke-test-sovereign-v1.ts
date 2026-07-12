@@ -46,6 +46,7 @@ const ROUTES: { group: string; path: string }[] = [
   { group: "gamma", path: "/api/gamma/stage-5/release-finalization-index" },
   { group: "gamma", path: "/api/gamma/stage-5/release-operator-registry" },
   { group: "gamma", path: "/api/gamma/stage-5/release-operator-action-queue" },
+  { group: "gamma", path: "/api/gamma/stage-5/release-operator-approval-packet" },
   { group: "executive", path: "/api/executive/health" },
   { group: "executive", path: "/api/executive/runtime" },
   { group: "executive", path: "/api/executive/command-center" },
