@@ -1,25 +1,36 @@
 /**
- * Calendar Connector — Barrel Export
+ * Calendar Connector - Barrel Export (Stage 1 Read-Only)
  */
-export { CalendarOAuth } from './oauth-adapter';
-export { CalendarClient } from './api-client';
-export { CalendarParser } from './resource-parser';
-export type { CalendarResource } from './resource-parser';
-export { CalendarActions } from './action-set';
-export {
-  certifyCalendarProductionConnector,
-  createCalendarAuditProjection,
-  createCalendarQueueProjection,
-  getCalendarProductionReadiness,
-  getCalendarRetryPolicy,
-  projectCalendarHealth,
-  projectCalendarMetrics,
-} from './production-readiness';
+
+export { calendarManifest, validateCalendarManifest } from './manifest';
+export { CalendarAuthenticator } from './authenticator';
+export { GoogleCalendarApiClient } from './api-client';
+
+export { CalendarReader } from './calendar-reader';
+export { CalendarEventReader } from './event-reader';
+export { CalendarEventSearch } from './event-search';
+export { CalendarFreeBusyReader } from './free-busy';
+
+export { computeAvailability } from './availability-engine';
+
+export { inspectCalendarPermissions, assertCanReadEvents } from './permission-inspector';
+export { validateCalendarReadScopes } from './scope-validator';
+export { evaluateCalendarQuota } from './quota-adapter';
+export { evaluateCalendarHealth } from './health-adapter';
+export { buildCalendarReadAuditReceipt } from './read-audit';
+export { classifyCalendarReadError } from './retry-classifier';
+
 export type {
-  CalendarAuditProjection,
-  CalendarCertificationProjection,
-  CalendarHealthProjection,
-  CalendarMetricsProjection,
-  CalendarQueueProjection,
-  CalendarRetryPolicy,
-} from './production-readiness';
+  CalendarAccessRole,
+  CalendarIdentity,
+  CalendarEventAttendee,
+  CalendarEventRecord,
+  CalendarListResult,
+  CalendarEventListResult,
+  CalendarFreeBusyResult,
+  AvailabilityWindow,
+  CalendarAvailabilityResult,
+  CalendarPermissionInspection,
+  CalendarHealthStatus,
+  CalendarAuditReceipt,
+} from './types';
