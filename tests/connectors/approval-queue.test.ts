@@ -475,7 +475,8 @@ describe('Draft Preview Reader', () => {
     reader.store(MOCK_DRAFT_PREVIEWS.simple);
     reader.store(MOCK_DRAFT_PREVIEWS.expired);
 
-    const active = reader.getActive(new Date());
+    // Use fixed reference time to keep this test deterministic (avoid wall-clock coupling).
+    const active = reader.getActive(new Date('2026-07-10T00:00:00Z'));
     expect(active.length).toBe(1);
     expect(active[0].status).toBe('active');
   });
