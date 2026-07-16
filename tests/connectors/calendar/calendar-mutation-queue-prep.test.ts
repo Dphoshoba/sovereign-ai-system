@@ -3,9 +3,9 @@ import { evaluateCalendarMutationGovernance } from '../../../lib/connectors/cale
 import { prepareCalendarMutationApproval } from '../../../lib/connectors/calendar/mutation-approval';
 import { buildMutationPreviewReceipt } from '../../../lib/connectors/calendar/mutation-preview-receipt';
 import { buildCalendarMutationPreviewAuditRecord } from '../../../lib/connectors/calendar/mutation-preview-audit';
-import { classifyMutationRisk } from '../../../lib/connectors/calendar/mutation-risk-classifier';
 import { prepareCalendarMutationQueuePreparation } from '../../../lib/connectors/calendar/mutation-queue-prep';
 import type { CalendarMutationPreview } from '../../../lib/connectors/calendar/mutation-types';
+import type { CalendarMutationGovernanceDecision } from '../../../lib/connectors/calendar/mutation-governance';
 
 const GENERATED_AT = '2026-07-20T00:00:00.000Z';
 
@@ -100,7 +100,7 @@ describe('calendar stage2c deterministic mutation queue preparation (metadata on
   });
 
   it('create/update/delete intents are supported (metadata)', () => {
-    const ops: Array<{ op: 'create' | 'update' | 'delete'; apiOp: string }> = [
+    const ops: Array<{ op: 'create' | 'update' | 'delete'; apiOp: 'events.insert' | 'events.update' | 'events.patch' | 'events.delete' }> = [
       { op: 'create', apiOp: 'events.insert' },
       { op: 'update', apiOp: 'events.patch' },
       { op: 'delete', apiOp: 'events.delete' },
@@ -299,7 +299,7 @@ describe('calendar stage2c deterministic mutation queue preparation (metadata on
     expect(prep.auditReferences.controls.executionAllowedForQueueRunner).toBe(false);
   });
 
-  it('deterministic repeated output for same input', () => {
+  it('deterministic repeated output for some input', () => {
     const preview = basePreview({ previewId: 'p-deterministic2', operation: 'update' });
     const { governance, approval, receipt, audit } = buildEvidence(preview);
 
@@ -379,12 +379,9 @@ describe('calendar stage2c deterministic mutation queue preparation (metadata on
     expect(prep.retry.retryPolicy.delaySeconds).toEqual([5, 10, 20]);
   });
 
-  // --- Expansion Cases ---
-
   it('rejects when approval status is not pending_human_review', () => {
     const preview = basePreview();
     const { governance, approval, receipt, audit } = buildEvidence(preview);
-    
     const mockApproval = { ...approval, approvalStatus: 'approved' as any };
 
     const prep = prepareCalendarMutationQueuePreparation({
@@ -403,7 +400,8 @@ describe('calendar stage2c deterministic mutation queue preparation (metadata on
   });
 
   it('rejects when previewOnly is false', () => {
-    const preview = basePreview({ previewOnly: false });
+    // intentionally invalid runtime input to verify rejection
+    const preview = basePreview({ previewOnly: false as any });
     const { governance, approval, receipt, audit } = buildEvidence(preview);
 
     const prep = prepareCalendarMutationQueuePreparation({
@@ -422,7 +420,8 @@ describe('calendar stage2c deterministic mutation queue preparation (metadata on
   });
 
   it('rejects when executionAllowed is true in preview', () => {
-    const preview = basePreview({ executionAllowed: true });
+    // intentionally invalid runtime input to verify rejection
+    const preview = basePreview({ executionAllowed: true as any });
     const { governance, approval, receipt, audit } = buildEvidence(preview);
 
     const prep = prepareCalendarMutationQueuePreparation({
@@ -443,7 +442,6 @@ describe('calendar stage2c deterministic mutation queue preparation (metadata on
   it('rejects when approval execution controls are violated (executionAllowed=true)', () => {
     const preview = basePreview();
     const { governance, approval, receipt, audit } = buildEvidence(preview);
-    
     const mockApproval = { ...approval, executionAllowed: true as any };
 
     const prep = prepareCalendarMutationQueuePreparation({
@@ -464,7 +462,6 @@ describe('calendar stage2c deterministic mutation queue preparation (metadata on
   it('rejects when approval liveExecutionAuthorized is true', () => {
     const preview = basePreview();
     const { governance, approval, receipt, audit } = buildEvidence(preview);
-    
     const mockApproval = { ...approval, liveExecutionAuthorized: true as any };
 
     const prep = prepareCalendarMutationQueuePreparation({
@@ -515,15 +512,14 @@ describe('calendar stage2c deterministic mutation queue preparation (metadata on
       const preview = basePreview();
       const { approval, receipt, audit } = buildEvidence(preview);
       
-      // Mock governance to force specific risk level
-      const mockGovernance = {
+      const mockGovernance: CalendarMutationGovernanceDecision = {
         ...evaluateCalendarMutationGovernance({
           requestId: 'req-q',
           workflowId: 'wf-q',
           organization: orgAllow,
           preview,
         }),
-        risk: { level: level as any, score: 10 },
+        risk: { level: level as any, score: 10, factors: [] },
       };
 
       const prep = prepareCalendarMutationQueuePreparation({
@@ -544,14 +540,14 @@ describe('calendar stage2c deterministic mutation queue preparation (metadata on
     const preview = basePreview();
     const { approval, receipt, audit } = buildEvidence(preview);
     
-    const mockGovernance = {
+    const mockGovernance: CalendarMutationGovernanceDecision = {
       ...evaluateCalendarMutationGovernance({
         requestId: 'req-q',
         workflowId: 'wf-q',
         organization: orgAllow,
         preview,
       }),
-      risk: { level: 'unknown' as any, score: 10 },
+      risk: { level: 'unknown' as any, score: 10, factors: [] },
     };
 
     const prep = prepareCalendarMutationQueuePreparation({
