@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { DriveMetadataReader } from '../../lib/connectors/drive/metadata-reader';
-import { DriveFixtures } from '../fixtures/drive/drive-fixtures';
+import { DriveMetadataReader } from '../../../lib/connectors/drive/metadata-reader';
+import { DriveFixtures } from '../../../tests/fixtures/drive/drive-fixtures';
 
 describe('Drive Metadata Reader', () => {
   it('correctly parses and classifies a standard file', () => {
