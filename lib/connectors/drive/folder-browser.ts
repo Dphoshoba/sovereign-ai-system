@@ -53,7 +53,6 @@ export class DriveFolderBrowser {
       includeTrashed = false,
     } = options;
 
-    // Simulation: Mock items.
     const mockRawItems = this.getMockItemsForFolder(folderId);
     
     const filteredItems = mockRawItems
