@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DriveFolderBrowser } from '../../lib/connectors/drive/folder-browser';
+import { DriveFolderBrowser } from '../../../lib/connectors/drive/folder-browser';
 
 describe('Drive Folder Browser', () => {
   it('lists root items deterministically', async () => {
