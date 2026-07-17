@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DriveSearch } from '../../lib/connectors/drive/drive-search';
+import { DriveSearch } from '../../../lib/connectors/drive/drive-search';
 
 describe('Drive Search', () => {
   it('performs a basic text search deterministically', async () => {

@@ -20,8 +20,8 @@ export class DriveVersionAwareness {
       revisionCount: version || 0,
       lastModified,
       checksum,
-      isStale: version && version < 10, // simulated drift
-      driftDetected: !!(checksum && checksum.startsWith("drift")),
+      isStale: version ? version < 10 : false,
+      driftDetected: !!(checksum && checksum.toLowerCase().includes("drift")),
     };
   }
 }

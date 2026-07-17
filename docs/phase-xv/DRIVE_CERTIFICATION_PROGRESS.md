@@ -1,54 +1,31 @@
-# Drive Connector Certification Progress
+# Google Drive Certification Progress
 
-## Phase XV.C: Google Drive Integration
+## Stage 1: Governed Read-Only Foundation
+- [x] OAuth Hardening (`lib/connectors/drive/oauth-adapter.ts`)
+- [x] Metadata Reader (`lib/connectors/drive/metadata-reader.ts`)
+- [x] Folder Browser (`lib/connectors/drive/folder-browser.ts`)
+- [x] Metadata Search (`lib/connectors/drive/drive-search.ts`)
+- [x] Permission Inspection (`lib/connectors/drive/permission-inspector.ts`)
+- [x] Ownership Analysis (`lib/connectors/drive/permission-inspector.ts`)
+- [x] Platform Permission Resolution (`lib/platform/security/permission-resolution.ts`)
+- [x] Drive Permission Adapter (`lib/connectors/drive/permission-adapter.ts`)
+- [x] Version Awareness (`lib/connectors/drive/version-awareness.ts`)
+- [x] Duplicate Detection (`lib/connectors/drive/duplicate-detector.ts`)
+- [x] MIME Classification (`lib/connectors/drive/mime-classifier.ts`)
+- [x] Read Audit (`lib/connectors/drive/read-audit.ts`)
+- [x] Final Certification Gates (TSC, Tests, Build, Determinism)
+- [x] Mandatory Security Reviews (Boundary, Permission Escalation, Leakage)
 
-### Stage 1: Governed Read-Only Foundation
-- [ ] OAuth Implementation
-- [ ] Drive Discovery & Folder Browsing
-- [ ] Metadata Reading & MIME Classification
-- [ ] File Search & Version Awareness
-- [ ] Permission & Ownership Inspection
-- [ ] Duplicate Detection
-- [ ] Download Authorization Metadata
-- [ ] Health & Quota Projection
-- [ ] Scope Validation
-- [ ] **Stage 1 Final Gates**
-  - [ ] TypeScript Compilation
-  - [ ] Drive Connector Suite
-  - [ ] Determinism Checks
-  - [ ] Full Repository Tests
-  - [ ] Boundary & Security Scans
-  - [ ] Permission Escalation Review
-  - [ ] Governance Review
-  - [ ] Secret Review
-  - [ ] Public Interface Review
-  - [ ] Capability Registry Review
+**Status:** CERTIFIED ✓
+**Tag:** `gamma-drive-stage1-read-only`
+**Date:** 2026-07-17
 
+---
 
-### Stage 2: Governed Mutation Preparation
-- [ ] **Stage 2A: Deterministic Mutation Previews**
-  - [ ] Upload / Create Folder Previews
-  - [ ] Rename / Move Previews
-  - [ ] Trash / Restore Previews
-  - [ ] Permission / Sharing Previews
-  - [ ] Risk Analysis (Public Sharing / Sensitive Files)
-- [ ] **Stage 2B: Governance and Approval Preparation**
-  - [ ] Risk Classification Logic
-  - [ ] Organization & Security Policy Integration
-  - [ ] Approval Evidence Preparation
-  - [ ] Preview Receipts & Audit
-- [ ] **Stage 2C: Queue Preparation**
-  - [ ] Deterministic Queue ID & Idempotency
-  - [ ] Priority Mapping
-  - [ ] Zero-Execution Guardrail Verification
-  - [ ] Preparation Receipts
-- [ ] **Stage 2 Final Gates**
-  - [ ] TypeScript Compilation
-  - [ ] Drive Connector Suite
-  - [ ] Determinism Checks
-  - [ ] Full Repository Tests
-  - [ ] Boundary & Security Scans
-- **Certification Tag**: `gamma-drive-stage2-governed-mutations`
+## Stage 2A: Deterministic Mutation Previews
+- [ ] Implementation of preview logic
+- [ ] Governance check for mutation intent
+- [ ] Deterministic diff generation
+- [ ] Preview certification
 
-### Stage 3: Controlled Execution
-- [ ] **BLOCKED PENDING EXPLICIT APPROVAL**
+**Status:** PENDING

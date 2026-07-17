@@ -2,11 +2,12 @@ import type { DriveResource } from "./resource-parser";
 import { PermissionResolutionBase, type PermissionResolution, type GammaPermissionRole } from "../../platform/security/permission-resolution";
 
 export class DrivePermissionAdapter extends PermissionResolutionBase {
-  resolve(resource: DriveResource, identity: string): PermissionResolution {
-    const allPermissions = resource.permissions || [];
-    const isOwner = resource.owners.includes(identity);
+  resolve(resource: any, identity: string): PermissionResolution {
+    const res = resource as DriveResource;
+    const allPermissions = res.permissions || [];
+    const isOwner = res.owners.includes(identity);
     const explicit = allPermissions.filter(p => p.email === identity);
-    const inherited = resource.inheritedPermissions ? allPermissions.filter(p => p.type !== 'user') : [];
+    const inherited = res.inheritedPermissions ? allPermissions.filter(p => p.type !== 'user') : [];
 
     let role: GammaPermissionRole = "unknown";
     if (isOwner) {

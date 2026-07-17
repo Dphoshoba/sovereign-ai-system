@@ -1,21 +1,24 @@
 import { describe, it, expect } from 'vitest';
-import { DriveVersionAwareness } from '../../lib/connectors/drive/version-awareness';
-import { DriveDuplicateDetector } from '../../lib/connectors/drive/duplicate-detector';
-import { DriveMimeClassifier } from '../../lib/connectors/drive/mime-classifier';
-import { DriveReadAuditLogger } from '../../lib/connectors/drive/read-audit';
-import { DriveParser } from '../../lib/connectors/drive/resource-parser';
+import { DriveVersionAwareness } from '../../../lib/connectors/drive/version-awareness';
+import { DriveDuplicateDetector } from '../../../lib/connectors/drive/duplicate-detector';
+import { DriveMimeClassifier } from '../../../lib/connectors/drive/mime-classifier';
+import { DriveReadAuditLogger } from '../../../lib/connectors/drive/read-audit';
+import { DriveParser } from '../../../lib/connectors/drive/resource-parser';
 
 describe('Drive Stage 1 Advanced Capabilities', () => {
-  const mockRes = (overrides = {}) => DriveParser.parse({
+  const mockRes = (overrides: any) => DriveParser.parse({
     id: 'f1', name: 'Test', mimeType: 'application/pdf',
     createdTime: '2026-01-01T00:00:00Z', modifiedTime: '2026-01-01T00:00:00Z',
     owners: ['me@ex.com'], permissions: [], parents: [],
+    md5Checksum: overrides.md5Checksum || null,
+    version: overrides.version || null,
+    size: overrides.size || null,
     ...overrides
   });
 
   describe('Version Awareness', () => {
     it('detects version drift based on checksum', () => {
-      const res = mockRes({ checksum: 'drift_123', version: 1 });
+      const res = mockRes({ md5Checksum: 'drift_123', version: 1 });
       const analysis = DriveVersionAwareness.analyzeVersion(res);
       expect(analysis.driftDetected).toBe(true);
     });
@@ -29,8 +32,8 @@ describe('Drive Stage 1 Advanced Capabilities', () => {
 
   describe('Duplicate Detection', () => {
     it('identifies exact duplicates by checksum', () => {
-      const r1 = mockRes({ checksum: 'hash1', size: 100 });
-      const r2 = mockRes({ id: 'f2', checksum: 'hash1', size: 100 });
+      const r1 = mockRes({ md5Checksum: 'hash1', size: 100 });
+      const r2 = mockRes({ id: 'f2', md5Checksum: 'hash1', size: 100 });
       const analysis = DriveDuplicateDetector.analyze(r1, [r2]);
       expect(analysis.confidence).toBeGreaterThanOrEqual(0.8);
       expect(analysis.duplicateGroupId).toBeDefined();

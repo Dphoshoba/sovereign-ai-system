@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { DrivePermissionInspector } from '../../lib/connectors/drive/permission-inspector';
-import { DriveParser } from '../../lib/connectors/drive/resource-parser';
+import { DrivePermissionInspector } from '../../../lib/connectors/drive/permission-inspector';
+import { DriveParser } from '../../../lib/connectors/drive/resource-parser';
 
 describe('Drive Permission Inspector', () => {
   const mockResource = (overrides: any) => {

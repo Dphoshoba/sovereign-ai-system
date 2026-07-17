@@ -14,28 +14,36 @@ export class DriveDuplicateDetector {
     }
 
     const matches: string[] = [];
-    let confidence = 0;
+    let maxConfidence = 0;
 
     for (const candidate of candidates) {
       if (resource.id === candidate.id) continue;
 
-      let matchCount = 0;
-      if (resource.checksum && resource.checksum === candidate.checksum) matchCount += 0.8;
-      if (resource.size === candidate.size && resource.size !== null) matchCount += 0.1;
-      if (resource.name === candidate.name) matchCount += 0.1;
-      if (resource.mimeType === candidate.mimeType) matchCount += 0.05;
+      let currentConfidence = 0;
+      if (resource.checksum && candidate.checksum && resource.checksum === candidate.checksum) {
+        currentConfidence += 0.8;
+      }
+      if (resource.size !== null && candidate.size !== null && resource.size === candidate.size) {
+        currentConfidence += 0.1;
+      }
+      if (resource.name && candidate.name && resource.name === candidate.name) {
+        currentConfidence += 0.1;
+      }
+      if (resource.mimeType && candidate.mimeType && resource.mimeType === candidate.mimeType) {
+        currentConfidence += 0.05;
+      }
 
-      if (matchCount > 0) {
-        confidence = Math.max(confidence, matchCount);
+      if (currentConfidence > 0) {
+        maxConfidence = Math.max(maxConfidence, currentConfidence);
         matches.push(candidate.id);
       }
     }
 
     return {
-      confidence: Math.min(confidence, 1.0),
+      confidence: Math.min(maxConfidence, 1.0),
       comparisonBasis: ['checksum', 'size', 'name', 'mimeType'],
-      duplicateGroupId: confidence > 0.8 ? `dup-group-${resource.id}` : null,
-      ambiguityWarnings: confidence > 0 && confidence < 0.5 ? ["Low confidence duplicate detected"] : [],
+      duplicateGroupId: maxConfidence >= 0.8 ? `dup-group-${resource.id}` : null,
+      ambiguityWarnings: maxConfidence > 0 && maxConfidence < 0.5 ? ["Low confidence duplicate detected"] : [],
     };
   }
 }

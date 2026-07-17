@@ -5,9 +5,9 @@ export class ResourceSecurityClassifier {
    * Generic platform-level classifier that ensures all connectors 
    * provide a standardized security posture for any given resource.
    */
-  static classify(
-    resourceMetadata: Record<string, unknown>,
-    adapter: (metadata: Record<string, unknown>) => ResourceSecurityClassification
+  static classify<T extends Record<string, unknown>>(
+    resourceMetadata: T,
+    adapter: (metadata: T) => ResourceSecurityClassification
   ): ResourceSecurityClassification {
     try {
       return adapter(resourceMetadata);
