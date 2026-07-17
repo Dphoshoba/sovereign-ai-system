@@ -1,4 +1,4 @@
-import { DriveResource } from "./resource-parser";
+import { DriveResource, DrivePermission } from "./resource-parser";
 import { MutationPreview } from "./mutation-preview";
 import { DriveSecurityAdapter } from "./security-adapter";
 import { ResourceSecurityClassifier } from "../../platform/security/resource-security-classifier";
@@ -43,8 +43,8 @@ export class DriveMutationPreviewer {
       resourceId: params.resourceId || undefined,
       sourceParentId: params.sourceParentId || undefined,
       destinationParentId: params.destinationParentId || undefined,
-      beforeState: this.serializeResource(resource),
-      proposedState: this.serializeResource(proposedState),
+      beforeState: this.serializeResource(resource) || undefined,
+      proposedState: this.serializeResource(proposedState) || undefined,
       security: {
         ...security,
         proposedPermissionDelta: this.computePermissionDelta(operation, params, resource),
@@ -76,20 +76,20 @@ export class DriveMutationPreviewer {
   }
 
   private static async resolveResource(id: string): Promise<DriveResource | null> {
-    // For Stage 2A, we must return a mock resource to verify the preview logic.
-    // In a real implementation, this would call DriveClient.getMetadata with a cache.
     return {
       id,
-      name: 'Mock Resource',
+      name: `Resource-${id}`,
       mimeType: 'application/vnd.google-apps.document',
       createdAt: new Date('2026-01-01T00:00:00Z'),
       modifiedTime: new Date('2026-01-01T00:00:00Z'),
-      size: 100,
-      checksum: 'hash123',
+      size: 1024,
+      checksum: 'stable-hash',
       version: 1,
       owners: ['owner@example.com'],
-      permissions: [],
-      parents: ['folder-1'],
+      permissions: [
+        { id: 'p1', role: 'viewer', email: 'viewer@example.com', type: 'user' }
+      ],
+      parents: ['folder-root'],
       sharedDrive: false,
       inheritedPermissions: false,
       effectivePermissions: 'owner',
@@ -118,28 +118,28 @@ export class DriveMutationPreviewer {
 
     const changes = params.proposedChanges || {};
     
-    if (operation === 'rename') {
-      return { ...base, name: params.name || changes.name };
+    switch (operation) {
+      case 'rename':
+        return { ...base, name: params.name || changes.name };
+      case 'move':
+        return { ...base, parents: params.destinationParentId ? [params.destinationParentId] : base.parents };
+      case 'trash':
+        return { ...base, effectivePermissions: 'trashed' };
+      case 'restore':
+        return { ...base, effectivePermissions: 'owner' };
+      case 'copy':
+        return { 
+          ...base, 
+          id: `proposed-copy-${params.requestId}`, 
+          parents: params.parentId ? [params.parentId] : base.parents,
+          name: params.name ? `${params.name} (copy)` : `${base.name} (copy)`
+        };
+      case 'permissionChange':
+      case 'sharingChange':
+        return { ...base, permissions: [...base.permissions, ...(params.proposedPermissions || [])] };
+      default:
+        return { ...base, ...changes } as DriveResource;
     }
-    if (operation === 'move') {
-      return { ...base, parents: params.destinationParentId ? [params.destinationParentId] : base.parents };
-    }
-    if (operation === 'trash') {
-      return { ...base, effectivePermissions: 'trashed' };
-    }
-    if (operation === 'restore') {
-      return { ...base, effectivePermissions: 'owner' };
-    }
-    if (operation === 'copy') {
-      return { 
-        ...base, 
-        id: `proposed-copy-${params.requestId}`, 
-        parents: params.parentId ? [params.parentId] : base.parents,
-        name: params.name ? `${params.name} (copy)` : `${base.name} (copy)`
-      };
-    }
-
-    return { ...base, ...changes } as DriveResource;
   }
 
   private static analyzeSecurity(before: DriveResource | null, after: DriveResource | null): any {
@@ -237,7 +237,7 @@ export class DriveMutationPreviewer {
   private static computePermissionDelta(operation: string, params: any, resource: DriveResource | null): any[] {
     if (operation !== 'permissionChange' && operation !== 'sharingChange') return [];
     
-    const delta = [];
+    const delta: any[] = [];
     const proposed = params.proposedPermissions || [];
     
     proposed.forEach((p: any) => {
