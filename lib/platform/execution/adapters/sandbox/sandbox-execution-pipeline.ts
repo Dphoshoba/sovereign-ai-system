@@ -21,6 +21,7 @@ import { TelemetryEmitter } from '../../operational-hardening/telemetry-emitter'
 import { FailureInjectionHarness } from '../../operational-hardening/failure-injection-harness';
 import { ProviderErrorInfo } from '../../provider-contracts/provider-error';
 import { RollbackExecutionPhase, RollbackPhaseOutcome } from './rollback-execution-phase';
+import { ProviderSelector, ProviderSelectionContext } from '../../provider-selector';
 
 export interface SandboxExecutionPipelineConfig {
   adapter: ConnectorExecutionAdapter;
@@ -36,6 +37,7 @@ export interface SandboxExecutionPipelineConfig {
   telemetryEmitter?: TelemetryEmitter;
   failureInjector?: FailureInjectionHarness;
   rollbackPhase?: RollbackExecutionPhase;
+  providerSelector?: ProviderSelector;
 }
 
 export class SandboxExecutionPipeline {
@@ -158,6 +160,51 @@ export class SandboxExecutionPipeline {
       level: 'INFO', category: 'EXECUTION', correlationId, executionId: request.executionId,
       operation: request.operation, message: 'Pipeline execution started', metadata: {},
     });
+
+    // Phase 0: Provider Selection (if selector configured)
+    let selectionContext: ProviderSelectionContext | null = null;
+    const selectionStart = Date.now();
+    if (this.config.providerSelector) {
+      try {
+        selectionContext = this.config.providerSelector.selectForRequest(request);
+      } catch (e) {
+        phases.push({
+          phase: 'PROVIDER_SELECTION',
+          passed: false,
+          durationMs: Date.now() - selectionStart,
+          details: { error: (e as Error).message },
+        });
+        auditEvents.push(`PROVIDER_SELECTION_FAILED: ${(e as Error).message}`);
+        this.telemetryEmitter.emit({
+          level: 'ERROR', category: 'EXECUTION', correlationId, executionId: request.executionId,
+          operation: request.operation, message: 'Provider selection failed', metadata: { error: (e as Error).message },
+        });
+        return this.buildReport(request, 'SANDBOX_ABORTED', phases, null, null, null, null, null, auditEvents, false, [`Provider selection failed: ${(e as Error).message}`]);
+      }
+      auditEvents.push(
+        `PROVIDER_SELECTED: ${selectionContext.provider.identity.id} ` +
+        `(score=${selectionContext.resolution.matchScore}, ` +
+        `candidates=${selectionContext.resolution.explanation.totalCandidates})`,
+      );
+      this.telemetryEmitter.emit({
+        level: 'INFO', category: 'EXECUTION', correlationId, executionId: request.executionId,
+        operation: request.operation, message: `Provider selected: ${selectionContext.provider.identity.id}`,
+        metadata: { provider: selectionContext.provider.identity, matchScore: selectionContext.resolution.matchScore },
+      });
+    }
+
+    if (this.config.providerSelector) {
+      phases.push({
+        phase: 'PROVIDER_SELECTION',
+        passed: true,
+        durationMs: Date.now() - selectionStart,
+        details: {
+          providerId: selectionContext!.provider.identity.id,
+          matchScore: selectionContext!.resolution.matchScore,
+          totalCandidates: selectionContext!.resolution.explanation.totalCandidates,
+        },
+      });
+    }
 
     // Phase 1: Isolation Check
     const isolationResult = this.policy.verifyIsolation(request.operation, targetCalendarId);
