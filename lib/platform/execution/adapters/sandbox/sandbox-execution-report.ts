@@ -10,12 +10,15 @@ export type SandboxExecutionOutcome =
 
 export type SandboxPhase =
   | 'ISOLATION_CHECK'
+  | 'CREDENTIAL_CHECK'
   | 'APPROVAL_GATE'
   | 'IDEMPOTENCY'
   | 'ROLLBACK_PLANNING'
   | 'AUDIT_PRE'
   | 'EXECUTION'
   | 'VERIFICATION'
+  | 'RECONCILIATION'
+  | 'ROLLBACK_EXECUTION'
   | 'AUDIT_POST'
   | 'COMPLETED';
 
