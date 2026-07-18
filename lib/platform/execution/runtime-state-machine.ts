@@ -1,0 +1,14 @@
+export type RuntimeState =
+  | 'RECEIVED'
+  | 'VALIDATING_PACKAGE'
+  | 'LOCK_VALIDATION'
+  | 'PREPARING'
+  | 'PREFLIGHT'
+  | 'READY'
+  | 'EXECUTION_BLOCKED'
+  | 'EXECUTING'
+  | 'VERIFYING'
+  | 'AUDITING'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'CANCELLED';

@@ -12,7 +12,7 @@ describe('Platform Queue Stage 2C - Deterministic Prep', () => {
     operation: 'upload',
     resourceId: 'res-1',
     security: {
-      classification: { classification: 'internal' as any, effectivePermissions: 'owner', externalSharing: false, ownerType: 'user' as any, permissionRisk: 'low' as any, publicExposure: false, inheritedPermissions: false },
+      classification: { classification: 'organization', effectivePermissions: 'owner', externalSharing: false, ownerType: 'personal', permissionRisk: 'low', publicExposure: false, inheritedPermissions: false, sensitivityScore: 20, governanceRisk: 'low' },
       mimeClassification: 'application/pdf',
       ownershipAnalysis: { currentOwner: 'a@ex.com', proposedOwner: 'a@ex.com' },
       currentPermissions: [],
@@ -88,7 +88,7 @@ describe('Platform Queue Stage 2C - Deterministic Prep', () => {
   it('detects S2C execution violations', () => {
     const candidate = DriveQueueBridge.generateCandidate(mockPreview, mockDecision);
     const invalidCandidate = { ...candidate, executionEligible: true };
-    const validation = QueueValidator.validate(invalidCandidate);
+    const validation = QueueValidator.validate(invalidCandidate as any);
     expect(validation.valid).toBe(false);
     expect(validation.errors).toContain('S2C_EXECUTION_PROHIBITED');
   });

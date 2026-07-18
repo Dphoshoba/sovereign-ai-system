@@ -14,13 +14,15 @@ describe('Platform Governance Stage 2B - Extended Suite', () => {
     resourceId: undefined,
     security: {
       classification: { 
-        classification: 'internal' as any, 
+        classification: 'organization',
         effectivePermissions: 'owner', 
         externalSharing: false,
-        ownerType: 'user' as any,
-        permissionRisk: 'low' as any,
+        ownerType: 'personal',
+        permissionRisk: 'low',
         publicExposure: false,
         inheritedPermissions: false,
+        sensitivityScore: 20,
+        governanceRisk: 'low',
       },
       mimeClassification: 'application/pdf',
       ownershipAnalysis: { currentOwner: 'owner@ex.com', proposedOwner: 'owner@ex.com' },
