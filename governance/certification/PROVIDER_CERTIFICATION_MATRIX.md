@@ -28,15 +28,15 @@
 |---|---|
 | **Provider** | Google Calendar API v3 (`google-calendar`) |
 | **Certification Level** | `READ_ONLY` |
-| **Certified Stage** | Stage 3C.2 |
-| **Supported Operations** | `events.list`, `events.get`, `calendarList.list`, `calendars.get` |
-| **Mutation Status** | `NONE` |
-| **Rollback Coverage** | N/A (read-only) |
-| **Idempotency Support** | `APPLICATION` (via extended properties, Stage 3C.4) |
-| **Approval Requirements** | `events.list`: NONE, `events.get`: NONE, `calendarList.list`: NONE, `calendars.get`: NONE |
-| **Last Certified** | 2026-07-18 (GOV-2026-Stage3C-006) |
-| **Certification Tag** | `gamma-drive-stage3c2-calendar-readonly` |
-| **Known Limitations** | Read-only phase; no mutations certified. Dry-run pipeline in progress (Stage 3C.3). |
+| **Certified Stage** | Stage 3C.2 (read-only) + Stage 3C.3 (dry-run pipeline) |
+| **Supported Operations** | `events.list`, `events.get`, `calendarList.list`, `calendars.get` (read-only); `events.insert`, `events.update`, `events.delete` (dry-run only — no transport) |
+| **Mutation Status** | `NONE` (no live transport; dry-run pipeline certified at Stage 3C.3) |
+| **Rollback Coverage** | N/A (read-only); dry-run rollback plans generated for `events.insert`, `events.update`, `events.delete` per G-012 |
+| **Idempotency Support** | `APPLICATION` (via idempotency key in dry-run pipeline, Stage 3C.3; live enforcement pending Stage 3C.4) |
+| **Approval Requirements** | `events.list`: NONE, `events.get`: NONE, `calendarList.list`: NONE, `calendars.get`: NONE; mutation operations require approval per risk level |
+| **Last Certified** | 2026-07-18 (GOV-2026-Stage3C-008) |
+| **Certification Tag** | `gamma-drive-stage3c3-dryrun-pipeline` |
+| **Known Limitations** | No live transport permitted (G-018). No sandbox mutations. Idempotency keys validated in simulation only. Credential and transport layers not yet integrated. Stage 3C.4 authorized for sandboxed mutations. |
 
 ## Adding a New Provider
 
