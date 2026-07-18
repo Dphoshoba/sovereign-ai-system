@@ -1,6 +1,6 @@
 # Stage 3B Architecture Specification
 
-**Status:** IMPLEMENTED (3B.1 interfaces, 3B.2 orchestrator)
+**Status:** IMPLEMENTED (3B.1 interfaces, 3B.2 orchestrator, 3B.3 adapter framework)
 **Parent:** Stage 3A FROZEN at `05631b9`
 **Objective:** Transform non-executing Stage 3A runtime into a safe execution runtime for approved provider operations.
 
@@ -132,6 +132,39 @@ Key properties:
 - **No Stage 3A modifications** — `RuntimeState` type additions (`ROLLING_BACK`, `CRITICAL_FAILURE`) are additive; transition matrix entries are additive
 - **Deterministic phases** — `ExecutionLifecycle` enforces phase ordering via `S3B_PHASE_TRANSITIONS`
 - **Connector-neutral** — `ApprovalGate` and `RollbackExecutor` are injected interfaces, not concrete implementations
+
+## Provider Adapter Framework (Stage 3B.3)
+
+### Components
+
+| Component | File | Purpose |
+|---|---|---|
+| `ProviderAdapter` | `adapters/provider-adapter.ts` | Abstract base class with `providerId`, `providerVersion`, `supportedOperations`, lifecycle methods (`initialize`, `validate`, `dispose`), and `getCapabilityProfile()` |
+| `AdapterRegistry` | `adapters/adapter-registry.ts` | Deterministic ordered registry with duplicate detection |
+| `CapabilityNegotiator` | `adapters/capability-negotiator.ts` | Negotiates adapter capabilities against runtime capabilities; detects conflicts for destructive operations when mutations disabled |
+| `ProviderDiscovery` | `adapters/provider-discovery.ts` | Discovers registered adapters with optional risk-level filtering; handles descriptor failures gracefully |
+| `AdapterValidator` | `adapters/adapter-validator.ts` | Validates adapter completeness (providerId, version, methods, capability consistency) |
+| `AdapterLifecycle` | `adapters/adapter-lifecycle.ts` | State machine: CREATED → INITIALIZED → READY → ACTIVE; recovery: ERROR → READY; terminal: DISPOSED |
+| `AdapterFactory` | `adapters/adapter-factory.ts` | Factory registration, `create()`, `createAndRegister()` (create + validate + register + lifecycle transition in one call) |
+| `AdapterDIContainer` | `adapters/adapter-di-container.ts` | Token-based DI with singleton/transient, nested resolution, circular dependency detection |
+
+### Design Properties
+
+- **Connector-neutral** — No adapter references Google Drive, Gmail, Calendar, or any real provider
+- **No provider mutations** — `ProviderAdapter` has no `execute()`, `send()`, `mutate()`, or `callApi()` methods
+- **Deterministic ordering** — Registry, discovery, lifecycle entries, and factory types are all sorted alphabetically by ID
+- **Fail-safe** — Invalid adapters fail validation before registration; factory `createAndRegister()` rolls back on lifecycle transition failure
+
+### Adapter Lifecycle
+
+```
+CREATED ──→ INITIALIZED ──→ READY ──→ ACTIVE ──→ DISPOSED
+                │              │         │
+                └──→ ERROR ←──┘─────────┘
+                        │
+                        └──→ READY (recovery)
+                        └──→ DISPOSED
+```
 
 ## Failure Boundaries
 

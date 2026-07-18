@@ -18,8 +18,8 @@ export class ManifestGenerator {
       blockingConditions: decision.blockingReasons,
       validationSummary: preview.execution.changeSummary,
       resourceSummary: {
-        sourceId: preview.resourceId,
-        targetId: preview.proposedState?.id || null,
+        sourceId: preview.resourceId ?? null,
+        targetId: preview.proposedState?.id ?? null,
         resourceType: 'google-drive-resource',
       },
       executionPrerequisites: [], // To be populated by dependency analysis in S2C
