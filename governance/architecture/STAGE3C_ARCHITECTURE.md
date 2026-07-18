@@ -1,8 +1,8 @@
 # Stage 3C Architecture Specification — Provider Integration
 
-**Status:** CERTIFIED (Stage 3C.0 — architecture approved per GOV-2026-Stage3C-002)
+**Status:** CERTIFIED (Stage 3C.0 — architecture approved per GOV-2026-Stage3C-002; Stage 3C.1 — provider contracts implemented per GOV-2026-Stage3C-003)
 **Parent:** Stage 3B CERTIFIED and FROZEN at `499401a` (`gamma-drive-stage3b4-rollback-engine`)
-**Governance:** GOV-2026-Stage3C-001, GOV-2026-Stage3C-002
+**Governance:** GOV-2026-Stage3C-001, GOV-2026-Stage3C-002, GOV-2026-Stage3C-003
 **Objective:** Define the complete provider integration architecture for safe, deterministic, and reversible external provider mutations.
 
 ## Scope
@@ -64,8 +64,9 @@ Stage 3C Provider Integration (replaces simulated stubs)
 | Sub-Stage | Focus | Key Deliverables |
 |---|---|---|
 | **3C.0** | Architecture & planning | Architecture docs, trust boundary, credential model, risk register, ADR |
-| **3C.1** | Credential framework | Credential manager, key rotation, redaction, secure storage interfaces |
-| **3C.2** | Google Calendar adapter | ProviderAdapter subclass for Calendar, operation handlers for read-only ops first |
+| **3C.1** | Provider-neutral integration contracts | 9 provider contract interfaces (request, response, error, auth, credential, transport, verification, reconciliation, idempotency) |
+| **3C.2** | Credential framework | Credential manager, key rotation, redaction, secure storage interfaces |
+| **3C.3** | Google Calendar adapter | ProviderAdapter subclass for Calendar, operation handlers for read-only ops first |
 | **3C.3** | Live execution wiring | Replace orchestrator stubs with real adapter calls, dry-run/sandbox/live modes |
 | **3C.4** | Idempotency & replay | Idempotency key generation, replay detection, deduplication store |
 | **3C.5** | Error classification & retry | Provider error classification, retry eligibility, ambiguous-outcome reconciliation |
@@ -90,6 +91,14 @@ Stage 3C Provider Integration (replaces simulated stubs)
      serialize()  deserialize()  mapError()  buildAudit()
            │          │          │          │
 ┌──────────┴──────────┴──────────┴──────────┴─────────┐
+│              Provider Contracts (Stage 3C.1)          │
+│          ProviderRequest / ProviderResponse           │
+│     ProviderError / Authentication / Credential       │
+│        Transport / Verification / Reconciliation      │
+│                    IdempotencyService                  │
+└──────────┬──────────┬──────────┬──────────┬─────────┘
+           │          │          │          │
+┌──────────┴──────────┴──────────┴──────────┴─────────┐
 │                 ProviderAdapter                       │
 │        (Stage 3B.3 framework — subclassed)            │
 └──────────┬──────────┬──────────┬──────────┬─────────┘
@@ -111,6 +120,7 @@ Stage 3C Provider Integration (replaces simulated stubs)
 | Adapter Registry | Adapter lifecycle, discovery, validation | Stage 3B.3 |
 | Capability Model | Risk levels, approval requirements, operation metadata | Stage 3B.1 |
 | Compensation Engine | Rollback planning, validation, audit | Stage 3B.4 |
+| **Provider Contracts** | **Provider-neutral interfaces (request, response, error, auth, credential, transport, verification, reconciliation, idempotency)** | **Stage 3C.1** |
 | **Provider Adapter** | **Provider-specific request formatting, response parsing, error mapping** | **Stage 3C** |
 | **Credential Manager** | **Secure storage, rotation, scoped access, redaction** | **Stage 3C** |
 | **Idempotency Store** | **Deduplication, replay detection** | **Stage 3C** |
@@ -127,3 +137,22 @@ The following must remain true after Stage 3C implementation:
 - Stage 3B.3 adapter framework tests: 56/56 passing
 - Stage 3B.4 rollback engine tests: 40/40 passing
 - Platform test suite: 318/318 passing
+- Provider contract tests: passing (Stage 3C.1)
+
+## Provider Contract Layer (Stage 3C.1)
+
+The provider contract layer sits between `ConnectorExecutionAdapter` and `ProviderAdapter`, defining provider-neutral interfaces for all external communication:
+
+| Contract | File | Purpose |
+|---|---|---|
+| `ProviderRequest` | `provider-contracts/provider-request.ts` | Canonical outbound request (method, url, headers, body, idempotency key, retry state) |
+| `ProviderResponse` | `provider-contracts/provider-response.ts` | Canonical provider response (status, headers, body, etag, revision, timing) |
+| `ProviderError` | `provider-contracts/provider-error.ts` | Provider-independent error taxonomy (16 codes, 3 categories, retry configuration) |
+| `AuthenticationProvider` | `provider-contracts/authentication-provider.ts` | Token acquisition, refresh, expiry detection, revocation |
+| `CredentialProvider` | `provider-contracts/credential-provider.ts` | Credential descriptor, validation, revocation |
+| `Transport` | `provider-contracts/transport.ts` | Network abstraction — send request, availability check (no implementation) |
+| `VerificationProvider` | `provider-contracts/verification-provider.ts` | Read-back verification of provider state after mutation |
+| `ReconciliationProvider` | `provider-contracts/reconciliation-provider.ts` | Ambiguous-outcome reconciliation via read-back |
+| `IdempotencyService` | `provider-contracts/idempotency-service.ts` | Replay detection, key lifecycle, TTL-based cleanup |
+
+All contracts are provider-neutral. No reference to Google Calendar, Google Drive, Gmail, or any specific provider exists in any contract file.
