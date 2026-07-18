@@ -62,6 +62,8 @@ Before any engineering claim (PASS, VERIFIED, CERTIFIED, COMPLETE) is accepted, 
 - **G-018 — Transport Boundary Certification**: No live provider transport may be enabled until the complete dry-run pipeline has been certified as transport-inert, deterministic, auditable, and rollback-ready.
 - **G-019 — Verified Rollback Readiness**: No provider mutation may be certified unless a corresponding rollback or compensating-action strategy has been demonstrated, documented, and verified for that operation class.
 - **G-020 — Post-Mutation Reconciliation**: Every successful provider mutation shall be followed by an independent reconciliation step that compares the expected provider state with the observed provider state. Certification requires reconciliation success or explicit recovery handling.
+- **G-021 — Ratification Reserved**: Reserved for future ratification.
+- **G-022 — Integrated Certification**: Components certified independently shall also be certified as an integrated execution path before the platform is considered operationally complete. Component correctness and system correctness are both required.
 
 ## Release Policy
 
