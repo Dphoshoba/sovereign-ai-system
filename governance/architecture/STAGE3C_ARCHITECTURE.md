@@ -1,8 +1,8 @@
 # Stage 3C Architecture Specification — Provider Integration
 
-**Status:** CERTIFIED (Stage 3C.0 — architecture approved per GOV-2026-Stage3C-002; Stage 3C.1 — provider contracts certified per GOV-2026-Stage3C-004)
+**Status:** CERTIFIED (Stage 3C.0 — architecture; Stage 3C.1 — contracts; Stage 3C.2 — Calendar read-only adapter)
 **Parent:** Stage 3B CERTIFIED and FROZEN at `499401a` (`gamma-drive-stage3b4-rollback-engine`)
-**Governance:** GOV-2026-Stage3C-001, GOV-2026-Stage3C-002, GOV-2026-Stage3C-003, GOV-2026-Stage3C-004
+**Governance:** GOV-2026-Stage3C-001 through GOV-2026-Stage3C-006
 **Objective:** Define the complete provider integration architecture for safe, deterministic, and reversible external provider mutations.
 
 ## Scope
@@ -65,8 +65,8 @@ Stage 3C Provider Integration (replaces simulated stubs)
 |---|---|---|
 | **3C.0** | Architecture & planning | Architecture docs, trust boundary, credential model, risk register, ADR |
 | **3C.1** | Provider-neutral integration contracts | 9 provider contract interfaces (request, response, error, auth, credential, transport, verification, reconciliation, idempotency) |
-| **3C.2** | Credential framework | Credential manager, key rotation, redaction, secure storage interfaces |
-| **3C.3** | Google Calendar adapter | ProviderAdapter subclass for Calendar, operation handlers for read-only ops first |
+| **3C.2** | Google Calendar read-only adapter | events.list, events.get, calendarList.list — first concrete provider, no mutations |
+| **3C.3** | Calendar mutation dry-run pipeline | Mutation request construction, approval gates, idempotency, rollback plans, deterministic simulation — transport never invoked |
 | **3C.3** | Live execution wiring | Replace orchestrator stubs with real adapter calls, dry-run/sandbox/live modes |
 | **3C.4** | Idempotency & replay | Idempotency key generation, replay detection, deduplication store |
 | **3C.5** | Error classification & retry | Provider error classification, retry eligibility, ambiguous-outcome reconciliation |

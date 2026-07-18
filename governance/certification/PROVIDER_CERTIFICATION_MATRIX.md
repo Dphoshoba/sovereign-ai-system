@@ -34,9 +34,9 @@
 | **Rollback Coverage** | N/A (read-only) |
 | **Idempotency Support** | `APPLICATION` (via extended properties, Stage 3C.4) |
 | **Approval Requirements** | `events.list`: NONE, `events.get`: NONE, `calendarList.list`: NONE, `calendars.get`: NONE |
-| **Last Certified** | 2026-07-18 |
+| **Last Certified** | 2026-07-18 (GOV-2026-Stage3C-006) |
 | **Certification Tag** | `gamma-drive-stage3c2-calendar-readonly` |
-| **Known Limitations** | Read-only phase; no mutations certified |
+| **Known Limitations** | Read-only phase; no mutations certified. Dry-run pipeline in progress (Stage 3C.3). |
 
 ## Adding a New Provider
 

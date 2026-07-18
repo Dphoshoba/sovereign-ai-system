@@ -58,6 +58,7 @@ Before any engineering claim (PASS, VERIFIED, CERTIFIED, COMPLETE) is accepted, 
 - **G-013 — Contract Stability**: Once a provider contract has been certified, incompatible changes require a new contract version and recertification. Existing certified contracts remain supported until formally deprecated.
 - **G-014 — Provider Contract Versioning**: Every externally consumable provider contract shall declare an explicit semantic version. Breaking changes require a new major version, certification, and coexistence strategy for previously certified implementations.
 - **G-015 — Read Before Write**: A provider shall complete certification for equivalent read-only operations before any write operation for that provider may be implemented or certified.
+- **G-016 — Sandbox Before Production**: Every provider mutation capability shall first be certified against an isolated sandbox or dedicated test resource before production resources are permitted.
 
 ## Release Policy
 
