@@ -271,14 +271,14 @@ Operational Hardening (Stage 3C.5)
 | Field | Value |
 |---|---|
 | **Current Phase** | Phase III — Providers |
-| **Current Stage** | 3C.6 — Rollback Integration |
-| **Status** | CERTIFIED |
-| **Next Stage** | 3C.7 — Full Certification |
+| **Current Stage** | 3C.7 — Final Provider Certification & Phase III Readiness |
+| **Status** | IN PROGRESS |
+| **Next Stage** | Phase III Gate Review → Phase IV |
 | **Test Count** | 540 passing |
 | **Repository** | `echoes-visions-nextjs-cta` (gamma) |
 | **Certification Tag** | `gamma-drive-stage3c6-rollback-integration` |
 | **EOS Version** | EOS v1.0.0 |
-| **Governance Index** | GOV-2026-Stage3C-001 through GOV-2026-Stage3C-015; GOV-2026-EOS-001 |
+| **Governance Index** | GOV-2026-Stage3C-001 through GOV-2026-Stage3C-017; GOV-2026-EOS-001 |
 | **Governance Policies** | G-001 through G-024 |
 
 This section must be updated after every certification.
@@ -303,7 +303,7 @@ This section must be updated after every certification.
 | 3C.4 | Sandbox Mutation | ✅ CERTIFIED |
 | 3C.5 | Operational Hardening | ✅ CERTIFIED |
 | 3C.6 | Rollback Integration | ✅ CERTIFIED |
-| 3C.7 | Full Certification | ⬜ PLANNING |
+| 3C.7 | Final Provider Certification & Phase III Readiness | 🔄 IN PROGRESS |
 
 ### Phase IV — Platform (Future)
 Multi-Provider Runtime, Cross-Provider Transactions, Workflow Graph Engine, Policy & Rules Engine, Distributed Execution, Provider Certification
