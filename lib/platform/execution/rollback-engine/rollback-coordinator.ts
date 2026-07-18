@@ -124,8 +124,8 @@ export class RollbackCoordinator {
         : outcome === 'SIMULATION_PARTIAL' ? 'TRANSACTION_PARTIAL'
         : 'TRANSACTION_FAILED',
       chain: simulatedChain,
-      startedAt: '2026-01-01T00:00:00Z',
-      completedAt: '2026-01-01T00:00:00Z',
+      startedAt: new Date().toISOString(),
+      completedAt: new Date().toISOString(),
       failureReason: outcome === 'SIMULATION_SUCCEEDED' ? null : 'Simulation did not fully succeed',
     };
 
@@ -152,12 +152,12 @@ export class RollbackCoordinator {
         executionId: request.executionId,
         strategy: plan.strategy,
         steps: [],
-        generatedAt: '2026-01-01T00:00:00Z',
+        generatedAt: new Date().toISOString(),
         chainHash: 'failed',
         totalSteps: 0,
         completedSteps: 0,
       },
-      startedAt: '2026-01-01T00:00:00Z',
+      startedAt: new Date().toISOString(),
       completedAt: null,
       failureReason: reason,
     };

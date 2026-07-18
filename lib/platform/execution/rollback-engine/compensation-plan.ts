@@ -21,7 +21,7 @@ export class CompensationPlanGenerator {
       executionId: plan.executionId,
       strategy: plan.strategy,
       steps,
-      generatedAt: '2026-01-01T00:00:00Z',
+      generatedAt: new Date().toISOString(),
       chainHash,
       totalSteps: steps.length,
       completedSteps: 0,

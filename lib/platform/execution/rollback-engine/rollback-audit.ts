@@ -14,7 +14,7 @@ export class RollbackAudit {
       eventType: 'PLAN_GENERATED',
       stepIndex: null,
       detail,
-      timestamp: '2026-01-01T00:00:00Z',
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -28,7 +28,7 @@ export class RollbackAudit {
       eventType: 'COMPENSATION_STARTED',
       stepIndex: null,
       detail,
-      timestamp: '2026-01-01T00:00:00Z',
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -43,7 +43,7 @@ export class RollbackAudit {
       eventType: 'COMPENSATION_STEP_EXECUTED',
       stepIndex,
       detail,
-      timestamp: '2026-01-01T00:00:00Z',
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -57,7 +57,7 @@ export class RollbackAudit {
       eventType: 'COMPENSATION_COMPLETED',
       stepIndex: null,
       detail,
-      timestamp: '2026-01-01T00:00:00Z',
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -72,7 +72,7 @@ export class RollbackAudit {
       eventType: 'ROLLBACK_FAILED',
       stepIndex,
       detail,
-      timestamp: '2026-01-01T00:00:00Z',
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -86,7 +86,7 @@ export class RollbackAudit {
       eventType: 'ROLLBACK_COMPLETED',
       stepIndex: null,
       detail,
-      timestamp: '2026-01-01T00:00:00Z',
+      timestamp: new Date().toISOString(),
     });
   }
 

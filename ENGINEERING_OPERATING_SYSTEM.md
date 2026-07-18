@@ -278,7 +278,7 @@ Operational Hardening (Stage 3C.5)
 | **Repository** | `echoes-visions-nextjs-cta` (gamma) |
 | **Certification Tag** | `gamma-drive-stage3c6-rollback-integration` |
 | **EOS Version** | EOS v1.0.0 |
-| **Governance Index** | GOV-2026-Stage3C-001 through GOV-2026-Stage3C-017; GOV-2026-EOS-001 |
+| **Governance Index** | GOV-2026-Stage3C-001 through GOV-2026-Stage3C-018; GOV-2026-EOS-001 |
 | **Governance Policies** | G-001 through G-024 |
 
 This section must be updated after every certification.

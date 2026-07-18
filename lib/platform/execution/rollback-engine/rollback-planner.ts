@@ -52,7 +52,7 @@ export class RollbackPlanner {
       verifiedPlan.rollbackId = `rb-${request.executionId}`;
     }
     if (!verifiedPlan.plannedAt) {
-      verifiedPlan.plannedAt = '2026-01-01T00:00:00Z';
+      verifiedPlan.plannedAt = new Date().toISOString();
     }
 
     if (verifiedPlan.steps.length === 0) {
@@ -92,7 +92,7 @@ export class RollbackPlanner {
       scope: 'FULL',
       strategy: 'REVERSE_ORDER',
       steps: stepDescriptors,
-      plannedAt: '2026-01-01T00:00:00Z',
+      plannedAt: new Date().toISOString(),
       planHash,
     };
   }

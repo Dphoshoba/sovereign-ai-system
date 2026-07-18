@@ -1,8 +1,8 @@
 # Stage 3C Architecture Specification — Provider Integration
 
-**Status:** CERTIFIED (Stage 3C.0 — architecture; Stage 3C.1 — contracts; Stage 3C.2 — Calendar read-only adapter; Stage 3C.3 — dry-run pipeline; Stage 3C.4 — sandbox mutation; Stage 3C.5 — operational hardening; Stage 3C.6 — rollback integration)
+**Status:** CERTIFIED (Stage 3C.0 — architecture; Stage 3C.1 — contracts; Stage 3C.2 — Calendar read-only adapter; Stage 3C.3 — dry-run pipeline; Stage 3C.4 — sandbox mutation; Stage 3C.5 — operational hardening; Stage 3C.6 — rollback integration; Stage 3C.6 CERTIFIED — gamma-drive-stage3c6-rollback-integration)
 **Parent:** Stage 3B CERTIFIED and FROZEN at `499401a` (`gamma-drive-stage3b4-rollback-engine`)
-**Governance:** GOV-2026-Stage3C-001 through GOV-2026-Stage3C-014
+**Governance:** GOV-2026-Stage3C-001 through GOV-2026-Stage3C-018
 **Objective:** Define the complete provider integration architecture for safe, deterministic, and reversible external provider mutations.
 
 ## Scope
@@ -70,7 +70,7 @@ Stage 3C Provider Integration (replaces simulated stubs)
 | **3C.4** | Sandboxed Calendar Mutation | events.insert/update/delete against sandbox calendar; post-mutation verification; idempotency enforcement; audit capture | ✅ **CERTIFIED** |
 | **3C.5** | Production Readiness & Operational Hardening | Transport retry, backoff, rate-limit handling, reconciliation engine, ambiguous outcome recovery, credential rotation, telemetry, distributed idempotency store, operational logging, failure injection, chaos testing | ✅ **CERTIFIED** |
 | **3C.6** | Rollback integration | RollbackExecutorImpl, RollbackExecutionPhase, pipeline integration | ✅ **CERTIFIED** |
-| **3C.7** | Certification | Full integration test suite, security review, governance certification | ⬜ PLANNING |
+| **3C.7** | Certification | Full integration test suite, security review, governance certification | 🔄 IN PROGRESS |
 
 ## Adapter Architecture (Stage 3C)
 
@@ -141,7 +141,7 @@ The following must remain true after Stage 3C implementation:
 - Dry-run pipeline tests: 31/31 passing (Stage 3C.3)
 - Sandbox pipeline tests: 36/36 passing (Stage 3C.4 + Stage 3C.5 integrated)
 - Operational hardening component tests: 56/56 passing (Stage 3C.5)
-- Cumulative regression: 521/521 passing
+- Cumulative regression: 540/540 passing
 
 ## Provider Contract Layer (Stage 3C.1)
 
