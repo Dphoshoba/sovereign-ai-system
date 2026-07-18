@@ -276,10 +276,10 @@ Operational Hardening (Stage 3C.5)
 | **Next Stage** | 3C.7 — Full Certification |
 | **Test Count** | 540 passing |
 | **Repository** | `echoes-visions-nextjs-cta` (gamma) |
-| **Certification Tag** | `gamma-drive-stage3c5-production-readiness` |
+| **Certification Tag** | `gamma-drive-stage3c6-rollback-integration` |
 | **EOS Version** | EOS v1.0.0 |
-| **Governance Index** | GOV-2026-Stage3C-001 through GOV-2026-Stage3C-014; GOV-2026-EOS-001 |
-| **Governance Policies** | G-001 through G-023 |
+| **Governance Index** | GOV-2026-Stage3C-001 through GOV-2026-Stage3C-015; GOV-2026-EOS-001 |
+| **Governance Policies** | G-001 through G-024 |
 
 This section must be updated after every certification.
 
