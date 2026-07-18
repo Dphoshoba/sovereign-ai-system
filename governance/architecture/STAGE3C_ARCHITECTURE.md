@@ -2,7 +2,7 @@
 
 **Status:** CERTIFIED (Stage 3C.0 — architecture; Stage 3C.1 — contracts; Stage 3C.2 — Calendar read-only adapter; Stage 3C.3 — dry-run pipeline; Stage 3C.4 — sandbox mutation)
 **Parent:** Stage 3B CERTIFIED and FROZEN at `499401a` (`gamma-drive-stage3b4-rollback-engine`)
-**Governance:** GOV-2026-Stage3C-001 through GOV-2026-Stage3C-010
+**Governance:** GOV-2026-Stage3C-001 through GOV-2026-Stage3C-011
 **Objective:** Define the complete provider integration architecture for safe, deterministic, and reversible external provider mutations.
 
 ## Scope
@@ -68,7 +68,7 @@ Stage 3C Provider Integration (replaces simulated stubs)
 | **3C.2** | Google Calendar read-only adapter | events.list, events.get, calendarList.list — first concrete provider, no mutations |
 | **3C.3** | Calendar mutation dry-run pipeline | Mutation request construction, approval gates, idempotency, rollback plans, deterministic simulation — transport never invoked | ✅ **CERTIFIED** |
 | **3C.4** | Sandboxed Calendar Mutation | events.insert/update/delete against sandbox calendar; post-mutation verification; idempotency enforcement; audit capture | ✅ **CERTIFIED** |
-| **3C.5** | Error classification & retry | Provider error classification, retry eligibility, ambiguous-outcome reconciliation | ⬜ PLANNING |
+| **3C.5** | Production Readiness & Operational Hardening | Transport retry, backoff, rate-limit handling, reconciliation engine, ambiguous outcome recovery, credential rotation, telemetry, distributed idempotency store, operational logging, failure injection, chaos testing | ✅ **AUTHORIZED** |
 | **3C.6** | Rollback integration | Real rollback executor implementation, compensation chain execution | ⬜ PLANNING |
 | **3C.7** | Certification | Full integration test suite, security review, governance certification | ⬜ PLANNING |
 

@@ -34,7 +34,7 @@
 | **Rollback Coverage** | Compensating rollback plans for `events.insert` (compensating delete) and `events.delete` (compensating insert) per G-019; `events.update` rollback requires prior state snapshot |
 | **Idempotency Support** | `APPLICATION` (via idempotency key, enforced by SandboxExecutionPipeline) |
 | **Approval Requirements** | `events.list`: NONE, `events.get`: NONE, `calendarList.list`: NONE, `calendars.get`: NONE; `events.insert`: STANDARD, `events.update`: STANDARD, `events.delete`: HEIGHTENED |
-| **Last Certified** | 2026-07-18 (GOV-2026-Stage3C-010) |
+| **Last Certified** | 2026-07-18 (GOV-2026-Stage3C-011) |
 | **Certification Tag** | `gamma-drive-stage3c4-sandbox-mutation` |
 | **Known Limitations** | Sandbox-gated mutations only (G-016). Only single-event mutations certified — no batch, no background, no multi-resource. Credential and transport layers use mock/sandbox tokens. Stage 3C.4 sandbox pipeline enforces isolation, approval, idempotency, and verification before transport. |
 

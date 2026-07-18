@@ -61,6 +61,7 @@ Before any engineering claim (PASS, VERIFIED, CERTIFIED, COMPLETE) is accepted, 
 - **G-016 — Sandbox Before Production**: Every provider mutation capability shall first be certified against an isolated sandbox or dedicated test resource before production resources are permitted.
 - **G-018 — Transport Boundary Certification**: No live provider transport may be enabled until the complete dry-run pipeline has been certified as transport-inert, deterministic, auditable, and rollback-ready.
 - **G-019 — Verified Rollback Readiness**: No provider mutation may be certified unless a corresponding rollback or compensating-action strategy has been demonstrated, documented, and verified for that operation class.
+- **G-020 — Post-Mutation Reconciliation**: Every successful provider mutation shall be followed by an independent reconciliation step that compares the expected provider state with the observed provider state. Certification requires reconciliation success or explicit recovery handling.
 
 ## Release Policy
 
