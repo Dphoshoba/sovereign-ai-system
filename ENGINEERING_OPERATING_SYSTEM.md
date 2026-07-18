@@ -271,14 +271,14 @@ Operational Hardening (Stage 3C.5)
 | Field | Value |
 |---|---|
 | **Current Phase** | Phase III — Providers |
-| **Current Stage** | 3C.7 — Final Provider Certification & Phase III Readiness |
-| **Status** | IN PROGRESS |
+| **Current Stage** | 3C.7 — CERTIFIED — Phase III Gate Review Authorized |
+| **Status** | AWAITING GATE REVIEW |
 | **Next Stage** | Phase III Gate Review → Phase IV |
 | **Test Count** | 540 passing |
 | **Repository** | `echoes-visions-nextjs-cta` (gamma) |
-| **Certification Tag** | `gamma-drive-stage3c6-rollback-integration` |
+| **Certification Tag** | `gamma-drive-stage3c7-final-certification` |
 | **EOS Version** | EOS v1.0.0 |
-| **Governance Index** | GOV-2026-Stage3C-001 through GOV-2026-Stage3C-018; GOV-2026-EOS-001 |
+| **Governance Index** | GOV-2026-Stage3C-001 through GOV-2026-Stage3C-018; GOV-2026-PhaseIII-001; GOV-2026-EOS-001 |
 | **Governance Policies** | G-001 through G-024 |
 
 This section must be updated after every certification.

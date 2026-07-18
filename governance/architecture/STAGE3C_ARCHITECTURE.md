@@ -1,8 +1,8 @@
 # Stage 3C Architecture Specification — Provider Integration
 
-**Status:** CERTIFIED (Stage 3C.0 — architecture; Stage 3C.1 — contracts; Stage 3C.2 — Calendar read-only adapter; Stage 3C.3 — dry-run pipeline; Stage 3C.4 — sandbox mutation; Stage 3C.5 — operational hardening; Stage 3C.6 — rollback integration; Stage 3C.6 CERTIFIED — gamma-drive-stage3c6-rollback-integration)
+**Status:** CERTIFIED (Stage 3C.0 — architecture; Stage 3C.1 — contracts; Stage 3C.2 — Calendar read-only adapter; Stage 3C.3 — dry-run pipeline; Stage 3C.4 — sandbox mutation; Stage 3C.5 — operational hardening; Stage 3C.6 — rollback integration; Stage 3C.7 — final provider certification; Stage 3C.7 CERTIFIED via GOV-2026-PhaseIII-001)
 **Parent:** Stage 3B CERTIFIED and FROZEN at `499401a` (`gamma-drive-stage3b4-rollback-engine`)
-**Governance:** GOV-2026-Stage3C-001 through GOV-2026-Stage3C-018
+**Governance:** GOV-2026-Stage3C-001 through GOV-2026-Stage3C-018; GOV-2026-PhaseIII-001
 **Objective:** Define the complete provider integration architecture for safe, deterministic, and reversible external provider mutations.
 
 ## Scope
