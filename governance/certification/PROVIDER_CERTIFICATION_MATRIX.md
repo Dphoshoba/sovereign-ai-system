@@ -27,15 +27,15 @@
 | Field | Value |
 |---|---|
 | **Provider** | Google Calendar API v3 (`google-calendar`) |
-| **Certification Level** | `READ_ONLY` (Stage 3C.2) |
+| **Certification Level** | `READ_ONLY` |
 | **Certified Stage** | Stage 3C.2 |
-| **Supported Operations** | `events.list`, `events.get` *(pending Stage 3C.2)* |
+| **Supported Operations** | `events.list`, `events.get`, `calendarList.list`, `calendars.get` |
 | **Mutation Status** | `NONE` |
 | **Rollback Coverage** | N/A (read-only) |
 | **Idempotency Support** | `APPLICATION` (via extended properties, Stage 3C.4) |
-| **Approval Requirements** | `events.list`: NONE, `events.get`: NONE |
-| **Last Certified** | TBD (Stage 3C.2) |
-| **Certification Tag** | TBD |
+| **Approval Requirements** | `events.list`: NONE, `events.get`: NONE, `calendarList.list`: NONE, `calendars.get`: NONE |
+| **Last Certified** | 2026-07-18 |
+| **Certification Tag** | `gamma-drive-stage3c2-calendar-readonly` |
 | **Known Limitations** | Read-only phase; no mutations certified |
 
 ## Adding a New Provider
