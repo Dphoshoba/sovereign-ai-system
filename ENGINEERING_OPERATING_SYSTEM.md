@@ -274,12 +274,12 @@ Operational Hardening (Stage 3C.5)
 | **Current Stage** | Phase IV Planning — Stage 4A.1: Provider Registry |
 | **Status** | ACTIVE |
 | **Next Milestone** | Stage 4A.1 — Provider Registry |
-| **Test Count** | 620 passing (540 Phase III + 80 Stage 4A) |
+| **Test Count** | 638 passing (540 Phase III + 98 Stage 4A) |
 | **Repository** | `echoes-visions-nextjs-cta` (gamma) |
 | **Certification Tag** | `gamma-drive-stage3c7-final-certification` |
 | **EOS Version** | EOS v1.0.0 |
 | **Governance Index** | GOV-2026-Stage3C-001 through GOV-2026-Stage3C-018; GOV-2026-PhaseIII-001; GATE-2026-PhaseIII-002; GOV-2026-PhaseIV-001; GOV-2026-EOS-001 |
-| **Governance Policies** | G-001 through G-027 |
+| **Governance Policies** | G-001 through G-029 |
 
 This section must be updated after every certification.
 
