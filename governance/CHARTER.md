@@ -52,6 +52,7 @@ Before any engineering claim (PASS, VERIFIED, CERTIFIED, COMPLETE) is accepted, 
 - **G-007 — Interface Before Behaviour**: Every new runtime behaviour must first exist as a certified interface contract before any implementation is permitted.
 - **G-008 — Behavioural Compatibility**: Any modification affecting a previously certified runtime must demonstrate behavioural compatibility through regression testing or explicitly require recertification. Governance protects behavioural integrity, not necessarily immutable file paths.
 - **G-009 — Orchestration Before Integration**: The execution runtime must prove deterministic orchestration independently before any external provider integration is introduced.
+- **G-010 — Adapter Purity**: A provider adapter shall never contain provider business logic. Adapters are responsible only for translating contracts, exposing capabilities, validating compatibility, and adapting runtime abstractions. Business rules belong in the orchestration layer or dedicated policy components.
 
 ## Release Policy
 

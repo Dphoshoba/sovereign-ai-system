@@ -1,6 +1,6 @@
 # Stage 3B Architecture Specification
 
-**Status:** IMPLEMENTED (3B.1 interfaces, 3B.2 orchestrator, 3B.3 adapter framework)
+**Status:** IMPLEMENTED (3B.1 interfaces, 3B.2 orchestrator, 3B.3 adapter framework, 3B.4 rollback engine)
 **Parent:** Stage 3A FROZEN at `05631b9`
 **Objective:** Transform non-executing Stage 3A runtime into a safe execution runtime for approved provider operations.
 
@@ -176,3 +176,57 @@ CREATED ──→ INITIALIZED ──→ READY ──→ ACTIVE ──→ DISPOSE
 | Verification | State mismatch | Trigger rollback |
 | Rollback | Rollback failure | Log critical failure, alert operator |
 | Audit | Audit failure | Execution still valid, audit marked incomplete |
+
+## Rollback Engine (Stage 3B.4)
+
+### Components
+
+| Component | File | Purpose |
+|---|---|---|
+| `types.ts` | `rollback-engine/types.ts` | `CompensationChain`, `CompensationStep`, `TransactionRecord`, `AuditEvent`, `RollbackScope`, `RollbackStatus` types |
+| `compensation-plan.ts` | `rollback-engine/compensation-plan.ts` | `CompensationPlanGenerator` — generates compensation chains from rollback plans using strategy-based step ordering (`REVERSE_ORDER`, `FORWARD_ORDER`, `PARALLEL`), computes deterministic chain hashes, detects conflicts via step-parameter comparison |
+| `rollback-planner.ts` | `rollback-engine/rollback-planner.ts` | `RollbackPlanner` — creates a full `RollbackPlan` from an `ExecutionRequest` + `ConnectorCandidate`, delegates step generation to an injected `RollbackExecutor`, computes planHash deterministically |
+| `rollback-validator.ts` | `rollback-engine/rollback-validator.ts` | `RollbackValidator` — validates `RollbackPlan` completeness (required fields), `CompensationChain` integrity (hash, completion bounds, step diversity), and individual `CompensationStep` fields |
+| `rollback-audit.ts` | `rollback-engine/rollback-audit.ts` | `RollbackAuditor` — creates structured `AuditEvent` records with versioned schema, references to plan/chain, and status snapshots |
+| `rollback-coordinator.ts` | `rollback-engine/rollback-coordinator.ts` | `RollbackCoordinator` — full simulation: plan → validate → generate chain → audit → return result with all intermediate objects |
+
+### Data Flow
+
+```
+plan(request, candidate)
+  │
+  ├─ RollbackPlanner.plan()
+  │     ├─ Create RollbackPlan (rollbackId, planHash)
+  │     ├─ Delegate step generation to RollbackExecutor
+  │     └─ Return { plan, steps, metadata }
+  │
+  ├─ RollbackValidator.validatePlan()
+  │     ├─ Check required fields (rollbackId, executionId, strategy, etc.)
+  │     ├─ Warn on NONE scope or empty steps
+  │     └─ Return { valid, errors, warnings }
+  │
+  ├─ CompensationPlanGenerator.generate()
+  │     ├─ Order steps by strategy (REVERSE_ORDER / FORWARD_ORDER / PARALLEL)
+  │     ├─ Compute chainHash from plan + steps
+  │     ├─ Conflict detection via step-parameter comparison
+  │     └─ Return CompensationChain { chainId, steps, chainHash, ... }
+  │
+  ├─ RollbackValidator.validateChain()
+  │     ├─ Check chainHash integrity
+  │     ├─ Check completedSteps ≤ totalSteps
+  │     ├─ Check step diversity (unique stepIndexes)
+  │     └─ Return { valid, errors, warnings }
+  │
+  ├─ RollbackAuditor.recordAuditEvent()
+  │     └─ Create versioned AuditEvent { eventId, timestamp, schema, ... }
+  │
+  └─ Return CompensationPlan { chain, audit, validation }
+```
+
+### Key Properties
+
+- **No provider mutations** — All rollback engine operations are simulation/planning only; no external API calls
+- **Deterministic hashing** — `chainHash` and `planHash` are computed from serialized state (stable JSON), ensuring reproducibility
+- **Strategy-based ordering** — `REVERSE_ORDER` (LIFO), `FORWARD_ORDER` (FIFO), `PARALLEL` (unordered)
+- **Conflict detection** — `CompensationPlanGenerator` detects when two steps share the same parameters, emitting warnings
+- **Validation-first** — `RollbackCoordinator` validates before generating compensation chains; invalid plans produce structured errors before any planning work
