@@ -26,9 +26,34 @@ export interface RollbackStepDescriptor {
   reversible: boolean;
 }
 
+export type RollbackStatus = 'COMPLETED' | 'PARTIAL' | 'FAILED';
+
+export interface RollbackStepResult {
+  stepIndex: number;
+  status: 'COMPLETED' | 'FAILED' | 'SKIPPED';
+  error?: string;
+  telemetrySpanId?: string;
+}
+
+export interface RollbackResult {
+  rollbackId: string;
+  executionId: string;
+  status: RollbackStatus;
+  stepsCompleted: number;
+  stepsTotal: number;
+  completedAt: string;
+  failureReason?: string;
+  stepResults: RollbackStepResult[];
+}
+
 export interface RollbackExecutor {
   readonly supportsRollback: boolean;
   readonly rollbackStrategies: RollbackStrategy[];
 
   plan(request: ExecutionRequest, candidate: QueueCandidate): Promise<RollbackPlan>;
+  execute?(
+    request: ExecutionRequest,
+    candidate: QueueCandidate,
+    plan: RollbackPlan,
+  ): Promise<RollbackResult>;
 }
