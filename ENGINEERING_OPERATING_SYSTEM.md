@@ -279,7 +279,7 @@ Operational Hardening (Stage 3C.5)
 | **Certification Tag** | `gamma-drive-stage3c7-final-certification` |
 | **EOS Version** | EOS v1.0.0 |
 | **Governance Index** | GOV-2026-Stage3C-001 through GOV-2026-Stage3C-018; GOV-2026-PhaseIII-001; GATE-2026-PhaseIII-002; GOV-2026-PhaseIV-001; GOV-2026-EOS-001 |
-| **Governance Policies** | G-001 through G-026 |
+| **Governance Policies** | G-001 through G-027 |
 
 This section must be updated after every certification.
 
