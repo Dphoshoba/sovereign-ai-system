@@ -27,16 +27,16 @@
 | Field | Value |
 |---|---|
 | **Provider** | Google Calendar API v3 (`google-calendar`) |
-| **Certification Level** | `READ_ONLY` |
-| **Certified Stage** | Stage 3C.2 (read-only) + Stage 3C.3 (dry-run pipeline) |
-| **Supported Operations** | `events.list`, `events.get`, `calendarList.list`, `calendars.get` (read-only); `events.insert`, `events.update`, `events.delete` (dry-run only — no transport) |
-| **Mutation Status** | `NONE` (no live transport; dry-run pipeline certified at Stage 3C.3) |
-| **Rollback Coverage** | N/A (read-only); dry-run rollback plans generated for `events.insert`, `events.update`, `events.delete` per G-012 |
-| **Idempotency Support** | `APPLICATION` (via idempotency key in dry-run pipeline, Stage 3C.3; live enforcement pending Stage 3C.4) |
-| **Approval Requirements** | `events.list`: NONE, `events.get`: NONE, `calendarList.list`: NONE, `calendars.get`: NONE; mutation operations require approval per risk level |
-| **Last Certified** | 2026-07-18 (GOV-2026-Stage3C-008) |
-| **Certification Tag** | `gamma-drive-stage3c3-dryrun-pipeline` |
-| **Known Limitations** | No live transport permitted (G-018). No sandbox mutations. Idempotency keys validated in simulation only. Credential and transport layers not yet integrated. Stage 3C.4 authorized for sandboxed mutations. |
+| **Certification Level** | `MUTATE_SAFE` |
+| **Certified Stage** | Stage 3C.2 (read-only) + Stage 3C.3 (dry-run pipeline) + Stage 3C.4 (sandbox mutation) |
+| **Supported Operations** | `events.list`, `events.get`, `calendarList.list`, `calendars.get` (read-only); `events.insert`, `events.update`, `events.delete` (sandbox-gated mutation) |
+| **Mutation Status** | `CREATE_ONLY` (sandbox-gated; production mutations not certified) |
+| **Rollback Coverage** | Compensating rollback plans for `events.insert` (compensating delete) and `events.delete` (compensating insert) per G-019; `events.update` rollback requires prior state snapshot |
+| **Idempotency Support** | `APPLICATION` (via idempotency key, enforced by SandboxExecutionPipeline) |
+| **Approval Requirements** | `events.list`: NONE, `events.get`: NONE, `calendarList.list`: NONE, `calendars.get`: NONE; `events.insert`: STANDARD, `events.update`: STANDARD, `events.delete`: HEIGHTENED |
+| **Last Certified** | 2026-07-18 (GOV-2026-Stage3C-010) |
+| **Certification Tag** | `gamma-drive-stage3c4-sandbox-mutation` |
+| **Known Limitations** | Sandbox-gated mutations only (G-016). Only single-event mutations certified — no batch, no background, no multi-resource. Credential and transport layers use mock/sandbox tokens. Stage 3C.4 sandbox pipeline enforces isolation, approval, idempotency, and verification before transport. |
 
 ## Adding a New Provider
 

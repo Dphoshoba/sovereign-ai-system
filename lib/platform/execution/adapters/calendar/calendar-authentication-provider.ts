@@ -1,6 +1,7 @@
 import { AuthenticationProvider, AuthToken, AuthTokenType } from '../../provider-contracts/authentication-provider';
 
 const CALENDAR_READ_SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
+const CALENDAR_WRITE_SCOPES = ['https://www.googleapis.com/auth/calendar.events'];
 
 export class CalendarAuthenticationProvider implements AuthenticationProvider {
   readonly providerId = 'google-calendar-auth';
@@ -13,9 +14,11 @@ export class CalendarAuthenticationProvider implements AuthenticationProvider {
 
   async acquireToken(_executionId: string, scopes: string[]): Promise<AuthToken> {
     const mergedScopes = [...new Set([...CALENDAR_READ_SCOPES, ...scopes])];
+    const hasWriteScopes = scopes.some(s => CALENDAR_WRITE_SCOPES.includes(s));
+    const tokenPrefix = hasWriteScopes ? 'sandbox-token-' : 'ya29.calendar-';
     this.currentToken = {
       tokenType: this.tokenType,
-      accessToken: `ya29.calendar-${Date.now()}`,
+      accessToken: `${tokenPrefix}${Date.now()}`,
       expiresAt: new Date(Date.now() + 3600 * 1000).toISOString(),
       scopes: mergedScopes,
     };
@@ -23,9 +26,11 @@ export class CalendarAuthenticationProvider implements AuthenticationProvider {
   }
 
   async refreshToken(_executionId: string, token: AuthToken): Promise<AuthToken> {
+    const hasWriteScopes = token.scopes.some(s => CALENDAR_WRITE_SCOPES.includes(s));
+    const tokenPrefix = hasWriteScopes ? 'sandbox-token-' : 'ya29.refreshed-';
     const refreshed: AuthToken = {
       tokenType: token.tokenType,
-      accessToken: `ya29.refreshed-${Date.now()}`,
+      accessToken: `${tokenPrefix}${Date.now()}`,
       expiresAt: new Date(Date.now() + 3600 * 1000).toISOString(),
       scopes: token.scopes,
     };

@@ -456,15 +456,32 @@ describe('GoogleCalendarAdapter', () => {
   });
 
   describe('capability profile', () => {
-    it('returns READ risk level for all operations', () => {
+    it('returns correct risk levels per operation', () => {
       const adapter = createAdapter();
       const profile = adapter.getCapabilityProfile();
       expect(profile.connectorId).toBe('google-calendar');
-      expect(profile.supportedOperations.length).toBe(4);
+      expect(profile.supportedOperations.length).toBe(7);
       for (const op of profile.supportedOperations) {
-        expect(op.riskLevel).toBe('READ');
-        expect(op.canRollback).toBe(false);
-        expect(op.requiredApprovalLevel).toBe('NONE');
+        if (['events.list', 'events.get', 'calendarList.list', 'calendars.get'].includes(op.operation)) {
+          expect(op.riskLevel).toBe('READ');
+          expect(op.canRollback).toBe(false);
+          expect(op.requiredApprovalLevel).toBe('NONE');
+        }
+        if (op.operation === 'events.insert') {
+          expect(op.riskLevel).toBe('MODIFY');
+          expect(op.canRollback).toBe(true);
+          expect(op.requiredApprovalLevel).toBe('STANDARD');
+        }
+        if (op.operation === 'events.update') {
+          expect(op.riskLevel).toBe('MODIFY');
+          expect(op.canRollback).toBe(true);
+          expect(op.requiredApprovalLevel).toBe('STANDARD');
+        }
+        if (op.operation === 'events.delete') {
+          expect(op.riskLevel).toBe('DESTRUCTIVE');
+          expect(op.canRollback).toBe(true);
+          expect(op.requiredApprovalLevel).toBe('HEIGHTENED');
+        }
       }
     });
 
@@ -472,7 +489,7 @@ describe('GoogleCalendarAdapter', () => {
       const adapter = createAdapter();
       const desc = adapter.getDescriptor();
       expect(desc.providerId).toBe('google-calendar');
-      expect(desc.riskLevel).toBe('READ');
+      expect(desc.riskLevel).toBe('DESTRUCTIVE');
       expect(desc.requiresAuthentication).toBe(true);
     });
   });
@@ -640,35 +657,47 @@ describe('Adapter registry integration', () => {
 });
 
 // ---------------------------------------------------------------------------
-// No mutation endpoints
+// Mutation capability (Stage 3C.4)
 // ---------------------------------------------------------------------------
-describe('No mutation capability', () => {
-  it('adapter capability profile declares no mutation operations', () => {
+describe('Mutation capability', () => {
+  it('adapter capability profile declares mutation operations', () => {
     const adapter = new GoogleCalendarAdapter(
       new CalendarAuthenticationProvider(),
       mockTransport,
     );
     const profile = adapter.getCapabilityProfile();
     const mutationOps = profile.supportedOperations.filter(
-      op => op.riskLevel !== 'READ' || op.canRollback,
+      op => ['events.insert', 'events.update', 'events.delete'].includes(op.operation),
     );
-    expect(mutationOps.length).toBe(0);
+    expect(mutationOps.length).toBe(3);
+    for (const op of mutationOps) {
+      expect(op.canExecute).toBe(true);
+      expect(op.canVerify).toBe(true);
+      expect(op.canRollback).toBe(true);
+      expect(op.supportsIdempotency).toBe(true);
+    }
   });
 
-  it('all supported operations are read-only', () => {
+  it('supported operations include insert, update, delete', () => {
     const adapter = new GoogleCalendarAdapter(
       new CalendarAuthenticationProvider(),
       mockTransport,
     );
-    for (const op of adapter.supportedOperations) {
-      expect(op.startsWith('events.') || op.startsWith('calendar') || op.startsWith('calendars')).toBe(true);
-      expect(op).not.toMatch(/insert|update|patch|delete|batch/);
-    }
+    expect(adapter.supportedOperations).toContain('events.insert');
+    expect(adapter.supportedOperations).toContain('events.update');
+    expect(adapter.supportedOperations).toContain('events.delete');
   });
 
-  it('no mutation endpoints in request builder', () => {
-    const builder = new CalendarRequestBuilder();
-    const methods = ['POST', 'PUT', 'PATCH', 'DELETE'];
-    expect(methods).not.toContain('GET');
+  it('mutation operations require write scopes', () => {
+    const adapter = new GoogleCalendarAdapter(
+      new CalendarAuthenticationProvider(),
+      mockTransport,
+    );
+    const profile = adapter.getCapabilityProfile();
+    for (const op of profile.supportedOperations) {
+      if (['events.insert', 'events.update', 'events.delete'].includes(op.operation)) {
+        expect(op.requiredScopes).toContain('https://www.googleapis.com/auth/calendar.events');
+      }
+    }
   });
 });

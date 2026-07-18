@@ -1,8 +1,8 @@
 # Stage 3C Architecture Specification — Provider Integration
 
-**Status:** CERTIFIED (Stage 3C.0 — architecture; Stage 3C.1 — contracts; Stage 3C.2 — Calendar read-only adapter; Stage 3C.3 — dry-run pipeline)
+**Status:** CERTIFIED (Stage 3C.0 — architecture; Stage 3C.1 — contracts; Stage 3C.2 — Calendar read-only adapter; Stage 3C.3 — dry-run pipeline; Stage 3C.4 — sandbox mutation)
 **Parent:** Stage 3B CERTIFIED and FROZEN at `499401a` (`gamma-drive-stage3b4-rollback-engine`)
-**Governance:** GOV-2026-Stage3C-001 through GOV-2026-Stage3C-008
+**Governance:** GOV-2026-Stage3C-001 through GOV-2026-Stage3C-010
 **Objective:** Define the complete provider integration architecture for safe, deterministic, and reversible external provider mutations.
 
 ## Scope
@@ -67,7 +67,7 @@ Stage 3C Provider Integration (replaces simulated stubs)
 | **3C.1** | Provider-neutral integration contracts | 9 provider contract interfaces (request, response, error, auth, credential, transport, verification, reconciliation, idempotency) |
 | **3C.2** | Google Calendar read-only adapter | events.list, events.get, calendarList.list — first concrete provider, no mutations |
 | **3C.3** | Calendar mutation dry-run pipeline | Mutation request construction, approval gates, idempotency, rollback plans, deterministic simulation — transport never invoked | ✅ **CERTIFIED** |
-| **3C.4** | Sandboxed Calendar Mutation | events.insert/update/delete against sandbox calendar; post-mutation verification; idempotency enforcement; audit capture | ✅ **AUTHORIZED** |
+| **3C.4** | Sandboxed Calendar Mutation | events.insert/update/delete against sandbox calendar; post-mutation verification; idempotency enforcement; audit capture | ✅ **CERTIFIED** |
 | **3C.5** | Error classification & retry | Provider error classification, retry eligibility, ambiguous-outcome reconciliation | ⬜ PLANNING |
 | **3C.6** | Rollback integration | Real rollback executor implementation, compensation chain execution | ⬜ PLANNING |
 | **3C.7** | Certification | Full integration test suite, security review, governance certification | ⬜ PLANNING |
@@ -139,7 +139,8 @@ The following must remain true after Stage 3C implementation:
 - Provider contract tests: 37/37 passing (Stage 3C.1)
 - Calendar adapter tests: 43/43 passing (Stage 3C.2)
 - Dry-run pipeline tests: 31/31 passing (Stage 3C.3)
-- Cumulative regression: 429/429 passing
+- Sandbox pipeline tests: 24/24 passing (Stage 3C.4)
+- Cumulative regression: 453/453 passing
 
 ## Provider Contract Layer (Stage 3C.1)
 

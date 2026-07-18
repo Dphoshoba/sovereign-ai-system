@@ -104,7 +104,7 @@ export interface CalendarListResponse {
   items: CalendarListEntry[];
 }
 
-export type CalendarOperation = 'events.list' | 'events.get' | 'calendarList.list' | 'calendars.get';
+export type CalendarOperation = 'events.list' | 'events.get' | 'calendarList.list' | 'calendars.get' | 'events.insert' | 'events.update' | 'events.delete';
 
 export interface CalendarListParams {
   minAccessRole?: 'freeBusyReader' | 'reader' | 'writer' | 'owner';
