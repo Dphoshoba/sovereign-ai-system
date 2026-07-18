@@ -1,8 +1,8 @@
 # Stage 3C Architecture Specification — Provider Integration
 
-**Status:** CERTIFIED (Stage 3C.0 — architecture approved per GOV-2026-Stage3C-002; Stage 3C.1 — provider contracts implemented per GOV-2026-Stage3C-003)
+**Status:** CERTIFIED (Stage 3C.0 — architecture approved per GOV-2026-Stage3C-002; Stage 3C.1 — provider contracts certified per GOV-2026-Stage3C-004)
 **Parent:** Stage 3B CERTIFIED and FROZEN at `499401a` (`gamma-drive-stage3b4-rollback-engine`)
-**Governance:** GOV-2026-Stage3C-001, GOV-2026-Stage3C-002, GOV-2026-Stage3C-003
+**Governance:** GOV-2026-Stage3C-001, GOV-2026-Stage3C-002, GOV-2026-Stage3C-003, GOV-2026-Stage3C-004
 **Objective:** Define the complete provider integration architecture for safe, deterministic, and reversible external provider mutations.
 
 ## Scope
