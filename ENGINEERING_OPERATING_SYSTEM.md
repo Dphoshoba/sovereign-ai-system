@@ -274,7 +274,7 @@ Operational Hardening (Stage 3C.5)
 | **Current Stage** | Phase IV Planning — Stage 4A.1: Provider Registry |
 | **Status** | ACTIVE |
 | **Next Milestone** | Stage 4A.1 — Provider Registry |
-| **Test Count** | 561 passing (540 Phase III + 21 Stage 4A.1) |
+| **Test Count** | 586 passing (540 Phase III + 46 Stage 4A) |
 | **Repository** | `echoes-visions-nextjs-cta` (gamma) |
 | **Certification Tag** | `gamma-drive-stage3c7-final-certification` |
 | **EOS Version** | EOS v1.0.0 |
