@@ -37,11 +37,11 @@ export const RUNTIME_TRANSITION_MATRIX: TransitionMatrix = {
     forbidden: ['EXECUTING', 'COMPLETED'],
   },
   EXECUTING: {
-    allowed: ['VERIFYING', 'FAILED', 'CANCELLED'],
+    allowed: ['VERIFYING', 'ROLLING_BACK', 'FAILED', 'CANCELLED'],
     forbidden: ['SENSITIVE_SINK', 'S3A_ENTRY'],
   },
   VERIFYING: {
-    allowed: ['AUDITING', 'FAILED'],
+    allowed: ['AUDITING', 'ROLLING_BACK', 'FAILED'],
     forbidden: ['EXECUTING'],
   },
   AUDITING: {
@@ -55,6 +55,14 @@ export const RUNTIME_TRANSITION_MATRIX: TransitionMatrix = {
   FAILED: {
     allowed: [],
     forbidden: ['COMPLETED', 'EXECUTING'],
+  },
+  ROLLING_BACK: {
+    allowed: ['AUDITING', 'CRITICAL_FAILURE', 'FAILED'],
+    forbidden: ['EXECUTING', 'VERIFYING', 'COMPLETED'],
+  },
+  CRITICAL_FAILURE: {
+    allowed: [],
+    forbidden: ['COMPLETED', 'EXECUTING', 'VERIFYING'],
   },
   CANCELLED: {
     allowed: [],

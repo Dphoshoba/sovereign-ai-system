@@ -8,6 +8,8 @@ export type RuntimeState =
   | 'EXECUTION_BLOCKED'
   | 'EXECUTING'
   | 'VERIFYING'
+  | 'ROLLING_BACK'
+  | 'CRITICAL_FAILURE'
   | 'AUDITING'
   | 'COMPLETED'
   | 'FAILED'

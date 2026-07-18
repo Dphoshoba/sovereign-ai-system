@@ -49,6 +49,8 @@ Before any engineering claim (PASS, VERIFIED, CERTIFIED, COMPLETE) is accepted, 
 - **G-004 — Phase Isolation**: No future-stage work in a certified stage.
 - **G-005 — Deterministic Engineering**: Every certified runtime must be deterministic, reproducible, and auditable.
 - **G-006 — Certification Archive**: Every certified stage preserves architecture decisions, validation outputs, test summaries, Git metadata, and certification reports.
+- **G-007 — Interface Before Behaviour**: Every new runtime behaviour must first exist as a certified interface contract before any implementation is permitted.
+- **G-008 — Behavioural Compatibility**: Any modification affecting a previously certified runtime must demonstrate behavioural compatibility through regression testing or explicitly require recertification. Governance protects behavioural integrity, not necessarily immutable file paths.
 
 ## Release Policy
 
