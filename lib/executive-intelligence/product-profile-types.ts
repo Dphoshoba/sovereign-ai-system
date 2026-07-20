@@ -222,3 +222,103 @@ export const CREATOR_AUTOMATION_PROFILE: ProductDeploymentProfile = {
     'Success measured by automation completion rate and exception frequency rather than content published',
   ],
 };
+
+export const VISIONCRAFT_STUDIO_PROFILE: ProductDeploymentProfile = {
+  productId: 'visioncraft-studio',
+  productName: 'VisionCraft Studio',
+  version: '1.0.0',
+  mission: 'Enable creative production through governed design workflows — from brief to published visual assets',
+  targetUsers: ['Graphic designers', 'Content creators', 'Marketing teams', 'Brand managers'],
+  keyWorkflows: [
+    'Branded visual campaign production',
+    'Design asset creation and review',
+    'Brand compliance approval workflow',
+    'Asset versioning and archive',
+  ],
+  lifecycleStages: [
+    'Executive brief and campaign approval',
+    'Creative research and reference gathering',
+    'Design brief definition and planning',
+    'Asset production and rendering',
+    'Creative review and brand compliance',
+    'Publishing and distribution',
+    'Knowledge capture of design patterns',
+    'Executive review of creative health',
+  ],
+  governanceRequirements: [
+    'Brand compliance review',
+    'Creative quality gate',
+    'Asset version control',
+    'Publishing approval chain',
+  ],
+  operationalCadence: 'Campaign-based production with weekly creative reviews and monthly portfolio retrospectives',
+  successMetrics: [
+    'Campaign published on schedule',
+    'Brand compliance approval obtained',
+    'Assets catalogued and versioned',
+    'Design patterns captured for reuse',
+    'EIS reports creative workflow health accurately',
+  ],
+  officeMappings: [
+    {
+      office: 'Executive Office',
+      responsibilities: [
+        'Approve campaign briefs and set creative priorities',
+        'Define brand strategy and positioning',
+        'Review campaign performance via EIS',
+        'Allocate creative production resources',
+      ],
+    },
+    {
+      office: 'Research Office',
+      responsibilities: [
+        'Gather design references and user research',
+        'Analyze creative trends and audience preferences',
+        'Assess brand compliance requirements',
+        'Evaluate asset effectiveness from past campaigns',
+      ],
+    },
+    {
+      office: 'Product Office',
+      responsibilities: [
+        'Define creative briefs and acceptance criteria',
+        'Plan campaign roadmap and release schedule',
+        'Manage dependencies between creative assets',
+        'Coordinate cross-campaign design consistency',
+      ],
+    },
+    {
+      office: 'Operations Office',
+      responsibilities: [
+        'Execute asset production and rendering',
+        'Manage creative review cycles',
+        'Handle publishing and distribution',
+        'Monitor rendering performance and incidents',
+      ],
+    },
+    {
+      office: 'Knowledge Office',
+      responsibilities: [
+        'Catalogue produced assets for reuse',
+        'Document design patterns and reusable templates',
+        'Capture campaign retrospectives and lessons',
+        'Archive brand guidelines and compliance records',
+      ],
+    },
+  ],
+  workflowStageMappings: [
+    { stage: 'Campaign brief and approval', responsibleOffice: 'Executive Office', description: 'Executive defines campaign objective, approves investment, and sets brand priorities' },
+    { stage: 'Creative research and references', responsibleOffice: 'Research Office', description: 'Research gathers design references, analyzes audience needs, and validates creative direction' },
+    { stage: 'Design brief and planning', responsibleOffice: 'Product Office', description: 'Product defines creative brief, acceptance criteria, and campaign roadmap' },
+    { stage: 'Asset production and rendering', responsibleOffice: 'Operations Office', description: 'Operations produces design assets, manages rendering, and coordinates review cycles' },
+    { stage: 'Asset cataloguing and pattern capture', responsibleOffice: 'Knowledge Office', description: 'Knowledge catalogues produced assets, documents design patterns, and archives campaign records' },
+    { stage: 'Executive review and optimization', responsibleOffice: 'Executive Office', description: 'EIS generates briefing on campaign health, identifies bottlenecks, and recommends improvements' },
+  ],
+  adaptionsFromReference: [
+    'Product is creative production — lifecycle emphasizes design iteration and review cycles over content publication',
+    'Governance focuses on brand compliance and creative quality gates (not content accuracy or automation safety)',
+    'Operations includes rendering pipeline management and creative review orchestration',
+    'Knowledge captures design patterns and reusable templates (not research findings or automation templates)',
+    'Success measured by campaign completion rate and brand compliance rather than content published',
+  ],
+};
