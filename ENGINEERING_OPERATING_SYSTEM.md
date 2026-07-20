@@ -270,16 +270,16 @@ Operational Hardening (Stage 3C.5)
 
 | Field | Value |
 |---|---|
-| **Current Phase** | Phase V — Workflow Orchestration & Coordinated Multi-Step Execution |
-| **Current Stage** | Stage 5D — Workflow Governance |
-| **Status** | ACTIVE |
-| **Next Milestone** | Phase V Gate Review |
+| **Current Phase** | Phase VI — Intelligent Orchestration Platform |
+| **Current Stage** | Planning — Stage 6A: Planning Engine |
+| **Status** | PLANNING |
+| **Next Milestone** | Stage 6A — Planning Engine |
 | **Test Count** | 835 passing (540 Phase III + 295 Phase IV–V) |
 | **Repository** | `echoes-visions-nextjs-cta` (gamma) |
 | **Certification Tag** | `gamma-drive-stage3c7-final-certification` |
 | **EOS Version** | EOS v1.0.0 |
-| **Governance Index** | GOV-2026-Stage3C-001 through GOV-2026-Stage3C-018; GOV-2026-PhaseIII-001; GATE-2026-PhaseIII-002; GOV-2026-PhaseIV-001; GOV-2026-Stage4A-001 through -005; GOV-2026-Stage4B-001 through -004; GOV-2026-Stage4C-001 through -004; GOV-2026-Stage4D-001; GOV-2026-PhaseV-001; GOV-2026-PhaseV-002; GOV-2026-Stage5B-001; GOV-2026-Stage5C-001; GOV-2026-Stage5D-001; GOV-2026-EOS-001 |
-| **Governance Policies** | G-001 through G-038 |
+| **Governance Index** | GOV-2026-Stage3C-001 through GOV-2026-Stage3C-018; GOV-2026-PhaseIII-001; GATE-2026-PhaseIII-002; GOV-2026-PhaseIV-001; GOV-2026-Stage4A-001 through -005; GOV-2026-Stage4B-001 through -004; GOV-2026-Stage4C-001 through -004; GOV-2026-Stage4D-001; GOV-2026-PhaseV-001; GOV-2026-PhaseV-002; GOV-2026-Stage5B-001; GOV-2026-Stage5C-001; GOV-2026-Stage5D-001; GOV-2026-PhaseVI-001; GOV-2026-EOS-001 |
+| **Governance Policies** | G-001 through G-039 |
 
 This section must be updated after every certification.
 
