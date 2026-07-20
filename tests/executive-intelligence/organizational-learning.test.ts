@@ -98,6 +98,102 @@ describe('Era 5 Phase 5 — Organizational Learning', () => {
     expect(retrieved?.evidenceIds).toEqual(['ev-mw-001', 'ev-bq-001']);
   });
 
+  it('repeated observations across products produce a candidate pattern', () => {
+    const engine = new OrganizationalLearningEngine();
+    const lessonA = makeArtifact({
+      id: 'pd-lesson-a', type: 'lesson', title: 'Lesson A', version: 1,
+      evidenceIds: ['ev-a1', 'ev-a2'],
+      productCoverage: ['menwise360', 'bible-quest'],
+      status: 'draft',
+      confidence: 0.8,
+    });
+    const lessonB = makeArtifact({
+      id: 'pd-lesson-b', type: 'lesson', title: 'Lesson B', version: 1,
+      evidenceIds: ['ev-b1'],
+      productCoverage: ['menwise360', 'bible-quest'],
+      status: 'draft',
+      confidence: 0.7,
+    });
+    engine.registerLessons([lessonA, lessonB]);
+    const patterns = engine.detectPatterns();
+    expect(patterns.length).toBeGreaterThanOrEqual(1);
+    const pattern = patterns[0];
+    expect(pattern.type).toBe('pattern');
+    expect(pattern.status).toBe('candidate');
+    expect(pattern.productCoverage).toContain('menwise360');
+    expect(pattern.productCoverage).toContain('bible-quest');
+  });
+
+  it('single observation does not form a pattern', () => {
+    const engine = new OrganizationalLearningEngine();
+    engine.registerLesson(makeArtifact({
+      id: 'pd-solo', type: 'lesson', title: 'Solo Lesson', version: 1,
+      evidenceIds: ['ev-solo'],
+      productCoverage: ['menwise360'],
+      status: 'draft',
+      confidence: 0.6,
+    }));
+    const patterns = engine.detectPatterns();
+    const soloPatterns = patterns.filter(p => p.evidenceIds.includes('ev-solo'));
+    expect(soloPatterns).toHaveLength(0);
+  });
+
+  it('pattern detection is deterministic', () => {
+    const engine = new OrganizationalLearningEngine();
+    const lessons = [
+      makeArtifact({
+        id: 'pd-det-a', type: 'lesson', title: 'Det A', version: 1,
+        evidenceIds: ['ev-da1'],
+        productCoverage: ['menwise360', 'bible-quest'],
+        status: 'draft',
+        confidence: 0.7,
+      }),
+      makeArtifact({
+        id: 'pd-det-b', type: 'lesson', title: 'Det B', version: 1,
+        evidenceIds: ['ev-db1'],
+        productCoverage: ['menwise360', 'bible-quest'],
+        status: 'draft',
+        confidence: 0.8,
+      }),
+      makeArtifact({
+        id: 'pd-det-c', type: 'lesson', title: 'Det C', version: 1,
+        evidenceIds: ['ev-dc1'],
+        productCoverage: ['creator-automation'],
+        status: 'draft',
+        confidence: 0.9,
+      }),
+    ];
+    engine.registerLessons(lessons);
+    const first = engine.detectPatterns();
+    const second = engine.detectPatterns();
+    expect(first).toEqual(second);
+  });
+
+  it('pattern references evidence from all contributing lessons', () => {
+    const engine = new OrganizationalLearningEngine();
+    const lessonX = makeArtifact({
+      id: 'pd-ev-x', type: 'lesson', title: 'Evidence X', version: 1,
+      evidenceIds: ['ev-x-001', 'ev-x-002'],
+      productCoverage: ['menwise360', 'bible-quest'],
+      status: 'draft',
+      confidence: 0.75,
+    });
+    const lessonY = makeArtifact({
+      id: 'pd-ev-y', type: 'lesson', title: 'Evidence Y', version: 1,
+      evidenceIds: ['ev-y-001'],
+      productCoverage: ['menwise360', 'bible-quest'],
+      status: 'draft',
+      confidence: 0.85,
+    });
+    engine.registerLessons([lessonX, lessonY]);
+    const patterns = engine.detectPatterns();
+    const pattern = patterns.find(p => p.evidenceIds.includes('ev-x-001'));
+    expect(pattern).toBeDefined();
+    expect(pattern!.evidenceIds).toContain('ev-x-001');
+    expect(pattern!.evidenceIds).toContain('ev-x-002');
+    expect(pattern!.evidenceIds).toContain('ev-y-001');
+  });
+
   it('supersedes chain is queryable', () => {
     const engine = new OrganizationalLearningEngine();
     engine.registerLesson(makeArtifact({
