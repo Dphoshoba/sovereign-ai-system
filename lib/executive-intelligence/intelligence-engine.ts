@@ -1,6 +1,6 @@
 import { WorkforcePlatform } from '../workforce/workforce-platform';
 import { buildSnapshot } from './executive-snapshot';
-import { ExecutiveSnapshot, ExecutiveBriefing, EISRecommendation, OfficeHealth, EscalatedRisk } from './types';
+import { ExecutiveSnapshot, ExecutiveBriefing, EISRecommendation, OfficeHealth, EscalatedRisk, CrossOfficeDependency, KpiTrend } from './types';
 
 export class ExecutiveIntelligence {
   private lastSnapshot: ExecutiveSnapshot | null = null;
@@ -32,6 +32,11 @@ export class ExecutiveIntelligence {
     return snapshot.pendingDecisions;
   }
 
+  getCrossOfficeDependencies(): CrossOfficeDependency[] {
+    const snapshot = this.lastSnapshot || this.refreshSnapshot();
+    return snapshot.crossOfficeDependencies;
+  }
+
   getKpiTrends(): { improving: KpiTrend[]; declining: KpiTrend[] } {
     return { improving: [], declining: [] };
   }
@@ -58,17 +63,21 @@ export class ExecutiveIntelligence {
       .filter(([_, s]) => s.blockers.length > 0)
       .map(([office, s]) => ({ office, blockers: s.blockers }));
 
-    const summary = risks.length > 0
-      ? `${risks.length} active risk(s) requiring attention`
-      : 'Organization operating normally';
+    const criticalRisks = risks.filter(r => r.severity === 'critical');
+    const summary = criticalRisks.length > 0
+      ? `${criticalRisks.length} critical risk(s) requiring executive attention`
+      : risks.length > 0
+        ? `${risks.length} active risk(s) requiring attention`
+        : 'Organization operating normally';
 
     return {
       summary,
       organizationHealth: health,
-      priorities: risks.filter(r => r.severity === 'critical').map(r => r.description),
+      priorities: criticalRisks.map(r => r.description),
       activeRisks: risks,
       blockedItems,
       pendingDecisions: snapshot.pendingDecisions,
+      crossOfficeDependencies: snapshot.crossOfficeDependencies,
       kpiTrends: { improving: [], declining: [] },
       recommendations,
       officeStatus: Object.fromEntries(
@@ -77,7 +86,7 @@ export class ExecutiveIntelligence {
       metadata: {
         generatedAt: Date.now(),
         snapshotVersion: snapshot.snapshotId,
-        confidence: risks.length > 0 ? 0.95 : 0.99,
+        confidence: criticalRisks.length > 0 ? 0.9 : risks.length > 0 ? 0.95 : 0.99,
         sources: Object.keys(snapshot.offices),
       },
     };
@@ -148,8 +157,14 @@ export class ExecutiveIntelligence {
         office: 'Executive Office',
       });
     }
+    if (snapshot.crossOfficeDependencies.some(d => d.status === 'blocked')) {
+      recs.push({
+        priority: 'high',
+        action: 'Resolve cross-office dependencies blocking workflow',
+        reason: `${snapshot.crossOfficeDependencies.filter(d => d.status === 'blocked').length} dependency chain(s) blocked`,
+        office: 'Executive Office',
+      });
+    }
     return recs;
   }
 }
-
-import { KpiTrend } from './types';

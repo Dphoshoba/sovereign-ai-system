@@ -16,6 +16,9 @@ export interface PendingDecision {
   requestedAt: number;
   urgency: 'low' | 'medium' | 'high' | 'critical';
   summary: string;
+  requiredApprover: string;
+  rationale: string;
+  status: 'pending' | 'approved' | 'denied' | 'escalated';
 }
 
 export interface EscalatedRisk {
@@ -26,12 +29,21 @@ export interface EscalatedRisk {
   raisedAt: number;
 }
 
+export interface CrossOfficeDependency {
+  id: string;
+  sourceOffice: string;
+  targetOffice: string;
+  description: string;
+  status: 'active' | 'blocked' | 'resolved';
+}
+
 export interface ExecutiveSnapshot {
   snapshotId: string;
   timestamp: number;
   offices: Record<string, OfficeStatus>;
   pendingDecisions: PendingDecision[];
   escalatedRisks: EscalatedRisk[];
+  crossOfficeDependencies: CrossOfficeDependency[];
 }
 
 export interface KpiTrend {
@@ -62,6 +74,7 @@ export interface ExecutiveBriefing {
   activeRisks: EscalatedRisk[];
   blockedItems: { office: string; blockers: string[] }[];
   pendingDecisions: PendingDecision[];
+  crossOfficeDependencies: CrossOfficeDependency[];
   kpiTrends: { improving: KpiTrend[]; declining: KpiTrend[] };
   recommendations: EISRecommendation[];
   officeStatus: Record<string, OfficeStatus>;
