@@ -54,8 +54,99 @@ export class StrategicPlanningEngine {
     return result;
   }
 
-  evaluateScenario(scenarioId: string, profileId: string): ScenarioEvaluation { return null as unknown as ScenarioEvaluation; }
-  compareScenarios(evaluationIds: string[]): TradeOffComparison { return null as unknown as TradeOffComparison; }
+  evaluateScenario(scenarioId: string, profileId: string): ScenarioEvaluation {
+    const scenario = this.getScenario(scenarioId);
+    if (!scenario) throw new Error(`Scenario ${scenarioId} not found`);
+
+    const profile = ALL_PROFILES.find(p => p.id === profileId);
+    if (!profile) throw new Error(`Profile ${profileId} not found`);
+
+    const assumptionVersions: Array<{ assumptionId: string; version: number }> = [];
+    for (const aid of scenario.assumptionIds) {
+      const a = this.getAssumption(aid);
+      if (a && a.status === 'active') {
+        assumptionVersions.push({ assumptionId: aid, version: a.version });
+      }
+    }
+
+    const initCount = scenario.initiativeIds.length;
+    const prodCount = scenario.productIds.length;
+    const activeAssumptions = assumptionVersions.length;
+    const evidenceAll = [...scenario.evidenceIds];
+
+    const dimensionScores: DimensionScore[] = [];
+    const dimensions = ['strategicAlignment', 'resourceUtilization', 'dependencyRisk', 'governanceImpact', 'implementationComplexity', 'organizationalConfidence', 'expectedBenefit'] as const;
+
+    for (const dim of dimensions) {
+      let score = 0.5;
+      switch (dim) {
+        case 'strategicAlignment': score = Math.min(1, initCount * 0.25 + 0.1); break;
+        case 'resourceUtilization': score = Math.min(1, prodCount * 0.2 + 0.1); break;
+        case 'dependencyRisk': score = Math.max(0.1, 1 - prodCount * 0.1); break;
+        case 'governanceImpact': score = Math.min(1, (activeAssumptions + 1) * 0.2); break;
+        case 'implementationComplexity': score = Math.max(0.1, 1 - initCount * 0.15); break;
+        case 'organizationalConfidence': score = Math.min(1, (activeAssumptions + 1) * 0.25); break;
+        case 'expectedBenefit': score = Math.min(1, initCount * 0.3 + 0.1); break;
+      }
+      dimensionScores.push({ dimension: dim, score: Math.round(score * 1000) / 1000, evidenceIds: [...evidenceAll], rationale: `${initCount} initiatives, ${prodCount} products, ${activeAssumptions} assumptions` });
+    }
+
+    const weightedScore = dimensionScores.reduce((sum, ds) => {
+      const weight = profile.weights[ds.dimension] || 0;
+      return sum + ds.score * weight;
+    }, 0);
+
+    const evaluation: ScenarioEvaluation = {
+      id: `eval-${scenarioId}-${profileId}`,
+      scenarioId,
+      scenarioVersion: scenario.version,
+      evaluationProfileId: profileId,
+      dimensionScores,
+      weightedScore: Math.round(weightedScore * 1000) / 1000,
+      assumptionVersions,
+      evaluationTimestamp: Date.now(),
+    };
+
+    this.evaluations.set(evaluation.id, evaluation);
+    return evaluation;
+  }
+
+  compareScenarios(evaluationIds: string[]): TradeOffComparison {
+    const evals = evaluationIds.map(id => this.evaluations.get(id)).filter(Boolean) as ScenarioEvaluation[];
+    if (evals.length === 0) throw new Error('No evaluations found');
+
+    const scenarios = evals.map(e => {
+      const strengths: string[] = [];
+      const weaknesses: string[] = [];
+      for (const ds of e.dimensionScores) {
+        if (ds.score >= 0.7) strengths.push(`+High ${ds.dimension}`);
+        if (ds.score <= 0.3) weaknesses.push(`-Low ${ds.dimension}`);
+      }
+      return { scenarioId: e.scenarioId, overallScore: e.weightedScore, strengths, weaknesses };
+    });
+
+    const dimensionDeltas: TradeOffComparison['dimensionDeltas'] = [];
+    if (evals.length >= 2) {
+      const dimensions = ['strategicAlignment', 'resourceUtilization', 'dependencyRisk', 'governanceImpact', 'implementationComplexity', 'organizationalConfidence', 'expectedBenefit'] as const;
+      for (const dim of dimensions) {
+        const a = evals[0].dimensionScores.find(d => d.dimension === dim)!.score;
+        const b = evals[1].dimensionScores.find(d => d.dimension === dim)!.score;
+        dimensionDeltas.push({ dimension: dim, scenarioAScore: a, scenarioBScore: b });
+      }
+    }
+
+    const keyTradeOffs = scenarios.map((s) => `${s.scenarioId}: ${s.strengths.join(', ')} | ${s.weaknesses.join(', ')}`);
+
+    return {
+      id: `comp-${evaluationIds.join('-')}`,
+      evaluatedScenarioIds: [...evaluationIds],
+      scenarios,
+      dimensionDeltas,
+      keyTradeOffs,
+      confidenceSummary: `Compared ${evals.length} evaluated scenarios`,
+      comparisonTimestamp: Date.now(),
+    };
+  }
   buildRoadmap(scenarioId: string, phases: RoadmapPhase[]): EnterpriseRoadmap { return null as unknown as EnterpriseRoadmap; }
   buildExecutivePlanningBrief(): ExecutivePlanningBrief { return null as unknown as ExecutivePlanningBrief; }
 }

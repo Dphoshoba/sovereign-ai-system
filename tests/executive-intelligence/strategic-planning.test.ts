@@ -95,4 +95,68 @@ describe('Era 5 Phase 6 — Strategic Planning', () => {
     engine.registerScenario({ ...SCENARIO_A, version: 2, title: 'Growth First v2' });
     expect(engine.getScenario('scn-001')?.version).toBe(2);
   });
+
+  it('evaluateScenario returns dimension scores with evidence', () => {
+    const engine = new StrategicPlanningEngine();
+    engine.registerAssumption(ASSUMPTION_A);
+    engine.registerScenario(SCENARIO_A);
+    const evaluation = engine.evaluateScenario('scn-001', 'growth');
+    expect(evaluation).toBeDefined();
+    expect(evaluation.dimensionScores.length).toBe(7);
+    expect(evaluation.weightedScore).toBeGreaterThan(0);
+  });
+
+  it('evaluation is deterministic', () => {
+    const engine = new StrategicPlanningEngine();
+    engine.registerScenario(SCENARIO_A);
+    engine.registerAssumption(ASSUMPTION_A);
+    const e1 = engine.evaluateScenario('scn-001', 'growth');
+    const e2 = engine.evaluateScenario('scn-001', 'growth');
+    expect(e1.weightedScore).toBe(e2.weightedScore);
+    expect(e1.dimensionScores.map(d => d.score)).toEqual(e2.dimensionScores.map(d => d.score));
+  });
+
+  it('different profiles produce different weighted scores', () => {
+    const engine = new StrategicPlanningEngine();
+    engine.registerScenario(SCENARIO_A);
+    engine.registerAssumption(ASSUMPTION_A);
+    const growthEval = engine.evaluateScenario('scn-001', 'growth');
+    const stabilityEval = engine.evaluateScenario('scn-001', 'stability');
+    expect(growthEval.weightedScore).not.toBe(stabilityEval.weightedScore);
+  });
+
+  it('evaluation records assumption versions used', () => {
+    const engine = new StrategicPlanningEngine();
+    engine.registerAssumption(ASSUMPTION_A);
+    engine.registerScenario(SCENARIO_A);
+    const evaluation = engine.evaluateScenario('scn-001', 'growth');
+    expect(evaluation.assumptionVersions.length).toBeGreaterThanOrEqual(1);
+    expect(evaluation.assumptionVersions[0].assumptionId).toBe('asm-001');
+  });
+
+  it('compareScenarios highlights strengths and weaknesses', () => {
+    const engine = new StrategicPlanningEngine();
+    engine.registerAssumption(ASSUMPTION_A);
+    engine.registerScenario({ ...SCENARIO_A, id: 'scn-001' });
+    engine.registerScenario({
+      ...SCENARIO_A, id: 'scn-002', title: 'Stability First',
+      initiativeIds: [], productIds: ['menwise360'], evaluationProfileId: 'stability',
+    });
+    const e1 = engine.evaluateScenario('scn-001', 'growth');
+    const e2 = engine.evaluateScenario('scn-002', 'stability');
+    const comparison = engine.compareScenarios([e1.id, e2.id]);
+    expect(comparison).toBeDefined();
+    expect(comparison.scenarios.length).toBe(2);
+    expect(comparison.keyTradeOffs.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('comparison is deterministic', () => {
+    const engine = new StrategicPlanningEngine();
+    engine.registerScenario(SCENARIO_A);
+    engine.registerAssumption(ASSUMPTION_A);
+    const e1 = engine.evaluateScenario('scn-001', 'growth');
+    const c1 = engine.compareScenarios([e1.id]);
+    const c2 = engine.compareScenarios([e1.id]);
+    expect(c1.scenarios[0].overallScore).toBe(c2.scenarios[0].overallScore);
+  });
 });
