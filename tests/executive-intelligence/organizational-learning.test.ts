@@ -104,16 +104,21 @@ describe('Era 5 Phase 5 — Organizational Learning', () => {
       id: 'chain-001', type: 'lesson', title: 'Chain v1', version: 1,
     }));
     engine.registerLesson(makeArtifact({
-      id: 'chain-001', type: 'lesson', title: 'Chain v2', version: 2, supersedes: 'chain-001',
+      id: 'chain-001', type: 'lesson', title: 'Chain v2', version: 2,
+      supersedes: 'chain-001-v1',
     }));
     engine.registerLesson(makeArtifact({
-      id: 'chain-001', type: 'lesson', title: 'Chain v3', version: 3, supersedes: 'chain-001',
+      id: 'chain-001', type: 'lesson', title: 'Chain v3', version: 3,
+      supersedes: 'chain-001-v2', supersededBy: '',
     }));
     const history = engine.getArtifactHistory('chain-001');
     expect(history).toHaveLength(3);
     expect(history[0].version).toBe(1);
+    expect(history[0].supersedes).toBeUndefined();
     expect(history[1].version).toBe(2);
+    expect(history[1].supersedes).toBe('chain-001-v1');
     expect(history[2].version).toBe(3);
+    expect(history[2].supersedes).toBe('chain-001-v2');
   });
 
 });

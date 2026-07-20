@@ -1,4 +1,4 @@
-import { LearningArtifact, LearningArtifactType, ArtifactStatus, ValidationAlert, InsightRecommendation, LearningBriefingSection } from './learning-types';
+import { LearningArtifact, LearningArtifactType, ArtifactStatus, ValidationStatus, ValidationAlert, InsightRecommendation, LearningBriefingSection } from './learning-types';
 
 export class OrganizationalLearningEngine {
   private artifacts: Map<string, LearningArtifact[]> = new Map();
@@ -36,7 +36,7 @@ export class OrganizationalLearningEngine {
 
   promote(id: string, targetType: LearningArtifact['type'], approver: string, rationale: string): LearningArtifact | null { return null; }
 
-  validate(artifactId: string, reviewer: string, newStatus: string, rationale: string): void {}
+  validate(artifactId: string, reviewer: string, newStatus: ValidationStatus, rationale: string): void {}
 
   getValidationAlerts(): ValidationAlert[] { return []; }
 
