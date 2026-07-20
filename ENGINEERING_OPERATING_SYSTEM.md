@@ -271,15 +271,13 @@ Operational Hardening (Stage 3C.5)
 | Field | Value |
 |---|---|
 | **Current Phase** | Phase VIII — Enterprise Federation Platform |
-| **Current Stage** | Stage 8C — Federated Governance |
-| **Status** | CERTIFIED |
-| **Next Milestone** | Stage 8D — Federated Observability |
-| **Test Count** | 1186 passing (540 Phase III + 295 Phase IV–V + 109 Phase VI + 12 integration + 130 Phase VII + 100 Phase VIII) |
-| **Repository** | `echoes-visions-nextjs-cta` (gamma) |
-| **Certification Tag** | `gamma-phase7-complete` |
-| **EOS Version** | EOS v1.0.0 |
-| **Governance Index** | GOV-2026-Stage3C-001 through GOV-2026-Stage3C-018; GOV-2026-PhaseIII-001; GATE-2026-PhaseIII-002; GOV-2026-PhaseIV-001; GOV-2026-Stage4A-001 through -005; GOV-2026-Stage4B-001 through -004; GOV-2026-Stage4C-001 through -004; GOV-2026-Stage4D-001; GOV-2026-PhaseV-001; GOV-2026-PhaseV-002; GOV-2026-Stage5B-001; GOV-2026-Stage5C-001; GOV-2026-Stage5D-001; GOV-2026-PhaseVI-001; GOV-2026-Stage6A-001; GOV-2026-Stage6A-002; GOV-2026-Stage6B-001; GOV-2026-Stage6C-001; GOV-2026-Stage6D-001; GATE-2026-PhaseVI-002; GOV-2026-PhaseVII-001; GOV-2026-Stage7A-001; GOV-2026-Stage7B-001; GOV-2026-Stage7C-001; GOV-2026-Stage7D-001; GATE-2026-PhaseVII-002; GOV-2026-PhaseVIII-001; GOV-2026-Stage8A-001; GOV-2026-Stage8B-001; GOV-2026-Stage8C-001 |
-| **Governance Policies** | G-001 through G-049 (G-050 proposed) |
+| **Current Stage** | Stage 8D — Federated Observability |
+| **Status** | CERTIFIED AND CLOSED |
+| **Next Milestone** | TBD — Future phase planning |
+| **Test Count** | 1209 passing (540 Phase III + 295 Phase IV–V + 109 Phase VI + 12 integration + 130 Phase VII + 123 Phase VIII) |
+| **Certification Tag** | `gamma-phase8-complete` |
+| **Governance Index** | GOV-2026-Stage3C-001 through GOV-2026-Stage3C-018; GOV-2026-PhaseIII-001; GATE-2026-PhaseIII-002; GOV-2026-PhaseIV-001; GOV-2026-Stage4A-001 through -005; GOV-2026-Stage4B-001 through -004; GOV-2026-Stage4C-001 through -004; GOV-2026-Stage4D-001; GOV-2026-PhaseV-001; GOV-2026-PhaseV-002; GOV-2026-Stage5B-001; GOV-2026-Stage5C-001; GOV-2026-Stage5D-001; GOV-2026-PhaseVI-001; GOV-2026-Stage6A-001; GOV-2026-Stage6A-002; GOV-2026-Stage6B-001; GOV-2026-Stage6C-001; GOV-2026-Stage6D-001; GATE-2026-PhaseVI-002; GOV-2026-PhaseVII-001; GOV-2026-Stage7A-001; GOV-2026-Stage7B-001; GOV-2026-Stage7C-001; GOV-2026-Stage7D-001; GATE-2026-PhaseVII-002; GOV-2026-PhaseVIII-001; GOV-2026-Stage8A-001; GOV-2026-Stage8B-001; GOV-2026-Stage8C-001; GOV-2026-Stage8D-001; GATE-2026-PhaseVIII-001 |
+| **Governance Policies** | G-001 through G-050 |
 
 This section must be updated after every certification.
 
