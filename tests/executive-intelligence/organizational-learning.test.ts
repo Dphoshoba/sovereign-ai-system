@@ -307,4 +307,52 @@ describe('Era 5 Phase 5 — Organizational Learning', () => {
     expect(result).toBeNull();
   });
 
+  it('artifacts start with current validation status', () => {
+    const engine = new OrganizationalLearningEngine();
+    engine.registerLesson(makeArtifact({
+      id: 'val-start', type: 'lesson', title: 'Validation Start', version: 1,
+      validationStatus: 'current',
+    }));
+    const retrieved = engine.getArtifact('val-start');
+    expect(retrieved?.validationStatus).toBe('current');
+  });
+
+  it('validate updates validation status and records history', () => {
+    const engine = new OrganizationalLearningEngine();
+    engine.registerLesson(makeArtifact({
+      id: 'val-update', type: 'lesson', title: 'Validation Update', version: 1,
+    }));
+    engine.validate('val-update', 'quality-reviewer', 'needs_review', 'Evidence is 6 months old');
+    const retrieved = engine.getArtifact('val-update');
+    expect(retrieved?.validationStatus).toBe('needs_review');
+    expect(retrieved?.validationHistory.length).toBe(1);
+    expect(retrieved?.validationHistory[0].reviewer).toBe('quality-reviewer');
+    expect(retrieved?.validationHistory[0].status).toBe('needs_review');
+  });
+
+  it('declining confidence produces validation alert', () => {
+    const engine = new OrganizationalLearningEngine();
+    engine.registerLesson(makeArtifact({
+      id: 'val-decline', type: 'lesson', title: 'Validation Decline', version: 1,
+      validationStatus: 'current',
+    }));
+    engine.validate('val-decline', 'reviewer', 'declining', 'Newer evidence contradicts');
+    const alerts = engine.getValidationAlerts();
+    expect(alerts.length).toBeGreaterThanOrEqual(1);
+    const alert = alerts.find(a => a.artifactId === 'val-decline');
+    expect(alert).toBeDefined();
+    expect(alert!.alertType).toBe('confidence_declining');
+  });
+
+  it('multiple validations preserve full history', () => {
+    const engine = new OrganizationalLearningEngine();
+    engine.registerLesson(makeArtifact({
+      id: 'val-multi', type: 'lesson', title: 'Validation Multi', version: 1,
+    }));
+    engine.validate('val-multi', 'reviewer-a', 'needs_review', 'First review');
+    engine.validate('val-multi', 'reviewer-b', 'declining', 'Second review');
+    engine.validate('val-multi', 'reviewer-c', 'current', 'Third review');
+    const retrieved = engine.getArtifact('val-multi');
+    expect(retrieved?.validationHistory.length).toBe(3);
+  });
 });

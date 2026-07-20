@@ -117,9 +117,72 @@ export class OrganizationalLearningEngine {
     return promoted;
   }
 
-  validate(artifactId: string, reviewer: string, newStatus: ValidationStatus, rationale: string): void {}
+  validate(artifactId: string, reviewer: string, newStatus: ValidationStatus, rationale: string): void {
+    const versions = this.artifacts.get(artifactId);
+    if (!versions) return;
+    const latestIdx = versions.reduce((best, v, i) => v.version > versions[best].version ? i : best, 0);
+    const artifact = versions[latestIdx];
 
-  getValidationAlerts(): ValidationAlert[] { return []; }
+    const record: ValidationRecord = {
+      timestamp: Date.now(),
+      status: newStatus,
+      reviewer,
+      rationale,
+    };
+
+    versions[latestIdx] = {
+      ...artifact,
+      lastValidated: Date.now(),
+      validationStatus: newStatus,
+      validationHistory: [...artifact.validationHistory, record],
+      validationConfidence: newStatus === 'current'
+        ? Math.min(1, artifact.validationConfidence + 0.05)
+        : newStatus === 'declining'
+          ? Math.max(0, artifact.validationConfidence - 0.2)
+          : artifact.validationConfidence,
+    };
+  }
+
+  getValidationAlerts(): ValidationAlert[] {
+    const alerts: ValidationAlert[] = [];
+    for (const versions of this.artifacts.values()) {
+      const latest = versions.reduce((best, v) => v.version > best.version ? v : best);
+      if (latest.validationStatus === 'needs_review') {
+        alerts.push({
+          artifactId: latest.id,
+          artifactTitle: latest.title,
+          alertType: 'needs_review',
+          previousValidationStatus: 'current',
+          currentValidationStatus: 'needs_review',
+          lastValidated: latest.lastValidated,
+          rationale: `Artifact ${latest.id} requires validation review`,
+        });
+      }
+      if (latest.validationStatus === 'declining') {
+        alerts.push({
+          artifactId: latest.id,
+          artifactTitle: latest.title,
+          alertType: 'confidence_declining',
+          previousValidationStatus: 'current',
+          currentValidationStatus: 'declining',
+          lastValidated: latest.lastValidated,
+          rationale: `Confidence declining for ${latest.id}`,
+        });
+      }
+      if (latest.status === 'superseded') {
+        alerts.push({
+          artifactId: latest.id,
+          artifactTitle: latest.title,
+          alertType: 'superseded',
+          previousValidationStatus: latest.validationStatus,
+          currentValidationStatus: 'superseded',
+          lastValidated: latest.lastValidated,
+          rationale: `Superseded by ${latest.supersededBy || 'newer version'}`,
+        });
+      }
+    }
+    return alerts;
+  }
 
   buildLearningBriefing(): LearningBriefingSection {
     return { newLessons: [], emergingPatterns: [], promotionCandidates: [], recentlyApprovedStandards: [], governanceRefinements: [], validationAlerts: [], supersededStandards: [], executiveRecommendations: [] };
