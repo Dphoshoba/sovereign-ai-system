@@ -46,6 +46,24 @@ export interface ExecutiveSnapshot {
   crossOfficeDependencies: CrossOfficeDependency[];
 }
 
+// ── Milestone 3: Risk Intelligence ──
+
+export type Likelihood = 'low' | 'medium' | 'high' | 'very_high';
+export type OrgImpact = 'contained' | 'office' | 'cross_office' | 'enterprise';
+export type RiskTrend = 'improving' | 'stable' | 'worsening';
+
+export interface RiskIntelligence {
+  id: string;
+  source: EscalatedRisk;
+  likelihood: Likelihood;
+  organizationalImpact: OrgImpact;
+  trend: RiskTrend;
+  recommendedOwner: string;
+  recommendedAction: string;
+  confidence: number;
+  rationale: string[];
+}
+
 export interface KpiTrend {
   metric: string;
   direction: 'improving' | 'declining' | 'stable';
@@ -110,6 +128,7 @@ export interface ExecutiveBriefing {
   organizationHealth: { overall: OfficeHealth; offices: Record<string, OfficeHealth> };
   priorities: string[];
   rankedPriorities: RankedPriority[];
+  riskIntelligence: RiskIntelligence[];
   activeRisks: EscalatedRisk[];
   blockedItems: { office: string; blockers: string[] }[];
   pendingDecisions: PendingDecision[];

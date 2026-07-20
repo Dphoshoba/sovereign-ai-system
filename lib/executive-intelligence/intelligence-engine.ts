@@ -67,6 +67,7 @@ export class ExecutiveIntelligence {
     const risks = this.deriveRisks(snapshot);
     const recommendations = this.deriveRecommendations(snapshot);
     const rankedPriorities = this.analysis.rankPriorities(snapshot);
+    const riskIntelligence = this.analysis.enrichRisks(snapshot);
     const blockedItems = Object.entries(snapshot.offices)
       .filter(([_, s]) => s.blockers.length > 0)
       .map(([office, s]) => ({ office, blockers: s.blockers }));
@@ -85,6 +86,7 @@ export class ExecutiveIntelligence {
         ? rankedPriorities.map(p => `${p.rank}. ${p.title}`)
         : criticalRisks.map(r => r.description),
       rankedPriorities,
+      riskIntelligence,
       activeRisks: risks,
       blockedItems,
       pendingDecisions: snapshot.pendingDecisions,

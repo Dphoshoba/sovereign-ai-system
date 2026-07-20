@@ -1,6 +1,10 @@
 import {
   ExecutiveSnapshot,
   RankedPriority,
+  RiskIntelligence,
+  Likelihood,
+  OrgImpact,
+  RiskTrend,
   ScoringConfig,
   DEFAULT_SCORING_CONFIG,
   ScoreComponents,
@@ -10,8 +14,82 @@ import {
   OfficeStatus,
 } from './types';
 
+const OFFICE_OWNERS: Record<string, string> = {
+  'Executive Office': 'CEO',
+  'Research Office': 'Director of Research',
+  'Product Office': 'Director of Product',
+  'Operations Office': 'Director of Operations',
+  'Knowledge Office': 'Director of Knowledge',
+};
+
 export class ExecutiveAnalysisEngine {
   constructor(private readonly scoringConfig: ScoringConfig = DEFAULT_SCORING_CONFIG) {}
+
+  enrichRisks(snapshot: ExecutiveSnapshot, previousSnapshot?: ExecutiveSnapshot): RiskIntelligence[] {
+    return snapshot.escalatedRisks.map((risk, i) => {
+      const likelihood = this.deriveLikelihood(risk);
+      const orgImpact = this.deriveOrgImpact(risk, snapshot);
+      const trend = this.deriveRiskTrend(risk, snapshot, previousSnapshot);
+      const recommendedOwner = OFFICE_OWNERS[risk.office] || 'Unassigned';
+      const recommendedAction = this.deriveRiskAction(risk, likelihood, orgImpact);
+
+      const rationale: string[] = [
+        `Severity: ${risk.severity}`,
+        `Likelihood: ${likelihood}`,
+        `Impact: ${orgImpact}`,
+        `Trend: ${trend}`,
+        `Owner: ${recommendedOwner}`,
+      ];
+
+      return {
+        id: `ri-${i + 1}`,
+        source: risk,
+        likelihood,
+        organizationalImpact: orgImpact,
+        trend,
+        recommendedOwner,
+        recommendedAction,
+        confidence: likelihood === 'very_high' ? 0.95 : likelihood === 'high' ? 0.85 : 0.7,
+        rationale,
+      };
+    });
+  }
+
+  private deriveLikelihood(risk: EscalatedRisk): Likelihood {
+    const likelihoodMap: Record<string, Likelihood> = {
+      critical: 'very_high',
+      high: 'high',
+      medium: 'medium',
+      low: 'low',
+    };
+    return likelihoodMap[risk.severity] || 'medium';
+  }
+
+  private deriveOrgImpact(risk: EscalatedRisk, snapshot: ExecutiveSnapshot): OrgImpact {
+    const affected = this.findAffectedOffices(risk.description, snapshot)
+      .filter(o => o !== risk.office && o !== 'Unknown');
+    if (affected.length >= 3) return 'enterprise';
+    if (affected.length >= 2) return 'cross_office';
+    if (affected.length === 1) return 'cross_office';
+    return 'office';
+  }
+
+  private deriveRiskTrend(risk: EscalatedRisk, snapshot: ExecutiveSnapshot, previous?: ExecutiveSnapshot): RiskTrend {
+    if (!previous) return 'stable';
+    const prevRisk = previous.escalatedRisks.find(r => r.id === risk.id);
+    if (!prevRisk) return 'worsening';
+    return 'stable';
+  }
+
+  private deriveRiskAction(risk: EscalatedRisk, likelihood: Likelihood, impact: OrgImpact): string {
+    if (likelihood === 'very_high' || impact === 'enterprise') {
+      return 'Escalate immediately to executive leadership';
+    }
+    if (likelihood === 'high' || impact === 'cross_office') {
+      return 'Schedule cross-office resolution within 24 hours';
+    }
+    return 'Assign to office lead for resolution';
+  }
 
   rankPriorities(snapshot: ExecutiveSnapshot): RankedPriority[] {
     const candidates: Array<{
@@ -266,9 +344,11 @@ export class ExecutiveAnalysisEngine {
   private findAffectedOffices(text: string, snapshot: ExecutiveSnapshot): string[] {
     const offices: string[] = [];
     const officeNames = Object.keys(snapshot.offices);
+    const lowerText = text.toLowerCase();
     for (const name of officeNames) {
       const shortName = name.replace(' Office', '').toLowerCase();
-      if (text.toLowerCase().includes(shortName)) {
+      const regex = new RegExp(`\\b${shortName}\\b`, 'i');
+      if (regex.test(text)) {
         offices.push(name);
       }
     }
