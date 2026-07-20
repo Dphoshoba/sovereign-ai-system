@@ -233,14 +233,51 @@ export class WorkforcePlatformImpl implements WorkforcePlatform {
     this.policies.push(policy);
   }
 
-  evaluatePolicy(scope: WorkforcePolicy['scope'], _context: unknown): WorkforcePolicyEffect {
+  evaluatePolicy(scope: WorkforcePolicy['scope'], context: Record<string, unknown>): WorkforcePolicyEffect {
     const matched = this.policies.filter(p => p.scope === scope);
     if (matched.length === 0) return 'allow';
+    const ctx = context || {};
+
     for (const p of matched) {
-      if (p.effect === 'deny') return 'deny';
-      if (p.effect === 'require-approval') return 'require-approval';
+      if (!p.condition) {
+        if (p.effect === 'deny') return 'deny';
+        if (p.effect === 'require-approval') return 'require-approval';
+        continue;
+      }
+      if (this.matchesCondition(p.condition, ctx)) {
+        if (p.effect === 'deny') return 'deny';
+        if (p.effect === 'require-approval') return 'require-approval';
+      }
     }
     return 'allow';
+  }
+
+  private matchesCondition(condition: string, ctx: Record<string, unknown>): boolean {
+    // Check actionType
+    const actionType = ctx.actionType as string | undefined;
+    if (actionType && condition.includes(`actionType == '${actionType}'`)) {
+      // Continue checking remaining conditions
+    } else if (actionType && condition.includes('actionType')) {
+      return false; // condition references actionType but doesn't match
+    }
+
+    // Check agentId.startsWith
+    const agentId = ctx.agentId as string | undefined;
+    if (agentId && condition.includes('agentId.startsWith')) {
+      const match = condition.match(/agentId\.startsWith\('([^']+)'\)/);
+      if (match && !agentId.startsWith(match[1])) return false;
+    } else if (agentId && condition.includes('agentId') && !condition.includes('agentId.startsWith')) {
+      return false; // condition references agentId but pattern not matched
+    }
+
+    // Check defaultMode != 
+    const defaultMode = ctx.defaultMode as string | undefined;
+    if (defaultMode && condition.includes("defaultMode != '")) {
+      const match = condition.match(/defaultMode != '([^']+)'/);
+      if (match && defaultMode === match[1]) return false; // mode matches the excluded one
+    }
+
+    return true;
   }
 
   listPolicies(scope?: WorkforcePolicy['scope']): readonly WorkforcePolicy[] {
