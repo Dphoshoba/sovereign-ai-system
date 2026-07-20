@@ -10,45 +10,41 @@ Canonical Vercel production URL: **https://sovereign-ai-executive.vercel.app**
 
 Set `NEXT_PUBLIC_APP_URL` and `NEXT_PUBLIC_BASE_URL` to this origin in the Vercel project. Local dev keeps `http://localhost:3000`. See `src/lib/site-config.ts` for the shared constant.
 
-## Programme State
+## Enterprise Architecture — Certified Baseline
 
-### Era 1-4: Complete
-- **Era 1 (Platform):** Gamma OS built and stabilized
-- **Era 2 (Organization):** 5-office enterprise (Executive, Research, Product, Operations, Knowledge) deployed
-- **Era 3 (Operation):** MenWise360 operational validation certified
-- **Era 4 (Portfolio):** Outcome 2 certified — 5 products deployed without platform modification:
-  - MenWise360 (health publishing) — ✅ Certified
-  - Bible Quest (educational content) — ✅ Certified
-  - Creator Automation (workflow orchestration) — ✅ Certified
-  - VisionCraft Studio (creative production) — ✅ Certified
-  - InspireVoice (multimedia generation) — ✅ Certified
-- **Platform modifications across all 5 product deployments:** 0
-- **Test count:** 297 tests passing across 19 test files, zero platform modifications
+**Status:** CERTIFIED BASELINE  
+**Record:** EA-NEXT-CERT-2026-001  
+**Tests:** 297 passing across 19 test files  
+**Platform modifications across all eras and products:** 0
 
-### Era 5: Enterprise Scale — Certified (ERA5-CERT-2026-001)
-Architectural principle: *Optimize the enterprise through portfolio insights before optimizing individual products.*
+### Programme Summary
 
-**Phase 1 — Portfolio Intelligence:** ✅ Certified — PortfolioEngine wraps EIS, portfolio health/briefing/risks/dependencies/initiatives/KPIs, 122 tests across 13 files, zero platform changes
+```
+Era 1  ✓ Platform               Gamma OS
+Era 2  ✓ Organization           5-Office Enterprise (Executive, Research, Product, Operations, Knowledge)
+Era 3  ✓ Operation              MenWise360 operational validation
+Era 4  ✓ Portfolio              5 Products (MenWise360, Bible Quest, Creator Automation, VisionCraft Studio, InspireVoice)
+Era 5  ✓ Enterprise Scale       6 Phases: Observe→Measure→Advise→Coordinate→Learn→Plan
+Era 6  ✓ Executive Intelligence Executive Knowledge Graph, Dashboard, Decision Journal, Governance Analytics, Forecast Engine, Executive Briefing
+Era 7  ✓ Autonomous Enterprise  Policy Engine, Approval Engine, Execution Planner, Execution Package, Audit Engine, Simulation Engine, Operational Connectors
+```
 
-**Phase 2 — Shared KPIs & Enterprise Metrics:** ✅ Certified — KPI Definition Registry with Definition, Measurement, Target, Trend, Confidence — deterministic trend engine, enterprise metric queries, metrics section in PortfolioBriefing, 140 tests across 14 files, zero platform changes
+### Architectural Principles
 
-**Phase 3 — Resource Allocation:** ✅ Certified — Capacity & Demand model with Capacity/Demand/Allocation/Constraint registries, utilization analysis, constraint-first advisory recommendations, PortfolioBriefing integration, 156 tests across 15 files, zero platform changes
-**Phase 4 — Cross-Product Dependencies:** ✅ Certified — Dependency graph (directed, transitive, cycles, blockers), conflict registry, synergy registry, optimization opportunities, CoordinationBriefingSection in PortfolioBriefing, 175 tests across 16 files, zero platform changes
-**Phase 5 — Organizational Learning:** ✅ Certified — Learning Registry (7 artifact types), Pattern Engine, branching promotion workflow, Validation Registry, LearningBriefingSection in PortfolioBriefing, 196 tests across 17 files, zero platform changes
+These principles are part of the architecture itself, not merely implementation guidance:
 
-**Phase 6 — Strategic Planning:** ✅ Certified — Assumption Registry, Scenario Registry, deterministic evaluator with configurable profiles, trade-off engine (strengths/weaknesses/deltas), roadmap builder, ExecutivePlanningBrief in PortfolioBriefing, 217 tests across 18 files, zero platform changes
+1. **Composition over modification** — New capabilities layer on certified foundations; never replace existing behaviour.
+2. **Deterministic behaviour** — Identical evidence, assumptions, and evaluation profiles produce identical outcomes.
+3. **Explainability** — Every recommendation and autonomous action is supported by evidence, rationale, confidence, and traceability.
+4. **Governance before automation** — Policy, approval, and audit precede execution.
+5. **Executive authority** — The platform informs, evaluates, and plans; decision authority remains with accountable leaders.
 
-### Enterprise Architecture v1.0 — Certified Baseline
+### Governance Policy
 
-Eras 1-5 constitute the immutable v1.0 architecture. All future development composes above, never modifies.
+- The certified baseline is **read-only** except for defect corrections.
+- New capabilities require separately scoped programmes with their own architecture decisions, implementation plans, test suites, and certification gates.
+- Changes that would alter behaviour of certified eras require explicit architecture review before implementation.
 
-### Era 6 — Executive Intelligence
+### Operational Principle
 
-**Status:** ✅ Certified — Executive Knowledge Graph, Dashboard, Decision Journal, Governance Analytics, Forecast Engine, Executive Briefing. Composes above v1.0.
-
-### Era 7 — Autonomous Enterprise
-
-**Status:** ✅ Certified — Policy Engine, Approval Engine, Execution Planner, Execution Package, Audit Engine, Simulation Engine, Operational Connectors. Composes above Era 6. Policy-governed, never unrestricted.
-
-### Key Architectural Property
-Growth through composition rather than expansion — new products extend the enterprise through configuration (deployment profiles, workflow definitions, governance overlays) rather than structural platform changes.
+*Capability through composition. Intelligence informs authority. Authority remains accountable.*
