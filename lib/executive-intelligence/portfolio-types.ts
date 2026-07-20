@@ -135,6 +135,43 @@ export interface PortfolioBriefing {
     critical: number;
     unavailable: number;
   }[];
+  metrics: {
+    enterpriseSummary: {
+      totalDefinitions: number;
+      totalMeasurements: number;
+      metricsWithData: number;
+      metricsWithoutData: number;
+      averageConfidence: number;
+    };
+    categoryBreakdown: {
+      category: KpiCategory;
+      metricCount: number;
+      averageConfidence: number;
+      improving: number;
+      declining: number;
+      stable: number;
+      insufficientData: number;
+    }[];
+    productComparison: {
+      productId: string;
+      productName: string;
+      metricsReported: number;
+      metricsTargetMet: number;
+      metricsAttention: number;
+      metricsCritical: number;
+      averageConfidence: number;
+    }[];
+    metricsRequiringAttention: {
+      definitionId: string;
+      name: string;
+      productId: string;
+      value: number | null;
+      target: number | null;
+      trend: string;
+      confidence: number;
+      rationale: string[];
+    }[];
+  };
   metadata: {
     generatedAt: number;
     productCount: number;

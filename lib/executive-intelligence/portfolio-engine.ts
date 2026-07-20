@@ -6,6 +6,8 @@ import {
   PortfolioRisk, PortfolioDependency, PortfolioInitiative,
   ProductSummary, Scope, KpiCategory, KpiStatus,
 } from './portfolio-types';
+import { KpiDefinition, KpiMeasurement } from './kpi-registry-types';
+import { KpiTrendEngine } from './kpi-trend-engine';
 import { OfficeHealth } from './types';
 
 export type EnterpriseRisksFromEis = PortfolioRisk[];
@@ -21,6 +23,10 @@ export class PortfolioEngine {
   private initiatives: PortfolioInitiative[] = [];
   private dependencies: PortfolioDependency[] = [];
   private productRisks: PortfolioRisk[] = [];
+
+  private kpiDefinitions: Map<string, KpiDefinition> = new Map();
+  private kpiMeasurements: KpiMeasurement[] = [];
+  private readonly trendEngine = new KpiTrendEngine();
 
   constructor(private readonly eis: ExecutiveIntelligence) {}
 
@@ -64,6 +70,89 @@ export class PortfolioEngine {
   getProductCount(): number {
     return this.productProfiles.size;
   }
+
+  // ── KPI Definition Registry (Milestone 1) ──
+
+  registerKpiDefinition(definition: KpiDefinition): void {
+    this.kpiDefinitions.set(definition.id, definition);
+  }
+
+  registerKpiDefinitions(definitions: KpiDefinition[]): void {
+    for (const d of definitions) {
+      this.registerKpiDefinition(d);
+    }
+  }
+
+  getKpiDefinition(id: string): KpiDefinition | undefined {
+    return this.kpiDefinitions.get(id);
+  }
+
+  getKpiDefinitions(): KpiDefinition[] {
+    return Array.from(this.kpiDefinitions.values());
+  }
+
+  // ── KPI Measurement Model (Milestone 2) ──
+
+  submitKpiMeasurement(measurement: KpiMeasurement): void {
+    this.kpiMeasurements.push(measurement);
+  }
+
+  submitKpiMeasurements(measurements: KpiMeasurement[]): void {
+    for (const m of measurements) {
+      this.submitKpiMeasurement(m);
+    }
+  }
+
+  // ── Enterprise Metric Queries (Milestone 4) ──
+
+  getEnterpriseMetrics(): { definition: KpiDefinition; measurements: KpiMeasurement[]; trend: ReturnType<KpiTrendEngine['calculateTrend']> }[] {
+    const results: { definition: KpiDefinition; measurements: KpiMeasurement[]; trend: ReturnType<KpiTrendEngine['calculateTrend']> }[] = [];
+    for (const def of this.kpiDefinitions.values()) {
+      for (const productId of this.getProductIdsForDefinition(def)) {
+        const measurements = this.kpiMeasurements.filter(
+          m => m.definitionId === def.id && m.productId === productId
+        );
+        if (measurements.length > 0) {
+          const trend = this.trendEngine.calculateTrend(def, measurements);
+          results.push({ definition: def, measurements, trend });
+        }
+      }
+    }
+    return results;
+  }
+
+  getMetricsByProduct(productId: string): { definition: KpiDefinition; measurements: KpiMeasurement[] }[] {
+    const results: { definition: KpiDefinition; measurements: KpiMeasurement[] }[] = [];
+    for (const def of this.kpiDefinitions.values()) {
+      const measurements = this.kpiMeasurements.filter(
+        m => m.definitionId === def.id && m.productId === productId
+      );
+      if (measurements.length > 0) {
+        results.push({ definition: def, measurements });
+      }
+    }
+    return results;
+  }
+
+  getMetricsByOffice(officeName: string): KpiDefinition[] {
+    return Array.from(this.kpiDefinitions.values()).filter(d => d.ownerOffice === officeName);
+  }
+
+  getMetricsByCategory(category: KpiCategory): KpiDefinition[] {
+    return Array.from(this.kpiDefinitions.values()).filter(d => d.category === category);
+  }
+
+  getMetricHistory(definitionId: string, productId: string): KpiMeasurement[] {
+    return [...this.kpiMeasurements]
+      .filter(m => m.definitionId === definitionId && m.productId === productId)
+      .sort((a, b) => a.measuredAt - b.measuredAt);
+  }
+
+  getMetricDefinitions(): KpiDefinition[] {
+    return this.getKpiDefinitions();
+  }
+
+  // ── Existing public API ──
 
   refreshPortfolioBriefing(): PortfolioBriefing {
     const briefing = this.eis.refreshAndBrief();
@@ -114,6 +203,8 @@ export class PortfolioEngine {
     return this.refreshPortfolioBriefing();
   }
 
+  // ── Private methods ──
+
   private buildSnapshot(briefing: import('./types').ExecutiveBriefing): PortfolioSnapshot {
     return Object.freeze({
       generatedAt: Date.now(),
@@ -136,6 +227,7 @@ export class PortfolioEngine {
     const unattributed = this.extractUnattributedItems(snapshot);
     const allKpis = this.computeAllKpis(snapshot);
     const kpiSummary = this.summarizeKpis(allKpis);
+    const metricsSection = this.buildMetricsSection(productSummaries);
 
     const strategicPriorities = [...snapshot.initiatives];
     const dependencies = [...snapshot.dependencies];
@@ -157,6 +249,7 @@ export class PortfolioEngine {
       strategicPriorities,
       recommendedActions: actions,
       kpiSummary,
+      metrics: metricsSection,
       metadata: {
         generatedAt: Date.now(),
         productCount: this.productProfiles.size,
@@ -166,6 +259,128 @@ export class PortfolioEngine {
         kpisWithEvidence,
       },
     };
+  }
+
+  private buildMetricsSection(summaries: ProductSummary[]): PortfolioBriefing['metrics'] {
+    const definitions = this.getKpiDefinitions();
+    const allMeasurements = this.kpiMeasurements;
+    const trends = this.computeAllTrends();
+
+    const definitionsWithProducts = definitions.filter(d =>
+      d.applicableProducts.includes('*') || d.applicableProducts.some(p =>
+        [...this.productProfiles.keys()].includes(p)
+      )
+    );
+
+    const productsWithData = new Set(allMeasurements.map(m => m.productId));
+    const metricsWithData = definitionsWithProducts.filter(d =>
+      allMeasurements.some(m => m.definitionId === d.id)
+    ).length;
+    const metricsWithoutData = definitionsWithProducts.length - metricsWithData;
+
+    const averageConfidence = allMeasurements.length > 0
+      ? Math.round(allMeasurements.reduce((a, m) => a + m.confidence, 0) / allMeasurements.length * 100) / 100
+      : 0;
+
+    const categories = [...new Set(definitionsWithProducts.map(d => d.category))] as KpiCategory[];
+    const categoryBreakdown = categories.map(category => {
+      const catDefs = definitionsWithProducts.filter(d => d.category === category);
+      const catTrends = Array.from(trends.values()).filter(t =>
+        catDefs.some(d => d.id === t.definitionId)
+      );
+      return {
+        category,
+        metricCount: catDefs.length,
+        averageConfidence: catTrends.length > 0
+          ? Math.round(catTrends.reduce((a, t) => a + t.confidence, 0) / catTrends.length * 100) / 100
+          : 0,
+        improving: catTrends.filter(t => t.direction === 'improving').length,
+        declining: catTrends.filter(t => t.direction === 'declining').length,
+        stable: catTrends.filter(t => t.direction === 'stable').length,
+        insufficientData: catTrends.filter(t => t.direction === 'insufficient_data').length,
+      };
+    });
+
+    const productComparison = summaries.map(s => {
+      const productDefs = definitionsWithProducts.filter(d =>
+        d.applicableProducts.includes('*') || d.applicableProducts.includes(s.productId)
+      );
+      const productTrends = Array.from(trends.values()).filter(t => t.productId === s.productId);
+      const productMeasurements = allMeasurements.filter(m => m.productId === s.productId);
+      const metricsTargetMet = productTrends.filter(t => {
+        if (t.currentValue === null) return false;
+        const def = definitions.find(d => d.id === t.definitionId);
+        if (!def) return false;
+        const target = def.targetValue;
+        if (target === undefined) return false;
+        return def.targetType === 'higher_is_better' ? t.currentValue >= target : t.currentValue <= target;
+      }).length;
+      return {
+        productId: s.productId,
+        productName: s.productName,
+        metricsReported: productDefs.length,
+        metricsTargetMet,
+        metricsAttention: productTrends.filter(t => t.direction === 'declining').length,
+        metricsCritical: productTrends.filter(t => t.direction === 'declining' && t.currentValue !== null && t.previousValue !== null
+          && Math.abs((t.currentValue - t.previousValue) / (t.previousValue || 1)) > 0.25).length,
+        averageConfidence: productMeasurements.length > 0
+          ? Math.round(productMeasurements.reduce((a, m) => a + m.confidence, 0) / productMeasurements.length * 100) / 100
+          : 0,
+      };
+    });
+
+    const metricsRequiringAttention = Array.from(trends.values())
+      .filter(t => t.direction === 'declining')
+      .map(t => {
+        const def = definitions.find(d => d.id === t.definitionId);
+        return {
+          definitionId: t.definitionId,
+          name: def?.name ?? t.definitionId,
+          productId: t.productId,
+          value: t.currentValue,
+          target: def?.targetValue ?? null,
+          trend: t.direction,
+          confidence: t.confidence,
+          rationale: t.rationale,
+        };
+      });
+
+    return {
+      enterpriseSummary: {
+        totalDefinitions: definitionsWithProducts.length,
+        totalMeasurements: allMeasurements.length,
+        metricsWithData,
+        metricsWithoutData,
+        averageConfidence,
+      },
+      categoryBreakdown,
+      productComparison,
+      metricsRequiringAttention,
+    };
+  }
+
+  private computeAllTrends(): Map<string, ReturnType<KpiTrendEngine['calculateTrend']>> {
+    const trends = new Map<string, ReturnType<KpiTrendEngine['calculateTrend']>>();
+    for (const def of this.kpiDefinitions.values()) {
+      const products = this.getProductIdsForDefinition(def);
+      for (const productId of products) {
+        const measurements = this.kpiMeasurements.filter(
+          m => m.definitionId === def.id && m.productId === productId
+        );
+        if (measurements.length > 0) {
+          const trend = this.trendEngine.calculateTrend(def, measurements);
+          trends.set(`${def.id}:${productId}`, trend);
+        }
+      }
+    }
+    return trends;
+  }
+
+  private getProductIdsForDefinition(def: KpiDefinition): string[] {
+    if (def.applicableProducts.includes('*')) {
+      return Array.from(this.productProfiles.keys());
+    }
+    return def.applicableProducts.filter(p => this.productProfiles.has(p));
   }
 
   private computePortfolioHealth(snapshot: PortfolioSnapshot): PortfolioHealth {
