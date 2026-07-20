@@ -322,3 +322,208 @@ export const VISIONCRAFT_STUDIO_PROFILE: ProductDeploymentProfile = {
     'Success measured by campaign completion rate and brand compliance rather than content published',
   ],
 };
+
+export const INSPIREVOICE_PROFILE: ProductDeploymentProfile = {
+  productId: 'inspirevoice',
+  productName: 'InspireVoice',
+  version: '1.0.0',
+  mission: 'Enable AI-powered multimedia production through governed media workflows — from script to published video',
+  targetUsers: ['Content producers', 'Educational content creators', 'Media teams', 'Narration and voice-over producers', 'Marketing video teams'],
+  keyWorkflows: [
+    'AI-narrated educational video production',
+    'Script generation and voice synthesis',
+    'Visual asset coordination and media assembly',
+    'Multi-format publishing and distribution',
+  ],
+  lifecycleStages: [
+    'Executive objective and release approval',
+    'Research validation and source verification',
+    'Script planning and feature definition',
+    'Voice generation and audio production',
+    'Visual asset production and coordination',
+    'Media assembly and video rendering',
+    'Quality review and content accuracy gate',
+    'Multi-format publishing and distribution',
+    'Knowledge capture of prompt patterns and playbooks',
+    'Executive review of media production health',
+  ],
+  governanceRequirements: [
+    'Content accuracy and source validation',
+    'Voice synthesis quality assurance',
+    'Audio production quality standard',
+    'Visual asset brand compliance',
+    'Multi-format publishing approval',
+  ],
+  operationalCadence: 'Media production cycles with daily rendering pipelines, quality reviews per production run, and weekly portfolio retrospectives',
+  successMetrics: [
+    'Educational video published on schedule',
+    'Content accuracy verified through source validation',
+    'Voice synthesis quality meets production standard',
+    'Assets catalogued and patterns captured',
+    'EIS accurately represents multimedia production state',
+  ],
+  officeMappings: [
+    {
+      office: 'Executive Office',
+      responsibilities: [
+        'Set product priorities and approve releases',
+        'Ensure portfolio alignment across multimedia initiatives',
+        'Review media production health via EIS',
+        'Approve strategic investments in media capabilities',
+      ],
+    },
+    {
+      office: 'Research Office',
+      responsibilities: [
+        'Validate content accuracy and source materials',
+        'Conduct audience research for media targeting',
+        'Assess educational effectiveness of published media',
+        'Evaluate voice synthesis quality against standards',
+      ],
+    },
+    {
+      office: 'Product Office',
+      responsibilities: [
+        'Plan script production roadmap and feature definition',
+        'Define acceptance criteria for media deliverables',
+        'Manage dependencies between script, voice, and visual tracks',
+        'Coordinate release planning across publishing channels',
+      ],
+    },
+    {
+      office: 'Operations Office',
+      responsibilities: [
+        'Execute rendering, encoding, and multi-format publishing',
+        'Monitor media production pipelines and handle incidents',
+        'Manage quality review cycles and production scheduling',
+        'Coordinate voice synthesis and visual asset rendering',
+      ],
+    },
+    {
+      office: 'Knowledge Office',
+      responsibilities: [
+        'Capture prompt patterns and reusable media workflows',
+        'Document production playbooks and encoding profiles',
+        'Archive published media and asset libraries',
+        'Record quality standards and governance artifacts',
+      ],
+    },
+  ],
+  workflowStageMappings: [
+    { stage: 'Executive objective and release approval', responsibleOffice: 'Executive Office', description: 'Executive sets product priorities, approves media releases, and ensures portfolio alignment' },
+    { stage: 'Research validation and source verification', responsibleOffice: 'Research Office', description: 'Research validates content accuracy, conducts audience research, and assesses educational effectiveness' },
+    { stage: 'Script planning and feature definition', responsibleOffice: 'Product Office', description: 'Product plans script production roadmap, defines acceptance criteria, and manages cross-track dependencies' },
+    { stage: 'Voice generation and audio production', responsibleOffice: 'Operations Office', description: 'Operations executes voice synthesis, manages audio production pipelines, and coordinates quality review' },
+    { stage: 'Visual asset production and coordination', responsibleOffice: 'Operations Office', description: 'Operations produces visual assets, coordinates rendering, and manages media assembly' },
+    { stage: 'Media assembly and video rendering', responsibleOffice: 'Operations Office', description: 'Operations assembles final media, renders multi-format outputs, and publishes to distribution channels' },
+    { stage: 'Quality review and content accuracy gate', responsibleOffice: 'Operations Office', description: 'Operations manages quality review cycles including content accuracy verification and media quality standards' },
+    { stage: 'Knowledge capture and playbook documentation', responsibleOffice: 'Knowledge Office', description: 'Knowledge captures prompt patterns, production playbooks, encoding profiles, and archives published media' },
+    { stage: 'Executive review and portfolio optimization', responsibleOffice: 'Executive Office', description: 'EIS generates briefing on media production health, identifies bottlenecks, and recommends improvements' },
+  ],
+  adaptionsFromReference: [
+    'Product is multimedia production — lifecycle spans script through publishing combining educational, orchestration, and creative dimensions',
+    'Governance addresses content accuracy, voice quality, visual brand compliance, and publishing approval — the broadest governance surface in the portfolio',
+    'Operations owns the most complex pipeline: voice synthesis, visual rendering, media assembly, and multi-format encoding',
+    'Knowledge captures prompt patterns and production playbooks spanning script, voice, visual, and media disciplines',
+    'Success measured by publication completion, content accuracy verification, and quality standard attainment rather than any single metric',
+    'InspireVoice combines challenges validated separately in Bible Quest (educational content), Creator Automation (workflow orchestration), and VisionCraft Studio (creative production) into a single multimedia pipeline',
+  ],
+};
+
+export const MENWISE360_PROFILE: ProductDeploymentProfile = {
+  productId: 'menwise360',
+  productName: 'MenWise360',
+  version: '1.0.0',
+  mission: 'Deliver evidence-based men\'s wellness and coaching content through governed content operations',
+  targetUsers: ['Individual men seeking wellness content', 'Health-conscious adults', 'Coaching programme participants'],
+  keyWorkflows: [
+    'Wellness article research and publication',
+    'Coaching content development and deployment',
+    'Health research integration and evidence synthesis',
+    'User onboarding flow management',
+  ],
+  lifecycleStages: [
+    'Executive objective and content prioritization',
+    'Research evidence gathering and validation',
+    'Content planning and roadmap definition',
+    'Content creation and operational publication',
+    'Knowledge capture and lesson documentation',
+    'Executive review and organizational health assessment',
+  ],
+  governanceRequirements: [
+    'Health content accuracy and source validation',
+    'Wellness claim evidence standard',
+    'Content freshness and review schedule',
+    'User privacy and data handling compliance',
+  ],
+  operationalCadence: 'Weekly content publication cycle with monthly wellness topic reviews and quarterly programme retrospectives',
+  successMetrics: [
+    'Article published on schedule',
+    'Research sources cited and confidence scored',
+    'Governance approval obtained',
+    'Knowledge captured for reuse',
+    'EIS reflects accurate organizational state',
+  ],
+  officeMappings: [
+    {
+      office: 'Executive Office',
+      responsibilities: [
+        'Set product vision and strategic wellness priorities',
+        'Approve major content initiatives and campaigns',
+        'Review organizational health via EIS',
+        'Allocate cross-product resources',
+      ],
+    },
+    {
+      office: 'Research Office',
+      responsibilities: [
+        'Validate health and wellness evidence sources',
+        'Identify relevant research for content development',
+        'Assess content confidence and source quality',
+        'Monitor emerging wellness research for applicability',
+      ],
+    },
+    {
+      office: 'Product Office',
+      responsibilities: [
+        'Maintain content roadmap and publication calendar',
+        'Plan wellness topic releases and series',
+        'Manage dependencies between content items',
+        'Define acceptance criteria for articles and programmes',
+      ],
+    },
+    {
+      office: 'Operations Office',
+      responsibilities: [
+        'Publish content to MenWise360 platform',
+        'Monitor deployment health and content delivery',
+        'Handle content-related incidents and updates',
+        'Execute publication and distribution schedule',
+      ],
+    },
+    {
+      office: 'Knowledge Office',
+      responsibilities: [
+        'Capture content decisions and editorial outcomes',
+        'Document reusable content patterns and templates',
+        'Track content effectiveness and engagement data',
+        'Archive published content for reference and reuse',
+      ],
+    },
+  ],
+  workflowStageMappings: [
+    { stage: 'Executive objective and content prioritization', responsibleOffice: 'Executive Office', description: 'Executive defines wellness topic priority based on strategic goals and audience needs' },
+    { stage: 'Research evidence gathering and validation', responsibleOffice: 'Research Office', description: 'Research gathers evidence, validates health sources, and assesses confidence for content development' },
+    { stage: 'Content planning and roadmap definition', responsibleOffice: 'Product Office', description: 'Product maps content onto the publication roadmap, defines dependencies and acceptance criteria' },
+    { stage: 'Content creation and operational publication', responsibleOffice: 'Operations Office', description: 'Operations executes content creation, editorial review, and platform publication' },
+    { stage: 'Knowledge capture and lesson documentation', responsibleOffice: 'Knowledge Office', description: 'Knowledge documents editorial decisions, captures reusable patterns, and archives published content' },
+    { stage: 'Executive review and organizational health assessment', responsibleOffice: 'Executive Office', description: 'EIS generates briefing, delta, and recommendations for leadership on content health' },
+  ],
+  adaptionsFromReference: [
+    'Product is individual-focused wellness content — differs from Bible Quest\'s group study and educational context',
+    'Governance requires health content accuracy and wellness claim validation rather than biblical accuracy or denominational sensitivity',
+    'Lifecycle emphasizes evidence-based content publication over curriculum planning or multimedia production',
+    'Operations focus is on content publication cycle rather than workflow automation execution or rendering pipelines',
+    'Success measured by publication timeliness, research confidence scoring, and governance compliance rather than campaign completion',
+  ],
+};
