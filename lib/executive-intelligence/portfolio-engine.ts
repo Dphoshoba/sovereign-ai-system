@@ -23,7 +23,11 @@ import { OrganizationalLearningEngine } from './learning-engine';
 import { LearningArtifact } from './learning-types';
 import { StrategicPlanningEngine } from './strategy-engine';
 import type { StrategicAssumption, StrategicScenario } from './strategy-types';
+import { ExecutiveIntelligenceEngine } from './executive-intelligence-engine';
+import type { ExecutiveDecision, KpiSnapshot } from './executive-intelligence-types';
 import { OfficeHealth } from './types';
+import { AutonomousEnterpriseEngine } from './autonomous-engine';
+import type { PolicyRule, ApprovalRequest, ExecutionStep } from './autonomous-types';
 
 export type EnterpriseRisksFromEis = PortfolioRisk[];
 export type UnattributedItems = string[];
@@ -46,6 +50,8 @@ export class PortfolioEngine {
   private readonly crossProductEngine = new CrossProductEngine();
   private readonly learningEngine = new OrganizationalLearningEngine();
   private readonly planningEngine = new StrategicPlanningEngine();
+  private readonly executiveIntelEngine = new ExecutiveIntelligenceEngine();
+  private readonly autonomousEngine = new AutonomousEnterpriseEngine();
 
   constructor(private readonly eis: ExecutiveIntelligence) {
     this.crossProductEngine.registerProducts(Array.from(this.productProfiles.values()));
@@ -259,6 +265,48 @@ export class PortfolioEngine {
     this.learningEngine.registerLessons(artifacts);
   }
 
+  // ── Executive Intelligence (Era 6) ──
+
+  registerExecutiveDecision(decision: ExecutiveDecision): void {
+    this.executiveIntelEngine.registerDecision(decision);
+  }
+
+  captureKpiSnapshot(snapshot: KpiSnapshot): void {
+    this.executiveIntelEngine.captureKpiSnapshot(snapshot);
+  }
+
+  registerPolicy(policy: PolicyRule): void {
+    this.autonomousEngine.registerPolicy(policy);
+  }
+
+  submitApprovalRequest(request: ApprovalRequest): void {
+    this.autonomousEngine.submitApprovalRequest(request);
+  }
+
+  createExecutionPlan(title: string, steps: ExecutionStep[], policyId: string) {
+    return this.autonomousEngine.createExecutionPlan(title, steps, policyId);
+  }
+
+  finalizePlan(planId: string) {
+    return this.autonomousEngine.finalizePlan(planId);
+  }
+
+  generateExecutionPackage(planId: string, policyId: string, approvalId: string) {
+    return this.autonomousEngine.generateExecutionPackage(planId, policyId, approvalId);
+  }
+
+  approveRequest(id: string, approver: string) {
+    return this.autonomousEngine.approve(id, approver);
+  }
+
+  rejectRequest(id: string, approver: string, reason: string) {
+    return this.autonomousEngine.reject(id, approver, reason);
+  }
+
+  simulatePlanExecution(planId: string) {
+    return this.autonomousEngine.simulateExecution(planId);
+  }
+
   // ── Enterprise Metric Queries (Milestone 4) ──
 
   getEnterpriseMetrics(): { definition: KpiDefinition; measurements: KpiMeasurement[]; trend: ReturnType<KpiTrendEngine['calculateTrend']> }[] {
@@ -388,6 +436,7 @@ export class PortfolioEngine {
     const coordinationSection = this.crossProductEngine.buildCoordinationBriefing();
     const learningSection = this.learningEngine.buildLearningBriefing();
     const strategicSection = this.planningEngine.buildExecutivePlanningBrief();
+    const execIntelSection = this.executiveIntelEngine.buildExecutiveBriefing();
 
     const strategicPriorities = [...snapshot.initiatives];
     const dependencies = [...snapshot.dependencies];
@@ -414,6 +463,8 @@ export class PortfolioEngine {
       coordination: coordinationSection,
       learning: learningSection,
       strategicPlanning: strategicSection,
+      executiveIntelligence: execIntelSection,
+      autonomousEnterprise: this.autonomousEngine.buildAutonomousBriefing(),
       metadata: {
         generatedAt: Date.now(),
         productCount: this.productProfiles.size,

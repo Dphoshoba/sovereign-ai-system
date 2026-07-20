@@ -3,6 +3,8 @@ import { AllocationBriefingSection } from './resource-allocation-types';
 import { CoordinationBriefingSection } from './cross-product-types';
 import { LearningBriefingSection } from './learning-types';
 import { ExecutivePlanningBrief } from './strategy-types';
+import { ExecutiveIntelligenceBriefing } from './executive-intelligence-types';
+import { AutonomousEnterpriseBriefing } from './autonomous-types';
 
 export type KpiCategory = 'delivery' | 'operations' | 'governance' | 'quality' | 'knowledge' | 'executive';
 export type KpiStatus = 'healthy' | 'attention' | 'critical' | 'unavailable';
@@ -143,6 +145,8 @@ export interface PortfolioBriefing {
   coordination: CoordinationBriefingSection;
   learning: LearningBriefingSection;
   strategicPlanning: ExecutivePlanningBrief;
+  executiveIntelligence: ExecutiveIntelligenceBriefing;
+  autonomousEnterprise: AutonomousEnterpriseBriefing;
   metrics: {
     enterpriseSummary: {
       totalDefinitions: number;
