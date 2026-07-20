@@ -2,6 +2,7 @@ import { LearningArtifact, LearningArtifactType, ArtifactStatus, ValidationStatu
 
 export class OrganizationalLearningEngine {
   private artifacts: Map<string, LearningArtifact[]> = new Map();
+  private patternCounter = 0;
 
   registerLesson(artifact: LearningArtifact): void {
     const id = artifact.id;
@@ -43,8 +44,7 @@ export class OrganizationalLearningEngine {
     }
 
     const patterns: LearningArtifact[] = [];
-    let patternIdx = 0;
-    for (const [, group] of groups) {
+    for (const [key, group] of groups) {
       if (group.length < 2) continue;
       const combinedProducts = new Set<string>();
       const allEvidence: string[] = [];
@@ -53,10 +53,9 @@ export class OrganizationalLearningEngine {
         allEvidence.push(...l.evidenceIds);
       }
       const avgConfidence = group.reduce((s, l) => s + l.confidence, 0) / group.length;
-      patternIdx++;
-      const now = Date.now();
+      const lessonIds = group.map(l => l.id).sort().join('+');
       patterns.push({
-        id: `pattern-${now}-${patternIdx}`,
+        id: `pattern-${key}-${lessonIds}`,
         type: 'pattern',
         title: `Pattern: ${group.map(l => l.title).join('; ')}`,
         description: `Multiple lessons: ${group.map(l => l.description).join(' | ')}`,
@@ -66,8 +65,8 @@ export class OrganizationalLearningEngine {
         confidence: Math.round(avgConfidence * 100) / 100,
         productCoverage: Array.from(combinedProducts),
         initiativeCoverage: [],
-        createdAt: now,
-        lastValidated: now,
+        createdAt: Date.now(),
+        lastValidated: Date.now(),
         rationale: `Consolidated from ${group.length} related lessons`,
         validationStatus: 'current',
         validationHistory: [],

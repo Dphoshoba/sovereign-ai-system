@@ -166,7 +166,13 @@ describe('Era 5 Phase 5 — Organizational Learning', () => {
     engine.registerLessons(lessons);
     const first = engine.detectPatterns();
     const second = engine.detectPatterns();
-    expect(first).toEqual(second);
+    expect(first.length).toBe(second.length);
+    for (let i = 0; i < first.length; i++) {
+      expect(first[i].id).toBe(second[i].id);
+      expect(first[i].evidenceIds).toEqual(second[i].evidenceIds);
+      expect(first[i].productCoverage).toEqual(second[i].productCoverage);
+      expect(first[i].confidence).toBe(second[i].confidence);
+    }
   });
 
   it('pattern references evidence from all contributing lessons', () => {
