@@ -1,4 +1,5 @@
 import { OfficeHealth } from './types';
+import { AllocationBriefingSection } from './resource-allocation-types';
 
 export type KpiCategory = 'delivery' | 'operations' | 'governance' | 'quality' | 'knowledge' | 'executive';
 export type KpiStatus = 'healthy' | 'attention' | 'critical' | 'unavailable';
@@ -135,6 +136,7 @@ export interface PortfolioBriefing {
     critical: number;
     unavailable: number;
   }[];
+  allocation: AllocationBriefingSection;
   metrics: {
     enterpriseSummary: {
       totalDefinitions: number;

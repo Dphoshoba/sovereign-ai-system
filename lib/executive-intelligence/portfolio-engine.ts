@@ -8,6 +8,11 @@ import {
 } from './portfolio-types';
 import { KpiDefinition, KpiMeasurement } from './kpi-registry-types';
 import { KpiTrendEngine } from './kpi-trend-engine';
+import { 
+  CapacityRecord, DemandRecord, AllocationRecord, AllocationConstraint,
+  AllocationRecommendation, AllocationBriefingSection,
+} from './resource-allocation-types';
+import { ResourceAllocationEngine } from './resource-allocation-engine';
 import { OfficeHealth } from './types';
 
 export type EnterpriseRisksFromEis = PortfolioRisk[];
@@ -27,6 +32,7 @@ export class PortfolioEngine {
   private kpiDefinitions: Map<string, KpiDefinition> = new Map();
   private kpiMeasurements: KpiMeasurement[] = [];
   private readonly trendEngine = new KpiTrendEngine();
+  private readonly allocationEngine = new ResourceAllocationEngine();
 
   constructor(private readonly eis: ExecutiveIntelligence) {}
 
@@ -101,6 +107,68 @@ export class PortfolioEngine {
     for (const m of measurements) {
       this.submitKpiMeasurement(m);
     }
+  }
+
+  // ── Resource Allocation (Phase 3) ──
+
+  registerCapacity(record: CapacityRecord): void {
+    this.allocationEngine.registerCapacity(record);
+  }
+
+  registerCapacities(records: CapacityRecord[]): void {
+    this.allocationEngine.registerCapacities(records);
+  }
+
+  registerDemand(record: DemandRecord): void {
+    this.allocationEngine.registerDemand(record);
+  }
+
+  registerDemands(records: DemandRecord[]): void {
+    this.allocationEngine.registerDemands(records);
+  }
+
+  registerAllocation(record: AllocationRecord): void {
+    this.allocationEngine.registerAllocation(record);
+  }
+
+  registerAllocations(records: AllocationRecord[]): void {
+    this.allocationEngine.registerAllocations(records);
+  }
+
+  registerConstraint(constraint: AllocationConstraint): void {
+    this.allocationEngine.registerConstraint(constraint);
+  }
+
+  registerConstraints(constraints: AllocationConstraint[]): void {
+    this.allocationEngine.registerConstraints(constraints);
+  }
+
+  getCapacityByOffice(officeId: string): CapacityRecord[] {
+    return this.allocationEngine.getCapacityByOffice(officeId);
+  }
+
+  getDemandByProduct(productId: string): DemandRecord[] {
+    return this.allocationEngine.getDemandByProduct(productId);
+  }
+
+  getAllocationSummary(): { totalAllocated: number; byOffice: Record<string, number> } {
+    return this.allocationEngine.getAllocationSummary();
+  }
+
+  getUtilizationReport(): AllocationBriefingSection['utilizationReport'] {
+    return this.allocationEngine.getUtilizationReport();
+  }
+
+  getUnmetDemand(): { demandId: string; productId: string; requiredUnits: number; allocatedUnits: number; unmetUnits: number }[] {
+    return this.allocationEngine.getUnmetDemand();
+  }
+
+  getAllocationConstraints(): AllocationConstraint[] {
+    return this.allocationEngine.getAllocationConstraints();
+  }
+
+  getAllocationRecommendations(): AllocationRecommendation[] {
+    return this.allocationEngine.getAllocationRecommendations(Array.from(this.productProfiles.values()));
   }
 
   // ── Enterprise Metric Queries (Milestone 4) ──
@@ -228,6 +296,7 @@ export class PortfolioEngine {
     const allKpis = this.computeAllKpis(snapshot);
     const kpiSummary = this.summarizeKpis(allKpis);
     const metricsSection = this.buildMetricsSection(productSummaries);
+    const allocationSection = this.allocationEngine.buildAllocationBriefing(Array.from(this.productProfiles.values()));
 
     const strategicPriorities = [...snapshot.initiatives];
     const dependencies = [...snapshot.dependencies];
@@ -250,6 +319,7 @@ export class PortfolioEngine {
       recommendedActions: actions,
       kpiSummary,
       metrics: metricsSection,
+      allocation: allocationSection,
       metadata: {
         generatedAt: Date.now(),
         productCount: this.productProfiles.size,
