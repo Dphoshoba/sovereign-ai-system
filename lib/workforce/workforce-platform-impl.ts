@@ -253,31 +253,50 @@ export class WorkforcePlatformImpl implements WorkforcePlatform {
   }
 
   private matchesCondition(condition: string, ctx: Record<string, unknown>): boolean {
-    // Check actionType
-    const actionType = ctx.actionType as string | undefined;
-    if (actionType && condition.includes(`actionType == '${actionType}'`)) {
-      // Continue checking remaining conditions
-    } else if (actionType && condition.includes('actionType')) {
-      return false; // condition references actionType but doesn't match
+    // Split on && and evaluate each sub-condition
+    const parts = condition.split('&&').map(s => s.trim());
+    return parts.every(part => this.evalSimpleExpr(part, ctx));
+  }
+
+  private evalSimpleExpr(expr: string, ctx: Record<string, unknown>): boolean {
+    // Handle == for strings
+    const eqStrMatch = expr.match(/^(\w+)\s*==\s*'([^']+)'$/);
+    if (eqStrMatch) {
+      return String(ctx[eqStrMatch[1]] ?? 'undefined') === eqStrMatch[2];
     }
 
-    // Check agentId.startsWith
-    const agentId = ctx.agentId as string | undefined;
-    if (agentId && condition.includes('agentId.startsWith')) {
-      const match = condition.match(/agentId\.startsWith\('([^']+)'\)/);
-      if (match && !agentId.startsWith(match[1])) return false;
-    } else if (agentId && condition.includes('agentId') && !condition.includes('agentId.startsWith')) {
-      return false; // condition references agentId but pattern not matched
+    // Handle == for boolean / null / number
+    const eqValMatch = expr.match(/^(\w+)\s*==\s*(null|true|false|\d+(?:\.\d+)?)$/);
+    if (eqValMatch) {
+      const ctxVal = ctx[eqValMatch[1]];
+      const rhs = eqValMatch[2];
+      if (rhs === 'null') return ctxVal === null || ctxVal === undefined;
+      if (rhs === 'true') return ctxVal === true;
+      if (rhs === 'false') return ctxVal === false;
+      return Number(ctxVal) === Number(rhs);
     }
 
-    // Check defaultMode != 
-    const defaultMode = ctx.defaultMode as string | undefined;
-    if (defaultMode && condition.includes("defaultMode != '")) {
-      const match = condition.match(/defaultMode != '([^']+)'/);
-      if (match && defaultMode === match[1]) return false; // mode matches the excluded one
+    // Handle < comparison for numbers
+    const ltMatch = expr.match(/^(\w+)\s*<\s*(\d+(?:\.\d+)?)$/);
+    if (ltMatch) {
+      return Number(ctx[ltMatch[1]] ?? -1) < Number(ltMatch[2]);
     }
 
-    return true;
+    // Handle .startsWith('...')
+    const startsWithMatch = expr.match(/^(\w+)\.startsWith\('([^']+)'\)$/);
+    if (startsWithMatch) {
+      const val = String(ctx[startsWithMatch[1]] ?? '');
+      return val.startsWith(startsWithMatch[2]);
+    }
+
+    // Handle != for strings
+    const neqStrMatch = expr.match(/^(\w+)\s*!=\s*'([^']+)'$/);
+    if (neqStrMatch) {
+      return String(ctx[neqStrMatch[1]] ?? 'undefined') !== neqStrMatch[2];
+    }
+
+    // Unknown expression — deny closed-world
+    return false;
   }
 
   listPolicies(scope?: WorkforcePolicy['scope']): readonly WorkforcePolicy[] {

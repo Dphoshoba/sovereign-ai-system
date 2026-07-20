@@ -305,7 +305,7 @@ describe('EVDP-002 — AI Workforce Platform', () => {
         effect: 'deny', condition: "authorityLevel == 'advisory'", description: '',
       };
       platform.addPolicy(policy);
-      expect(platform.evaluatePolicy('identity', {})).toBe('deny');
+      expect(platform.evaluatePolicy('identity', { authorityLevel: 'advisory' })).toBe('deny');
     });
 
     it('returns allow for scopes with no policies', () => {
