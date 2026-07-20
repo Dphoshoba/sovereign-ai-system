@@ -123,3 +123,102 @@ export const BIBLE_QUEST_PROFILE: ProductDeploymentProfile = {
     'Governance includes denominational sensitivity check (unique to Bible Quest)',
   ],
 };
+
+export const CREATOR_AUTOMATION_PROFILE: ProductDeploymentProfile = {
+  productId: 'creator-automation',
+  productName: 'Creator Automation',
+  version: '1.0.0',
+  mission: 'Automate creator workflows — lead capture, qualification, approval, and follow-up through governed operational processes',
+  targetUsers: ['Content creators', 'Digital agencies', 'Freelancers', 'Marketing teams'],
+  keyWorkflows: [
+    'Lead qualification automation',
+    'Content approval workflow',
+    'Client onboarding sequence',
+    'Performance monitoring and alerting',
+  ],
+  lifecycleStages: [
+    'Executive approval of automation initiative',
+    'Research workflow requirements and risks',
+    'Product design of automation rules',
+    'Operations configuration and testing',
+    'Automation execution and monitoring',
+    'Knowledge capture of reusable templates',
+    'Executive review of automation health',
+  ],
+  governanceRequirements: [
+    'Automation safety level classification',
+    'Human approval checkpoint placement',
+    'Exception handling and retry policy',
+    'Audit trail completeness',
+  ],
+  operationalCadence: 'Continuous automation execution with weekly operations review and monthly optimization cycle',
+  successMetrics: [
+    'Automation deployed and executing',
+    'Human approval checkpoints respected',
+    'Exception handling triggers correctly',
+    'Audit trail complete and traceable',
+    'EIS reports automation health accurately',
+  ],
+  officeMappings: [
+    {
+      office: 'Executive Office',
+      responsibilities: [
+        'Approve automation initiatives and prioritize workflows',
+        'Set automation governance policies',
+        'Review automation health via EIS',
+        'Allocate resources for automation development',
+      ],
+    },
+    {
+      office: 'Research Office',
+      responsibilities: [
+        'Analyze workflow requirements and operational patterns',
+        'Assess automation feasibility and risks',
+        'Identify cross-product automation reuse opportunities',
+        'Evaluate exception scenarios and failure modes',
+      ],
+    },
+    {
+      office: 'Product Office',
+      responsibilities: [
+        'Design automation rules and workflow definitions',
+        'Define acceptance criteria and success thresholds',
+        'Manage automation roadmap and release schedule',
+        'Coordinate dependencies between automations',
+      ],
+    },
+    {
+      office: 'Operations Office',
+      responsibilities: [
+        'Configure and test automation workflows',
+        'Monitor automation execution and handle exceptions',
+        'Track automation performance metrics',
+        'Execute incident response for automation failures',
+      ],
+    },
+    {
+      office: 'Knowledge Office',
+      responsibilities: [
+        'Document automation templates and reusable patterns',
+        'Capture lessons from automation exceptions and retries',
+        'Archive automation configurations for audit',
+        'Publish operational playbooks for common workflows',
+      ],
+    },
+  ],
+  workflowStageMappings: [
+    { stage: 'Automation initiative approval', responsibleOffice: 'Executive Office', description: 'Executive defines automation objective, approves investment, and sets governance requirements' },
+    { stage: 'Workflow requirements and risk analysis', responsibleOffice: 'Research Office', description: 'Research analyzes workflow patterns, identifies risks, and validates automation feasibility' },
+    { stage: 'Automation design and planning', responsibleOffice: 'Product Office', description: 'Product designs automation rules, defines acceptance criteria, and schedules release' },
+    { stage: 'Configuration, testing, and deployment', responsibleOffice: 'Operations Office', description: 'Operations configures automation rules, runs tests, deploys to production, and monitors execution' },
+    { stage: 'Automation documentation and reuse', responsibleOffice: 'Knowledge Office', description: 'Knowledge captures automation as reusable template, documents operational playbook, and archives audit trail' },
+    { stage: 'Executive review and optimization', responsibleOffice: 'Executive Office', description: 'EIS generates briefing on automation health, identifies bottlenecks, and recommends improvements' },
+  ],
+  adaptionsFromReference: [
+    'Product is a workflow/process, not content — lifecycle emphasizes execution and monitoring over publication',
+    'Governance focuses on automation safety levels and human approval placement (not content accuracy)',
+    'Operations focus shifts from deployment to continuous execution, exception handling, and retry management',
+    'Knowledge captures reusable automation templates and operational playbooks (not content patterns)',
+    'Success measured by automation completion rate and exception frequency rather than content published',
+  ],
+};
