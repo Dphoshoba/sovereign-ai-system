@@ -259,14 +259,23 @@ export class WorkforcePlatformImpl implements WorkforcePlatform {
   }
 
   private evalSimpleExpr(expr: string, ctx: Record<string, unknown>): boolean {
+    const trimmed = expr.trim();
+
+    // Handle parenthesized OR groups: (A || B)
+    const parenOrMatch = trimmed.match(/^\(([^)]+)\)$/);
+    if (parenOrMatch) {
+      const innerParts = parenOrMatch[1].split('||').map(s => s.trim());
+      return innerParts.some(part => this.evalSimpleExpr(part, ctx));
+    }
+
     // Handle == for strings
-    const eqStrMatch = expr.match(/^(\w+)\s*==\s*'([^']+)'$/);
+    const eqStrMatch = trimmed.match(/^(\w+)\s*==\s*'([^']+)'$/);
     if (eqStrMatch) {
       return String(ctx[eqStrMatch[1]] ?? 'undefined') === eqStrMatch[2];
     }
 
     // Handle == for boolean / null / number
-    const eqValMatch = expr.match(/^(\w+)\s*==\s*(null|true|false|\d+(?:\.\d+)?)$/);
+    const eqValMatch = trimmed.match(/^(\w+)\s*==\s*(null|true|false|\d+(?:\.\d+)?)$/);
     if (eqValMatch) {
       const ctxVal = ctx[eqValMatch[1]];
       const rhs = eqValMatch[2];
@@ -276,21 +285,29 @@ export class WorkforcePlatformImpl implements WorkforcePlatform {
       return Number(ctxVal) === Number(rhs);
     }
 
-    // Handle < comparison for numbers
-    const ltMatch = expr.match(/^(\w+)\s*<\s*(\d+(?:\.\d+)?)$/);
-    if (ltMatch) {
-      return Number(ctx[ltMatch[1]] ?? -1) < Number(ltMatch[2]);
-    }
+    // Handle < and <= for numbers
+    const ltEqMatch = trimmed.match(/^(\w+)\s*<=\s*(\d+(?:\.\d+)?)$/);
+    if (ltEqMatch) return Number(ctx[ltEqMatch[1]] ?? -1) <= Number(ltEqMatch[2]);
+
+    const ltMatch = trimmed.match(/^(\w+)\s*<\s*(\d+(?:\.\d+)?)$/);
+    if (ltMatch) return Number(ctx[ltMatch[1]] ?? -1) < Number(ltMatch[2]);
+
+    // Handle > and >= for numbers
+    const gtEqMatch = trimmed.match(/^(\w+)\s*>=\s*(\d+(?:\.\d+)?)$/);
+    if (gtEqMatch) return Number(ctx[gtEqMatch[1]] ?? -1) >= Number(gtEqMatch[2]);
+
+    const gtMatch = trimmed.match(/^(\w+)\s*>\s*(\d+(?:\.\d+)?)$/);
+    if (gtMatch) return Number(ctx[gtMatch[1]] ?? -1) > Number(gtMatch[2]);
 
     // Handle .startsWith('...')
-    const startsWithMatch = expr.match(/^(\w+)\.startsWith\('([^']+)'\)$/);
+    const startsWithMatch = trimmed.match(/^(\w+)\.startsWith\('([^']+)'\)$/);
     if (startsWithMatch) {
       const val = String(ctx[startsWithMatch[1]] ?? '');
       return val.startsWith(startsWithMatch[2]);
     }
 
     // Handle != for strings
-    const neqStrMatch = expr.match(/^(\w+)\s*!=\s*'([^']+)'$/);
+    const neqStrMatch = trimmed.match(/^(\w+)\s*!=\s*'([^']+)'$/);
     if (neqStrMatch) {
       return String(ctx[neqStrMatch[1]] ?? 'undefined') !== neqStrMatch[2];
     }

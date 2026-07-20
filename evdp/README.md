@@ -1,6 +1,6 @@
 # Echoes & Visions Deployment Programme (EVDP)
 
-**Status:** Active — Workstreams 1 and 2 deployed, 3 remaining
+**Status:** Active — Workstreams 1-3 deployed, 2 remaining
 
 ## Structure
 
@@ -22,7 +22,7 @@ evdp/
 |---|---|---|---|---|
 | 1 | Executive Office | Deployed | 6 agents |
 | 2 | Research Office | Deployed | 4 agents |
-| 3 | Product Office | Defined | 5 agents |
+| 3 | Product Office | Deployed | 5 agents |
 | 4 | Operations Office | Defined | 5 agents |
 | 5 | Knowledge Office | Defined | 4 agents |
 
