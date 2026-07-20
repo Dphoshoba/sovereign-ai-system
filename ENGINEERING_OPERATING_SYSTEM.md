@@ -271,10 +271,10 @@ Operational Hardening (Stage 3C.5)
 | Field | Value |
 |---|---|
 | **Current Phase** | Phase VII — Autonomous Operations Platform |
-| **Current Stage** | Planning |
-| **Status** | PLANNING |
-| **Next Milestone** | Stage 7A — Operational State Engine |
-| **Test Count** | 956 passing (540 Phase III + 295 Phase IV–V + 109 Phase VI + 12 integration) |
+| **Current Stage** | Stage 7A — Operational State Engine |
+| **Status** | CERTIFIED |
+| **Next Milestone** | Stage 7B — Autonomous Decision Engine |
+| **Test Count** | 990 passing (540 Phase III + 295 Phase IV–V + 109 Phase VI + 12 integration + 34 Phase VII) |
 | **Repository** | `echoes-visions-nextjs-cta` (gamma) |
 | **Certification Tag** | `gamma-phase6-complete` |
 | **EOS Version** | EOS v1.0.0 |
