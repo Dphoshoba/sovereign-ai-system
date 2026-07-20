@@ -21,6 +21,8 @@ import {
 import { CrossProductEngine } from './cross-product-engine';
 import { OrganizationalLearningEngine } from './learning-engine';
 import { LearningArtifact } from './learning-types';
+import { StrategicPlanningEngine } from './strategy-engine';
+import type { StrategicAssumption, StrategicScenario } from './strategy-types';
 import { OfficeHealth } from './types';
 
 export type EnterpriseRisksFromEis = PortfolioRisk[];
@@ -43,6 +45,7 @@ export class PortfolioEngine {
   private readonly allocationEngine = new ResourceAllocationEngine();
   private readonly crossProductEngine = new CrossProductEngine();
   private readonly learningEngine = new OrganizationalLearningEngine();
+  private readonly planningEngine = new StrategicPlanningEngine();
 
   constructor(private readonly eis: ExecutiveIntelligence) {
     this.crossProductEngine.registerProducts(Array.from(this.productProfiles.values()));
@@ -94,6 +97,9 @@ export class PortfolioEngine {
   getProductCount(): number {
     return this.productProfiles.size;
   }
+
+  registerAssumption(a: StrategicAssumption): void { this.planningEngine.registerAssumption(a); }
+  registerScenario(s: StrategicScenario): void { this.planningEngine.registerScenario(s); }
 
   // ── KPI Definition Registry (Milestone 1) ──
 
@@ -381,6 +387,7 @@ export class PortfolioEngine {
     const allocationSection = this.allocationEngine.buildAllocationBriefing(Array.from(this.productProfiles.values()));
     const coordinationSection = this.crossProductEngine.buildCoordinationBriefing();
     const learningSection = this.learningEngine.buildLearningBriefing();
+    const strategicSection = this.planningEngine.buildExecutivePlanningBrief();
 
     const strategicPriorities = [...snapshot.initiatives];
     const dependencies = [...snapshot.dependencies];
@@ -406,6 +413,7 @@ export class PortfolioEngine {
       allocation: allocationSection,
       coordination: coordinationSection,
       learning: learningSection,
+      strategicPlanning: strategicSection,
       metadata: {
         generatedAt: Date.now(),
         productCount: this.productProfiles.size,

@@ -147,6 +147,55 @@ export class StrategicPlanningEngine {
       comparisonTimestamp: Date.now(),
     };
   }
-  buildRoadmap(scenarioId: string, phases: RoadmapPhase[]): EnterpriseRoadmap { return null as unknown as EnterpriseRoadmap; }
-  buildExecutivePlanningBrief(): ExecutivePlanningBrief { return null as unknown as ExecutivePlanningBrief; }
+  buildRoadmap(scenarioId: string, phases: RoadmapPhase[]): EnterpriseRoadmap {
+    const scenario = this.getScenario(scenarioId);
+    if (!scenario) throw new Error(`Scenario ${scenarioId} not found`);
+    return {
+      id: `roadmap-${scenarioId}`,
+      scenarioId,
+      title: `Roadmap for ${scenario.title}`,
+      description: `Roadmap derived from ${scenario.title} scenario`,
+      status: 'draft',
+      version: 1,
+      phases,
+      createdAt: Date.now(),
+      evidenceIds: [...scenario.evidenceIds],
+    };
+  }
+
+  buildExecutivePlanningBrief(): ExecutivePlanningBrief {
+    const latestScenarios = new Map<string, StrategicScenario>();
+    for (const s of this.getAllScenarios()) {
+      const existing = latestScenarios.get(s.id);
+      if (!existing || s.version > existing.version) latestScenarios.set(s.id, s);
+    }
+
+    const latestAssumptions = new Map<string, StrategicAssumption>();
+    for (const a of this.getAllAssumptions()) {
+      const existing = latestAssumptions.get(a.id);
+      if (!existing || a.version > existing.version) latestAssumptions.set(a.id, a);
+    }
+
+    const scenarios = Array.from(latestScenarios.values());
+    const assumptions = Array.from(latestAssumptions.values());
+    const activeAssumptions = assumptions.filter(a => a.status === 'active');
+
+    return {
+      enterpriseSummary: `Enterprise briefing with ${scenarios.length} strategic scenarios and ${activeAssumptions.length} active assumptions`,
+      strategicScenarios: scenarios,
+      assumptions: activeAssumptions,
+      evaluationProfiles: [...ALL_PROFILES],
+      tradeOffComparisons: [],
+      recommendedRoadmaps: [],
+      risks: [],
+      confidenceAnalysis: {
+        overallConfidence: activeAssumptions.length > 0 ? activeAssumptions.reduce((s, a) => s + a.confidence, 0) / activeAssumptions.length : 0.5,
+        assumptionConfidence: activeAssumptions.length > 0 ? activeAssumptions.reduce((s, a) => s + a.confidence, 0) / activeAssumptions.length : 0.5,
+        evidenceCoverage: scenarios.length > 0 ? 0.7 : 0.3,
+        trackRecordComments: 'Based on enterprise assumptions and scenario evidence',
+      },
+      requiredExecutiveDecisions: [],
+      supportingEvidence: [],
+    };
+  }
 }

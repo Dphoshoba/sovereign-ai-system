@@ -1,6 +1,18 @@
 import { describe, it, expect } from 'vitest';
 import { StrategicPlanningEngine } from '../../lib/executive-intelligence/strategy-engine';
 import type { StrategicAssumption, StrategicScenario } from '../../lib/executive-intelligence/strategy-types';
+import { WorkforcePlatformImpl } from '../../lib/workforce/workforce-platform-impl';
+import { ExecutiveOffice } from '../../lib/executive-office/executive-office';
+import { ResearchOffice } from '../../lib/research-office/research-office';
+import { ProductOffice } from '../../lib/product-office/product-office';
+import { OperationsOffice } from '../../lib/operations-office/operations-office';
+import { KnowledgeOffice } from '../../lib/knowledge-office/knowledge-office';
+import { ExecutiveIntelligence } from '../../lib/executive-intelligence/intelligence-engine';
+import { PortfolioEngine } from '../../lib/executive-intelligence/portfolio-engine';
+import {
+  MENWISE360_PROFILE, BIBLE_QUEST_PROFILE, CREATOR_AUTOMATION_PROFILE,
+  VISIONCRAFT_STUDIO_PROFILE, INSPIREVOICE_PROFILE,
+} from '../../lib/executive-intelligence/product-profile-types';
 
 const ASSUMPTION_A: StrategicAssumption = {
   id: 'asm-001', title: 'Demand Growth', description: 'Market demand grows 15% YoY',
@@ -19,6 +31,16 @@ const SCENARIO_A: StrategicScenario = {
   status: 'draft', evaluationProfileId: 'growth',
   createdAt: 1000, createdBy: 'exec-director',
 };
+
+function deployAllOffices(w: WorkforcePlatformImpl): void {
+  new ExecutiveOffice(w).deploy();
+  new ResearchOffice(w).deploy();
+  new ProductOffice(w).deploy();
+  new OperationsOffice(w).deploy();
+  new KnowledgeOffice(w).deploy();
+}
+
+const ALL_PROFILES = [MENWISE360_PROFILE, BIBLE_QUEST_PROFILE, CREATOR_AUTOMATION_PROFILE, VISIONCRAFT_STUDIO_PROFILE, INSPIREVOICE_PROFILE];
 
 describe('Era 5 Phase 6 — Strategic Planning', () => {
 
@@ -158,5 +180,76 @@ describe('Era 5 Phase 6 — Strategic Planning', () => {
     const c1 = engine.compareScenarios([e1.id]);
     const c2 = engine.compareScenarios([e1.id]);
     expect(c1.scenarios[0].overallScore).toBe(c2.scenarios[0].overallScore);
+  });
+
+  it('buildRoadmap generates phased roadmap from scenario', () => {
+    const engine = new StrategicPlanningEngine();
+    engine.registerScenario(SCENARIO_A);
+    const roadmap = engine.buildRoadmap('scn-001', [
+      { order: 1, title: 'Phase 1', description: 'Foundation', initiativeIds: ['init-1'], dependencyIds: [], estimatedCapacity: 'medium', startAfter: '' },
+      { order: 2, title: 'Phase 2', description: 'Scale', initiativeIds: ['init-2'], dependencyIds: ['dep-1'], estimatedCapacity: 'high', startAfter: 'Phase 1' },
+    ]);
+    expect(roadmap).toBeDefined();
+    expect(roadmap.phases.length).toBe(2);
+    expect(roadmap.status).toBe('draft');
+    expect(roadmap.phases[0].order).toBe(1);
+    expect(roadmap.phases[1].order).toBe(2);
+  });
+
+  it('roadmap evidence preserves traceability', () => {
+    const engine = new StrategicPlanningEngine();
+    engine.registerScenario(SCENARIO_A);
+    const roadmap = engine.buildRoadmap('scn-001', []);
+    expect(roadmap.evidenceIds).toContain('ev-eis-001');
+  });
+
+  it('buildExecutivePlanningBrief returns complete section', () => {
+    const engine = new StrategicPlanningEngine();
+    engine.registerAssumption(ASSUMPTION_A);
+    engine.registerScenario(SCENARIO_A);
+    engine.evaluateScenario('scn-001', 'growth');
+    const brief = engine.buildExecutivePlanningBrief();
+    expect(brief).toBeDefined();
+    expect(brief.enterpriseSummary).toBeTruthy();
+    expect(brief.strategicScenarios.length).toBeGreaterThanOrEqual(1);
+    expect(brief.assumptions.length).toBeGreaterThanOrEqual(1);
+    expect(brief.evaluationProfiles.length).toBe(4);
+    expect(brief.confidenceAnalysis).toBeDefined();
+  });
+
+  it('confidence analysis reflects evidence and assumptions', () => {
+    const engine = new StrategicPlanningEngine();
+    engine.registerAssumption(ASSUMPTION_A);
+    engine.registerScenario(SCENARIO_A);
+    const brief = engine.buildExecutivePlanningBrief();
+    expect(brief.confidenceAnalysis.overallConfidence).toBeGreaterThan(0);
+    expect(brief.confidenceAnalysis.assumptionConfidence).toBeGreaterThanOrEqual(0);
+  });
+
+  it('PortfolioBriefing includes strategicPlanning section', () => {
+    const workforce = new WorkforcePlatformImpl();
+    deployAllOffices(workforce);
+    const eis = new ExecutiveIntelligence(workforce);
+    const portfolio = new PortfolioEngine(eis);
+    portfolio.registerProducts(ALL_PROFILES);
+
+    portfolio.registerAssumption(ASSUMPTION_A);
+    portfolio.registerScenario(SCENARIO_A);
+
+    const briefing = portfolio.refreshPortfolioBriefing();
+    expect(briefing.strategicPlanning).toBeDefined();
+    expect(briefing.strategicPlanning.enterpriseSummary).toBeTruthy();
+  });
+
+  it('sixth product extends without platform changes', () => {
+    const workforce = new WorkforcePlatformImpl();
+    deployAllOffices(workforce);
+    const eis = new ExecutiveIntelligence(workforce);
+    const portfolio = new PortfolioEngine(eis);
+    portfolio.registerProducts(ALL_PROFILES);
+    expect(portfolio.refreshPortfolioBriefing().metadata.productCount).toBe(5);
+
+    portfolio.registerProduct({ ...MENWISE360_PROFILE, productId: 'sixth', productName: 'Sixth' });
+    expect(portfolio.refreshPortfolioBriefing().metadata.productCount).toBe(6);
   });
 });
