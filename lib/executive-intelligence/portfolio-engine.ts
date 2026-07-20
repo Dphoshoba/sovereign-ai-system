@@ -8,11 +8,17 @@ import {
 } from './portfolio-types';
 import { KpiDefinition, KpiMeasurement } from './kpi-registry-types';
 import { KpiTrendEngine } from './kpi-trend-engine';
-import { 
+import {
   CapacityRecord, DemandRecord, AllocationRecord, AllocationConstraint,
   AllocationRecommendation, AllocationBriefingSection,
 } from './resource-allocation-types';
 import { ResourceAllocationEngine } from './resource-allocation-engine';
+import {
+  CrossProductDependency as CP_Dependency,
+  CrossProductConflict, CrossProductSynergy, OptimizationOpportunity,
+  CoordinationBriefingSection,
+} from './cross-product-types';
+import { CrossProductEngine } from './cross-product-engine';
 import { OfficeHealth } from './types';
 
 export type EnterpriseRisksFromEis = PortfolioRisk[];
@@ -33,11 +39,20 @@ export class PortfolioEngine {
   private kpiMeasurements: KpiMeasurement[] = [];
   private readonly trendEngine = new KpiTrendEngine();
   private readonly allocationEngine = new ResourceAllocationEngine();
+  private readonly crossProductEngine = new CrossProductEngine();
 
-  constructor(private readonly eis: ExecutiveIntelligence) {}
+  constructor(private readonly eis: ExecutiveIntelligence) {
+    this.crossProductEngine.registerProducts(Array.from(this.productProfiles.values()));
+  }
 
   registerProduct(profile: ProductDeploymentProfile): void {
     this.productProfiles.set(profile.productId, profile);
+    this.crossProductEngine.registerProducts([profile]);
+  }
+
+  registerProduct(profile: ProductDeploymentProfile): void {
+    this.productProfiles.set(profile.productId, profile);
+    this.crossProductEngine.registerProducts([profile]);
   }
 
   registerProducts(profiles: ProductDeploymentProfile[]): void {
@@ -171,6 +186,60 @@ export class PortfolioEngine {
     return this.allocationEngine.getAllocationRecommendations(Array.from(this.productProfiles.values()));
   }
 
+  // ── Cross-Product Coordination (Phase 4) ──
+
+  registerCrossProductDependency(dep: CP_Dependency): void {
+    this.crossProductEngine.registerDependency(dep);
+  }
+
+  registerCrossProductDependencies(deps: CP_Dependency[]): void {
+    this.crossProductEngine.registerDependencies(deps);
+  }
+
+  registerCrossProductConflict(conflict: CrossProductConflict): void {
+    this.crossProductEngine.registerConflict(conflict);
+  }
+
+  registerCrossProductConflicts(conflicts: CrossProductConflict[]): void {
+    this.crossProductEngine.registerConflicts(conflicts);
+  }
+
+  registerCrossProductSynergy(synergy: CrossProductSynergy): void {
+    this.crossProductEngine.registerSynergy(synergy);
+  }
+
+  registerCrossProductSynergies(synergies: CrossProductSynergy[]): void {
+    this.crossProductEngine.registerSynergies(synergies);
+  }
+
+  registerInitiativeIds(ids: string[]): void {
+    this.crossProductEngine.registerInitiativeIds(ids);
+  }
+
+  getCrossProductDependencyGraph(): { nodes: string[]; edges: { source: string; target: string; type: import('./cross-product-types').DependencyType; status: string }[] } {
+    return this.crossProductEngine.getDependencyGraph();
+  }
+
+  getUpstreamBlockers(productId: string, initiativeId?: string): CP_Dependency[] {
+    return this.crossProductEngine.getUpstreamBlockers(productId, initiativeId);
+  }
+
+  getCrossProductConflicts(): CrossProductConflict[] {
+    return this.crossProductEngine.getCrossProductConflicts();
+  }
+
+  getCrossProductSynergies(): CrossProductSynergy[] {
+    return this.crossProductEngine.getCrossProductSynergies();
+  }
+
+  getOptimizationOpportunities(): OptimizationOpportunity[] {
+    return this.crossProductEngine.getOptimizationOpportunities();
+  }
+
+  detectCycles(): string[][] {
+    return this.crossProductEngine.detectCycles();
+  }
+
   // ── Enterprise Metric Queries (Milestone 4) ──
 
   getEnterpriseMetrics(): { definition: KpiDefinition; measurements: KpiMeasurement[]; trend: ReturnType<KpiTrendEngine['calculateTrend']> }[] {
@@ -297,6 +366,7 @@ export class PortfolioEngine {
     const kpiSummary = this.summarizeKpis(allKpis);
     const metricsSection = this.buildMetricsSection(productSummaries);
     const allocationSection = this.allocationEngine.buildAllocationBriefing(Array.from(this.productProfiles.values()));
+    const coordinationSection = this.crossProductEngine.buildCoordinationBriefing();
 
     const strategicPriorities = [...snapshot.initiatives];
     const dependencies = [...snapshot.dependencies];
@@ -320,6 +390,7 @@ export class PortfolioEngine {
       kpiSummary,
       metrics: metricsSection,
       allocation: allocationSection,
+      coordination: coordinationSection,
       metadata: {
         generatedAt: Date.now(),
         productCount: this.productProfiles.size,
