@@ -4,6 +4,9 @@ import {
   RankedPriority,
   RiskIntelligence,
   StructuredRecommendation,
+  OrganizationalPattern,
+  PatternType,
+  PatternSeverity,
   RecommendationCategory,
   Likelihood,
   OrgImpact,
@@ -307,6 +310,122 @@ export class ExecutiveAnalysisEngine {
     const likelihoodScore: Record<string, number> = { low: 0.2, medium: 0.4, high: 0.7, very_high: 1.0 };
     const impactScore: Record<string, number> = { contained: 0.2, office: 0.4, cross_office: 0.7, enterprise: 1.0 };
     return ((likelihoodScore[likelihood] ?? 0.5) * 0.5) + ((impactScore[impact] ?? 0.5) * 0.5);
+  }
+
+  detectPatterns(snapshotHistory: ExecutiveSnapshot[]): OrganizationalPattern[] {
+    if (snapshotHistory.length < 2) return [];
+
+    const patterns: OrganizationalPattern[] = [];
+    const latest = snapshotHistory[snapshotHistory.length - 1];
+
+    // Pattern 1: Recurring blockers — same blocker text in 2+ consecutive snapshots
+    const blockerFrequency = this.findRecurringBlockers(snapshotHistory);
+    for (const [office, blockers] of Object.entries(blockerFrequency)) {
+      for (const [blocker, count] of Object.entries(blockers)) {
+        if (count >= 2) {
+          const occurrences = Object.values(blockers).reduce((sum, c) => sum + c, 0);
+          const firstIdx = snapshotHistory.findIndex(s =>
+            s.offices[office]?.blockers.includes(blocker)
+          );
+          patterns.push({
+            id: `pattern-rec-${patterns.length + 1}`,
+            type: 'recurring_blocker',
+            description: `Recurring blocker "${blocker}" in ${office} (${count}x across ${snapshotHistory.length} snapshots)`,
+            severity: count >= 3 ? 'critical' : count >= 2 ? 'warning' : 'info',
+            affectedOffices: [office],
+            occurrences: count,
+            firstObserved: snapshotHistory[firstIdx]?.timestamp ?? latest.timestamp,
+            lastObserved: latest.timestamp,
+            evidence: [`Appeared in ${count} of ${snapshotHistory.length} snapshots`, `Office: ${office}`],
+          });
+        }
+      }
+    }
+
+    // Pattern 2: Governance bottleneck — same actionType in 3+ snapshots
+    const decisionFrequency: Record<string, { count: number; offices: Set<string>; firstIdx: number }> = {};
+    for (let i = 0; i < snapshotHistory.length; i++) {
+      const snap = snapshotHistory[i];
+      for (const d of snap.pendingDecisions) {
+        if (d.status === 'pending') {
+          if (!decisionFrequency[d.actionType]) {
+            decisionFrequency[d.actionType] = { count: 0, offices: new Set(), firstIdx: i };
+          }
+          decisionFrequency[d.actionType].count++;
+          decisionFrequency[d.actionType].offices.add(d.office);
+        }
+      }
+    }
+    for (const [actionType, info] of Object.entries(decisionFrequency)) {
+      if (info.count >= 3) {
+        patterns.push({
+          id: `pattern-gov-${patterns.length + 1}`,
+          type: 'governance_bottleneck',
+          description: `Repeated ${actionType} pending across ${snapshotHistory.length} snapshots`,
+          severity: info.count >= 5 ? 'critical' : 'warning',
+          affectedOffices: [...info.offices],
+          occurrences: info.count,
+          firstObserved: snapshotHistory[info.firstIdx]?.timestamp ?? latest.timestamp,
+          lastObserved: latest.timestamp,
+          evidence: [`Action: ${actionType}`, `Count: ${info.count}`, `Offices: ${[...info.offices].join(', ')}`],
+        });
+      }
+    }
+
+    // Pattern 3: Incident cluster — 3+ blockers in same office within rolling window
+    for (const office of Object.keys(latest.offices)) {
+      const totalBlockers = snapshotHistory.reduce((sum, snap) => {
+        return sum + (snap.offices[office]?.blockers.length ?? 0);
+      }, 0);
+      if (totalBlockers >= 3) {
+        patterns.push({
+          id: `pattern-cluster-${patterns.length + 1}`,
+          type: 'incident_cluster',
+          description: `High blocker volume in ${office} (${totalBlockers} total across ${snapshotHistory.length} snapshots)`,
+          severity: totalBlockers >= 5 ? 'critical' : 'warning',
+          affectedOffices: [office],
+          occurrences: totalBlockers,
+          firstObserved: snapshotHistory[0]?.timestamp ?? latest.timestamp,
+          lastObserved: latest.timestamp,
+          evidence: [`Total blockers: ${totalBlockers}`, `Office: ${office}`, `Snapshots analyzed: ${snapshotHistory.length}`],
+        });
+      }
+    }
+
+    // Pattern 4: Research without downstream execution
+    const researchHasBlockers = latest.offices['Research Office']?.blockers.length ?? 0;
+    const productHasBlockers = latest.offices['Product Office']?.blockers.length ?? 0;
+    if (researchHasBlockers > 0 && productHasBlockers === 0) {
+      patterns.push({
+        id: `pattern-research-${patterns.length + 1}`,
+        type: 'research_without_downstream',
+        description: 'Research blockers exist but no Product Office blockers — potential research without downstream execution',
+        severity: 'info',
+        affectedOffices: ['Research Office', 'Product Office'],
+        occurrences: researchHasBlockers,
+        firstObserved: snapshotHistory[0]?.timestamp ?? latest.timestamp,
+        lastObserved: latest.timestamp,
+        evidence: [
+          `Research blockers: ${researchHasBlockers}`,
+          `Product blockers: ${productHasBlockers}`,
+        ],
+      });
+    }
+
+    return patterns;
+  }
+
+  private findRecurringBlockers(snapshotHistory: ExecutiveSnapshot[]): Record<string, Record<string, number>> {
+    const frequency: Record<string, Record<string, number>> = {};
+    for (const snap of snapshotHistory) {
+      for (const [office, status] of Object.entries(snap.offices)) {
+        if (!frequency[office]) frequency[office] = {};
+        for (const blocker of status.blockers) {
+          frequency[office][blocker] = (frequency[office][blocker] ?? 0) + 1;
+        }
+      }
+    }
+    return frequency;
   }
 
   rankPriorities(snapshot: ExecutiveSnapshot): RankedPriority[] {

@@ -46,6 +46,23 @@ export interface ExecutiveSnapshot {
   crossOfficeDependencies: CrossOfficeDependency[];
 }
 
+// ── Milestone 3: Pattern Intelligence ──
+
+export type PatternType = 'recurring_blocker' | 'governance_bottleneck' | 'research_without_downstream' | 'incident_cluster';
+export type PatternSeverity = 'info' | 'warning' | 'critical';
+
+export interface OrganizationalPattern {
+  id: string;
+  type: PatternType;
+  description: string;
+  severity: PatternSeverity;
+  affectedOffices: string[];
+  occurrences: number;
+  firstObserved: number;
+  lastObserved: number;
+  evidence: string[];
+}
+
 // ── Milestone 3: Recommendation Engine ──
 
 export type RecommendationCategory = 'resolve_blocker' | 'review_decision' | 'clear_dependency' | 'address_risk' | 'investigate_trend';
@@ -177,6 +194,7 @@ export interface ExecutiveBriefing {
   kpiTrends: { improving: KpiTrend[]; declining: KpiTrend[] };
   recommendations: EISRecommendation[];
   structuredRecommendations: StructuredRecommendation[];
+  patterns: OrganizationalPattern[];
   officeStatus: Record<string, OfficeStatus>;
   metadata: EISMetadata;
 }

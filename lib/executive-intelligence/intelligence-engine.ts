@@ -3,12 +3,13 @@ import { buildSnapshot } from './executive-snapshot';
 import { ExecutiveAnalysisEngine } from './analysis-engine';
 import {
   ExecutiveSnapshot, ExecutiveBriefing, ExecutiveDelta, EISRecommendation,
-  OfficeHealth, EscalatedRisk, CrossOfficeDependency, KpiTrend,
+  OfficeHealth, EscalatedRisk, CrossOfficeDependency, KpiTrend, OrganizationalPattern,
 } from './types';
 
 export class ExecutiveIntelligence {
   private lastSnapshot: ExecutiveSnapshot | null = null;
   private previousSnapshot: ExecutiveSnapshot | null = null;
+  private snapshotHistory: ExecutiveSnapshot[] = [];
   private readonly analysis: ExecutiveAnalysisEngine;
 
   constructor(private readonly workforce: WorkforcePlatform) {
@@ -18,7 +19,16 @@ export class ExecutiveIntelligence {
   refreshSnapshot(): ExecutiveSnapshot {
     this.previousSnapshot = this.lastSnapshot;
     this.lastSnapshot = buildSnapshot(this.workforce);
+    this.snapshotHistory.push(this.lastSnapshot);
+    if (this.snapshotHistory.length > 20) {
+      this.snapshotHistory = this.snapshotHistory.slice(-20);
+    }
     return this.lastSnapshot;
+  }
+
+  getPatterns(): OrganizationalPattern[] {
+    if (this.snapshotHistory.length < 2) return [];
+    return this.analysis.detectPatterns(this.snapshotHistory);
   }
 
   getDelta(): ExecutiveDelta | null {
@@ -76,6 +86,7 @@ export class ExecutiveIntelligence {
     const rankedPriorities = this.analysis.rankPriorities(snapshot);
     const riskIntelligence = this.analysis.enrichRisks(snapshot);
     const structuredRecommendations = this.analysis.generateRecommendations(snapshot, riskIntelligence);
+    const patterns = this.getPatterns();
     const blockedItems = Object.entries(snapshot.offices)
       .filter(([_, s]) => s.blockers.length > 0)
       .map(([office, s]) => ({ office, blockers: s.blockers }));
@@ -102,6 +113,7 @@ export class ExecutiveIntelligence {
       kpiTrends: { improving: [], declining: [] },
       recommendations,
       structuredRecommendations,
+      patterns,
       officeStatus: Object.fromEntries(
         Object.entries(snapshot.offices).map(([name, status]) => [name, status])
       ),
