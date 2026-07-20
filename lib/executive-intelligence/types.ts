@@ -46,6 +46,24 @@ export interface ExecutiveSnapshot {
   crossOfficeDependencies: CrossOfficeDependency[];
 }
 
+// ── Milestone 3: Recommendation Engine ──
+
+export type RecommendationCategory = 'resolve_blocker' | 'review_decision' | 'clear_dependency' | 'address_risk' | 'investigate_trend';
+
+export interface StructuredRecommendation {
+  id: string;
+  rank: number;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  category: RecommendationCategory;
+  action: string;
+  reason: string;
+  expectedBenefit: string;
+  suggestedOwner: string;
+  supportingEvidence: string[];
+  confidence: number;
+  score: number;
+}
+
 // ── Milestone 3: Delta Engine ──
 
 export interface ExecutiveDelta {
@@ -158,6 +176,7 @@ export interface ExecutiveBriefing {
   crossOfficeDependencies: CrossOfficeDependency[];
   kpiTrends: { improving: KpiTrend[]; declining: KpiTrend[] };
   recommendations: EISRecommendation[];
+  structuredRecommendations: StructuredRecommendation[];
   officeStatus: Record<string, OfficeStatus>;
   metadata: EISMetadata;
 }

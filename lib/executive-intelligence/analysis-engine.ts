@@ -3,6 +3,8 @@ import {
   ExecutiveDelta,
   RankedPriority,
   RiskIntelligence,
+  StructuredRecommendation,
+  RecommendationCategory,
   Likelihood,
   OrgImpact,
   RiskTrend,
@@ -176,6 +178,135 @@ export class ExecutiveAnalysisEngine {
       resolvedDependencies,
       summary,
     };
+  }
+
+  generateRecommendations(snapshot: ExecutiveSnapshot, enrichedRisks: RiskIntelligence[]): StructuredRecommendation[] {
+    const recs: Array<{
+      priority: 'low' | 'medium' | 'high' | 'critical';
+      category: RecommendationCategory;
+      action: string;
+      reason: string;
+      expectedBenefit: string;
+      suggestedOwner: string;
+      supportingEvidence: string[];
+      confidence: number;
+      score: number;
+    }> = [];
+
+    // Recommendations from enriched risks
+    for (const ri of enrichedRisks) {
+      if (ri.likelihood === 'very_high' || ri.likelihood === 'high') {
+        recs.push({
+          priority: ri.source.severity === 'critical' ? 'critical' : 'high',
+          category: 'address_risk',
+          action: ri.recommendedAction,
+          reason: ri.source.description,
+          expectedBenefit: `Mitigate ${ri.organizationalImpact} impact in ${ri.source.office}`,
+          suggestedOwner: ri.recommendedOwner,
+          supportingEvidence: ri.rationale,
+          confidence: ri.confidence,
+          score: this.scoreRecommendation(ri.likelihood, ri.organizationalImpact),
+        });
+      }
+    }
+
+    // Recommendations from blocked cross-office dependencies
+    for (const dep of snapshot.crossOfficeDependencies) {
+      if (dep.status === 'blocked') {
+        recs.push({
+          priority: 'high',
+          category: 'clear_dependency',
+          action: `Resolve dependency: ${dep.sourceOffice} → ${dep.targetOffice}`,
+          reason: dep.description,
+          expectedBenefit: `Unblock workflow between ${dep.sourceOffice} and ${dep.targetOffice}`,
+          suggestedOwner: OFFICE_OWNERS[dep.sourceOffice] || 'Unassigned',
+          supportingEvidence: [
+            `Source: ${dep.sourceOffice}`,
+            `Target: ${dep.targetOffice}`,
+            `Status: ${dep.status}`,
+          ],
+          confidence: 0.8,
+          score: 0.7,
+        });
+      }
+    }
+
+    // Recommendations from stale pending decisions (>24h old)
+    const now = snapshot.timestamp;
+    for (const decision of snapshot.pendingDecisions) {
+      if (decision.status === 'pending') {
+        const hoursOpen = (now - decision.requestedAt) / 3600000;
+        if (hoursOpen > 24) {
+          recs.push({
+            priority: decision.urgency === 'critical' ? 'critical' : 'high',
+            category: 'review_decision',
+            action: `Review ${decision.actionType} in ${decision.office}`,
+            reason: `Pending for ${Math.round(hoursOpen)}h — requested by ${decision.requiredApprover}`,
+            expectedBenefit: `Unblock governance workflow in ${decision.office}`,
+            suggestedOwner: decision.requiredApprover,
+            supportingEvidence: [
+              `Status: ${decision.status}`,
+              `Urgency: ${decision.urgency}`,
+              `Rationale: ${decision.rationale}`,
+            ],
+            confidence: 0.75,
+            score: Math.min(0.4 + (hoursOpen / 72) * 0.6, 1.0),
+          });
+        }
+      }
+    }
+
+    // Recommendations from blockers
+    for (const [office, status] of Object.entries(snapshot.offices)) {
+      for (const blocker of status.blockers) {
+        const isCritical = blocker.includes('critical') || blocker.includes('Production');
+        recs.push({
+          priority: isCritical ? 'critical' : 'high',
+          category: 'resolve_blocker',
+          action: `Resolve blocker in ${office}`,
+          reason: blocker,
+          expectedBenefit: `Restore normal operations in ${office}`,
+          suggestedOwner: OFFICE_OWNERS[office] || 'Unassigned',
+          supportingEvidence: [
+            `Office: ${office}`,
+            `Severity: ${isCritical ? 'critical' : 'high'}`,
+          ],
+          confidence: isCritical ? 0.9 : 0.8,
+          score: isCritical ? 0.9 : 0.6,
+        });
+      }
+    }
+
+    // Deduplicate: same action + same owner = duplicate
+    const seen = new Set<string>();
+    const deduped = recs.filter(r => {
+      const key = `${r.action}|${r.suggestedOwner}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    deduped.sort((a, b) => b.score - a.score);
+
+    return deduped.map((item, index) => ({
+      id: `rec-${index + 1}`,
+      rank: index + 1,
+      priority: item.priority,
+      category: item.category,
+      action: item.action,
+      reason: item.reason,
+      expectedBenefit: item.expectedBenefit,
+      suggestedOwner: item.suggestedOwner,
+      supportingEvidence: item.supportingEvidence,
+      confidence: Math.round(item.confidence * 100) / 100,
+      score: Math.round(item.score * 100) / 100,
+    }));
+  }
+
+  private scoreRecommendation(likelihood: string, impact: string): number {
+    const likelihoodScore: Record<string, number> = { low: 0.2, medium: 0.4, high: 0.7, very_high: 1.0 };
+    const impactScore: Record<string, number> = { contained: 0.2, office: 0.4, cross_office: 0.7, enterprise: 1.0 };
+    return ((likelihoodScore[likelihood] ?? 0.5) * 0.5) + ((impactScore[impact] ?? 0.5) * 0.5);
   }
 
   rankPriorities(snapshot: ExecutiveSnapshot): RankedPriority[] {

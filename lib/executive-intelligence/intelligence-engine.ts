@@ -75,6 +75,7 @@ export class ExecutiveIntelligence {
     const recommendations = this.deriveRecommendations(snapshot);
     const rankedPriorities = this.analysis.rankPriorities(snapshot);
     const riskIntelligence = this.analysis.enrichRisks(snapshot);
+    const structuredRecommendations = this.analysis.generateRecommendations(snapshot, riskIntelligence);
     const blockedItems = Object.entries(snapshot.offices)
       .filter(([_, s]) => s.blockers.length > 0)
       .map(([office, s]) => ({ office, blockers: s.blockers }));
@@ -100,6 +101,7 @@ export class ExecutiveIntelligence {
       crossOfficeDependencies: snapshot.crossOfficeDependencies,
       kpiTrends: { improving: [], declining: [] },
       recommendations,
+      structuredRecommendations,
       officeStatus: Object.fromEntries(
         Object.entries(snapshot.offices).map(([name, status]) => [name, status])
       ),
