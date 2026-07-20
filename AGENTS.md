@@ -25,7 +25,7 @@ Set `NEXT_PUBLIC_APP_URL` and `NEXT_PUBLIC_BASE_URL` to this origin in the Verce
 - **Platform modifications across all 5 product deployments:** 0
 - **Test count:** 217 tests passing across 18 test files, zero platform modifications
 
-### Era 5: Enterprise Scale — Active (ERA5-ENTERPRISE-2026-001)
+### Era 5: Enterprise Scale — Certified (ERA5-CERT-2026-001)
 Architectural principle: *Optimize the enterprise through portfolio insights before optimizing individual products.*
 
 **Phase 1 — Portfolio Intelligence:** ✅ Certified — PortfolioEngine wraps EIS, portfolio health/briefing/risks/dependencies/initiatives/KPIs, 122 tests across 13 files, zero platform changes
@@ -36,7 +36,7 @@ Architectural principle: *Optimize the enterprise through portfolio insights bef
 **Phase 4 — Cross-Product Dependencies:** ✅ Certified — Dependency graph (directed, transitive, cycles, blockers), conflict registry, synergy registry, optimization opportunities, CoordinationBriefingSection in PortfolioBriefing, 175 tests across 16 files, zero platform changes
 **Phase 5 — Organizational Learning:** ✅ Certified — Learning Registry (7 artifact types), Pattern Engine, branching promotion workflow, Validation Registry, LearningBriefingSection in PortfolioBriefing, 196 tests across 17 files, zero platform changes
 
-**Phase 6 — Strategic Planning:** ✅ Implemented — Assumption Registry, Scenario Registry, deterministic evaluator with configurable profiles, trade-off engine (strengths/weaknesses/deltas), roadmap builder, ExecutivePlanningBrief in PortfolioBriefing, 217 tests across 18 files, zero platform changes
+**Phase 6 — Strategic Planning:** ✅ Certified — Assumption Registry, Scenario Registry, deterministic evaluator with configurable profiles, trade-off engine (strengths/weaknesses/deltas), roadmap builder, ExecutivePlanningBrief in PortfolioBriefing, 217 tests across 18 files, zero platform changes
 
 ### Key Architectural Property
 Growth through composition rather than expansion — new products extend the enterprise through configuration (deployment profiles, workflow definitions, governance overlays) rather than structural platform changes.
