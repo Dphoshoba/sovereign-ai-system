@@ -271,15 +271,15 @@ Operational Hardening (Stage 3C.5)
 | Field | Value |
 |---|---|
 | **Current Phase** | Phase VII — Autonomous Operations Platform |
-| **Current Stage** | Stage 7A — Operational State Engine |
+| **Current Stage** | Stage 7B — Autonomous Decision Engine |
 | **Status** | CERTIFIED |
-| **Next Milestone** | Stage 7B — Autonomous Decision Engine |
-| **Test Count** | 990 passing (540 Phase III + 295 Phase IV–V + 109 Phase VI + 12 integration + 34 Phase VII) |
+| **Next Milestone** | Stage 7C — Self-Healing & Recovery Coordination |
+| **Test Count** | 1019 passing (540 Phase III + 295 Phase IV–V + 109 Phase VI + 12 integration + 63 Phase VII) |
 | **Repository** | `echoes-visions-nextjs-cta` (gamma) |
 | **Certification Tag** | `gamma-phase6-complete` |
 | **EOS Version** | EOS v1.0.0 |
-| **Governance Index** | GOV-2026-Stage3C-001 through GOV-2026-Stage3C-018; GOV-2026-PhaseIII-001; GATE-2026-PhaseIII-002; GOV-2026-PhaseIV-001; GOV-2026-Stage4A-001 through -005; GOV-2026-Stage4B-001 through -004; GOV-2026-Stage4C-001 through -004; GOV-2026-Stage4D-001; GOV-2026-PhaseV-001; GOV-2026-PhaseV-002; GOV-2026-Stage5B-001; GOV-2026-Stage5C-001; GOV-2026-Stage5D-001; GOV-2026-PhaseVI-001; GOV-2026-Stage6A-001; GOV-2026-Stage6A-002; GOV-2026-Stage6B-001; GOV-2026-Stage6C-001; GOV-2026-Stage6D-001; GATE-2026-PhaseVI-002; GOV-2026-PhaseVII-001 |
-| **Governance Policies** | G-001 through G-042 (G-043–G-046 proposed) |
+| **Governance Index** | GOV-2026-Stage3C-001 through GOV-2026-Stage3C-018; GOV-2026-PhaseIII-001; GATE-2026-PhaseIII-002; GOV-2026-PhaseIV-001; GOV-2026-Stage4A-001 through -005; GOV-2026-Stage4B-001 through -004; GOV-2026-Stage4C-001 through -004; GOV-2026-Stage4D-001; GOV-2026-PhaseV-001; GOV-2026-PhaseV-002; GOV-2026-Stage5B-001; GOV-2026-Stage5C-001; GOV-2026-Stage5D-001; GOV-2026-PhaseVI-001; GOV-2026-Stage6A-001; GOV-2026-Stage6A-002; GOV-2026-Stage6B-001; GOV-2026-Stage6C-001; GOV-2026-Stage6D-001; GATE-2026-PhaseVI-002; GOV-2026-PhaseVII-001; GOV-2026-Stage7A-001; GOV-2026-Stage7B-001 |
+| **Governance Policies** | G-001 through G-044 (G-045–G-046 proposed) |
 
 This section must be updated after every certification.
 
