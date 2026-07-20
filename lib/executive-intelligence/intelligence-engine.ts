@@ -1,11 +1,18 @@
 import { WorkforcePlatform } from '../workforce/workforce-platform';
 import { buildSnapshot } from './executive-snapshot';
-import { ExecutiveSnapshot, ExecutiveBriefing, EISRecommendation, OfficeHealth, EscalatedRisk, CrossOfficeDependency, KpiTrend } from './types';
+import { ExecutiveAnalysisEngine } from './analysis-engine';
+import {
+  ExecutiveSnapshot, ExecutiveBriefing, EISRecommendation,
+  OfficeHealth, EscalatedRisk, CrossOfficeDependency, KpiTrend,
+} from './types';
 
 export class ExecutiveIntelligence {
   private lastSnapshot: ExecutiveSnapshot | null = null;
+  private readonly analysis: ExecutiveAnalysisEngine;
 
-  constructor(private readonly workforce: WorkforcePlatform) {}
+  constructor(private readonly workforce: WorkforcePlatform) {
+    this.analysis = new ExecutiveAnalysisEngine();
+  }
 
   refreshSnapshot(): ExecutiveSnapshot {
     this.lastSnapshot = buildSnapshot(this.workforce);
@@ -59,6 +66,7 @@ export class ExecutiveIntelligence {
     const health = this.assessHealth(snapshot);
     const risks = this.deriveRisks(snapshot);
     const recommendations = this.deriveRecommendations(snapshot);
+    const rankedPriorities = this.analysis.rankPriorities(snapshot);
     const blockedItems = Object.entries(snapshot.offices)
       .filter(([_, s]) => s.blockers.length > 0)
       .map(([office, s]) => ({ office, blockers: s.blockers }));
@@ -73,7 +81,10 @@ export class ExecutiveIntelligence {
     return {
       summary,
       organizationHealth: health,
-      priorities: criticalRisks.map(r => r.description),
+      priorities: rankedPriorities.length > 0
+        ? rankedPriorities.map(p => `${p.rank}. ${p.title}`)
+        : criticalRisks.map(r => r.description),
+      rankedPriorities,
       activeRisks: risks,
       blockedItems,
       pendingDecisions: snapshot.pendingDecisions,

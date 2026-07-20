@@ -67,10 +67,49 @@ export interface EISMetadata {
   sources: string[];
 }
 
+// ── Milestone 3: Priority Engine ──
+
+export interface ScoreComponents {
+  impact: number;
+  urgency: number;
+  dependencyWeight: number;
+  governanceWeight: number;
+}
+
+export interface ScoringConfig {
+  impactWeight: number;
+  urgencyWeight: number;
+  dependencyWeight: number;
+  governanceWeight: number;
+}
+
+export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
+  impactWeight: 0.35,
+  urgencyWeight: 0.25,
+  dependencyWeight: 0.20,
+  governanceWeight: 0.20,
+};
+
+export type PriorityCategory = 'risk' | 'blocker' | 'decision' | 'dependency' | 'trend';
+
+export interface RankedPriority {
+  id: string;
+  rank: number;
+  title: string;
+  category: PriorityCategory;
+  compositeScore: number;
+  components: ScoreComponents;
+  confidence: number;
+  rationale: string[];
+  affectedOffices: string[];
+  timestamp: number;
+}
+
 export interface ExecutiveBriefing {
   summary: string;
   organizationHealth: { overall: OfficeHealth; offices: Record<string, OfficeHealth> };
   priorities: string[];
+  rankedPriorities: RankedPriority[];
   activeRisks: EscalatedRisk[];
   blockedItems: { office: string; blockers: string[] }[];
   pendingDecisions: PendingDecision[];
