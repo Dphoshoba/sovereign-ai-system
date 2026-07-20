@@ -44,11 +44,11 @@ Eras 1-5 constitute the immutable v1.0 architecture. All future development comp
 
 ### Era 6 — Executive Intelligence
 
-**Status:** ✅ Implemented — Executive Knowledge Graph, Dashboard, Decision Journal, Governance Analytics, Forecast Engine, Executive Briefing. Composes above v1.0.
+**Status:** ✅ Certified — Executive Knowledge Graph, Dashboard, Decision Journal, Governance Analytics, Forecast Engine, Executive Briefing. Composes above v1.0.
 
 ### Era 7 — Autonomous Enterprise
 
-**Status:** ✅ Implemented — Policy Engine, Approval Engine, Execution Planner, Execution Package, Audit Engine, Simulation Engine, Operational Connectors. Composes above Era 6. Policy-governed, never unrestricted.
+**Status:** ✅ Certified — Policy Engine, Approval Engine, Execution Planner, Execution Package, Audit Engine, Simulation Engine, Operational Connectors. Composes above Era 6. Policy-governed, never unrestricted.
 
 ### Key Architectural Property
 Growth through composition rather than expansion — new products extend the enterprise through configuration (deployment profiles, workflow definitions, governance overlays) rather than structural platform changes.
