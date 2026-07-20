@@ -3,6 +3,6 @@ Version: 1.0.0
 Status: Approved
 
 Phase VI: ACTIVE — Intelligent Orchestration Platform
-Stage 6A: CERTIFIED — Planning Engine
-Last Governance Decision: GOV-2026-Stage6A-001
-Next Milestone: Stage 6B — Adaptive Scheduling
+Stage 6B: CERTIFIED — Adaptive Scheduling
+Last Governance Decision: GOV-2026-Stage6B-001
+Next Milestone: Stage 6C — Observability & Analytics
