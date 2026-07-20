@@ -223,4 +223,88 @@ describe('Era 5 Phase 5 — Organizational Learning', () => {
     expect(history[2].supersedes).toBe('chain-001-v2');
   });
 
+  it('pattern promotes to playbook with approval', () => {
+    const engine = new OrganizationalLearningEngine();
+    const lessonA = makeArtifact({
+      id: 'promo-a', type: 'lesson', title: 'Promo A', version: 1,
+      evidenceIds: ['ev-pa-001', 'ev-pa-002'],
+      productCoverage: ['menwise360', 'bible-quest'],
+      status: 'draft',
+      confidence: 0.8,
+    });
+    const lessonB = makeArtifact({
+      id: 'promo-b', type: 'lesson', title: 'Promo B', version: 1,
+      evidenceIds: ['ev-pb-001'],
+      productCoverage: ['menwise360', 'bible-quest'],
+      status: 'draft',
+      confidence: 0.75,
+    });
+    engine.registerLessons([lessonA, lessonB]);
+    const patterns = engine.detectPatterns();
+    expect(patterns.length).toBeGreaterThanOrEqual(1);
+    const pattern = patterns[0];
+    const result = engine.promote(pattern.id, 'playbook', 'exec-director', 'Approved for enterprise use');
+    expect(result).not.toBeNull();
+    expect(result!.type).toBe('playbook');
+    expect(result!.status).toBe('approved');
+    expect(result!.approvedBy).toBe('exec-director');
+    expect(result!.evidenceIds.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('pattern promotes to governance_pattern with approval', () => {
+    const engine = new OrganizationalLearningEngine();
+    const lessonA = makeArtifact({
+      id: 'promo-gov-a', type: 'lesson', title: 'Gov A', version: 1,
+      evidenceIds: ['ev-ga-001'],
+      productCoverage: ['menwise360', 'bible-quest'],
+      status: 'draft',
+      confidence: 0.7,
+    });
+    const lessonB = makeArtifact({
+      id: 'promo-gov-b', type: 'lesson', title: 'Gov B', version: 1,
+      evidenceIds: ['ev-gb-001'],
+      productCoverage: ['menwise360', 'bible-quest'],
+      status: 'draft',
+      confidence: 0.85,
+    });
+    engine.registerLessons([lessonA, lessonB]);
+    const patterns = engine.detectPatterns();
+    expect(patterns.length).toBeGreaterThanOrEqual(1);
+    const pattern = patterns[0];
+    const result = engine.promote(pattern.id, 'governance_pattern', 'exec-director', 'Governance approval');
+    expect(result).not.toBeNull();
+    expect(result!.type).toBe('governance_pattern');
+    expect(result!.status).toBe('approved');
+  });
+
+  it('promotion without evidence is rejected', () => {
+    const engine = new OrganizationalLearningEngine();
+    engine.registerLesson(makeArtifact({
+      id: 'no-evidence', type: 'lesson', title: 'No Evidence', version: 1,
+      evidenceIds: [],
+    }));
+    const result = engine.promote('no-evidence', 'playbook', 'exec', 'No evidence');
+    expect(result).toBeNull();
+  });
+
+  it('promotion without approver is rejected', () => {
+    const engine = new OrganizationalLearningEngine();
+    engine.registerLesson(makeArtifact({
+      id: 'no-approver', type: 'lesson', title: 'No Approver', version: 1,
+      evidenceIds: ['ev-na-001'],
+    }));
+    const result = engine.promote('no-approver', 'playbook', '', 'No approver');
+    expect(result).toBeNull();
+  });
+
+  it('promotion to non-standard type is rejected', () => {
+    const engine = new OrganizationalLearningEngine();
+    engine.registerLesson(makeArtifact({
+      id: 'bad-type', type: 'lesson', title: 'Bad Type', version: 1,
+      evidenceIds: ['ev-bt-001'],
+    }));
+    const result = engine.promote('bad-type', 'lesson' as any, 'exec', 'Trying lesson type');
+    expect(result).toBeNull();
+  });
+
 });

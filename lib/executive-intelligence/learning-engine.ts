@@ -56,7 +56,7 @@ export class OrganizationalLearningEngine {
       }
       const avgConfidence = deduped.reduce((s, l) => s + l.confidence, 0) / deduped.length;
       const lessonIds = deduped.map(l => l.id).sort().join('+');
-      patterns.push({
+      const pattern: LearningArtifact = {
         id: `pattern-${key}-${lessonIds}`,
         type: 'pattern',
         title: `Pattern: ${deduped.map(l => l.title).join('; ')}`,
@@ -73,12 +73,49 @@ export class OrganizationalLearningEngine {
         validationStatus: 'current',
         validationHistory: [],
         validationConfidence: Math.round(avgConfidence * 100) / 100,
-      });
+      };
+      this.registerLesson(pattern);
+      patterns.push(pattern);
     }
     return patterns;
   }
 
-  promote(id: string, targetType: LearningArtifact['type'], approver: string, rationale: string): LearningArtifact | null { return null; }
+  promote(id: string, targetType: LearningArtifact['type'], approver: string, rationale: string): LearningArtifact | null {
+    if (!approver) return null;
+    const source = this.getArtifact(id);
+    if (!source) return null;
+    if (source.evidenceIds.length === 0) return null;
+
+    const allowedTargets: LearningArtifact['type'][] = ['playbook', 'workflow_template', 'governance_pattern', 'best_practice'];
+    if (!allowedTargets.includes(targetType)) return null;
+
+    const promoted: LearningArtifact = {
+      id: `${targetType}-${id}`,
+      type: targetType,
+      title: source.title,
+      description: source.description,
+      status: 'approved',
+      version: 1,
+      evidenceIds: [...source.evidenceIds],
+      confidence: source.confidence,
+      productCoverage: [...source.productCoverage],
+      initiativeCoverage: [...source.initiativeCoverage],
+      createdAt: Date.now(),
+      lastValidated: Date.now(),
+      approvedBy: approver,
+      approvedAt: Date.now(),
+      rationale,
+      validationStatus: 'current',
+      validationHistory: [],
+      validationConfidence: source.validationConfidence,
+    };
+    this.registerLesson(promoted);
+
+    const updatedSource = { ...source, status: 'superseded' as const, supersededBy: promoted.id };
+    this.registerLesson(updatedSource);
+
+    return promoted;
+  }
 
   validate(artifactId: string, reviewer: string, newStatus: ValidationStatus, rationale: string): void {}
 
