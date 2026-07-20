@@ -1,4 +1,4 @@
-import { LearningArtifact, LearningArtifactType, ArtifactStatus, ValidationStatus, ValidationAlert, InsightRecommendation, LearningBriefingSection } from './learning-types';
+import { LearningArtifact, LearningArtifactType, ArtifactStatus, ValidationStatus, ValidationAlert, ValidationRecord, InsightRecommendation, LearningBriefingSection } from './learning-types';
 
 export class OrganizationalLearningEngine {
   private artifacts: Map<string, LearningArtifact[]> = new Map();
@@ -185,6 +185,37 @@ export class OrganizationalLearningEngine {
   }
 
   buildLearningBriefing(): LearningBriefingSection {
-    return { newLessons: [], emergingPatterns: [], promotionCandidates: [], recentlyApprovedStandards: [], governanceRefinements: [], validationAlerts: [], supersededStandards: [], executiveRecommendations: [] };
+    const latest = this.getLatestArtifacts();
+    return {
+      newLessons: latest.filter(a => a.type === 'lesson' && a.status === 'draft'),
+      emergingPatterns: latest.filter(a => a.type === 'pattern' && a.status === 'candidate'),
+      promotionCandidates: latest.filter(a => a.status === 'candidate'),
+      recentlyApprovedStandards: latest.filter(a => a.status === 'approved' && (a.type === 'playbook' || a.type === 'governance_pattern')),
+      governanceRefinements: latest.filter(a => a.type === 'governance_pattern' && a.status === 'approved'),
+      validationAlerts: this.getValidationAlerts(),
+      supersededStandards: latest.filter(a => a.status === 'superseded'),
+      executiveRecommendations: this.synthesizeRecommendations(),
+    };
+  }
+
+  private getLatestArtifacts(): LearningArtifact[] {
+    const result: LearningArtifact[] = [];
+    for (const versions of this.artifacts.values()) {
+      const latest = versions.reduce((best, v) => v.version > best.version ? v : best);
+      result.push(latest);
+    }
+    return result;
+  }
+
+  private synthesizeRecommendations(): InsightRecommendation[] {
+    const candidates = this.getLatestArtifacts().filter(a => a.type === 'pattern' && a.status === 'candidate');
+    return candidates.map((p, i) => ({
+      id: `rec-${p.id}-${i}`,
+      insightId: p.id,
+      recommendation: `Promote pattern "${p.title}" to a standard artifact`,
+      rationale: `Pattern covers ${p.productCoverage.length} product(s) (${p.productCoverage.join(', ')}) with ${p.evidenceIds.length} evidence piece(s) and confidence ${p.confidence}`,
+      evidenceIds: [...p.evidenceIds],
+      confidence: p.confidence,
+    }));
   }
 }

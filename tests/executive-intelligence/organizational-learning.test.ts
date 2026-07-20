@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { OrganizationalLearningEngine } from '../../lib/executive-intelligence/learning-engine';
+import { PortfolioEngine } from '../../lib/executive-intelligence/portfolio-engine';
+import { ExecutiveIntelligence } from '../../lib/executive-intelligence/intelligence-engine';
+import { WorkforcePlatformImpl } from '../../lib/workforce/workforce-platform-impl';
+import { ExecutiveOffice } from '../../lib/executive-office/executive-office';
+import { ResearchOffice } from '../../lib/research-office/research-office';
+import { ProductOffice } from '../../lib/product-office/product-office';
+import { OperationsOffice } from '../../lib/operations-office/operations-office';
+import { KnowledgeOffice } from '../../lib/knowledge-office/knowledge-office';
+import { MENWISE360_PROFILE, BIBLE_QUEST_PROFILE, CREATOR_AUTOMATION_PROFILE, VISIONCRAFT_STUDIO_PROFILE, INSPIREVOICE_PROFILE } from '../../lib/executive-intelligence/product-profile-types';
 import type { LearningArtifact, LearningArtifactType } from '../../lib/executive-intelligence/learning-types';
 
 function makeArtifact(overrides: Partial<LearningArtifact> & { id: string; type: LearningArtifactType; title: string; version: number }): LearningArtifact {
@@ -354,5 +363,65 @@ describe('Era 5 Phase 5 — Organizational Learning', () => {
     engine.validate('val-multi', 'reviewer-c', 'current', 'Third review');
     const retrieved = engine.getArtifact('val-multi');
     expect(retrieved?.validationHistory.length).toBe(3);
+  });
+
+  it('buildLearningBriefing returns complete section', () => {
+    const engine = new OrganizationalLearningEngine();
+    engine.registerLessons([
+      makeArtifact({ id: 'brief-lesson-1', type: 'lesson', title: 'Brief Lesson 1', version: 1, evidenceIds: ['ev-1'], productCoverage: ['menwise360'], confidence: 0.7, status: 'draft' }),
+      makeArtifact({ id: 'brief-lesson-2', type: 'lesson', title: 'Brief Lesson 2', version: 1, evidenceIds: ['ev-2'], productCoverage: ['bible-quest'], confidence: 0.8, status: 'draft' }),
+    ]);
+    engine.detectPatterns();
+    const briefing = engine.buildLearningBriefing();
+    expect(briefing.newLessons.length).toBe(2);
+    expect(briefing.emergingPatterns).toBeDefined();
+    expect(briefing.promotionCandidates).toBeDefined();
+    expect(briefing.recentlyApprovedStandards).toBeDefined();
+    expect(briefing.governanceRefinements).toBeDefined();
+    expect(briefing.validationAlerts).toBeDefined();
+    expect(briefing.supersededStandards).toBeDefined();
+    expect(briefing.executiveRecommendations).toBeDefined();
+  });
+});
+
+const ALL_PROFILES = [MENWISE360_PROFILE, BIBLE_QUEST_PROFILE, CREATOR_AUTOMATION_PROFILE, VISIONCRAFT_STUDIO_PROFILE, INSPIREVOICE_PROFILE];
+
+function deployAllOffices(workforce: WorkforcePlatformImpl): void {
+  new ExecutiveOffice(workforce).deploy();
+  new ResearchOffice(workforce).deploy();
+  new ProductOffice(workforce).deploy();
+  new OperationsOffice(workforce).deploy();
+  new KnowledgeOffice(workforce).deploy();
+}
+
+describe('Era 5 Phase 5 — PortfolioEngine Integration', () => {
+
+  it('PortfolioBriefing includes learning section', () => {
+    const workforce = new WorkforcePlatformImpl();
+    deployAllOffices(workforce);
+    const eis = new ExecutiveIntelligence(workforce);
+    const portfolio = new PortfolioEngine(eis);
+    portfolio.registerProducts(ALL_PROFILES);
+    portfolio.registerLessons([
+      makeArtifact({ id: 'int-lesson-1', type: 'lesson', title: 'Integration Lesson 1', version: 1, evidenceIds: ['ev-int-1'], productCoverage: ['menwise360'], confidence: 0.75, status: 'draft' }),
+      makeArtifact({ id: 'int-lesson-2', type: 'lesson', title: 'Integration Lesson 2', version: 1, evidenceIds: ['ev-int-2'], productCoverage: ['bible-quest'], confidence: 0.8, status: 'draft' }),
+    ]);
+    const briefing = portfolio.refreshPortfolioBriefing();
+    expect(briefing.learning).toBeDefined();
+    expect(briefing.learning.newLessons.length).toBe(2);
+  });
+
+  it('sixth product extends without platform changes', () => {
+    const workforce = new WorkforcePlatformImpl();
+    deployAllOffices(workforce);
+    const eis = new ExecutiveIntelligence(workforce);
+    const portfolio = new PortfolioEngine(eis);
+    portfolio.registerProducts(ALL_PROFILES);
+    const briefing5 = portfolio.refreshPortfolioBriefing();
+    expect(briefing5.metadata.productCount).toBe(5);
+    const sixthProduct = { ...MENWISE360_PROFILE, productId: 'sixth-product', productName: 'Sixth Product' };
+    portfolio.registerProduct(sixthProduct);
+    const briefing6 = portfolio.refreshPortfolioBriefing();
+    expect(briefing6.metadata.productCount).toBe(6);
   });
 });

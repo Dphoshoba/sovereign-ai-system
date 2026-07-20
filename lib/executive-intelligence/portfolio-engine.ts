@@ -19,6 +19,8 @@ import {
   CoordinationBriefingSection,
 } from './cross-product-types';
 import { CrossProductEngine } from './cross-product-engine';
+import { OrganizationalLearningEngine } from './learning-engine';
+import { LearningArtifact } from './learning-types';
 import { OfficeHealth } from './types';
 
 export type EnterpriseRisksFromEis = PortfolioRisk[];
@@ -40,6 +42,7 @@ export class PortfolioEngine {
   private readonly trendEngine = new KpiTrendEngine();
   private readonly allocationEngine = new ResourceAllocationEngine();
   private readonly crossProductEngine = new CrossProductEngine();
+  private readonly learningEngine = new OrganizationalLearningEngine();
 
   constructor(private readonly eis: ExecutiveIntelligence) {
     this.crossProductEngine.registerProducts(Array.from(this.productProfiles.values()));
@@ -240,6 +243,16 @@ export class PortfolioEngine {
     return this.crossProductEngine.detectCycles();
   }
 
+  // ── Organizational Learning (Phase 5) ──
+
+  registerLesson(artifact: LearningArtifact): void {
+    this.learningEngine.registerLesson(artifact);
+  }
+
+  registerLessons(artifacts: LearningArtifact[]): void {
+    this.learningEngine.registerLessons(artifacts);
+  }
+
   // ── Enterprise Metric Queries (Milestone 4) ──
 
   getEnterpriseMetrics(): { definition: KpiDefinition; measurements: KpiMeasurement[]; trend: ReturnType<KpiTrendEngine['calculateTrend']> }[] {
@@ -367,6 +380,7 @@ export class PortfolioEngine {
     const metricsSection = this.buildMetricsSection(productSummaries);
     const allocationSection = this.allocationEngine.buildAllocationBriefing(Array.from(this.productProfiles.values()));
     const coordinationSection = this.crossProductEngine.buildCoordinationBriefing();
+    const learningSection = this.learningEngine.buildLearningBriefing();
 
     const strategicPriorities = [...snapshot.initiatives];
     const dependencies = [...snapshot.dependencies];
@@ -391,6 +405,7 @@ export class PortfolioEngine {
       metrics: metricsSection,
       allocation: allocationSection,
       coordination: coordinationSection,
+      learning: learningSection,
       metadata: {
         generatedAt: Date.now(),
         productCount: this.productProfiles.size,
