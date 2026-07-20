@@ -46,6 +46,29 @@ export interface ExecutiveSnapshot {
   crossOfficeDependencies: CrossOfficeDependency[];
 }
 
+// ── Milestone 3: Delta Engine ──
+
+export interface ExecutiveDelta {
+  previousSnapshotId: string;
+  previousTimestamp: number;
+  currentSnapshotId: string;
+  currentTimestamp: number;
+  newRisks: EscalatedRisk[];
+  resolvedRisks: string[];
+  newBlockers: { office: string; blocker: string }[];
+  resolvedBlockers: { office: string; blocker: string }[];
+  newPendingDecisions: PendingDecision[];
+  resolvedPendingDecisions: string[];
+  officeHealthChanges: {
+    office: string;
+    previous: OfficeHealth;
+    current: OfficeHealth;
+  }[];
+  newDependencies: CrossOfficeDependency[];
+  resolvedDependencies: string[];
+  summary: string;
+}
+
 // ── Milestone 3: Risk Intelligence ──
 
 export type Likelihood = 'low' | 'medium' | 'high' | 'very_high';

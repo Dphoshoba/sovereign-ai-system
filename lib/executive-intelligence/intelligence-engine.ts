@@ -2,12 +2,13 @@ import { WorkforcePlatform } from '../workforce/workforce-platform';
 import { buildSnapshot } from './executive-snapshot';
 import { ExecutiveAnalysisEngine } from './analysis-engine';
 import {
-  ExecutiveSnapshot, ExecutiveBriefing, EISRecommendation,
+  ExecutiveSnapshot, ExecutiveBriefing, ExecutiveDelta, EISRecommendation,
   OfficeHealth, EscalatedRisk, CrossOfficeDependency, KpiTrend,
 } from './types';
 
 export class ExecutiveIntelligence {
   private lastSnapshot: ExecutiveSnapshot | null = null;
+  private previousSnapshot: ExecutiveSnapshot | null = null;
   private readonly analysis: ExecutiveAnalysisEngine;
 
   constructor(private readonly workforce: WorkforcePlatform) {
@@ -15,8 +16,14 @@ export class ExecutiveIntelligence {
   }
 
   refreshSnapshot(): ExecutiveSnapshot {
+    this.previousSnapshot = this.lastSnapshot;
     this.lastSnapshot = buildSnapshot(this.workforce);
     return this.lastSnapshot;
+  }
+
+  getDelta(): ExecutiveDelta | null {
+    if (!this.previousSnapshot || !this.lastSnapshot) return null;
+    return this.analysis.computeDelta(this.previousSnapshot, this.lastSnapshot);
   }
 
   refreshAndBrief(): ExecutiveBriefing {

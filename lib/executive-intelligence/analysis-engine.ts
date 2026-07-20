@@ -1,5 +1,6 @@
 import {
   ExecutiveSnapshot,
+  ExecutiveDelta,
   RankedPriority,
   RiskIntelligence,
   Likelihood,
@@ -12,6 +13,7 @@ import {
   CrossOfficeDependency,
   EscalatedRisk,
   OfficeStatus,
+  OfficeHealth,
 } from './types';
 
 const OFFICE_OWNERS: Record<string, string> = {
@@ -89,6 +91,91 @@ export class ExecutiveAnalysisEngine {
       return 'Schedule cross-office resolution within 24 hours';
     }
     return 'Assign to office lead for resolution';
+  }
+
+  computeDelta(previous: ExecutiveSnapshot, current: ExecutiveSnapshot): ExecutiveDelta {
+    const newRisks = current.escalatedRisks.filter(
+      cr => !previous.escalatedRisks.find(pr => pr.id === cr.id)
+    );
+    const resolvedRisks = previous.escalatedRisks
+      .filter(pr => !current.escalatedRisks.find(cr => cr.id === pr.id))
+      .map(r => r.id);
+
+    const newBlockers: { office: string; blocker: string }[] = [];
+    const resolvedBlockers: { office: string; blocker: string }[] = [];
+
+    for (const [office, curStatus] of Object.entries(current.offices)) {
+      const prevStatus = previous.offices[office];
+      if (prevStatus) {
+        for (const blocker of curStatus.blockers) {
+          if (!prevStatus.blockers.includes(blocker)) {
+            newBlockers.push({ office, blocker });
+          }
+        }
+        for (const blocker of prevStatus.blockers) {
+          if (!curStatus.blockers.includes(blocker)) {
+            resolvedBlockers.push({ office, blocker });
+          }
+        }
+      } else {
+        for (const blocker of curStatus.blockers) {
+          newBlockers.push({ office, blocker });
+        }
+      }
+    }
+
+    const newPendingDecisions = current.pendingDecisions.filter(
+      cd => !previous.pendingDecisions.find(pd => pd.id === cd.id)
+    );
+    const resolvedPendingDecisions = previous.pendingDecisions
+      .filter(pd => !current.pendingDecisions.find(cd => cd.id === pd.id))
+      .map(d => d.id);
+
+    const officeHealthChanges: ExecutiveDelta['officeHealthChanges'] = [];
+    const allOffices = new Set([...Object.keys(previous.offices), ...Object.keys(current.offices)]);
+    for (const office of allOffices) {
+      const prevHealth = previous.offices[office]?.health;
+      const curHealth = current.offices[office]?.health;
+      if (prevHealth && curHealth && prevHealth !== curHealth) {
+        officeHealthChanges.push({ office, previous: prevHealth, current: curHealth });
+      }
+    }
+
+    const newDependencies = current.crossOfficeDependencies.filter(
+      cd => !previous.crossOfficeDependencies.find(pd => pd.id === cd.id)
+    );
+    const resolvedDependencies = previous.crossOfficeDependencies
+      .filter(pd => !current.crossOfficeDependencies.find(cd => cd.id === pd.id))
+      .map(d => d.id);
+
+    const parts: string[] = [];
+    if (newRisks.length > 0) parts.push(`${newRisks.length} new risk(s)`);
+    if (resolvedRisks.length > 0) parts.push(`${resolvedRisks.length} resolved risk(s)`);
+    if (newBlockers.length > 0) parts.push(`${newBlockers.length} new blocker(s)`);
+    if (resolvedBlockers.length > 0) parts.push(`${resolvedBlockers.length} resolved blocker(s)`);
+    if (newPendingDecisions.length > 0) parts.push(`${newPendingDecisions.length} new pending decision(s)`);
+    if (resolvedPendingDecisions.length > 0) parts.push(`${resolvedPendingDecisions.length} resolved decision(s)`);
+    if (officeHealthChanges.length > 0) parts.push(`${officeHealthChanges.length} office health change(s)`);
+    if (newDependencies.length > 0) parts.push(`${newDependencies.length} new dependency(ies)`);
+    if (resolvedDependencies.length > 0) parts.push(`${resolvedDependencies.length} resolved dependenc(ies)`);
+    const summary = parts.length > 0 ? parts.join('; ') : 'No material changes detected';
+
+    return {
+      previousSnapshotId: previous.snapshotId,
+      previousTimestamp: previous.timestamp,
+      currentSnapshotId: current.snapshotId,
+      currentTimestamp: current.timestamp,
+      newRisks,
+      resolvedRisks,
+      newBlockers,
+      resolvedBlockers,
+      newPendingDecisions,
+      resolvedPendingDecisions,
+      officeHealthChanges,
+      newDependencies,
+      resolvedDependencies,
+      summary,
+    };
   }
 
   rankPriorities(snapshot: ExecutiveSnapshot): RankedPriority[] {
