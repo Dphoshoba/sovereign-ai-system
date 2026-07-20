@@ -23,7 +23,7 @@ Set `NEXT_PUBLIC_APP_URL` and `NEXT_PUBLIC_BASE_URL` to this origin in the Verce
   - VisionCraft Studio (creative production) — ✅ Certified
   - InspireVoice (multimedia generation) — ✅ Certified
 - **Platform modifications across all 5 product deployments:** 0
-- **Test count:** 217 tests passing across 18 test files, zero platform modifications
+- **Test count:** 297 tests passing across 19 test files, zero platform modifications
 
 ### Era 5: Enterprise Scale — Certified (ERA5-CERT-2026-001)
 Architectural principle: *Optimize the enterprise through portfolio insights before optimizing individual products.*
@@ -37,6 +37,18 @@ Architectural principle: *Optimize the enterprise through portfolio insights bef
 **Phase 5 — Organizational Learning:** ✅ Certified — Learning Registry (7 artifact types), Pattern Engine, branching promotion workflow, Validation Registry, LearningBriefingSection in PortfolioBriefing, 196 tests across 17 files, zero platform changes
 
 **Phase 6 — Strategic Planning:** ✅ Certified — Assumption Registry, Scenario Registry, deterministic evaluator with configurable profiles, trade-off engine (strengths/weaknesses/deltas), roadmap builder, ExecutivePlanningBrief in PortfolioBriefing, 217 tests across 18 files, zero platform changes
+
+### Enterprise Architecture v1.0 — Certified Baseline
+
+Eras 1-5 constitute the immutable v1.0 architecture. All future development composes above, never modifies.
+
+### Era 6 — Executive Intelligence
+
+**Status:** ✅ Implemented — Executive Knowledge Graph, Dashboard, Decision Journal, Governance Analytics, Forecast Engine, Executive Briefing. Composes above v1.0.
+
+### Era 7 — Autonomous Enterprise
+
+**Status:** ✅ Implemented — Policy Engine, Approval Engine, Execution Planner, Execution Package, Audit Engine, Simulation Engine, Operational Connectors. Composes above Era 6. Policy-governed, never unrestricted.
 
 ### Key Architectural Property
 Growth through composition rather than expansion — new products extend the enterprise through configuration (deployment profiles, workflow definitions, governance overlays) rather than structural platform changes.
