@@ -2,7 +2,6 @@ import { LearningArtifact, LearningArtifactType, ArtifactStatus, ValidationStatu
 
 export class OrganizationalLearningEngine {
   private artifacts: Map<string, LearningArtifact[]> = new Map();
-  private patternCounter = 0;
 
   registerLesson(artifact: LearningArtifact): void {
     const id = artifact.id;
@@ -45,20 +44,23 @@ export class OrganizationalLearningEngine {
 
     const patterns: LearningArtifact[] = [];
     for (const [key, group] of groups) {
-      if (group.length < 2) continue;
+      const unique = new Map<string, LearningArtifact>();
+      for (const l of group) unique.set(l.id, l);
+      const deduped = Array.from(unique.values());
+      if (deduped.length < 2) continue;
       const combinedProducts = new Set<string>();
       const allEvidence: string[] = [];
-      for (const l of group) {
+      for (const l of deduped) {
         for (const p of l.productCoverage) combinedProducts.add(p);
         allEvidence.push(...l.evidenceIds);
       }
-      const avgConfidence = group.reduce((s, l) => s + l.confidence, 0) / group.length;
-      const lessonIds = group.map(l => l.id).sort().join('+');
+      const avgConfidence = deduped.reduce((s, l) => s + l.confidence, 0) / deduped.length;
+      const lessonIds = deduped.map(l => l.id).sort().join('+');
       patterns.push({
         id: `pattern-${key}-${lessonIds}`,
         type: 'pattern',
-        title: `Pattern: ${group.map(l => l.title).join('; ')}`,
-        description: `Multiple lessons: ${group.map(l => l.description).join(' | ')}`,
+        title: `Pattern: ${deduped.map(l => l.title).join('; ')}`,
+        description: `Multiple lessons: ${deduped.map(l => l.description).join(' | ')}`,
         status: 'candidate',
         version: 1,
         evidenceIds: allEvidence,
@@ -67,7 +69,7 @@ export class OrganizationalLearningEngine {
         initiativeCoverage: [],
         createdAt: Date.now(),
         lastValidated: Date.now(),
-        rationale: `Consolidated from ${group.length} related lessons`,
+        rationale: `Consolidated from ${deduped.length} related lessons`,
         validationStatus: 'current',
         validationHistory: [],
         validationConfidence: Math.round(avgConfidence * 100) / 100,
