@@ -258,6 +258,15 @@ export class WorkforcePlatformImpl implements WorkforcePlatform {
     return parts.every(part => this.evalSimpleExpr(part, ctx));
   }
 
+  private resolveValue(token: string, ctx: Record<string, unknown>): number | string {
+    const num = Number(token);
+    if (!isNaN(num) && token !== '' && token !== 'null') return num;
+    const ctxVal = ctx[token];
+    if (typeof ctxVal === 'number') return ctxVal;
+    if (typeof ctxVal === 'string') return ctxVal;
+    return token; // fallback — treat as string literal
+  }
+
   private evalSimpleExpr(expr: string, ctx: Record<string, unknown>): boolean {
     const trimmed = expr.trim();
 
@@ -285,19 +294,35 @@ export class WorkforcePlatformImpl implements WorkforcePlatform {
       return Number(ctxVal) === Number(rhs);
     }
 
-    // Handle < and <= for numbers
-    const ltEqMatch = trimmed.match(/^(\w+)\s*<=\s*(\d+(?:\.\d+)?)$/);
-    if (ltEqMatch) return Number(ctx[ltEqMatch[1]] ?? -1) <= Number(ltEqMatch[2]);
+    // Handle <= and < comparisons (field op field or field op literal)
+    const ltEqMatch = trimmed.match(/^(\w+)\s*<=\s*(.+)$/);
+    if (ltEqMatch) {
+      const lhs = Number(ctx[ltEqMatch[1]] ?? -1);
+      const rhs = Number(this.resolveValue(ltEqMatch[2].trim(), ctx));
+      return lhs <= rhs;
+    }
 
-    const ltMatch = trimmed.match(/^(\w+)\s*<\s*(\d+(?:\.\d+)?)$/);
-    if (ltMatch) return Number(ctx[ltMatch[1]] ?? -1) < Number(ltMatch[2]);
+    const ltMatch = trimmed.match(/^(\w+)\s*<\s*(.+)$/);
+    if (ltMatch) {
+      const lhs = Number(ctx[ltMatch[1]] ?? -1);
+      const rhs = Number(this.resolveValue(ltMatch[2].trim(), ctx));
+      return lhs < rhs;
+    }
 
-    // Handle > and >= for numbers
-    const gtEqMatch = trimmed.match(/^(\w+)\s*>=\s*(\d+(?:\.\d+)?)$/);
-    if (gtEqMatch) return Number(ctx[gtEqMatch[1]] ?? -1) >= Number(gtEqMatch[2]);
+    // Handle >= and > comparisons (field op field or field op literal)
+    const gtEqMatch = trimmed.match(/^(\w+)\s*>=\s*(.+)$/);
+    if (gtEqMatch) {
+      const lhs = Number(ctx[gtEqMatch[1]] ?? -1);
+      const rhs = Number(this.resolveValue(gtEqMatch[2].trim(), ctx));
+      return lhs >= rhs;
+    }
 
-    const gtMatch = trimmed.match(/^(\w+)\s*>\s*(\d+(?:\.\d+)?)$/);
-    if (gtMatch) return Number(ctx[gtMatch[1]] ?? -1) > Number(gtMatch[2]);
+    const gtMatch = trimmed.match(/^(\w+)\s*>\s*(.+)$/);
+    if (gtMatch) {
+      const lhs = Number(ctx[gtMatch[1]] ?? -1);
+      const rhs = Number(this.resolveValue(gtMatch[2].trim(), ctx));
+      return lhs > rhs;
+    }
 
     // Handle .startsWith('...')
     const startsWithMatch = trimmed.match(/^(\w+)\.startsWith\('([^']+)'\)$/);
