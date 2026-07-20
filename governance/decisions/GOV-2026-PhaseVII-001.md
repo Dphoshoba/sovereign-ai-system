@@ -16,7 +16,7 @@ Phase VII — Autonomous Operations Platform is authorized for planning.
 | 7A | Operational State Engine — unified health model, state transitions, dependency impact analysis | G-043 — Certified Operational State |
 | 7B | Autonomous Decision Engine — rule-based decisions, risk scoring, explainable rationale | G-044 — Explainable Autonomous Decisions |
 | 7C | Self-Healing & Recovery Coordination — compose certified recovery services (Phases IV–VI) | G-045 — Certified Autonomous Recovery |
-| 7D | Operational Governance & Human Oversight — approval thresholds, human-in-the-loop, escalation | G-046 — Governed Autonomous Operations |
+| 7D | Operational Governance & Human Oversight — approval thresholds, human-in-the-loop, escalation (CERTIFIED) | G-046 — Governed Autonomous Operations |
 
 ## Architectural Constraint
 
