@@ -99,12 +99,10 @@ export class TransactionCoordinatorImpl implements TransactionCoordinator {
     const allCompleted = updatedResults.every((r) => r.state === 'COMPLETED');
 
     let newState: TransactionState;
-    if (allCompleted) {
+    if (allCompleted || allDone) {
       newState = 'COMMITTED';
     } else if (anyFailed) {
       newState = 'PARTIAL';
-    } else if (allDone) {
-      newState = 'COMMITTED';
     } else {
       newState = 'ACTIVE';
     }
@@ -112,7 +110,7 @@ export class TransactionCoordinatorImpl implements TransactionCoordinator {
     return this.update(transactionId, {
       stepResults: updatedResults,
       state: newState,
-      completedAt: newState === 'COMMITTED' || newState === 'PARTIAL' || newState === 'ABORTED'
+      completedAt: newState !== 'ACTIVE'
         ? new Date().toISOString() : null,
     });
   }
