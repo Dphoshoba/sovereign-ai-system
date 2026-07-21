@@ -28,6 +28,8 @@ export default function EditArticlePage({
 
   const [article, setArticle] = useState<Article | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false)
+  const [imageGenerationError, setImageGenerationError] = useState("")
 
   useEffect(() => {
     async function loadArticle() {
@@ -81,6 +83,40 @@ export default function EditArticlePage({
 
     router.push("/admin/articles")
     router.refresh()
+  }
+
+  async function handleGenerateFeaturedImage() {
+    if (!article) return
+
+    setIsGeneratingImage(true)
+    setImageGenerationError("")
+
+    try {
+      const response = await fetch("/api/ai/generate-featured-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ articleId: article.id }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.ok) {
+        setImageGenerationError(
+          result.error || result.warning || "Image generation failed"
+        )
+        return
+      }
+
+      if (result.article) {
+        setArticle(result.article)
+      }
+    } catch (err) {
+      setImageGenerationError(
+        err instanceof Error ? err.message : "Network error"
+      )
+    } finally {
+      setIsGeneratingImage(false)
+    }
   }
 
   if (loading) return <main style={{ padding: 40 }}>Loading...</main>
@@ -147,6 +183,23 @@ export default function EditArticlePage({
             }}
           />
         ) : null}
+
+        <div>
+          <button
+            type="button"
+            onClick={handleGenerateFeaturedImage}
+            disabled={isGeneratingImage}
+            style={generateButton}
+          >
+            {isGeneratingImage ? "Generating Image..." : "Generate Featured Image"}
+          </button>
+
+          {imageGenerationError ? (
+            <p style={{ color: "#cc0000", fontSize: "14px", marginTop: "8px" }}>
+              {imageGenerationError}
+            </p>
+          ) : null}
+        </div>
 
         <label>
           SEO Title
@@ -297,6 +350,16 @@ const deleteButton: React.CSSProperties = {
   border: "none",
   background: "#cc0000",
   color: "var(--hero-foreground)",
+  cursor: "pointer",
+  fontWeight: "bold",
+}
+
+const generateButton: React.CSSProperties = {
+  padding: "12px 18px",
+  borderRadius: "10px",
+  border: "1px solid var(--border)",
+  background: "var(--background)",
+  color: "var(--foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }
