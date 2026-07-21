@@ -28,6 +28,7 @@ import { buildGovernanceFramework } from "@/lib/executive/operational-governance
 import { buildObservabilityReport } from "@/lib/executive/enterprise-observability"
 import { buildResilienceReport } from "@/lib/executive/enterprise-resilience"
 import { buildIntegrationPlatform } from "@/lib/executive/enterprise-integrations"
+import { buildApiPlatform } from "@/lib/executive/enterprise-api"
 
 export const dynamic = "force-dynamic"
 
@@ -209,6 +210,7 @@ export async function GET() {
           governancePassing: true,
         }),
         integrationPlatform: buildIntegrationPlatform(),
+        apiPlatform: buildApiPlatform(),
       },
     })
   } catch (error) {
