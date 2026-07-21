@@ -9,6 +9,7 @@ export type SandboxExecutionOutcome =
   | 'SANDBOX_ROLLED_BACK';
 
 export type SandboxPhase =
+  | 'PROVIDER_SELECTION'
   | 'ISOLATION_CHECK'
   | 'CREDENTIAL_CHECK'
   | 'APPROVAL_GATE'
