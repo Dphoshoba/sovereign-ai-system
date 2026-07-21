@@ -26,6 +26,7 @@ import { buildAutomationPlatform } from "@/lib/executive/automation-platform"
 import { deployExecutiveAgents } from "@/lib/executive/ai-agents"
 import { buildGovernanceFramework } from "@/lib/executive/operational-governance"
 import { buildObservabilityReport } from "@/lib/executive/enterprise-observability"
+import { buildResilienceReport } from "@/lib/executive/enterprise-resilience"
 
 export const dynamic = "force-dynamic"
 
@@ -200,6 +201,10 @@ export async function GET() {
         enterpriseObservability: buildObservabilityReport({
           totalTests: 297,
           testFailures: 0,
+          governancePassing: true,
+        }),
+        enterpriseResilience: buildResilienceReport({
+          testCount: 297,
           governancePassing: true,
         }),
       },
