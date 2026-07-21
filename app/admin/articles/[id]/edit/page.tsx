@@ -30,6 +30,8 @@ export default function EditArticlePage({
   const [loading, setLoading] = useState(true)
   const [isGeneratingImage, setIsGeneratingImage] = useState(false)
   const [imageGenerationError, setImageGenerationError] = useState("")
+  const [isApproving, setIsApproving] = useState(false)
+  const [approvalMessage, setApprovalMessage] = useState("")
 
   useEffect(() => {
     async function loadArticle() {
@@ -83,6 +85,44 @@ export default function EditArticlePage({
 
     router.push("/admin/articles")
     router.refresh()
+  }
+
+  async function handleApproveArticle() {
+    if (!article) return
+
+    setIsApproving(true)
+    setApprovalMessage("")
+
+    try {
+      const response = await fetch("/api/articles/approve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          articleId: article.id,
+          approvedBy: "admin",
+          reviewNote: "Approved via admin edit panel.",
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!result.ok) {
+        setApprovalMessage(result.error || "Approval failed")
+        return
+      }
+
+      setArticle({
+        ...article,
+        status: "approved",
+      })
+      setApprovalMessage("Article approved for publishing.")
+    } catch (err) {
+      setApprovalMessage(
+        err instanceof Error ? err.message : "Approval request failed"
+      )
+    } finally {
+      setIsApproving(false)
+    }
   }
 
   async function handleGenerateFeaturedImage() {
@@ -298,10 +338,34 @@ export default function EditArticlePage({
           >
             <option value="draft">Draft</option>
             <option value="review">Review</option>
+            <option value="approved">Approved</option>
             <option value="scheduled">Scheduled</option>
             <option value="published">Published</option>
           </select>
         </label>
+
+        {(article.status === "review-required" || article.status === "review") && (
+          <div>
+            <button
+              type="button"
+              onClick={handleApproveArticle}
+              disabled={isApproving}
+              style={approveButton}
+            >
+              {isApproving ? "Approving..." : "Approve Article"}
+            </button>
+            {approvalMessage && (
+              <p style={{
+                fontSize: "14px",
+                marginTop: "8px",
+                color: approvalMessage.includes("failed") || approvalMessage.includes("error")
+                  ? "#cc0000" : "var(--hero-background)",
+              }}>
+                {approvalMessage}
+              </p>
+            )}
+          </div>
+        )}
 
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
           <button type="submit" style={saveButton}>
@@ -362,4 +426,15 @@ const generateButton: React.CSSProperties = {
   color: "var(--foreground)",
   cursor: "pointer",
   fontWeight: "bold",
+}
+
+const approveButton: React.CSSProperties = {
+  padding: "12px 18px",
+  borderRadius: "10px",
+  border: "none",
+  background: "#2e7d32",
+  color: "var(--hero-foreground)",
+  cursor: "pointer",
+  fontWeight: "bold",
+  width: "100%",
 }
