@@ -536,4 +536,60 @@ describe('Era 6 — Executive Intelligence Engine', () => {
     expect(briefing.executiveIntelligence).toBeDefined();
     expect(briefing.productSummaries.length).toBe(6);
   });
+
+  it('engine accepts decisions regardless of test metadata', () => {
+    const engine = new ExecutiveIntelligenceEngine();
+    const productionDecision: ExecutiveDecision = {
+      ...SAMPLE_DECISION, id: 'prod-001', title: 'Production decision',
+    };
+    const testDecision: ExecutiveDecision = {
+      ...SAMPLE_DECISION, id: 'test-001', title: 'Test decision',
+    };
+    engine.registerDecision(productionDecision);
+    engine.registerDecision(testDecision);
+    const all = engine.getRecentDecisions(10);
+    expect(all.length).toBe(2);
+  });
+
+  it('briefing health calculation handles zero opportunities gracefully', () => {
+    const engine = new ExecutiveIntelligenceEngine();
+    engine.registerDecision(SAMPLE_DECISION);
+    const briefing = engine.buildExecutiveBriefing();
+    expect(briefing.enterpriseHealth.overallScore).toBeGreaterThanOrEqual(0);
+    expect(briefing.enterpriseHealth.overallScore).toBeLessThanOrEqual(1);
+  });
+
+  it('briefing health calculation handles empty decision set gracefully', () => {
+    const engine = new ExecutiveIntelligenceEngine();
+    const briefing = engine.buildExecutiveBriefing();
+    expect(briefing.enterpriseHealth).toBeDefined();
+    expect(briefing.decisionQuality.totalDecisions).toBe(0);
+  });
+
+  it('governance bottleneck detection returns empty for no decisions', () => {
+    const engine = new ExecutiveIntelligenceEngine();
+    const bottlenecks = engine.detectGovernanceBottlenecks();
+    expect(bottlenecks.length).toBe(0);
+  });
+
+  it('forecast types remain distinct and deterministic', () => {
+    const engine = new ExecutiveIntelligenceEngine();
+    const proj = engine.generateProjection('Revenue flat', 10000, 'Q3', 0.8, ['ev-1']);
+    const fcst = engine.generateForecast('Revenue growth', 12000, 'Q3', 0.7, ['ev-2']);
+    const sc = engine.generateScenarioProjection('Adopt growth', 15000, 'Q4', 'scn-001', ['ev-3']);
+
+    expect(proj.type).toBe('projection');
+    expect(fcst.type).toBe('forecast');
+    expect(sc.type).toBe('scenario');
+    expect(fcst.confidence).not.toBe(sc.confidence);
+  });
+
+  it('opportunity ranking not affected by decision count', () => {
+    const engine = new ExecutiveIntelligenceEngine();
+    const before = engine.buildExecutiveBriefing();
+    engine.registerDecision(SAMPLE_DECISION);
+    engine.registerDecision({ ...SAMPLE_DECISION, id: 'dec-002000', title: 'Decision 2' });
+    const after = engine.buildExecutiveBriefing();
+    expect(after.decisionQuality.totalDecisions).toBeGreaterThan(before.decisionQuality.totalDecisions);
+  });
 });

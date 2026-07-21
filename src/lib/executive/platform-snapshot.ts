@@ -186,7 +186,7 @@ export async function getExecutivePlatformSnapshot(): Promise<ExecutivePlatformS
     prisma.article.findMany(),
     prisma.subscriber.findMany(),
     prisma.leadMagnet.findMany(),
-    prisma.creatorLead.findMany(),
+    prisma.creatorLead.findMany({ where: { isTest: false } }),
     prisma.clientInvoice.findMany(),
     prisma.clientProfile.findMany({ where: { type: "client" } }),
     prisma.clientProject.findMany({
