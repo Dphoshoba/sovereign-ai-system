@@ -14,7 +14,7 @@ Set `NEXT_PUBLIC_APP_URL` and `NEXT_PUBLIC_BASE_URL` to this origin in the Verce
 
 **Status:** CERTIFIED BASELINE  
 **Record:** EA-NEXT-CERT-2026-001  
-**Tests:** 297 passing across 19 test files  
+**Tests:** 378 passing across 27 test files  
 **Platform modifications across all eras and products:** 0
 
 ### Programme Summary
@@ -27,6 +27,7 @@ Era 4  ✓ Portfolio              5 Products (MenWise360, Bible Quest, Creator A
 Era 5  ✓ Enterprise Scale       6 Phases: Observe→Measure→Advise→Coordinate→Learn→Plan
 Era 6  ✓ Executive Intelligence Executive Knowledge Graph, Dashboard, Decision Journal, Governance Analytics, Forecast Engine, Executive Briefing
 Era 7  ✓ Autonomous Enterprise  Policy Engine, Approval Engine, Execution Planner, Execution Package, Audit Engine, Simulation Engine, Operational Connectors
+Era 8  ✓ Enterprise Platform    Observability, Resilience, Integrations, API Platform, Security, Performance, Certification
 ```
 
 ### Architectural Principles
