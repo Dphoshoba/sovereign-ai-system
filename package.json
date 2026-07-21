@@ -12,7 +12,7 @@
     "test:coverage": "vitest run --coverage",
     "test:readers": "vitest run tests/readers/",
     "test:determinism": "tsx scripts/check-determinism.ts",
-    "ci": "npm run build && npm run test && npm run test:determinism && npm run smoke:v1",
+    "ci": "npm run governance:executive-data && npm run build && npm run test && npm run test:determinism && npm run smoke:v1",
     "youtube:auth": "node scripts/youtube-auth.js",
     "sweep:mojibake": "tsx scripts/clean-article-mojibake.ts",
     "sweep:mojibake:dry": "tsx scripts/clean-article-mojibake.ts --dry",
@@ -29,7 +29,8 @@
     "connector:generate": "tsx scripts/connector-generate-autonomous.ts",
     "connector:generate-batch": "tsx scripts/connector-generate-batch.ts",
     "connector:list": "tsx scripts/connector-list.ts",
-    "phase:xvii": "tsx scripts/phase-xvii-init.ts"
+    "phase:xvii": "tsx scripts/phase-xvii-init.ts",
+    "governance:executive-data": "tsx scripts/governance-executive-data.ts"
   },
   "dependencies": {
     "@mdx-js/react": "^3.1.1",

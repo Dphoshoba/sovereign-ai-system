@@ -132,3 +132,41 @@ All 18 seeded records across the 5 models marked `isTest: true`.
 ### Test Results
 
 305 tests passing across 19 test files, zero failures. 2 new regression tests added for decision quality stability.
+
+## Phase IV — Governance Enforcement Platform (v1.1)
+
+### Problem
+
+The `isTest` pattern was enforced by developer convention. A future query could omit the filter and compile without error.
+
+### Solution
+
+A static governance validator (`scripts/governance-executive-data.ts`) that scans all `src/lib/executive/` files for Prisma queries on governed models and verifies `isTest: false` is present. Integrated into `npm run ci` and `npm run governance:executive-data`.
+
+### Design Decisions
+
+- **Regex-based static analysis** rather than AST parsing — sufficient for the pattern, no tooling overhead
+- **CamelCase Prisma accessors** (`prisma.creatorLead.findMany()`) — matches the Prisma Client convention
+- **`// executive-governance-ignore`** comment for approved exceptions
+- **Exclusions:** `tests/`, `scripts/`, `prisma/` directories automatically excluded
+
+### Validator Rules
+
+- Exit code 0 when compliant, 1 when violations exist
+- Reports: model, file, line, suggested fix
+- Checks: `findMany`, `findUnique`, `findFirst`, `create`, `update`, `upsert`, `delete`
+- Ignores: non-governed models, excluded directories, `governance-ignore` comments
+
+### Test Results
+
+316 tests across 20 files, zero failures. 11 governance-specific tests covering:
+- Compliant queries (isTest present, existing where clauses, options)
+- Missing filter detection
+- Executive-governance-ignore exclusion
+- All 6 governed models
+- findUnique, findFirst, create, update operations
+- Non-governed model exclusion
+
+### CI Integration
+
+`npm run ci` now includes `npm run governance:executive-data` as the validation gate before build and test.
