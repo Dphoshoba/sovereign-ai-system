@@ -63,6 +63,7 @@ export interface ReasoningChain {
   confidenceFactors: Array<{ factor: string; contribution: number }>;
   missingEvidence: string[];
   conflictingEvidence: string[];
+  hasConflictingEvidence: boolean;
   decisionPath: string[];
 }
 
@@ -101,6 +102,7 @@ export function buildReasoning(params: {
     confidenceFactors,
     missingEvidence: params.missingEvidence,
     conflictingEvidence: params.hasConflictingEvidence ? ['Contradictory signals present'] : [],
+    hasConflictingEvidence: params.hasConflictingEvidence,
     decisionPath: params.decisionFactors || [],
   };
 }

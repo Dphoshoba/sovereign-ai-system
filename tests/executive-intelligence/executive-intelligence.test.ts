@@ -896,3 +896,36 @@ describe('Scenario Simulator', () => {
     expect(r.scenario.impactMultipliers.revenue).toBeLessThan(0);
   });
 });
+
+describe('Autonomous Planning — Executive Intelligence v1.7', () => {
+  it('planning: generates all 4 horizons', async () => {
+    const { generatePlanningSuite } = await import('../../src/lib/executive/autonomous-planner');
+    const suite = generatePlanningSuite({ goalCount: 5, riskCount: 3, recommendationCount: 8, timestampMs: Date.now() });
+    expect(suite.plans.length).toBe(4);
+    expect(suite.plans.map(p => p.horizon)).toEqual(['weekly', 'monthly', 'quarterly', 'annual']);
+  });
+
+  it('planning: each plan has reasoning and status', async () => {
+    const { generatePlanningSuite } = await import('../../src/lib/executive/autonomous-planner');
+    const suite = generatePlanningSuite({ goalCount: 5, riskCount: 3, recommendationCount: 8, timestampMs: Date.now() });
+    for (const plan of suite.plans) {
+      expect(plan.status).toBe('draft');
+      expect(plan.reasoning.summary).toBeTruthy();
+      expect(plan.items.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('planning: deterministic', async () => {
+    const { generatePlanningSuite } = await import('../../src/lib/executive/autonomous-planner');
+    const s1 = generatePlanningSuite({ goalCount: 5, riskCount: 3, recommendationCount: 8, timestampMs: 1000 });
+    const s2 = generatePlanningSuite({ goalCount: 5, riskCount: 3, recommendationCount: 8, timestampMs: 1000 });
+    expect(s1.totalItems).toBe(s2.totalItems);
+    expect(s1.plans.length).toBe(s2.plans.length);
+  });
+
+  it('planning: conflicting evidence annotated in reasoning', async () => {
+    const { generatePlan } = await import('../../src/lib/executive/autonomous-planner');
+    const plan = generatePlan({ horizon: 'quarterly', goalCount: 1, riskCount: 5, recommendationCount: 3, timestampMs: Date.now() });
+    expect(plan.reasoning.hasConflictingEvidence).toBe(true);
+  });
+});

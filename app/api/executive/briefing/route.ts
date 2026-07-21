@@ -17,6 +17,7 @@ import {
 } from "@/lib/executive/evidence-confidence"
 import { generatePredictionSet } from "@/lib/executive/prediction-engine"
 import { simulateAllScenarios, type ScenarioResult } from "@/lib/executive/scenario-simulator"
+import { generatePlanningSuite } from "@/src/lib/executive/autonomous-planner"
 
 export const dynamic = "force-dynamic"
 
@@ -137,6 +138,12 @@ export async function GET() {
           baselineRevenue: opportunities.reduce((s, o) => s + o.potentialValue, 0) || 10000,
           trendRevenue: recommendations.length * 200 || 1500,
           sourceCount: opportunities.length + recommendations.length,
+          timestampMs: Date.now(),
+        }),
+        autonomousPlan: generatePlanningSuite({
+          goalCount: recommendations.length,
+          riskCount: risks.length,
+          recommendationCount: recommendations.length,
           timestampMs: Date.now(),
         }),
       },
