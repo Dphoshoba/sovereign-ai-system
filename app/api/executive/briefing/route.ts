@@ -116,6 +116,10 @@ export async function GET() {
         nextActions: buildNextActions(recommendations, risks),
         confidenceAnalysis,
         explainabilitySummary,
+        decisionMemory: {
+          totalTracked: 0,
+          effectiveSince: 'Not yet populated — requires production decision outcomes',
+        },
         totals: {
           recommendations: recommendations.length,
           opportunities: opportunities.length,

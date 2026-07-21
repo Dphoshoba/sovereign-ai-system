@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ExecutiveSnapshot, OfficeStatus, ExecutiveBriefing, EISRecommendation } from '../../lib/executive-intelligence/types';
+import { recordDecisionOutcome, adjustConfidenceFromMemory, analyzeDecisionMemory } from '../../src/lib/executive/decision-memory-v2';
 import { WorkforcePlatformImpl } from '../../lib/workforce/workforce-platform-impl';
 import { ExecutiveOffice } from '../../lib/executive-office/executive-office';
 import { ResearchOffice } from '../../lib/research-office/research-office';
@@ -755,5 +756,69 @@ describe('Executive Explainability Engine', () => {
     });
     expect(reasoning.supportingEvidence).not.toContain('mia@caldercreates.example');
     expect(reasoning.supportingEvidence).not.toContain('jonah@reevewrites.example');
+  });
+});
+
+describe('Decision Memory Engine v1.4', () => {
+  it('decision memory: successful outcome increases confidence', () => {
+    const outcome = recordDecisionOutcome({
+      decisionTitle: 'Approve Q3 budget',
+      category: 'investment',
+      status: 'successful',
+      outcomeSummary: 'Revenue increased 15%',
+      lessonsLearned: ['Budget allocation effective'],
+      evidenceIds: ['ev-1'],
+    });
+    const result = adjustConfidenceFromMemory(0.7, [outcome]);
+    expect(result.adjustedConfidence).toBeGreaterThan(0.7);
+  });
+
+  it('decision memory: failed outcome decreases confidence', () => {
+    const outcome = recordDecisionOutcome({
+      decisionTitle: 'Launch campaign early',
+      category: 'operational',
+      status: 'failed',
+      outcomeSummary: 'Market not ready',
+      lessonsLearned: ['Verify market readiness'],
+      evidenceIds: ['ev-2'],
+    });
+    const result = adjustConfidenceFromMemory(0.7, [outcome]);
+    expect(result.adjustedConfidence).toBeLessThan(0.7);
+  });
+
+  it('decision memory: snapshot contains correct counts', () => {
+    const outcomes = [
+      recordDecisionOutcome({ decisionTitle: 'A', category: 'investment', status: 'successful', outcomeSummary: 'Good', lessonsLearned: ['L1'], evidenceIds: ['e1'] }),
+      recordDecisionOutcome({ decisionTitle: 'B', category: 'operational', status: 'failed', outcomeSummary: 'Bad', lessonsLearned: ['L2'], evidenceIds: ['e2'] }),
+      recordDecisionOutcome({ decisionTitle: 'C', category: 'governance', status: 'successful', outcomeSummary: 'Ok', lessonsLearned: ['L3'], evidenceIds: ['e3'] }),
+    ];
+    const snapshot = analyzeDecisionMemory(outcomes);
+    expect(snapshot.totalDecisions).toBe(3);
+    expect(snapshot.successfulOutcomes).toBe(2);
+    expect(snapshot.failedOutcomes).toBe(1);
+    expect(snapshot.lessonsCount).toBe(3);
+  });
+
+  it('decision memory: deterministic outcomes', () => {
+    const o1 = recordDecisionOutcome({ decisionTitle: 'T', category: 'operational', status: 'mixed', outcomeSummary: 'Meh', lessonsLearned: [], evidenceIds: [] });
+    const r1 = adjustConfidenceFromMemory(0.5, [o1]);
+    const r2 = adjustConfidenceFromMemory(0.5, [o1]);
+    expect(r1.adjustedConfidence).toBe(r2.adjustedConfidence);
+  });
+
+  it('decision memory: no historical data returns original confidence', () => {
+    const result = adjustConfidenceFromMemory(0.8, []);
+    expect(result.adjustedConfidence).toBe(0.8);
+    expect(result.adjustmentReason).toContain('No historical data');
+  });
+
+  it('decision memory: PortfolioBriefing still functional after v1.4 changes', () => {
+    const workforce = new WorkforcePlatformImpl();
+    deployAllOffices(workforce);
+    const eis = new ExecutiveIntelligence(workforce);
+    const engine = new PortfolioEngine(eis);
+    for (const p of ALL_PROFILES) engine.registerProduct(p);
+    const briefing = engine.getExecutivePortfolioBriefing();
+    expect(briefing.executiveIntelligence).toBeDefined();
   });
 });

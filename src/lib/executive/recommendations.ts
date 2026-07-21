@@ -424,6 +424,7 @@ export type ExecutiveIntelligenceRecommendation = {
   confidence: number
   evidenceIds?: string[]
   reasoning: ReasoningChain
+  confidenceMemory: { adjustedConfidence: number; adjustmentReason: string } | null
 }
 
 const INTELLIGENCE_PRIORITY_RANK: Record<
@@ -495,6 +496,7 @@ export async function generateExecutiveRecommendations(): Promise<
           action: `Draft and send a proposal to ${lead.name} (${lead.email}).`,
           confidence: leadRecEc.score,
           evidenceIds: [lead.id],
+          confidenceMemory: null,
           reasoning: buildReasoning({
             summary: `Lead ${lead.name} has score ${lead.leadScore} with no proposal on record`,
             evidenceIds: [lead.id],
@@ -524,6 +526,7 @@ export async function generateExecutiveRecommendations(): Promise<
           action: `Book a call with ${lead.name} and qualify for a proposal.`,
           confidence: hotLeadEc.score,
           evidenceIds: [lead.id],
+          confidenceMemory: null,
           reasoning: buildReasoning({
             summary: `Lead ${lead.name} readiness is hot with no proposal`,
             evidenceIds: [lead.id],
@@ -558,6 +561,7 @@ export async function generateExecutiveRecommendations(): Promise<
           action: `Review scope and timeline for "${project.title}" and notify the client.`,
           confidence: projectEc.score,
           evidenceIds: [project.id],
+          confidenceMemory: null,
           reasoning: buildReasoning({
             summary: `Project ${project.title} is overdue (due ${project.dueDate.toISOString().slice(0, 10)})`,
             evidenceIds: [project.id],
@@ -591,6 +595,7 @@ export async function generateExecutiveRecommendations(): Promise<
         action: "Reprioritize the delivery queue and reassign blocked tasks.",
         confidence: overdueTasksEc.score,
         evidenceIds: overdueTasks.map((t) => t.id),
+        confidenceMemory: null,
         reasoning: buildReasoning({
           summary: `${overdueTasks.length} delivery task${overdueTasks.length === 1 ? "" : "s"} past due`,
           evidenceIds: overdueTasks.map((t) => t.id),
@@ -620,6 +625,7 @@ export async function generateExecutiveRecommendations(): Promise<
           action: `Run a strategic review of "${goal.title}" and adjust supporting initiatives.`,
           confidence: goalRecEc.score,
           evidenceIds: [goal.id],
+          confidenceMemory: null,
           reasoning: buildReasoning({
             summary: `Goal "${goal.title}" at ${goal.progress}% progress needs strategic review`,
             evidenceIds: [goal.id],
@@ -650,6 +656,7 @@ export async function generateExecutiveRecommendations(): Promise<
           action: `Review the execution path for "${initiative.title}" and remove blockers.`,
           confidence: initiativeEc.score,
           evidenceIds: [initiative.id],
+          confidenceMemory: null,
           reasoning: buildReasoning({
             summary: `Initiative "${initiative.title}" stalled at ${initiative.progress}% progress`,
             evidenceIds: [initiative.id],
@@ -684,6 +691,7 @@ export async function generateExecutiveRecommendations(): Promise<
           action: `Send a payment reminder for ${invoice.invoiceNumber} and confirm payment terms.`,
           confidence: invoiceRecEc.score,
           evidenceIds: [invoice.id],
+          confidenceMemory: null,
           reasoning: buildReasoning({
             summary: `Invoice ${invoice.invoiceNumber} is overdue (AUD ${invoice.amountAud.toLocaleString("en-AU")})`,
             evidenceIds: [invoice.id],
@@ -717,6 +725,7 @@ export async function generateExecutiveRecommendations(): Promise<
         action: "Set review dates and add the decisions to the next boardroom agenda.",
         confidence: followUpsEc.score,
         evidenceIds: followUps.map((d) => d.id),
+        confidenceMemory: null,
         reasoning: buildReasoning({
           summary: `${followUps.length} executive decision${followUps.length === 1 ? "" : "s"} require follow-up without a review date`,
           evidenceIds: followUps.map((d) => d.id),
