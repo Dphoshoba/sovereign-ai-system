@@ -18,6 +18,7 @@ import {
 import { generatePredictionSet } from "@/lib/executive/prediction-engine"
 import { simulateAllScenarios, type ScenarioResult } from "@/lib/executive/scenario-simulator"
 import { generatePlanningSuite } from "@/src/lib/executive/autonomous-planner"
+import { generateActionsFromRecommendations, buildActionQueue } from "@/lib/executive/action-engine"
 
 export const dynamic = "force-dynamic"
 
@@ -146,6 +147,12 @@ export async function GET() {
           recommendationCount: recommendations.length,
           timestampMs: Date.now(),
         }),
+        actionQueue: buildActionQueue(
+          generateActionsFromRecommendations(
+            recommendations.map(r => ({ title: r.title, action: r.action, priority: r.priority, confidence: r.confidence })),
+            risks.length
+          )
+        ),
       },
     })
   } catch (error) {

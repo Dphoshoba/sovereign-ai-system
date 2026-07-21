@@ -929,3 +929,53 @@ describe('Autonomous Planning — Executive Intelligence v1.7', () => {
     expect(plan.reasoning.hasConflictingEvidence).toBe(true);
   });
 });
+
+describe('Executive Office v2 — Action Generation Engine', () => {
+  it('actions generated from recommendations', async () => {
+    const { generateActionsFromRecommendations } = await import('../../src/lib/executive/action-engine');
+    const recs = [
+      { title: 'Expand Q3 pipeline', action: 'Launch outreach campaign', priority: 'high', confidence: 0.85 },
+      { title: 'Reduce churn', action: 'Implement retention program', priority: 'medium', confidence: 0.72 },
+      { title: 'Optimize delivery', action: 'Streamline workflows', priority: 'low', confidence: 0.65 },
+    ];
+    const actions = generateActionsFromRecommendations(recs, 3);
+    expect(actions.length).toBe(3);
+    expect(actions[0].title).toBe('Launch outreach campaign');
+    expect(actions[0].status).toBe('queued');
+    expect(actions[0].reasoning.summary).toBeTruthy();
+    expect(actions[0].createdAt).toBeGreaterThan(0);
+  });
+
+  it('action types assigned correctly', async () => {
+    const { generateActionsFromRecommendations } = await import('../../src/lib/executive/action-engine');
+    const recs = Array.from({ length: 9 }, (_, i) => ({
+      title: `Rec ${i}`, action: `Action ${i}`, priority: 'medium', confidence: 0.8,
+    }));
+    const actions = generateActionsFromRecommendations(recs, 2);
+    expect(actions[0].actionType).toBe('approve');
+    expect(actions[1].actionType).toBe('approve');
+    expect(actions[2].actionType).toBe('approve');
+    expect(actions[3].actionType).toBe('schedule');
+    expect(actions[4].actionType).toBe('schedule');
+    expect(actions[5].actionType).toBe('schedule');
+    expect(actions[6].actionType).toBe('delegate');
+    expect(actions[7].actionType).toBe('delegate');
+    expect(actions[8].actionType).toBe('delegate');
+  });
+
+  it('action queue counts are correct', async () => {
+    const { generateActionsFromRecommendations, buildActionQueue } = await import('../../src/lib/executive/action-engine');
+    const recs = Array.from({ length: 10 }, (_, i) => ({
+      title: `Rec ${i}`, action: `Action ${i}`, priority: i < 4 ? 'high' : 'medium', confidence: 0.8,
+    }));
+    const actions = generateActionsFromRecommendations(recs, 5);
+    const queue = buildActionQueue(actions);
+    expect(queue.total).toBe(10);
+    expect(queue.byType['approve']).toBe(3);
+    expect(queue.byType['schedule']).toBe(3);
+    expect(queue.byType['delegate']).toBe(4);
+    expect(queue.byPriority['high']).toBe(4);
+    expect(queue.byPriority['medium']).toBe(6);
+    expect(queue.generatedAt).toBeGreaterThan(0);
+  });
+});
