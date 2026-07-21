@@ -859,3 +859,40 @@ describe('Decision Memory Engine v1.4', () => {
     expect(briefing.executiveIntelligence).toBeDefined();
   });
 });
+
+describe('Scenario Simulator', () => {
+  it('scenario: all 7 scenarios produce results', async () => {
+    const { simulateAllScenarios } = await import('../../src/lib/executive/scenario-simulator');
+    const results = simulateAllScenarios({ baselineRevenue: 10000, trendRevenue: 1500, sourceCount: 3, timestampMs: Date.now() });
+    expect(results.length).toBe(7);
+  });
+
+  it('scenario: each result has predictions with confidence', async () => {
+    const { simulateAllScenarios } = await import('../../src/lib/executive/scenario-simulator');
+    const results = simulateAllScenarios({ baselineRevenue: 10000, trendRevenue: 1500, sourceCount: 3, timestampMs: Date.now() });
+    for (const r of results) {
+      expect(r.predictions.predictions.length).toBe(15);
+      expect(r.overallConfidence).toBeGreaterThan(0);
+      expect(r.recommendation).toBeTruthy();
+    }
+  });
+
+  it('scenario: deterministic simulations', async () => {
+    const { simulateAllScenarios } = await import('../../src/lib/executive/scenario-simulator');
+    const r1 = simulateAllScenarios({ baselineRevenue: 10000, trendRevenue: 1500, sourceCount: 3, timestampMs: 1000 });
+    const r2 = simulateAllScenarios({ baselineRevenue: 10000, trendRevenue: 1500, sourceCount: 3, timestampMs: 1000 });
+    expect(r1.map(r => r.projectedOutcome)).toEqual(r2.map(r => r.projectedOutcome));
+  });
+
+  it('scenario: acquire has highest revenue impact', async () => {
+    const { simulateScenario } = await import('../../src/lib/executive/scenario-simulator');
+    const r = simulateScenario({ type: 'acquire', baselineRevenue: 10000, trendRevenue: 1500, sourceCount: 3, timestampMs: Date.now() });
+    expect(r.scenario.impactMultipliers.revenue).toBe(0.35);
+  });
+
+  it('scenario: delay has negative revenue impact', async () => {
+    const { simulateScenario } = await import('../../src/lib/executive/scenario-simulator');
+    const r = simulateScenario({ type: 'delay', baselineRevenue: 10000, trendRevenue: 1500, sourceCount: 3, timestampMs: Date.now() });
+    expect(r.scenario.impactMultipliers.revenue).toBeLessThan(0);
+  });
+});

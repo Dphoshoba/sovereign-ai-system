@@ -16,6 +16,7 @@ import {
   computeCompositeConfidence,
 } from "@/lib/executive/evidence-confidence"
 import { generatePredictionSet } from "@/lib/executive/prediction-engine"
+import { simulateAllScenarios, type ScenarioResult } from "@/lib/executive/scenario-simulator"
 
 export const dynamic = "force-dynamic"
 
@@ -127,8 +128,14 @@ export async function GET() {
           risks: risks.length,
         },
         predictions: generatePredictionSet({
-          baselineRevenue: 10000,
-          trendRevenue: 1500,
+          baselineRevenue: opportunities.reduce((s, o) => s + o.potentialValue, 0) || 10000,
+          trendRevenue: recommendations.length * 200 || 1500,
+          sourceCount: opportunities.length + recommendations.length,
+          timestampMs: Date.now(),
+        }),
+        scenarioSimulations: simulateAllScenarios({
+          baselineRevenue: opportunities.reduce((s, o) => s + o.potentialValue, 0) || 10000,
+          trendRevenue: recommendations.length * 200 || 1500,
           sourceCount: opportunities.length + recommendations.length,
           timestampMs: Date.now(),
         }),
