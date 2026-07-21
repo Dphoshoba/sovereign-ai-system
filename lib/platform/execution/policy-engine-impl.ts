@@ -162,7 +162,7 @@ export class PolicyEngineImpl implements PolicyEngine {
   }
 
   private evaluateCondition(condition: Condition, context: EvaluationContext): boolean {
-    const contextValue = (context as Record<string, unknown>)[condition.field];
+    const contextValue = (context as unknown as Record<string, unknown>)[condition.field];
     return this.compare(contextValue, condition.operator, condition.value);
   }
 
