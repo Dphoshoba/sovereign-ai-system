@@ -62,11 +62,6 @@ export class PortfolioEngine {
     this.crossProductEngine.registerProducts([profile]);
   }
 
-  registerProduct(profile: ProductDeploymentProfile): void {
-    this.productProfiles.set(profile.productId, profile);
-    this.crossProductEngine.registerProducts([profile]);
-  }
-
   registerProducts(profiles: ProductDeploymentProfile[]): void {
     for (const p of profiles) {
       this.registerProduct(p);

@@ -9,24 +9,6 @@ export const DECISION_STATUSES = [
 
 export type DecisionStatus = (typeof DECISION_STATUSES)[number]
 
-export type DecisionRecordRow = {
-  id: string
-  boardroomId: string | null
-  title: string
-  description: string | null
-  category: string | null
-  status: string
-  outcome: string | null
-  effectiveness: number | null
-  actionTaken: string | null
-  lessonLearned: string | null
-  reviewDate: string | null
-  impactArea: string | null
-  followUpRequired: boolean
-  createdAt: string
-  updatedAt: string
-}
-
 export type ExecutiveDecisionRecord = {
   id: string
   boardroomId: string | null
@@ -45,7 +27,35 @@ export type ExecutiveDecisionRecord = {
   updatedAt: string
 }
 
-export function mapDecisionRecord(decision: {
+export type DecisionMemory = {
+  totalDecisions: number
+  proposed: number
+  approved: number
+  completed: number
+  averageEffectiveness: number
+  decisions: ExecutiveDecisionRecord[]
+}
+
+export function isDecisionStatus(value: string): value is DecisionStatus {
+  return DECISION_STATUSES.includes(value as DecisionStatus)
+}
+
+export function normalizeDecisionTitle(value: string) {
+  return value
+    .replace(/\s*\(supported by \d+ agents\)$/i, "")
+    .trim()
+    .toLowerCase()
+}
+
+export function toDecisionTitle(value: string) {
+  return value.replace(/\s*\(supported by \d+ agents\)$/i, "").trim()
+}
+
+export function clampEffectiveness(value: number) {
+  return Math.max(0, Math.min(100, Math.round(value)))
+}
+
+export function serializeDecision(decision: {
   id: string
   boardroomId: string | null
   title: string
@@ -81,79 +91,66 @@ export function mapDecisionRecord(decision: {
   }
 }
 
+export function buildDecisionMemory(
+  decisions: ExecutiveDecisionRecord[]
+): DecisionMemory {
+  const proposed = decisions.filter(d => d.status === "proposed").length
+  const approved = decisions.filter(d => d.status === "approved").length
+  const completed = decisions.filter(d => d.status === "completed").length
+
+  const scored = decisions.filter(d => d.effectiveness !== null)
+  const averageEffectiveness = scored.length > 0
+    ? Math.round(scored.reduce((sum, d) => sum + (d.effectiveness ?? 0), 0) / scored.length)
+    : 0
+
+  return { totalDecisions: decisions.length, proposed, approved, completed, averageEffectiveness, decisions }
+}
+
+export async function saveBoardroomKeyDecisions(boardroomId: string, keyDecisions: string[]) {
+  const existing = await prisma.executiveDecision.findMany({ select: { title: true } })
+  const existingTitles = new Set(existing.map(d => normalizeDecisionTitle(d.title)))
+  let created = 0
+
+  for (const keyDecision of keyDecisions) {
+    const title = toDecisionTitle(keyDecision)
+    if (!title) continue
+    const normalized = normalizeDecisionTitle(title)
+    if (existingTitles.has(normalized)) continue
+
+    await prisma.executiveDecision.create({
+      data: { boardroomId, title, description: keyDecision, category: "boardroom", status: "proposed" },
+    })
+    existingTitles.add(normalized)
+    created += 1
+  }
+  return created
+}
+
 export async function loadDecisionRecords(): Promise<ExecutiveDecisionRecord[]> {
   const decisions = await prisma.executiveDecision.findMany({
     orderBy: { createdAt: "desc" },
     take: 100,
   })
-  return decisions.map(mapDecisionRecord)
+  return decisions.map(serializeDecision)
 }
 
 export async function recordBoardroomDecision(
-  boardroomId: string,
-  title: string,
-  description: string,
-  category: string
+  boardroomId: string, title: string, description: string, category: string
 ): Promise<ExecutiveDecisionRecord> {
   const decision = await prisma.executiveDecision.create({
-    data: {
-      boardroomId,
-      title,
-      description,
-      category,
-      status: "proposed",
-    },
+    data: { boardroomId, title, description, category, status: "proposed" },
   })
-  return mapDecisionRecord(decision)
+  return serializeDecision(decision)
 }
 
 export async function updateDecisionOutcome(
-  decisionId: string,
-  outcome: string,
-  effectiveness: number,
-  actionTaken: string,
-  lessonLearned: string
+  decisionId: string, outcome: string, effectiveness: number, actionTaken: string, lessonLearned: string
 ): Promise<ExecutiveDecisionRecord> {
   const decision = await prisma.executiveDecision.update({
     where: { id: decisionId },
-    data: {
-      outcome,
-      effectiveness,
-      actionTaken,
-      lessonLearned,
-      status: "completed",
-    },
+    data: { outcome, effectiveness, actionTaken, lessonLearned, status: "completed" },
   })
-  return mapDecisionRecord(decision)
-}
-
-export async function storeBoardroomRecommendationsInMemory(
-  boardroomId: string,
-  keyDecisions: string[]
-): Promise<number> {
-  const existingTitles = new Set<string>()
-  let created = 0
-
-  for (const keyDecision of keyDecisions) {
-    const title = keyDecision.slice(0, 200)
-    const normalized = title.toLowerCase().trim()
-    if (existingTitles.has(normalized)) continue
-
-    await prisma.executiveDecision.create({
-      data: {
-        boardroomId,
-        title,
-        description: keyDecision,
-        category: "boardroom",
-        status: "proposed",
-      },
-    })
-
-    existingTitles.add(normalized)
-    created += 1
-  }
-
-  return created
+  return serializeDecision(decision)
 }
 
 export interface DecisionOutcome {

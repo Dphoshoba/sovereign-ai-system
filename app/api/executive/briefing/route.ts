@@ -17,7 +17,7 @@ import {
 } from "@/lib/executive/evidence-confidence"
 import { generatePredictionSet } from "@/lib/executive/prediction-engine"
 import { simulateAllScenarios, type ScenarioResult } from "@/lib/executive/scenario-simulator"
-import { generatePlanningSuite } from "@/src/lib/executive/autonomous-planner"
+import { generatePlanningSuite } from "@/lib/executive/autonomous-planner"
 import { generateActionsFromRecommendations, buildActionQueue } from "@/lib/executive/action-engine"
 import { buildWorkspaceDashboard } from "@/lib/executive/workspace-dashboard"
 import { buildEnterpriseKnowledgeSummary } from "@/lib/executive/enterprise-knowledge"
