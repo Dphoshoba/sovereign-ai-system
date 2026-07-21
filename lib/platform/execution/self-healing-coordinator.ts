@@ -8,11 +8,13 @@ export type RecoveryStrategy =
   | 'reconcile'
   | 'credential_rotation'
   | 'circuit_breaker_reset'
-  | 'workflow_recovery';
+  | 'workflow_recovery'
+  | 'notify';
 
 export interface HealingAction {
   readonly id: string;
   readonly strategy: RecoveryStrategy;
+  readonly target: string;
   readonly success: boolean;
   readonly durationMs: number;
   readonly detail: string;
