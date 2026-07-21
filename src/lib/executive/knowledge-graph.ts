@@ -265,16 +265,17 @@ export async function buildExecutiveKnowledgeGraph(): Promise<KnowledgeGraphBuil
     prisma.strategicInitiative.findMany(),
     prisma.executiveBoardroomSession.findMany(),
     prisma.planningCycle.findMany(),
-    prisma.clientProject.findMany(),
-    prisma.clientProjectTask.findMany(),
-    prisma.clientInvoice.findMany(),
+    prisma.clientProject.findMany({ where: { isTest: false } }),
+    prisma.clientProjectTask.findMany({ where: { isTest: false } }),
+    prisma.clientInvoice.findMany({ where: { isTest: false } }),
     prisma.creatorLead.findMany({ where: { isTest: false } }),
-    prisma.clientProfile.findMany(),
+    prisma.clientProfile.findMany({ where: { isTest: false } }),
     prisma.creatorProposal.findMany({
       where: {
         leadId: {
           not: null,
         },
+        isTest: false,
       },
     }),
     prisma.executiveQuarterlyReview.findMany(),

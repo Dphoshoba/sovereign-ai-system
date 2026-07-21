@@ -219,6 +219,7 @@ model ClientProfile {
   interests String?
   notes     String?
   tags      String?
+  isTest    Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -236,6 +237,7 @@ model ClientProject {
   valueAud    Float?
   startDate   DateTime?
   dueDate     DateTime?
+  isTest      Boolean   @default(false)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -252,6 +254,7 @@ model ClientProjectTask {
   status      String    @default("todo")
   priority    String    @default("normal")
   dueDate     DateTime?
+  isTest      Boolean   @default(false)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -271,6 +274,7 @@ model ClientInvoice {
   dueDate       DateTime?
   paidDate      DateTime?
   notes         String?
+  isTest        Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -594,6 +598,7 @@ model CreatorProposal {
   proposalContent     String?
   pricingBreakdown    Json?
   aiSummary           String?
+  isTest              Boolean  @default(false)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 

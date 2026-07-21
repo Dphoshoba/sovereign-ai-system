@@ -32,9 +32,9 @@ export async function generateExecutiveRisks(): Promise<ExecutiveRisk[]> {
 
     const [invoices, projects, tasks, decisions, goals, boardroomSessions] =
       await Promise.all([
-        prisma.clientInvoice.findMany(),
-        prisma.clientProject.findMany(),
-        prisma.clientProjectTask.findMany(),
+        prisma.clientInvoice.findMany({ where: { isTest: false } }),
+        prisma.clientProject.findMany({ where: { isTest: false } }),
+        prisma.clientProjectTask.findMany({ where: { isTest: false } }),
         prisma.executiveDecision.findMany(),
         prisma.quarterlyGoal.findMany(),
         prisma.executiveBoardroomSession.findMany({

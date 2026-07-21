@@ -460,10 +460,10 @@ export async function generateExecutiveRecommendations(): Promise<
       prisma.strategicInitiative.findMany(),
       prisma.executiveDecision.findMany(),
        prisma.creatorLead.findMany({ where: { isTest: false } }),
-      prisma.creatorProposal.findMany(),
-      prisma.clientProject.findMany(),
-      prisma.clientProjectTask.findMany(),
-      prisma.clientInvoice.findMany(),
+      prisma.creatorProposal.findMany({ where: { isTest: false } }),
+      prisma.clientProject.findMany({ where: { isTest: false } }),
+      prisma.clientProjectTask.findMany({ where: { isTest: false } }),
+      prisma.clientInvoice.findMany({ where: { isTest: false } }),
     ])
 
     const recommendations: ExecutiveIntelligenceRecommendation[] = []

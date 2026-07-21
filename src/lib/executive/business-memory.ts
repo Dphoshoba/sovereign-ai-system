@@ -144,6 +144,7 @@ export async function buildBusinessMemory(options?: {
 
   const [projects, tasks, invoices, leads, proposals] = await Promise.all([
     prisma.clientProject.findMany({
+      where: { isTest: false },
       orderBy: { createdAt: "desc" },
       take: QUERY_LIMIT,
       select: {
@@ -157,6 +158,7 @@ export async function buildBusinessMemory(options?: {
       },
     }),
     prisma.clientProjectTask.findMany({
+      where: { isTest: false },
       orderBy: { createdAt: "desc" },
       take: QUERY_LIMIT,
       select: {
@@ -168,6 +170,7 @@ export async function buildBusinessMemory(options?: {
       },
     }),
     prisma.clientInvoice.findMany({
+      where: { isTest: false },
       orderBy: { createdAt: "desc" },
       take: QUERY_LIMIT,
       select: {
@@ -195,6 +198,7 @@ export async function buildBusinessMemory(options?: {
       },
     }),
     prisma.creatorProposal.findMany({
+      where: { isTest: false },
       orderBy: { createdAt: "desc" },
       take: QUERY_LIMIT,
       select: {

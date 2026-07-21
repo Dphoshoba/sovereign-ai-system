@@ -124,6 +124,7 @@ export async function buildClientIntelligence(options?: {
       ? Promise.resolve(null)
       : buildBusinessMemory({ snapshot }),
     prisma.clientProfile.findMany({
+      where: { isTest: false },
       orderBy: { createdAt: "desc" },
       take: QUERY_LIMIT,
       select: {
@@ -135,6 +136,7 @@ export async function buildClientIntelligence(options?: {
       },
     }),
     prisma.clientProject.findMany({
+      where: { isTest: false },
       orderBy: { createdAt: "desc" },
       take: QUERY_LIMIT,
       select: {
@@ -146,6 +148,7 @@ export async function buildClientIntelligence(options?: {
       },
     }),
     prisma.clientInvoice.findMany({
+      where: { isTest: false },
       orderBy: { createdAt: "desc" },
       take: QUERY_LIMIT,
       select: {
@@ -163,6 +166,7 @@ export async function buildClientIntelligence(options?: {
       select: { id: true, email: true },
     }),
     prisma.creatorProposal.findMany({
+      where: { isTest: false },
       orderBy: { createdAt: "desc" },
       take: QUERY_LIMIT,
       select: { leadId: true, status: true, estimatedValue: true },

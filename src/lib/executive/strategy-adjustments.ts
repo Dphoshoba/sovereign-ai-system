@@ -611,7 +611,7 @@ export async function generateStrategicAdjustments(): Promise<
       generateExecutiveOpportunities(),
       getExecutivePlatformSnapshot(),
       prisma.quarterlyGoal.findMany(),
-      prisma.creatorProposal.findMany(),
+      prisma.creatorProposal.findMany({ where: { isTest: false } }),
       prisma.executiveDecision.findMany(),
     ])
 

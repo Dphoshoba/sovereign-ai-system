@@ -350,6 +350,7 @@ async function seedClients() {
       status: "active",
       source: "referral",
       notes: "YouTube channel needing publishing automation.",
+      isTest: true,
     },
     {
       name: "Stonebridge Coaching",
@@ -358,6 +359,7 @@ async function seedClients() {
       status: "active",
       source: "lead-magnet",
       notes: "Solo coach automating newsletter and lead follow-up.",
+      isTest: true,
     },
     {
       name: "Northgate Studios",
@@ -366,6 +368,7 @@ async function seedClients() {
       status: "qualified",
       source: "audit",
       notes: "Podcast studio exploring content repurposing automation.",
+      isTest: true,
     },
   ]
 
@@ -401,6 +404,7 @@ async function seedProjects(clients: { id: string; name: string }[]) {
       status: "active",
       valueAud: 4500,
       clientName: "Harvest Lane Media",
+      isTest: true,
     },
     {
       title: "Newsletter and CRM automation",
@@ -408,6 +412,7 @@ async function seedProjects(clients: { id: string; name: string }[]) {
       status: "active",
       valueAud: 3200,
       clientName: "Stonebridge Coaching",
+      isTest: true,
     },
     {
       title: "Content repurposing audit implementation",
@@ -415,6 +420,7 @@ async function seedProjects(clients: { id: string; name: string }[]) {
       status: "planned",
       valueAud: 2800,
       clientName: "Northgate Studios",
+      isTest: true,
     },
   ]
 
@@ -461,36 +467,42 @@ async function seedTasks(projects: { id: string; title: string }[]) {
       status: "done",
       priority: "high",
       projectTitle: "Publishing pipeline automation",
+      isTest: true,
     },
     {
       title: "Build social distribution automation",
       status: "in_progress",
       priority: "high",
       projectTitle: "Publishing pipeline automation",
+      isTest: true,
     },
     {
       title: "Set up lead capture forms",
       status: "done",
       priority: "normal",
       projectTitle: "Newsletter and CRM automation",
+      isTest: true,
     },
     {
       title: "Configure newsletter automation",
       status: "in_progress",
       priority: "high",
       projectTitle: "Newsletter and CRM automation",
+      isTest: true,
     },
     {
       title: "Confirm audit scope with client",
       status: "todo",
       priority: "high",
       projectTitle: "Content repurposing audit implementation",
+      isTest: true,
     },
     {
       title: "Draft clip repurposing workflow",
       status: "todo",
       priority: "normal",
       projectTitle: "Content repurposing audit implementation",
+      isTest: true,
     },
   ]
 
@@ -598,6 +610,7 @@ async function seedCreatorProposals(
       estimatedValue: 3500,
       implementationWeeks: 4,
       leadEmail: "mia@caldercreates.example",
+      isTest: true,
     },
     {
       title: "Newsletter growth system — Jonah Reeve",
@@ -607,6 +620,7 @@ async function seedCreatorProposals(
       estimatedValue: 5200,
       implementationWeeks: 6,
       leadEmail: "jonah@reevewrites.example",
+      isTest: true,
     },
     {
       title: "Podcast repurposing starter — Priya Anand",
@@ -616,6 +630,7 @@ async function seedCreatorProposals(
       estimatedValue: 2600,
       implementationWeeks: 3,
       leadEmail: "priya@anandaudio.example",
+      isTest: true,
     },
   ]
 
@@ -668,6 +683,7 @@ async function seedInvoices(
       notes: "Publishing pipeline automation — milestone 1.",
       clientName: "Harvest Lane Media",
       projectTitle: "Publishing pipeline automation",
+      isTest: true,
     },
     {
       invoiceNumber: "INV-2026-002",
@@ -676,6 +692,7 @@ async function seedInvoices(
       notes: "Newsletter and CRM automation — milestone 1.",
       clientName: "Stonebridge Coaching",
       projectTitle: "Newsletter and CRM automation",
+      isTest: true,
     },
     {
       invoiceNumber: "INV-2026-003",
@@ -684,6 +701,7 @@ async function seedInvoices(
       notes: "Content repurposing implementation — deposit.",
       clientName: "Northgate Studios",
       projectTitle: "Content repurposing audit implementation",
+      isTest: true,
     },
   ]
 

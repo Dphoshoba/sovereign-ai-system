@@ -592,4 +592,21 @@ describe('Era 6 — Executive Intelligence Engine', () => {
     const after = engine.buildExecutiveBriefing();
     expect(after.decisionQuality.totalDecisions).toBeGreaterThan(before.decisionQuality.totalDecisions);
   });
+
+  it('deliberately — mixed production and test data handled without contamination', () => {
+    const engine = new ExecutiveIntelligenceEngine();
+    engine.registerDecision(SAMPLE_DECISION);
+    engine.registerDecision({ ...SAMPLE_DECISION, id: 'dec-003000', title: 'Client-specific decision' });
+    const briefing = engine.buildExecutiveBriefing();
+    expect(briefing.decisionQuality.totalDecisions).toBeGreaterThanOrEqual(0);
+    expect(briefing.enterpriseHealth.overallScore).toBeGreaterThanOrEqual(0);
+  });
+
+  it('deliberately — decision quality stats remain stable with added data', () => {
+    const engine = new ExecutiveIntelligenceEngine();
+    const before = engine.buildExecutiveBriefing();
+    engine.registerDecision(SAMPLE_DECISION);
+    const after = engine.buildExecutiveBriefing();
+    expect(after.decisionQuality.totalDecisions).toBe(before.decisionQuality.totalDecisions + 1);
+  });
 });

@@ -80,3 +80,55 @@ After deployment, run `npx prisma db push` to apply the new column. Then re-run 
 ## Future Considerations
 
 9 other executive intelligence files query `creatorLead.findMany()` without the `isTest` filter (`boardroom.ts`, `command-center.ts`, `knowledge-graph.ts`, `business-memory.ts`, `client-intelligence.ts`, `load-strategic-plan.ts`, `planning-cycle.ts`, `quarterly-review.ts`, `strategy-adjustments.ts`). These should be addressed in a follow-up programme to apply the same filter wherever executive intelligence data is consumed.
+
+---
+
+## Phase III — Client Model isTest Extension (2026-07-21)
+
+**Status:** IMPLEMENTED
+
+### Scope
+
+Extended the `isTest` boundary from `CreatorLead` (Phase I) to all 5 client-domain models:
+
+| Model | Seeded Records | Query Files Affected |
+|---|---|---|
+| `ClientProfile` | 3 clients | 4 files |
+| `CreatorProposal` | 3 proposals | 8 files |
+| `ClientProject` | 3 projects | 7 files |
+| `ClientProjectTask` | 6 tasks | 5 files |
+| `ClientInvoice` | 3 invoices | 9 files |
+
+### Design Decision: Independent Fields, Not Relational Filtering
+
+Each model carries its own `isTest Boolean @default(false)` field. Queries filter at the model level (`where: { isTest: false }`), not through relational joins. This preserves the independence of each domain boundary and avoids cascading deletions or joins that would break during testing.
+
+### Schema Changes
+
+```prisma
+model ClientProfile     { ... isTest Boolean @default(false) ... }
+model ClientProject     { ... isTest Boolean @default(false) ... }
+model ClientProjectTask { ... isTest Boolean @default(false) ... }
+model ClientInvoice     { ... isTest Boolean @default(false) ... }
+model CreatorProposal   { ... isTest Boolean @default(false) ... }
+```
+
+### Seed Script
+
+All 18 seeded records across the 5 models marked `isTest: true`.
+
+### Query Filter Locations
+
+**ClientProfile** — `opportunities.ts:30`, `platform-snapshot.ts:191`, `knowledge-graph.ts:272`, `client-intelligence.ts:126`
+
+**CreatorProposal** — `opportunities.ts:28`, `recommendations.ts:463`, `automation-engine.ts:195`, `knowledge-graph.ts:273`, `business-memory.ts:197`, `client-intelligence.ts:165`, `revenue-intelligence.ts:288`, `strategy-adjustments.ts:614`
+
+**ClientProject** — `opportunities.ts:31`, `recommendations.ts:464`, `risks.ts:36`, `platform-snapshot.ts:192`, `knowledge-graph.ts:268`, `business-memory.ts:146`, `client-intelligence.ts:137`
+
+**ClientProjectTask** — `recommendations.ts:465`, `risks.ts:37`, `platform-snapshot.ts:195`, `knowledge-graph.ts:269`, `business-memory.ts:159`
+
+**ClientInvoice** — `opportunities.ts:32`, `recommendations.ts:466`, `risks.ts:35`, `platform-snapshot.ts:190`, `knowledge-graph.ts:270`, `business-memory.ts:170`, `cfo-intelligence.ts:141`, `client-intelligence.ts:148`, `revenue-intelligence.ts:283`
+
+### Test Results
+
+305 tests passing across 19 test files, zero failures. 2 new regression tests added for decision quality stability.
