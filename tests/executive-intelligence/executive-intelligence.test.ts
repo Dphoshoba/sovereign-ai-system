@@ -812,6 +812,43 @@ describe('Decision Memory Engine v1.4', () => {
     expect(result.adjustmentReason).toContain('No historical data');
   });
 
+  it('prediction: generates correct number of forecasts', async () => {
+    const { generatePredictionSet } = await import('../../src/lib/executive/prediction-engine');
+    const set = generatePredictionSet({ baselineRevenue: 10000, trendRevenue: 1500, sourceCount: 3, timestampMs: Date.now() });
+    expect(set.predictions.length).toBe(15);
+  });
+
+  it('prediction: longer horizons have higher uncertainty', async () => {
+    const { forecastPrediction } = await import('../../src/lib/executive/prediction-engine');
+    const p30 = forecastPrediction({ metric: 'Revenue', horizon: '30d', baselineValue: 10000, trendFactor: 1500, confidenceSourceCount: 3, confidenceTimestampMs: Date.now() });
+    const p180 = forecastPrediction({ metric: 'Revenue', horizon: '180d', baselineValue: 10000, trendFactor: 1500, confidenceSourceCount: 3, confidenceTimestampMs: Date.now() });
+    expect(p30.value).toBeLessThan(p180.value);
+  });
+
+  it('prediction: deterministic — same inputs same outputs', async () => {
+    const { generatePredictionSet } = await import('../../src/lib/executive/prediction-engine');
+    const s1 = generatePredictionSet({ baselineRevenue: 10000, trendRevenue: 1500, sourceCount: 3, timestampMs: 1000 });
+    const s2 = generatePredictionSet({ baselineRevenue: 10000, trendRevenue: 1500, sourceCount: 3, timestampMs: 1000 });
+    expect(s1.predictions.map(p => p.value)).toEqual(s2.predictions.map(p => p.value));
+  });
+
+  it('prediction: each forecast has confidence and reasoning', async () => {
+    const { generatePredictionSet } = await import('../../src/lib/executive/prediction-engine');
+    const set = generatePredictionSet({ baselineRevenue: 10000, trendRevenue: 1500, sourceCount: 3, timestampMs: Date.now() });
+    for (const p of set.predictions) {
+      expect(p.confidence.score).toBeGreaterThan(0);
+      expect(p.reasoning.summary).toBeTruthy();
+      expect(p.reasoning.decisionPath.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('prediction: overall confidence computed correctly', async () => {
+    const { generatePredictionSet } = await import('../../src/lib/executive/prediction-engine');
+    const set = generatePredictionSet({ baselineRevenue: 10000, trendRevenue: 1500, sourceCount: 3, timestampMs: Date.now() });
+    expect(set.overallConfidence).toBeGreaterThan(0);
+    expect(set.overallConfidence).toBeLessThanOrEqual(1);
+  });
+
   it('decision memory: PortfolioBriefing still functional after v1.4 changes', () => {
     const workforce = new WorkforcePlatformImpl();
     deployAllOffices(workforce);

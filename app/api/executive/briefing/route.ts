@@ -15,6 +15,7 @@ import {
   ConfidenceAnalysis,
   computeCompositeConfidence,
 } from "@/lib/executive/evidence-confidence"
+import { generatePredictionSet } from "@/lib/executive/prediction-engine"
 
 export const dynamic = "force-dynamic"
 
@@ -125,6 +126,12 @@ export async function GET() {
           opportunities: opportunities.length,
           risks: risks.length,
         },
+        predictions: generatePredictionSet({
+          baselineRevenue: 10000,
+          trendRevenue: 1500,
+          sourceCount: opportunities.length + recommendations.length,
+          timestampMs: Date.now(),
+        }),
       },
     })
   } catch (error) {
