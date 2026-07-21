@@ -1057,3 +1057,29 @@ describe('Enterprise Knowledge Graph — Relationship Discovery', () => {
     expect(summary.relationCount).toBe(0);
   });
 });
+
+describe('Enterprise Memory — Business Memory Consolidation', () => {
+  it('enterprise memory snapshot aggregates lesson counts', async () => {
+    const { synthesizeEnterpriseMemory } = await import('../../src/lib/executive/enterprise-memory');
+    const snapshot = synthesizeEnterpriseMemory({
+      decisionCount: 12,
+      lessonCount: 8,
+      timestampMs: Date.now(),
+    });
+    expect(snapshot.totalLessons).toBe(8);
+    expect(snapshot.categories).toEqual(['revenue', 'delivery', 'governance', 'operations', 'strategy']);
+    expect(snapshot.generatedAt).toBeGreaterThan(0);
+  });
+
+  it('enterprise memory handles zero lessons gracefully', async () => {
+    const { synthesizeEnterpriseMemory } = await import('../../src/lib/executive/enterprise-memory');
+    const snapshot = synthesizeEnterpriseMemory({
+      decisionCount: 0,
+      lessonCount: 0,
+      timestampMs: Date.now(),
+    });
+    expect(snapshot.totalLessons).toBe(0);
+    expect(snapshot.highestImpact).toEqual([]);
+    expect(snapshot.recentLearnings).toEqual([]);
+  });
+});

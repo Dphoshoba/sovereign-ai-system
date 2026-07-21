@@ -21,6 +21,7 @@ import { generatePlanningSuite } from "@/src/lib/executive/autonomous-planner"
 import { generateActionsFromRecommendations, buildActionQueue } from "@/lib/executive/action-engine"
 import { buildWorkspaceDashboard } from "@/lib/executive/workspace-dashboard"
 import { buildEnterpriseKnowledgeSummary } from "@/lib/executive/enterprise-knowledge"
+import { synthesizeEnterpriseMemory } from "@/lib/executive/enterprise-memory"
 
 export const dynamic = "force-dynamic"
 
@@ -173,6 +174,11 @@ export async function GET() {
           decisionCount: 0,
           goalCount: recommendations.length,
           riskCount: risks.length,
+        }),
+        enterpriseMemory: synthesizeEnterpriseMemory({
+          decisionCount: 0,
+          lessonCount: recommendations.length,
+          timestampMs: Date.now(),
         }),
       },
     })
