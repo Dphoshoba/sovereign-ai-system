@@ -459,7 +459,7 @@ export async function generateExecutiveRecommendations(): Promise<
       prisma.quarterlyGoal.findMany(),
       prisma.strategicInitiative.findMany(),
       prisma.executiveDecision.findMany(),
-      prisma.creatorLead.findMany(),
+       prisma.creatorLead.findMany({ where: { isTest: false } }),
       prisma.creatorProposal.findMany(),
       prisma.clientProject.findMany(),
       prisma.clientProjectTask.findMany(),

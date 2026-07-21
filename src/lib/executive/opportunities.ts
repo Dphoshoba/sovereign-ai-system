@@ -24,7 +24,7 @@ export async function generateExecutiveOpportunities(): Promise<
   try {
     const [leads, proposals, goals, clients, projects, invoices] =
       await Promise.all([
-        prisma.creatorLead.findMany(),
+        prisma.creatorLead.findMany({ where: { isTest: false } }),
         prisma.creatorProposal.findMany(),
         prisma.quarterlyGoal.findMany(),
         prisma.clientProfile.findMany(),

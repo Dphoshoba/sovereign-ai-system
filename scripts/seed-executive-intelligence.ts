@@ -539,6 +539,7 @@ async function seedCreatorLeads() {
       niche: "Productivity content",
       notes: "Downloaded starter pack; asked about publishing automation.",
       projectedValue: 3500,
+      isTest: true,
     },
     {
       name: "Jonah Reeve",
@@ -551,6 +552,7 @@ async function seedCreatorLeads() {
       niche: "Finance newsletter",
       notes: "Completed audit; reviewing proposal options.",
       projectedValue: 5200,
+      isTest: true,
     },
     {
       name: "Priya Anand",
@@ -563,6 +565,7 @@ async function seedCreatorLeads() {
       niche: "Wellness podcast",
       notes: "Referred by existing client; intro call scheduled.",
       projectedValue: 2600,
+      isTest: true,
     },
   ]
 
