@@ -1083,3 +1083,28 @@ describe('Enterprise Memory — Business Memory Consolidation', () => {
     expect(snapshot.recentLearnings).toEqual([]);
   });
 });
+
+describe('Enterprise Automation Platform — Capability Catalog', () => {
+  it('automation platform catalogs all capabilities', async () => {
+    const { buildAutomationPlatform } = await import('../../src/lib/executive/automation-platform');
+    const platform = buildAutomationPlatform({ actionCount: 5, scenarioCount: 7, predictionCount: 15 });
+    expect(platform.capabilities.length).toBe(7);
+    expect(platform.totalActive).toBe(7);
+    expect(platform.totalPaused).toBe(0);
+    expect(platform.totalFailed).toBe(0);
+    expect(platform.generatedAt).toBeGreaterThan(0);
+    expect(platform.capabilities.find(c => c.id === 'action-engine')!.version).toBe('2.0');
+    expect(platform.capabilities.find(c => c.id === 'evidence-confidence')!.status).toBe('active');
+  });
+
+  it('automation platform audit trail counts pass through context', async () => {
+    const { buildAutomationPlatform } = await import('../../src/lib/executive/automation-platform');
+    const platform = buildAutomationPlatform({ actionCount: 12, scenarioCount: 3, predictionCount: 8 });
+    const actionEngine = platform.capabilities.find(c => c.id === 'action-engine')!;
+    const scenario = platform.capabilities.find(c => c.id === 'scenario-simulator')!;
+    const prediction = platform.capabilities.find(c => c.id === 'prediction')!;
+    expect(actionEngine.auditTrailCount).toBe(12);
+    expect(scenario.auditTrailCount).toBe(3);
+    expect(prediction.auditTrailCount).toBe(8);
+  });
+});

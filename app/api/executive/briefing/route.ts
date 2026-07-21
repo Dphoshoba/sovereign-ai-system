@@ -22,6 +22,7 @@ import { generateActionsFromRecommendations, buildActionQueue } from "@/lib/exec
 import { buildWorkspaceDashboard } from "@/lib/executive/workspace-dashboard"
 import { buildEnterpriseKnowledgeSummary } from "@/lib/executive/enterprise-knowledge"
 import { synthesizeEnterpriseMemory } from "@/lib/executive/enterprise-memory"
+import { buildAutomationPlatform } from "@/lib/executive/automation-platform"
 
 export const dynamic = "force-dynamic"
 
@@ -179,6 +180,11 @@ export async function GET() {
           decisionCount: 0,
           lessonCount: recommendations.length,
           timestampMs: Date.now(),
+        }),
+        automationPlatform: buildAutomationPlatform({
+          actionCount: Math.min(10, recommendations.length),
+          scenarioCount: 7,
+          predictionCount: 15,
         }),
       },
     })
