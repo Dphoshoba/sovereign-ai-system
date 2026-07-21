@@ -10,6 +10,7 @@ import {
 const LIFECYCLE_SCORES: Record<ProviderLifecycleStatus, number> = {
   REGISTERED: 0,
   CERTIFIED: 100,
+  PRODUCTION: 200,
   DEPRECATED: 0,
   RETIRED: 0,
 };

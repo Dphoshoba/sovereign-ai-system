@@ -20,8 +20,9 @@ const CERTIFICATION_ORDER: Record<ProviderCertificationLevel, number> = {
 const LIFECYCLE_ORDER: Record<ProviderLifecycleStatus, number> = {
   REGISTERED: 0,
   CERTIFIED: 1,
-  DEPRECATED: 2,
-  RETIRED: 3,
+  PRODUCTION: 2,
+  DEPRECATED: 3,
+  RETIRED: 4,
 };
 
 function meetsMinLifecycle(

@@ -1,6 +1,7 @@
 export type ProviderLifecycleStatus =
   | 'REGISTERED'
   | 'CERTIFIED'
+  | 'PRODUCTION'
   | 'DEPRECATED'
   | 'RETIRED';
 
