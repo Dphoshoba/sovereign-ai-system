@@ -27,6 +27,7 @@ import { deployExecutiveAgents } from "@/lib/executive/ai-agents"
 import { buildGovernanceFramework } from "@/lib/executive/operational-governance"
 import { buildObservabilityReport } from "@/lib/executive/enterprise-observability"
 import { buildResilienceReport } from "@/lib/executive/enterprise-resilience"
+import { buildIntegrationPlatform } from "@/lib/executive/enterprise-integrations"
 
 export const dynamic = "force-dynamic"
 
@@ -207,6 +208,7 @@ export async function GET() {
           testCount: 297,
           governancePassing: true,
         }),
+        integrationPlatform: buildIntegrationPlatform(),
       },
     })
   } catch (error) {
