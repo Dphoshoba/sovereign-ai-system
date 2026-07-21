@@ -1108,3 +1108,24 @@ describe('Enterprise Automation Platform — Capability Catalog', () => {
     expect(prediction.auditTrailCount).toBe(8);
   });
 });
+
+describe('Executive AI Agents — Role Specialization', () => {
+  it('ai agents deploy all 6 roles', async () => {
+    const { deployExecutiveAgents } = await import('../../src/lib/executive/ai-agents');
+    const coordination = deployExecutiveAgents({ recommendationCount: 8, riskCount: 3 });
+    expect(coordination.agents.length).toBe(6);
+    expect(coordination.activeAgents).toBe(4);
+    expect(coordination.generatedAt).toBeGreaterThan(0);
+    const roles = coordination.agents.map(a => a.role);
+    expect(roles).toEqual(['CEO', 'COO', 'CFO', 'CTO', 'LEGAL', 'OPERATIONS']);
+  });
+
+  it('ai agents context reflected in coordination summary', async () => {
+    const { deployExecutiveAgents } = await import('../../src/lib/executive/ai-agents');
+    const standard = deployExecutiveAgents({ recommendationCount: 5, riskCount: 3 });
+    expect(standard.coordinationSummary).toContain('standard');
+    const highRisk = deployExecutiveAgents({ recommendationCount: 10, riskCount: 6 });
+    expect(highRisk.coordinationSummary).toContain('high-risk');
+    expect(standard.crossFunctionalCoverage.length).toBe(3);
+  });
+});
