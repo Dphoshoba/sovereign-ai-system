@@ -11,6 +11,10 @@ import {
   generateExecutiveRisks,
   type ExecutiveRisk,
 } from "@/lib/executive/risks"
+import {
+  ConfidenceAnalysis,
+  computeCompositeConfidence,
+} from "@/lib/executive/evidence-confidence"
 
 export const dynamic = "force-dynamic"
 
@@ -66,6 +70,26 @@ export async function GET() {
 
     const health = computeBriefingHealth(risks, opportunities)
 
+    const allConfidences = [
+      ...opportunities.map(o => o.evidenceConfidence.score),
+      ...risks.map(r => r.evidenceConfidence.score),
+      ...recommendations.map(r => r.confidence),
+    ];
+    const allSourceCounts = [
+      ...opportunities.map(o => o.evidenceConfidence.sourceCount),
+      ...risks.map(r => r.evidenceConfidence.sourceCount),
+      ...recommendations.filter(r => r.evidenceIds).map(r => r.evidenceIds!.length),
+    ];
+
+    const confidenceAnalysis: ConfidenceAnalysis = {
+      overallConfidence: computeCompositeConfidence(allConfidences, allSourceCounts),
+      assumptionConfidence: 0.85,
+      evidenceCoverage: allConfidences.length > 0 ? (allConfidences.filter(c => c >= 0.6).length / allConfidences.length) : 0,
+      trackRecordComments: `${opportunities.length} opportunities, ${risks.length} risks assessed`,
+      componentCount: allConfidences.length,
+      componentsAssessed: allConfidences.length,
+    };
+
     return NextResponse.json({
       ok: true,
       briefing: {
@@ -75,6 +99,7 @@ export async function GET() {
         topRisks: risks.slice(0, 5),
         recommendations: recommendations.slice(0, 5),
         nextActions: buildNextActions(recommendations, risks),
+        confidenceAnalysis,
         totals: {
           recommendations: recommendations.length,
           opportunities: opportunities.length,

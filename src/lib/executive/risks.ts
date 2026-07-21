@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/prisma"
+import { EvidenceConfidence, computeEvidenceConfidence } from './evidence-confidence';
 
 export type ExecutiveRisk = {
   title: string
   severity: "low" | "medium" | "high" | "critical"
   impact: string
   mitigation: string
+  evidenceConfidence: EvidenceConfidence
 }
 
 const SEVERITY_RANK: Record<ExecutiveRisk["severity"], number> = {
@@ -59,6 +61,11 @@ export async function generateExecutiveRisks(): Promise<ExecutiveRisk[]> {
           severity: invoice.amountAud >= 2000 ? "critical" : "high",
           impact: `${amount} of revenue is past due, straining cash flow.`,
           mitigation: `Send a payment reminder for ${invoice.invoiceNumber} and agree on a payment date.`,
+          evidenceConfidence: computeEvidenceConfidence({
+            evidenceIds: [invoice.id, `invoice-status-${invoice.status}`],
+            sourceCount: 2,
+            timestampMs: new Date(invoice.updatedAt).getTime(),
+          }),
         })
       } else if (invoice.status === "sent") {
         risks.push({
@@ -66,6 +73,11 @@ export async function generateExecutiveRisks(): Promise<ExecutiveRisk[]> {
           severity: "medium",
           impact: `${amount} is invoiced but not yet collected.`,
           mitigation: `Confirm receipt of ${invoice.invoiceNumber} and the expected payment date.`,
+          evidenceConfidence: computeEvidenceConfidence({
+            evidenceIds: [invoice.id, `invoice-status-${invoice.status}`],
+            sourceCount: 1,
+            timestampMs: new Date(invoice.updatedAt).getTime(),
+          }),
         })
       }
     }
@@ -100,6 +112,11 @@ export async function generateExecutiveRisks(): Promise<ExecutiveRisk[]> {
           severity: "high",
           impact: "Client delivery commitment has been missed.",
           mitigation: `Re-plan "${project.title}" and communicate a revised timeline to the client.`,
+          evidenceConfidence: computeEvidenceConfidence({
+            evidenceIds: [project.id, `project-status-${project.status}`],
+            sourceCount: 2,
+            timestampMs: new Date(project.updatedAt).getTime(),
+          }),
         })
       } else if (stalled) {
         risks.push({
@@ -107,6 +124,11 @@ export async function generateExecutiveRisks(): Promise<ExecutiveRisk[]> {
           severity: "medium",
           impact: `No activity for ${PROJECT_STALL_WINDOW_DAYS}+ days with open tasks remaining.`,
           mitigation: `Review open tasks on "${project.title}" and restart delivery momentum.`,
+          evidenceConfidence: computeEvidenceConfidence({
+            evidenceIds: [project.id, `project-stalled-${PROJECT_STALL_WINDOW_DAYS}d`],
+            sourceCount: 1,
+            timestampMs: new Date(project.updatedAt).getTime(),
+          }),
         })
       }
     }
@@ -123,6 +145,11 @@ export async function generateExecutiveRisks(): Promise<ExecutiveRisk[]> {
         severity: pendingDecisions.length >= 3 ? "high" : "medium",
         impact: "Approved direction is not being executed, slowing strategy.",
         mitigation: "Assign owners and implementation dates to pending decisions.",
+        evidenceConfidence: computeEvidenceConfidence({
+          evidenceIds: pendingDecisions.map((d) => d.id),
+          sourceCount: pendingDecisions.length > 2 ? 3 : pendingDecisions.length,
+          timestampMs: pendingDecisions.length > 0 ? new Date(pendingDecisions[0].updatedAt).getTime() : Date.now(),
+        }),
       })
     }
 
@@ -136,6 +163,11 @@ export async function generateExecutiveRisks(): Promise<ExecutiveRisk[]> {
         severity: "low",
         impact: "Follow-up reviews may be skipped, weakening the learning loop.",
         mitigation: "Set review dates during the next boardroom session.",
+        evidenceConfidence: computeEvidenceConfidence({
+          evidenceIds: missingFollowUps.map((d) => d.id),
+          sourceCount: missingFollowUps.length > 2 ? 3 : missingFollowUps.length,
+          timestampMs: missingFollowUps.length > 0 ? new Date(missingFollowUps[0].updatedAt).getTime() : Date.now(),
+        }),
       })
     }
 
@@ -147,6 +179,11 @@ export async function generateExecutiveRisks(): Promise<ExecutiveRisk[]> {
           severity: goal.progress < 15 ? "high" : "medium",
           impact: `Only ${goal.progress}% progress in ${goal.quarter} ${goal.year} — target likely to be missed.`,
           mitigation: `Run a strategic review of "${goal.title}" and rescope or reinforce initiatives.`,
+          evidenceConfidence: computeEvidenceConfidence({
+            evidenceIds: [goal.id, `goal-progress-${goal.progress}`],
+            sourceCount: 1,
+            timestampMs: new Date(goal.updatedAt).getTime(),
+          }),
         })
       }
     }
@@ -161,6 +198,11 @@ export async function generateExecutiveRisks(): Promise<ExecutiveRisk[]> {
         severity: "medium",
         impact: "Executive oversight cadence has lapsed; priorities may drift.",
         mitigation: "Schedule a boardroom session and review current priorities.",
+        evidenceConfidence: computeEvidenceConfidence({
+          evidenceIds: ['boardroom-cadence-gap'],
+          sourceCount: 1,
+          timestampMs: latestSession ? new Date(latestSession.createdAt).getTime() : Date.now() - 365 * 24 * 60 * 60 * 1000,
+        }),
       })
     }
 

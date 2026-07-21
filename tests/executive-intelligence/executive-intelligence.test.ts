@@ -610,3 +610,58 @@ describe('Era 6 — Executive Intelligence Engine', () => {
     expect(after.decisionQuality.totalDecisions).toBe(before.decisionQuality.totalDecisions + 1);
   });
 });
+
+describe('Evidence Confidence Engine', () => {
+  it('evidence confidence: higher source count increases score', async () => {
+    const { computeEvidenceConfidence } = await import('../../src/lib/executive/evidence-confidence');
+    const low = computeEvidenceConfidence({ evidenceIds: ['e1'], sourceCount: 1, timestampMs: Date.now() });
+    const high = computeEvidenceConfidence({ evidenceIds: ['e1','e2','e3'], sourceCount: 3, timestampMs: Date.now() });
+    expect(high.score).toBeGreaterThan(low.score);
+  });
+
+  it('evidence confidence: stale data lowers score', async () => {
+    const { computeEvidenceConfidence } = await import('../../src/lib/executive/evidence-confidence');
+    const fresh = computeEvidenceConfidence({ evidenceIds: ['e1'], sourceCount: 1, timestampMs: Date.now() });
+    const stale = computeEvidenceConfidence({ evidenceIds: ['e1'], sourceCount: 1, timestampMs: Date.now() - 800 * 3600 * 1000 });
+    expect(stale.score).toBeLessThan(fresh.score);
+  });
+
+  it('evidence confidence: missing evidence lowers score', async () => {
+    const { computeEvidenceConfidence } = await import('../../src/lib/executive/evidence-confidence');
+    const complete = computeEvidenceConfidence({ evidenceIds: ['e1'], sourceCount: 2, timestampMs: Date.now(), missingEvidence: [] });
+    const missing = computeEvidenceConfidence({ evidenceIds: ['e1'], sourceCount: 2, timestampMs: Date.now(), missingEvidence: ['Contract renewal', 'Email activity'] });
+    expect(missing.score).toBeLessThan(complete.score);
+  });
+
+  it('evidence confidence: conflicting evidence lowers score', async () => {
+    const { computeEvidenceConfidence } = await import('../../src/lib/executive/evidence-confidence');
+    const noConflict = computeEvidenceConfidence({ evidenceIds: ['e1'], sourceCount: 2, timestampMs: Date.now(), hasConflictingEvidence: false });
+    const hasConflict = computeEvidenceConfidence({ evidenceIds: ['e1'], sourceCount: 2, timestampMs: Date.now(), hasConflictingEvidence: true });
+    expect(hasConflict.score).toBeLessThan(noConflict.score);
+  });
+
+  it('evidence confidence: deterministic — same inputs produce same outputs', async () => {
+    const { computeEvidenceConfidence } = await import('../../src/lib/executive/evidence-confidence');
+    const params = { evidenceIds: ['e1', 'e2'], sourceCount: 2, timestampMs: 1000000, missingEvidence: ['ev1'], hasConflictingEvidence: false };
+    const r1 = computeEvidenceConfidence(params);
+    const r2 = computeEvidenceConfidence(params);
+    expect(r1.score).toBe(r2.score);
+    expect(r1.sourceCount).toBe(r2.sourceCount);
+    expect(r1.dataFreshnessHours).toBe(r2.dataFreshnessHours);
+  });
+
+  it('evidence confidence: zero evidence returns baseline', async () => {
+    const { computeEvidenceConfidence } = await import('../../src/lib/executive/evidence-confidence');
+    const zero = computeEvidenceConfidence({ evidenceIds: [], sourceCount: 0, timestampMs: Date.now() - 48 * 3600 * 1000 });
+    expect(zero.score).toBe(0.5);
+    expect(zero.sourceCount).toBe(0);
+  });
+
+  it('evidence confidence: score clamped to 0-1 range', async () => {
+    const { computeEvidenceConfidence } = await import('../../src/lib/executive/evidence-confidence');
+    const high = computeEvidenceConfidence({ evidenceIds: ['e1'], sourceCount: 10, timestampMs: Date.now() });
+    const low = computeEvidenceConfidence({ evidenceIds: [], sourceCount: 0, timestampMs: Date.now() - 2000 * 3600 * 1000, missingEvidence: ['a','b','c'], hasConflictingEvidence: true });
+    expect(high.score).toBeLessThanOrEqual(1);
+    expect(low.score).toBeGreaterThanOrEqual(0);
+  });
+});

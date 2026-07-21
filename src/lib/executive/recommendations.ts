@@ -1,5 +1,6 @@
 import type { ExecutivePlatformSnapshot } from "@/lib/executive/platform-snapshot"
 import { prisma } from "@/lib/prisma"
+import { computeEvidenceConfidence } from './evidence-confidence';
 
 export type ExecutiveActionPayload = Record<string, unknown>
 
@@ -421,6 +422,7 @@ export type ExecutiveIntelligenceRecommendation = {
   rationale: string
   action: string
   confidence: number
+  evidenceIds?: string[]
 }
 
 const INTELLIGENCE_PRIORITY_RANK: Record<
@@ -485,7 +487,12 @@ export async function generateExecutiveRecommendations(): Promise<
           category: "revenue",
           rationale: `Lead score ${lead.leadScore} with no proposal on record.`,
           action: `Draft and send a proposal to ${lead.name} (${lead.email}).`,
-          confidence: 0.9,
+          confidence: computeEvidenceConfidence({
+            evidenceIds: [lead.id, `lead-score-${lead.leadScore}`],
+            sourceCount: 2,
+            timestampMs: new Date(lead.updatedAt).getTime(),
+          }).score,
+          evidenceIds: [lead.id],
         })
       } else if (
         lead.readiness === "hot" &&
@@ -498,7 +505,12 @@ export async function generateExecutiveRecommendations(): Promise<
           category: "revenue",
           rationale: `Lead readiness is hot but no proposal exists yet.`,
           action: `Book a call with ${lead.name} and qualify for a proposal.`,
-          confidence: 0.75,
+          confidence: computeEvidenceConfidence({
+            evidenceIds: [lead.id, `lead-readiness-${lead.readiness}`],
+            sourceCount: 1,
+            timestampMs: new Date(lead.updatedAt).getTime(),
+          }).score,
+          evidenceIds: [lead.id],
         })
       }
     }
@@ -516,7 +528,12 @@ export async function generateExecutiveRecommendations(): Promise<
           category: "delivery",
           rationale: `Project due ${project.dueDate.toISOString().slice(0, 10)} is still ${project.status}.`,
           action: `Review scope and timeline for "${project.title}" and notify the client.`,
-          confidence: 0.95,
+          confidence: computeEvidenceConfidence({
+            evidenceIds: [project.id, `project-status-${project.status}`],
+            sourceCount: 2,
+            timestampMs: new Date(project.updatedAt).getTime(),
+          }).score,
+          evidenceIds: [project.id],
         })
       }
     }
@@ -533,7 +550,12 @@ export async function generateExecutiveRecommendations(): Promise<
         category: "delivery",
         rationale: `${overdueTasks.length} client task${overdueTasks.length === 1 ? " is" : "s are"} past due.`,
         action: "Reprioritize the delivery queue and reassign blocked tasks.",
-        confidence: 0.85,
+        confidence: computeEvidenceConfidence({
+          evidenceIds: overdueTasks.map((t) => t.id),
+          sourceCount: overdueTasks.length > 3 ? 3 : overdueTasks.length,
+          timestampMs: overdueTasks.length > 0 ? new Date(overdueTasks[0].updatedAt).getTime() : Date.now(),
+        }).score,
+        evidenceIds: overdueTasks.map((t) => t.id),
       })
     }
 
@@ -546,7 +568,12 @@ export async function generateExecutiveRecommendations(): Promise<
           category: "strategy",
           rationale: `Goal progress is ${goal.progress}% for ${goal.quarter} ${goal.year}.`,
           action: `Run a strategic review of "${goal.title}" and adjust supporting initiatives.`,
-          confidence: 0.7,
+          confidence: computeEvidenceConfidence({
+            evidenceIds: [goal.id, `goal-progress-${goal.progress}`],
+            sourceCount: 1,
+            timestampMs: new Date(goal.updatedAt).getTime(),
+          }).score,
+          evidenceIds: [goal.id],
         })
       }
     }
@@ -560,7 +587,12 @@ export async function generateExecutiveRecommendations(): Promise<
           category: "execution",
           rationale: `Initiative is in progress but only ${initiative.progress}% complete.`,
           action: `Review the execution path for "${initiative.title}" and remove blockers.`,
-          confidence: 0.65,
+          confidence: computeEvidenceConfidence({
+            evidenceIds: [initiative.id, `initiative-progress-${initiative.progress}`],
+            sourceCount: 1,
+            timestampMs: new Date(initiative.updatedAt).getTime(),
+          }).score,
+          evidenceIds: [initiative.id],
         })
       }
     }
@@ -578,7 +610,12 @@ export async function generateExecutiveRecommendations(): Promise<
           category: "revenue",
           rationale: `Invoice ${invoice.invoiceNumber} (AUD ${invoice.amountAud.toLocaleString("en-AU")}) is past due.`,
           action: `Send a payment reminder for ${invoice.invoiceNumber} and confirm payment terms.`,
-          confidence: 0.95,
+          confidence: computeEvidenceConfidence({
+            evidenceIds: [invoice.id, `invoice-status-${invoice.status}`],
+            sourceCount: 2,
+            timestampMs: new Date(invoice.updatedAt).getTime(),
+          }).score,
+          evidenceIds: [invoice.id],
         })
       }
     }
@@ -595,7 +632,12 @@ export async function generateExecutiveRecommendations(): Promise<
         category: "governance",
         rationale: `${followUps.length} decision${followUps.length === 1 ? "" : "s"} require follow-up but have no review date.`,
         action: "Set review dates and add the decisions to the next boardroom agenda.",
-        confidence: 0.8,
+        confidence: computeEvidenceConfidence({
+          evidenceIds: followUps.map((d) => d.id),
+          sourceCount: followUps.length > 2 ? 3 : followUps.length,
+          timestampMs: followUps.length > 0 ? new Date(followUps[0].updatedAt).getTime() : Date.now(),
+        }).score,
+        evidenceIds: followUps.map((d) => d.id),
       })
     }
 

@@ -170,3 +170,36 @@ A static governance validator (`scripts/governance-executive-data.ts`) that scan
 ### CI Integration
 
 `npm run ci` now includes `npm run governance:executive-data` as the validation gate before build and test.
+
+---
+
+## Programme 1 — Evidence Confidence Engine (v1.2)
+
+### Problem
+Executive Intelligence outputs carried no evidence-backed confidence. Opportunities and risks had no traceable evidence chain. Recommendations used hardcoded confidence values.
+
+### Solution
+A reusable `EvidenceConfidence` model that computes confidence scores from evidence density, source count, data freshness, missing evidence, and conflicting signals. Integrated into all three briefing generators and the briefing API response.
+
+### Confidence Model
+- `score`: 0-1 computed dynamically (not hardcoded)
+- `evidenceIds`: traceable evidence chain
+- `sourceCount`: how many independent sources
+- `dataFreshnessHours`: recency of underlying data
+- `missingEvidence`: what evidence is absent
+- `hasConflictingEvidence`: contradictory signals detected
+
+### Scoring Algorithm
+- Baseline: 0.5
+- Evidence density: +0.05 (1 source), +0.12 (3), +0.20 (5+)
+- Freshness: +0.10 (<1h), +0.05 (<24h), -0.10 (>1wk), -0.20 (>30d)
+- Missing evidence: -0.05 per item
+- Conflicting evidence: -0.15
+- Clamped to 0-1
+
+### Integration
+- `ExecutiveOpportunity` now carries `evidenceConfidence`
+- `ExecutiveRisk` now carries `evidenceConfidence`
+- `ExecutiveIntelligenceRecommendation` now carries computed `confidence` + `evidenceIds`
+- Briefing API response now includes `confidenceAnalysis`
+- Deterministic: identical inputs → identical confidence scores

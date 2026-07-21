@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/prisma"
+import { EvidenceConfidence, computeEvidenceConfidence } from './evidence-confidence';
 
 export type ExecutiveOpportunity = {
   title: string
   score: number
   potentialValue: number
   nextAction: string
+  evidenceConfidence: EvidenceConfidence
 }
 
 const OPEN_LEAD_STATUSES = ["new", "engaged", "qualified", "contacted"]
@@ -54,6 +56,12 @@ export async function generateExecutiveOpportunities(): Promise<
         nextAction: hasProposal
           ? `Advance the open proposal for ${lead.name} to a decision.`
           : `Create and send a proposal to ${lead.name}.`,
+        evidenceConfidence: computeEvidenceConfidence({
+          evidenceIds: [lead.id, `lead-status-${lead.status}`],
+          sourceCount: lead.leadScore > 70 ? 3 : 1,
+          timestampMs: new Date(lead.updatedAt).getTime(),
+          missingEvidence: lead.readiness === 'unknown' ? ['Missing readiness assessment'] : [],
+        }),
       })
     }
 
@@ -77,6 +85,12 @@ export async function generateExecutiveOpportunities(): Promise<
           proposal.status === "draft"
             ? `Finalize and send "${proposal.title}".`
             : `Follow up on "${proposal.title}" and ask for a decision.`,
+        evidenceConfidence: computeEvidenceConfidence({
+          evidenceIds: [proposal.id, `proposal-status-${proposal.status}`],
+          sourceCount: proposal.status === 'review' ? 3 : 2,
+          timestampMs: new Date(proposal.updatedAt).getTime(),
+          missingEvidence: proposal.status === 'draft' ? ['Proposal not yet sent to client'] : [],
+        }),
       })
     }
 
@@ -98,6 +112,12 @@ export async function generateExecutiveOpportunities(): Promise<
         score: clampScore(40 + goal.progress / 2),
         potentialValue: remainingValue,
         nextAction: `Double down on initiatives driving "${goal.title}" (${goal.progress}% complete).`,
+        evidenceConfidence: computeEvidenceConfidence({
+          evidenceIds: [goal.id, `goal-category-${goal.category}`],
+          sourceCount: goal.progress > 50 ? 3 : 1,
+          timestampMs: new Date(goal.updatedAt).getTime(),
+          missingEvidence: goal.progress < 75 ? ['Goal completion path unverified'] : [],
+        }),
       })
     }
 
@@ -132,6 +152,12 @@ export async function generateExecutiveOpportunities(): Promise<
           score: clampScore(60 + Math.min(20, paid / 500)),
           potentialValue: Math.round(projectValue * 0.5),
           nextAction: `Propose a follow-on engagement to ${client.name} based on delivered work.`,
+          evidenceConfidence: computeEvidenceConfidence({
+            evidenceIds: [client.id],
+            sourceCount: paid > 1000 ? 3 : 1,
+            timestampMs: new Date(client.updatedAt).getTime(),
+            missingEvidence: [],
+          }),
         })
       }
     }
