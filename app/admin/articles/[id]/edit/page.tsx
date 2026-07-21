@@ -326,14 +326,20 @@ export default function EditArticlePage({
           Status
           <select
             value={article.status}
-            onChange={(e) =>
+            onChange={(e) => {
+              const isScheduled = e.target.value === "scheduled"
+              const fallbackDate = isScheduled && !article.scheduledFor
+                ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16)
+                : null
               setArticle({
                 ...article,
                 status: e.target.value,
                 scheduledFor:
-                  e.target.value === "scheduled" ? article.scheduledFor : null,
+                  isScheduled
+                    ? article.scheduledFor || fallbackDate
+                    : null,
               })
-            }
+            }}
             style={inputStyle}
           >
             <option value="draft">Draft</option>
