@@ -20,6 +20,7 @@ import { simulateAllScenarios, type ScenarioResult } from "@/lib/executive/scena
 import { generatePlanningSuite } from "@/src/lib/executive/autonomous-planner"
 import { generateActionsFromRecommendations, buildActionQueue } from "@/lib/executive/action-engine"
 import { buildWorkspaceDashboard } from "@/lib/executive/workspace-dashboard"
+import { buildEnterpriseKnowledgeSummary } from "@/lib/executive/enterprise-knowledge"
 
 export const dynamic = "force-dynamic"
 
@@ -165,6 +166,13 @@ export async function GET() {
           scenarioCount: 7,
           confidenceOverall: confidenceAnalysis.overallConfidence,
           briefingTimestamp: new Date().toISOString(),
+        }),
+        enterpriseKnowledge: buildEnterpriseKnowledgeSummary({
+          clientCount: 0,
+          projectCount: 0,
+          decisionCount: 0,
+          goalCount: recommendations.length,
+          riskCount: risks.length,
         }),
       },
     })

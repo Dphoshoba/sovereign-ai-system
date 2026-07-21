@@ -1027,3 +1027,33 @@ describe('Executive Workspace — Unified Dashboard', () => {
     expect(dashboard.nextRecommendation).toContain('5 active risk');
   });
 });
+
+describe('Enterprise Knowledge Graph — Relationship Discovery', () => {
+  it('knowledge graph summary computes node and relation counts', async () => {
+    const { buildEnterpriseKnowledgeSummary } = await import('../../src/lib/executive/enterprise-knowledge');
+    const summary = buildEnterpriseKnowledgeSummary({
+      clientCount: 10,
+      projectCount: 5,
+      decisionCount: 3,
+      goalCount: 8,
+      riskCount: 4,
+    });
+    expect(summary.nodeCount).toBe(30);
+    expect(summary.relationCount).toBe(17);
+    expect(summary.entityTypes).toEqual(['Client', 'Project', 'Decision', 'Goal', 'Risk']);
+    expect(summary.generatedAt).toBeGreaterThan(0);
+  });
+
+  it('knowledge graph summary handles zero counts', async () => {
+    const { buildEnterpriseKnowledgeSummary } = await import('../../src/lib/executive/enterprise-knowledge');
+    const summary = buildEnterpriseKnowledgeSummary({
+      clientCount: 0,
+      projectCount: 0,
+      decisionCount: 0,
+      goalCount: 0,
+      riskCount: 0,
+    });
+    expect(summary.nodeCount).toBe(0);
+    expect(summary.relationCount).toBe(0);
+  });
+});
