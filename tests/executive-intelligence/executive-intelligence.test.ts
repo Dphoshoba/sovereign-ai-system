@@ -979,3 +979,51 @@ describe('Executive Office v2 — Action Generation Engine', () => {
     expect(queue.generatedAt).toBeGreaterThan(0);
   });
 });
+
+describe('Executive Workspace — Unified Dashboard', () => {
+  it('workspace dashboard aggregates all executive intelligence', async () => {
+    const { buildWorkspaceDashboard } = await import('../../src/lib/executive/workspace-dashboard');
+    const dashboard = buildWorkspaceDashboard({
+      healthScore: 85,
+      recommendationCount: 8,
+      riskCount: 3,
+      opportunityCount: 5,
+      actionCount: 6,
+      decisionCount: 2,
+      planCount: 4,
+      scenarioCount: 7,
+      confidenceOverall: 0.88,
+      briefingTimestamp: new Date().toISOString(),
+    });
+    expect(dashboard.health.score).toBe(85);
+    expect(dashboard.health.status).toBe('Healthy');
+    expect(dashboard.risksActive).toBe(3);
+    expect(dashboard.opportunitiesTracked).toBe(5);
+    expect(dashboard.executiveActionsPending).toBe(6);
+    expect(dashboard.decisionsPending).toBe(2);
+    expect(dashboard.plansGenerated).toBe(4);
+    expect(dashboard.scenariosAvailable).toBe(7);
+    expect(dashboard.confidenceOverall).toBe(0.88);
+    expect(dashboard.generatedAt).toBeGreaterThan(0);
+    expect(dashboard.activeProgrammes.length).toBe(7);
+  });
+
+  it('workspace dashboard reflects low health correctly', async () => {
+    const { buildWorkspaceDashboard } = await import('../../src/lib/executive/workspace-dashboard');
+    const dashboard = buildWorkspaceDashboard({
+      healthScore: 45,
+      recommendationCount: 2,
+      riskCount: 5,
+      opportunityCount: 1,
+      actionCount: 2,
+      decisionCount: 4,
+      planCount: 4,
+      scenarioCount: 7,
+      confidenceOverall: 0.55,
+      briefingTimestamp: new Date().toISOString(),
+    });
+    expect(dashboard.health.status).toBe('Attention Required');
+    expect(dashboard.health.trend).toBe('declining');
+    expect(dashboard.nextRecommendation).toContain('5 active risk');
+  });
+});

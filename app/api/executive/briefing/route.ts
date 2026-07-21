@@ -19,6 +19,7 @@ import { generatePredictionSet } from "@/lib/executive/prediction-engine"
 import { simulateAllScenarios, type ScenarioResult } from "@/lib/executive/scenario-simulator"
 import { generatePlanningSuite } from "@/src/lib/executive/autonomous-planner"
 import { generateActionsFromRecommendations, buildActionQueue } from "@/lib/executive/action-engine"
+import { buildWorkspaceDashboard } from "@/lib/executive/workspace-dashboard"
 
 export const dynamic = "force-dynamic"
 
@@ -153,6 +154,18 @@ export async function GET() {
             risks.length
           )
         ),
+        workspaceDashboard: buildWorkspaceDashboard({
+          healthScore: health,
+          recommendationCount: recommendations.length,
+          riskCount: risks.length,
+          opportunityCount: opportunities.length,
+          actionCount: Math.min(10, recommendations.length),
+          decisionCount: 0,
+          planCount: 4,
+          scenarioCount: 7,
+          confidenceOverall: confidenceAnalysis.overallConfidence,
+          briefingTimestamp: new Date().toISOString(),
+        }),
       },
     })
   } catch (error) {
