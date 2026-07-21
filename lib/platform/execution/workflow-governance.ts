@@ -33,6 +33,7 @@ export interface WorkflowVersionLineage {
 // ── Execution Policies ──
 
 export interface WorkflowExecutionPolicyInput {
+  readonly version?: string;
   readonly permittedProviders: readonly string[];
   readonly maxExecutionTimeMs: number;
   readonly allowRetries: boolean;
