@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ExecutiveSnapshot, OfficeStatus, ExecutiveBriefing, EISRecommendation } from '../../lib/executive-intelligence/types';
-import { recordDecisionOutcome, adjustConfidenceFromMemory, analyzeDecisionMemory } from '../../src/lib/executive/decision-memory-v2';
+import { recordDecisionOutcome, adjustConfidenceFromMemory, analyzeDecisionMemory } from '../../src/lib/executive/decision-memory';
 import { WorkforcePlatformImpl } from '../../lib/workforce/workforce-platform-impl';
 import { ExecutiveOffice } from '../../lib/executive-office/executive-office';
 import { ResearchOffice } from '../../lib/research-office/research-office';

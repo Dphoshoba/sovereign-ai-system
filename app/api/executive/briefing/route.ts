@@ -32,7 +32,7 @@ import { buildApiPlatform } from "@/lib/executive/enterprise-api"
 import { buildSecurityReport } from "@/lib/executive/enterprise-security"
 import { buildPerformanceReport } from "@/lib/executive/enterprise-performance"
 import { buildCertificationReport } from "@/lib/executive/enterprise-certification"
-import { recordDecisionOutcome, analyzeDecisionMemory } from "@/lib/executive/decision-memory-v2"
+import { recordDecisionOutcome, analyzeDecisionMemory } from "@/lib/executive/decision-memory"
 import { execSync } from "child_process"
 
 export const dynamic = "force-dynamic"
