@@ -24,6 +24,7 @@ import { buildEnterpriseKnowledgeSummary } from "@/lib/executive/enterprise-know
 import { synthesizeEnterpriseMemory } from "@/lib/executive/enterprise-memory"
 import { buildAutomationPlatform } from "@/lib/executive/automation-platform"
 import { deployExecutiveAgents } from "@/lib/executive/ai-agents"
+import { buildGovernanceFramework } from "@/lib/executive/operational-governance"
 
 export const dynamic = "force-dynamic"
 
@@ -189,6 +190,10 @@ export async function GET() {
         }),
         aiAgents: deployExecutiveAgents({
           recommendationCount: recommendations.length,
+          riskCount: risks.length,
+        }),
+        governanceFramework: buildGovernanceFramework({
+          policyCount: 6,
           riskCount: risks.length,
         }),
       },

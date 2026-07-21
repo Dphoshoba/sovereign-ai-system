@@ -1129,3 +1129,23 @@ describe('Executive AI Agents — Role Specialization', () => {
     expect(standard.crossFunctionalCoverage.length).toBe(3);
   });
 });
+
+describe('Operational Governance — Compliance Framework', () => {
+  it('governance framework enforces 6 categories with strict rules', async () => {
+    const { buildGovernanceFramework } = await import('../../src/lib/executive/operational-governance');
+    const framework = buildGovernanceFramework({ policyCount: 6, riskCount: 4 });
+    expect(framework.rules.length).toBe(6);
+    expect(framework.activeRules).toBe(6);
+    expect(framework.strictEnforcements).toBe(5);
+    expect(framework.categories.length).toBe(6);
+    expect(framework.complianceScore).toBe(88);
+    expect(framework.generatedAt).toBeGreaterThan(0);
+    expect(framework.rules.every(r => r.status === 'active')).toBe(true);
+  });
+
+  it('governance compliance score capped at 100', async () => {
+    const { buildGovernanceFramework } = await import('../../src/lib/executive/operational-governance');
+    const framework = buildGovernanceFramework({ policyCount: 6, riskCount: 15 });
+    expect(framework.complianceScore).toBe(100);
+  });
+});
