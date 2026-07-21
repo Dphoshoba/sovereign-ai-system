@@ -90,6 +90,21 @@ export async function GET() {
       componentsAssessed: allConfidences.length,
     };
 
+    const explainabilitySummary = {
+      opportunitiesWithEvidence: opportunities.filter(o => o.reasoning.supportingEvidence.length > 0).length,
+      risksWithEvidence: risks.filter(r => r.reasoning.supportingEvidence.length > 0).length,
+      recommendationsWithEvidence: recommendations.filter(r => r.reasoning.supportingEvidence.length > 0).length,
+      totalConfidenceFactors: [
+        ...opportunities.flatMap(o => o.reasoning.confidenceFactors),
+        ...risks.flatMap(r => r.reasoning.confidenceFactors),
+        ...recommendations.flatMap(r => r.reasoning.confidenceFactors),
+      ].length,
+      missingEvidenceCounts: [
+        ...opportunities.flatMap(o => o.reasoning.missingEvidence),
+        ...risks.flatMap(r => r.reasoning.missingEvidence),
+      ].length,
+    }
+
     return NextResponse.json({
       ok: true,
       briefing: {
@@ -100,6 +115,7 @@ export async function GET() {
         recommendations: recommendations.slice(0, 5),
         nextActions: buildNextActions(recommendations, risks),
         confidenceAnalysis,
+        explainabilitySummary,
         totals: {
           recommendations: recommendations.length,
           opportunities: opportunities.length,

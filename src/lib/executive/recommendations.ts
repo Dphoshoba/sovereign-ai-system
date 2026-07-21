@@ -1,6 +1,6 @@
 import type { ExecutivePlatformSnapshot } from "@/lib/executive/platform-snapshot"
 import { prisma } from "@/lib/prisma"
-import { computeEvidenceConfidence } from './evidence-confidence';
+import { ReasoningChain, computeEvidenceConfidence, buildReasoning } from './evidence-confidence';
 
 export type ExecutiveActionPayload = Record<string, unknown>
 
@@ -423,6 +423,7 @@ export type ExecutiveIntelligenceRecommendation = {
   action: string
   confidence: number
   evidenceIds?: string[]
+  reasoning: ReasoningChain
 }
 
 const INTELLIGENCE_PRIORITY_RANK: Record<
@@ -481,36 +482,58 @@ export async function generateExecutiveRecommendations(): Promise<
         OPEN_LEAD_STATUSES.includes(lead.status) &&
         !leadIdsWithProposals.has(lead.id)
       ) {
+        const leadRecEc = computeEvidenceConfidence({
+          evidenceIds: [lead.id, `lead-score-${lead.leadScore}`],
+          sourceCount: 2,
+          timestampMs: new Date(lead.updatedAt).getTime(),
+        })
         recommendations.push({
           title: `Create proposal for ${lead.name}`,
           priority: "high",
           category: "revenue",
           rationale: `Lead score ${lead.leadScore} with no proposal on record.`,
           action: `Draft and send a proposal to ${lead.name} (${lead.email}).`,
-          confidence: computeEvidenceConfidence({
-            evidenceIds: [lead.id, `lead-score-${lead.leadScore}`],
-            sourceCount: 2,
-            timestampMs: new Date(lead.updatedAt).getTime(),
-          }).score,
+          confidence: leadRecEc.score,
           evidenceIds: [lead.id],
+          reasoning: buildReasoning({
+            summary: `Lead ${lead.name} has score ${lead.leadScore} with no proposal on record`,
+            evidenceIds: [lead.id],
+            confidenceScore: leadRecEc.score,
+            sourceCount: 2,
+            dataFreshnessHours: (Date.now() - new Date(lead.updatedAt).getTime()) / (1000 * 60 * 60),
+            missingEvidence: [],
+            hasConflictingEvidence: false,
+            decisionFactors: ['High-value lead detection', `Score threshold: 80`, 'No existing proposal check'],
+          }),
         })
       } else if (
         lead.readiness === "hot" &&
         OPEN_LEAD_STATUSES.includes(lead.status) &&
         !leadIdsWithProposals.has(lead.id)
       ) {
+        const hotLeadEc = computeEvidenceConfidence({
+          evidenceIds: [lead.id, `lead-readiness-${lead.readiness}`],
+          sourceCount: 1,
+          timestampMs: new Date(lead.updatedAt).getTime(),
+        })
         recommendations.push({
           title: `Follow up with hot lead ${lead.name}`,
           priority: "medium",
           category: "revenue",
           rationale: `Lead readiness is hot but no proposal exists yet.`,
           action: `Book a call with ${lead.name} and qualify for a proposal.`,
-          confidence: computeEvidenceConfidence({
-            evidenceIds: [lead.id, `lead-readiness-${lead.readiness}`],
-            sourceCount: 1,
-            timestampMs: new Date(lead.updatedAt).getTime(),
-          }).score,
+          confidence: hotLeadEc.score,
           evidenceIds: [lead.id],
+          reasoning: buildReasoning({
+            summary: `Lead ${lead.name} readiness is hot with no proposal`,
+            evidenceIds: [lead.id],
+            confidenceScore: hotLeadEc.score,
+            sourceCount: 1,
+            dataFreshnessHours: (Date.now() - new Date(lead.updatedAt).getTime()) / (1000 * 60 * 60),
+            missingEvidence: [],
+            hasConflictingEvidence: false,
+            decisionFactors: ['Hot readiness detection', 'No existing proposal guard', `Readiness: ${lead.readiness}`],
+          }),
         })
       }
     }
@@ -522,18 +545,29 @@ export async function generateExecutiveRecommendations(): Promise<
         project.dueDate < now &&
         ACTIVE_PROJECT_STATUSES.includes(project.status)
       ) {
+        const projectEc = computeEvidenceConfidence({
+          evidenceIds: [project.id, `project-status-${project.status}`],
+          sourceCount: 2,
+          timestampMs: new Date(project.updatedAt).getTime(),
+        })
         recommendations.push({
           title: `Escalate overdue project: ${project.title}`,
           priority: "critical",
           category: "delivery",
           rationale: `Project due ${project.dueDate.toISOString().slice(0, 10)} is still ${project.status}.`,
           action: `Review scope and timeline for "${project.title}" and notify the client.`,
-          confidence: computeEvidenceConfidence({
-            evidenceIds: [project.id, `project-status-${project.status}`],
-            sourceCount: 2,
-            timestampMs: new Date(project.updatedAt).getTime(),
-          }).score,
+          confidence: projectEc.score,
           evidenceIds: [project.id],
+          reasoning: buildReasoning({
+            summary: `Project ${project.title} is overdue (due ${project.dueDate.toISOString().slice(0, 10)})`,
+            evidenceIds: [project.id],
+            confidenceScore: projectEc.score,
+            sourceCount: 2,
+            dataFreshnessHours: (Date.now() - new Date(project.updatedAt).getTime()) / (1000 * 60 * 60),
+            missingEvidence: [],
+            hasConflictingEvidence: false,
+            decisionFactors: ['Overdue detection', `Status: ${project.status}`, `Due date: ${project.dueDate.toISOString().slice(0, 10)}`],
+          }),
         })
       }
     }
@@ -544,36 +578,58 @@ export async function generateExecutiveRecommendations(): Promise<
     )
 
     if (overdueTasks.length > 0) {
+      const overdueTasksEc = computeEvidenceConfidence({
+        evidenceIds: overdueTasks.map((t) => t.id),
+        sourceCount: overdueTasks.length > 3 ? 3 : overdueTasks.length,
+        timestampMs: overdueTasks.length > 0 ? new Date(overdueTasks[0].updatedAt).getTime() : Date.now(),
+      })
       recommendations.push({
         title: `Clear ${overdueTasks.length} overdue delivery task${overdueTasks.length === 1 ? "" : "s"}`,
         priority: "high",
         category: "delivery",
         rationale: `${overdueTasks.length} client task${overdueTasks.length === 1 ? " is" : "s are"} past due.`,
         action: "Reprioritize the delivery queue and reassign blocked tasks.",
-        confidence: computeEvidenceConfidence({
-          evidenceIds: overdueTasks.map((t) => t.id),
-          sourceCount: overdueTasks.length > 3 ? 3 : overdueTasks.length,
-          timestampMs: overdueTasks.length > 0 ? new Date(overdueTasks[0].updatedAt).getTime() : Date.now(),
-        }).score,
+        confidence: overdueTasksEc.score,
         evidenceIds: overdueTasks.map((t) => t.id),
+        reasoning: buildReasoning({
+          summary: `${overdueTasks.length} delivery task${overdueTasks.length === 1 ? "" : "s"} past due`,
+          evidenceIds: overdueTasks.map((t) => t.id),
+          confidenceScore: overdueTasksEc.score,
+          sourceCount: overdueTasksEc.sourceCount,
+          dataFreshnessHours: overdueTasksEc.dataFreshnessHours,
+          missingEvidence: overdueTasksEc.missingEvidence,
+          hasConflictingEvidence: overdueTasksEc.hasConflictingEvidence,
+          decisionFactors: ['Task completion audit', 'Delivery queue analysis', `Overdue count: ${overdueTasks.length}`],
+        }),
       })
     }
 
     // Low-progress active goals → strategic review.
     for (const goal of goals) {
       if (goal.status === "active" && goal.progress < 25) {
+        const goalRecEc = computeEvidenceConfidence({
+          evidenceIds: [goal.id, `goal-progress-${goal.progress}`],
+          sourceCount: 1,
+          timestampMs: new Date(goal.updatedAt).getTime(),
+        })
         recommendations.push({
           title: `Strategic review: ${goal.title}`,
           priority: "medium",
           category: "strategy",
           rationale: `Goal progress is ${goal.progress}% for ${goal.quarter} ${goal.year}.`,
           action: `Run a strategic review of "${goal.title}" and adjust supporting initiatives.`,
-          confidence: computeEvidenceConfidence({
-            evidenceIds: [goal.id, `goal-progress-${goal.progress}`],
-            sourceCount: 1,
-            timestampMs: new Date(goal.updatedAt).getTime(),
-          }).score,
+          confidence: goalRecEc.score,
           evidenceIds: [goal.id],
+          reasoning: buildReasoning({
+            summary: `Goal "${goal.title}" at ${goal.progress}% progress needs strategic review`,
+            evidenceIds: [goal.id],
+            confidenceScore: goalRecEc.score,
+            sourceCount: 1,
+            dataFreshnessHours: (Date.now() - new Date(goal.updatedAt).getTime()) / (1000 * 60 * 60),
+            missingEvidence: [],
+            hasConflictingEvidence: false,
+            decisionFactors: ['Strategic goal monitoring', `Progress threshold: <25%`, `Current: ${goal.progress}%`, `Quarter: ${goal.quarter} ${goal.year}`],
+          }),
         })
       }
     }
@@ -581,18 +637,29 @@ export async function generateExecutiveRecommendations(): Promise<
     // Stalled in-progress initiatives → review execution path.
     for (const initiative of initiatives) {
       if (initiative.status === "in_progress" && initiative.progress < 25) {
+        const initiativeEc = computeEvidenceConfidence({
+          evidenceIds: [initiative.id, `initiative-progress-${initiative.progress}`],
+          sourceCount: 1,
+          timestampMs: new Date(initiative.updatedAt).getTime(),
+        })
         recommendations.push({
           title: `Unblock initiative: ${initiative.title}`,
           priority: "medium",
           category: "execution",
           rationale: `Initiative is in progress but only ${initiative.progress}% complete.`,
           action: `Review the execution path for "${initiative.title}" and remove blockers.`,
-          confidence: computeEvidenceConfidence({
-            evidenceIds: [initiative.id, `initiative-progress-${initiative.progress}`],
-            sourceCount: 1,
-            timestampMs: new Date(initiative.updatedAt).getTime(),
-          }).score,
+          confidence: initiativeEc.score,
           evidenceIds: [initiative.id],
+          reasoning: buildReasoning({
+            summary: `Initiative "${initiative.title}" stalled at ${initiative.progress}% progress`,
+            evidenceIds: [initiative.id],
+            confidenceScore: initiativeEc.score,
+            sourceCount: 1,
+            dataFreshnessHours: (Date.now() - new Date(initiative.updatedAt).getTime()) / (1000 * 60 * 60),
+            missingEvidence: [],
+            hasConflictingEvidence: false,
+            decisionFactors: ['Execution monitoring', `Progress threshold: <25%`, `Current: ${initiative.progress}%`, `Status: ${initiative.status}`],
+          }),
         })
       }
     }
@@ -604,18 +671,29 @@ export async function generateExecutiveRecommendations(): Promise<
         invoice.dueDate &&
         invoice.dueDate < now
       ) {
+        const invoiceRecEc = computeEvidenceConfidence({
+          evidenceIds: [invoice.id, `invoice-status-${invoice.status}`],
+          sourceCount: 2,
+          timestampMs: new Date(invoice.updatedAt).getTime(),
+        })
         recommendations.push({
           title: `Chase overdue invoice ${invoice.invoiceNumber}`,
           priority: "critical",
           category: "revenue",
           rationale: `Invoice ${invoice.invoiceNumber} (AUD ${invoice.amountAud.toLocaleString("en-AU")}) is past due.`,
           action: `Send a payment reminder for ${invoice.invoiceNumber} and confirm payment terms.`,
-          confidence: computeEvidenceConfidence({
-            evidenceIds: [invoice.id, `invoice-status-${invoice.status}`],
-            sourceCount: 2,
-            timestampMs: new Date(invoice.updatedAt).getTime(),
-          }).score,
+          confidence: invoiceRecEc.score,
           evidenceIds: [invoice.id],
+          reasoning: buildReasoning({
+            summary: `Invoice ${invoice.invoiceNumber} is overdue (AUD ${invoice.amountAud.toLocaleString("en-AU")})`,
+            evidenceIds: [invoice.id],
+            confidenceScore: invoiceRecEc.score,
+            sourceCount: 2,
+            dataFreshnessHours: (Date.now() - new Date(invoice.updatedAt).getTime()) / (1000 * 60 * 60),
+            missingEvidence: [],
+            hasConflictingEvidence: false,
+            decisionFactors: ['Revenue risk detection', `Status: ${invoice.status}`, `Due date: ${invoice.dueDate?.toISOString().slice(0, 10)}`],
+          }),
         })
       }
     }
@@ -626,18 +704,29 @@ export async function generateExecutiveRecommendations(): Promise<
     )
 
     if (followUps.length > 0) {
+      const followUpsEc = computeEvidenceConfidence({
+        evidenceIds: followUps.map((d) => d.id),
+        sourceCount: followUps.length > 2 ? 3 : followUps.length,
+        timestampMs: followUps.length > 0 ? new Date(followUps[0].updatedAt).getTime() : Date.now(),
+      })
       recommendations.push({
         title: `Schedule follow-up for ${followUps.length} executive decision${followUps.length === 1 ? "" : "s"}`,
         priority: "low",
         category: "governance",
         rationale: `${followUps.length} decision${followUps.length === 1 ? "" : "s"} require follow-up but have no review date.`,
         action: "Set review dates and add the decisions to the next boardroom agenda.",
-        confidence: computeEvidenceConfidence({
-          evidenceIds: followUps.map((d) => d.id),
-          sourceCount: followUps.length > 2 ? 3 : followUps.length,
-          timestampMs: followUps.length > 0 ? new Date(followUps[0].updatedAt).getTime() : Date.now(),
-        }).score,
+        confidence: followUpsEc.score,
         evidenceIds: followUps.map((d) => d.id),
+        reasoning: buildReasoning({
+          summary: `${followUps.length} executive decision${followUps.length === 1 ? "" : "s"} require follow-up without a review date`,
+          evidenceIds: followUps.map((d) => d.id),
+          confidenceScore: followUpsEc.score,
+          sourceCount: followUpsEc.sourceCount,
+          dataFreshnessHours: followUpsEc.dataFreshnessHours,
+          missingEvidence: followUpsEc.missingEvidence,
+          hasConflictingEvidence: followUpsEc.hasConflictingEvidence,
+          decisionFactors: ['Governance compliance', 'Follow-up requirement detection', `Missing review dates: ${followUps.length}`],
+        }),
       })
     }
 

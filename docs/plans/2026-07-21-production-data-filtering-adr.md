@@ -203,3 +203,18 @@ A reusable `EvidenceConfidence` model that computes confidence scores from evide
 - `ExecutiveIntelligenceRecommendation` now carries computed `confidence` + `evidenceIds`
 - Briefing API response now includes `confidenceAnalysis`
 - Deterministic: identical inputs → identical confidence scores
+
+## Programme 2 — Executive Explainability Engine (v1.3)
+
+### Problem
+Executive Intelligence outputs carried confidence scores but no explanation of how conclusions were reached. Recommendations lacked auditable reasoning chains.
+
+### Solution
+A reusable `ReasoningChain` model integrated into every executive insight. Each output now carries: summary, supporting evidence, confidence factors (with individual contributions), missing evidence, conflicting evidence, and a decision path tracing the logic.
+
+### Integration
+- `ExecutiveOpportunity` now carries `reasoning`
+- `ExecutiveIntelligenceRecommendation` now carries `reasoning`
+- `ExecutiveRisk` now carries `reasoning`
+- Briefing API response now includes `explainabilitySummary`
+- All explanations are deterministic and evidence-backed

@@ -665,3 +665,95 @@ describe('Evidence Confidence Engine', () => {
     expect(low.score).toBeGreaterThanOrEqual(0);
   });
 });
+
+describe('Executive Explainability Engine', () => {
+  it('explainability: reasoning chain includes decision path', async () => {
+    const { buildReasoning } = await import('../../src/lib/executive/evidence-confidence');
+    const reasoning = buildReasoning({
+      summary: 'Test',
+      evidenceIds: ['e1'],
+      confidenceScore: 0.8,
+      sourceCount: 2,
+      dataFreshnessHours: 5,
+      missingEvidence: [],
+      hasConflictingEvidence: false,
+      decisionFactors: ['Factor A', 'Factor B'],
+    });
+    expect(reasoning.summary).toBe('Test');
+    expect(reasoning.decisionPath).toContain('Factor A');
+    expect(reasoning.decisionPath).toContain('Factor B');
+  });
+
+  it('explainability: deterministic — same factors produce same reasoning', async () => {
+    const { buildReasoning } = await import('../../src/lib/executive/evidence-confidence');
+    const params = { summary: 'T', evidenceIds: ['e1'], confidenceScore: 0.7, sourceCount: 1, dataFreshnessHours: 10, missingEvidence: [], hasConflictingEvidence: false, decisionFactors: ['A'] };
+    const r1 = buildReasoning(params);
+    const r2 = buildReasoning(params);
+    expect(r1.summary).toBe(r2.summary);
+    expect(r1.confidenceFactors.length).toBe(r2.confidenceFactors.length);
+    expect(r1.decisionPath.length).toBe(r2.decisionPath.length);
+  });
+
+  it('explainability: conflicting evidence reflected in reasoning', async () => {
+    const { buildReasoning } = await import('../../src/lib/executive/evidence-confidence');
+    const reasoning = buildReasoning({
+      summary: 'Conflict test',
+      evidenceIds: ['e1'],
+      confidenceScore: 0.6,
+      sourceCount: 1,
+      dataFreshnessHours: 5,
+      missingEvidence: [],
+      hasConflictingEvidence: true,
+      decisionFactors: [],
+    });
+    expect(reasoning.conflictingEvidence.length).toBeGreaterThan(0);
+    expect(reasoning.confidenceFactors.some(f => f.factor.includes('Conflicting'))).toBe(true);
+  });
+
+  it('explainability: missing evidence surfaced in reasoning', async () => {
+    const { buildReasoning } = await import('../../src/lib/executive/evidence-confidence');
+    const reasoning = buildReasoning({
+      summary: 'Missing test',
+      evidenceIds: ['e1'],
+      confidenceScore: 0.5,
+      sourceCount: 1,
+      dataFreshnessHours: 5,
+      missingEvidence: ['Contract', 'Email'],
+      hasConflictingEvidence: false,
+      decisionFactors: [],
+    });
+    expect(reasoning.missingEvidence.length).toBe(2);
+    expect(reasoning.confidenceFactors.some(f => f.factor.includes('missing'))).toBe(true);
+  });
+
+  it('explainability: stale data annotated in reasoning', async () => {
+    const { buildReasoning } = await import('../../src/lib/executive/evidence-confidence');
+    const reasoning = buildReasoning({
+      summary: 'Stale test',
+      evidenceIds: ['e1'],
+      confidenceScore: 0.4,
+      sourceCount: 1,
+      dataFreshnessHours: 200,
+      missingEvidence: [],
+      hasConflictingEvidence: false,
+      decisionFactors: [],
+    });
+    expect(reasoning.confidenceFactors.some(f => f.factor.includes('Stale'))).toBe(true);
+  });
+
+  it('explainability: governance boundaries — no seeded data in reasoning', async () => {
+    const { buildReasoning } = await import('../../src/lib/executive/evidence-confidence');
+    const reasoning = buildReasoning({
+      summary: 'Governance test',
+      evidenceIds: ['ev-prod-001'],
+      confidenceScore: 0.9,
+      sourceCount: 3,
+      dataFreshnessHours: 2,
+      missingEvidence: [],
+      hasConflictingEvidence: false,
+      decisionFactors: ['Production-only analysis'],
+    });
+    expect(reasoning.supportingEvidence).not.toContain('mia@caldercreates.example');
+    expect(reasoning.supportingEvidence).not.toContain('jonah@reevewrites.example');
+  });
+});

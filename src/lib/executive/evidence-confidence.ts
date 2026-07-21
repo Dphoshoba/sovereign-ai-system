@@ -57,6 +57,54 @@ export function computeEvidenceConfidence(params: {
   };
 }
 
+export interface ReasoningChain {
+  summary: string;
+  supportingEvidence: string[];
+  confidenceFactors: Array<{ factor: string; contribution: number }>;
+  missingEvidence: string[];
+  conflictingEvidence: string[];
+  decisionPath: string[];
+}
+
+export interface ExplainableRecommendation {
+  reasoning: ReasoningChain;
+}
+
+export function buildReasoning(params: {
+  summary: string;
+  evidenceIds: string[];
+  confidenceScore: number;
+  sourceCount: number;
+  dataFreshnessHours: number;
+  missingEvidence: string[];
+  hasConflictingEvidence: boolean;
+  decisionFactors?: string[];
+}): ReasoningChain {
+  const confidenceFactors: Array<{ factor: string; contribution: number }> = [];
+
+  if (params.sourceCount >= 3) confidenceFactors.push({ factor: 'Multiple data sources', contribution: 0.12 });
+  else if (params.sourceCount >= 1) confidenceFactors.push({ factor: 'Single data source', contribution: 0.05 });
+
+  if (params.dataFreshnessHours < 1) confidenceFactors.push({ factor: 'Real-time data', contribution: 0.10 });
+  else if (params.dataFreshnessHours < 24) confidenceFactors.push({ factor: 'Recent data (<24h)', contribution: 0.05 });
+  else if (params.dataFreshnessHours > 168) confidenceFactors.push({ factor: 'Stale data (>1 week)', contribution: -0.10 });
+  else if (params.dataFreshnessHours > 720) confidenceFactors.push({ factor: 'Very stale data (>30 days)', contribution: -0.20 });
+
+  if (params.hasConflictingEvidence) confidenceFactors.push({ factor: 'Conflicting signals detected', contribution: -0.15 });
+
+  const missingCount = params.missingEvidence.length;
+  if (missingCount > 0) confidenceFactors.push({ factor: `${missingCount} missing evidence items`, contribution: -0.05 * missingCount });
+
+  return {
+    summary: params.summary,
+    supportingEvidence: params.evidenceIds,
+    confidenceFactors,
+    missingEvidence: params.missingEvidence,
+    conflictingEvidence: params.hasConflictingEvidence ? ['Contradictory signals present'] : [],
+    decisionPath: params.decisionFactors || [],
+  };
+}
+
 export function computeCompositeConfidence(scores: number[], sourceCounts: number[]): number {
   if (scores.length === 0) return 0;
   const avgScore = scores.reduce((s, v) => s + v, 0) / scores.length;
