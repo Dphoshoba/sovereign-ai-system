@@ -31,6 +31,7 @@ import { buildIntegrationPlatform } from "@/lib/executive/enterprise-integration
 import { buildApiPlatform } from "@/lib/executive/enterprise-api"
 import { buildSecurityReport } from "@/lib/executive/enterprise-security"
 import { buildPerformanceReport } from "@/lib/executive/enterprise-performance"
+import { buildCertificationReport } from "@/lib/executive/enterprise-certification"
 
 export const dynamic = "force-dynamic"
 
@@ -219,6 +220,11 @@ export async function GET() {
         enterprisePerformance: buildPerformanceReport({
           testCount: 297,
           latencyMs: 120,
+        }),
+        enterpriseCertification: buildCertificationReport({
+          testCount: 311,
+          governancePassing: true,
+          programmeCount: 20,
         }),
       },
     })
