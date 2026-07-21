@@ -453,7 +453,7 @@ async function loadAdjustmentContext(): Promise<AdjustmentContext> {
         briefingDate: "desc",
       },
     }),
-    prisma.creatorLead.findMany(),
+    prisma.creatorLead.findMany({ where: { isTest: false } }),
     prisma.executiveQuarterlyReview.findFirst({
       orderBy: [{ year: "desc" }, { quarter: "desc" }],
     }),

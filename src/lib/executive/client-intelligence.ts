@@ -157,6 +157,7 @@ export async function buildClientIntelligence(options?: {
       },
     }),
     prisma.creatorLead.findMany({
+      where: { isTest: false },
       orderBy: { createdAt: "desc" },
       take: QUERY_LIMIT,
       select: { id: true, email: true },

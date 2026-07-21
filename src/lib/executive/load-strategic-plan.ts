@@ -27,7 +27,7 @@ export async function loadExecutiveStrategicPlan(): Promise<StrategicPlan> {
         briefingDate: "desc",
       },
     }),
-    prisma.creatorLead.findMany(),
+    prisma.creatorLead.findMany({ where: { isTest: false } }),
   ])
 
   const monthlyReview = buildExecutiveMonthlyReview(briefings)

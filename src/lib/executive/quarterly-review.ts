@@ -547,7 +547,7 @@ async function loadQuarterlyReviewContext(
         createdAt: "desc",
       },
     }),
-    prisma.creatorLead.findMany(),
+    prisma.creatorLead.findMany({ where: { isTest: false } }),
   ])
 
   const serializedDecisions = executiveDecisions.map(serializeDecision)

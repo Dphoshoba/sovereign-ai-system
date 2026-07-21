@@ -333,7 +333,7 @@ export async function loadPlanningCycleInputs(
         briefingDate: "desc",
       },
     }),
-    prisma.creatorLead.findMany(),
+    prisma.creatorLead.findMany({ where: { isTest: false } }),
     prisma.quarterlyGoal.findMany(),
     prisma.strategicInitiative.findMany({
       select: {

@@ -437,7 +437,7 @@ export async function buildExecutiveCommandCenter(): Promise<ExecutiveCommandCen
         briefingDate: "desc",
       },
     }),
-    prisma.creatorLead.findMany(),
+    prisma.creatorLead.findMany({ where: { isTest: false } }),
     prisma.quarterlyGoal.findMany({
       where: { quarter, year },
     }),

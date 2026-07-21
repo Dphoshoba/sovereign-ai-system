@@ -182,6 +182,7 @@ export async function buildBusinessMemory(options?: {
       },
     }),
     prisma.creatorLead.findMany({
+      where: { isTest: false },
       orderBy: { createdAt: "desc" },
       take: QUERY_LIMIT,
       select: {
