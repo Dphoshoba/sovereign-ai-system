@@ -61,7 +61,7 @@ export default function NewsletterForm() {
         disabled={loading}
         className="rounded-2xl bg-black px-6 py-4 font-semibold text-white disabled:opacity-60"
       >
-        {loading ? "Joining..." : "Join Now"}
+        {loading ? "Joining..." : "Join the Sovereign Intelligence Network"}
       </button>
 
       {message ? (
