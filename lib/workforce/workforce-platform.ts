@@ -9,6 +9,16 @@ import {
   WorkforcePlatformError,
 } from './types';
 
+export type {
+  AgentIdentity, AgentStatus, Skill, AgentSkillAssignment,
+  WorkforceMessage, MessageType,
+  Task, TaskStatus, AuditEntry,
+  CollaborationMode, CollaborationRule, HumanCollaborationRequest,
+  AgentMetrics, PerformanceGoal,
+  WorkforcePolicy, WorkforcePolicyEffect, AgentLifecycleEvent,
+  WorkforcePlatformError,
+};
+
 export interface WorkforcePlatform {
   // ── Workstream A: Identity ──
   registerAgent(identity: AgentIdentity): void;

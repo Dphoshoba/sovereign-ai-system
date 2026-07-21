@@ -175,7 +175,7 @@ export class FederatedGovernanceImpl implements FederatedGovernance {
             effectiveDecision = 'denied';
             break;
           case 'require_approval':
-            if (effectiveDecision !== 'deny') effectiveDecision = 'require_approval';
+            if (effectiveDecision !== 'denied') effectiveDecision = 'require_approval';
             break;
           case 'allow':
             if (effectiveDecision === 'denied') break; // deny already set, skip
