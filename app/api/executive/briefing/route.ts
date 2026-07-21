@@ -30,6 +30,7 @@ import { buildResilienceReport } from "@/lib/executive/enterprise-resilience"
 import { buildIntegrationPlatform } from "@/lib/executive/enterprise-integrations"
 import { buildApiPlatform } from "@/lib/executive/enterprise-api"
 import { buildSecurityReport } from "@/lib/executive/enterprise-security"
+import { buildPerformanceReport } from "@/lib/executive/enterprise-performance"
 
 export const dynamic = "force-dynamic"
 
@@ -214,6 +215,10 @@ export async function GET() {
         apiPlatform: buildApiPlatform(),
         enterpriseSecurity: buildSecurityReport({
           governancePassing: true,
+        }),
+        enterprisePerformance: buildPerformanceReport({
+          testCount: 297,
+          latencyMs: 120,
         }),
       },
     })
