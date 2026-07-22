@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { publicationGuard } from "../../../../lib/publishing/publication-guard"
+import { autoGenerateSocialPosts } from "../../../../lib/social/auto-generate-social"
 
 export async function POST(req: NextRequest) {
   try {
@@ -37,6 +38,13 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const existingPostIds = (
+      await prisma.socialPost.findMany({
+        where: { articleId },
+        select: { id: true },
+      })
+    ).map((p) => p.id)
+
     const publishedArticle = await prisma.article.update({
       where: { id: articleId },
       data: {
@@ -47,6 +55,13 @@ export async function POST(req: NextRequest) {
         scheduledFor: null,
       },
     })
+
+    let socialResult = null
+    try {
+      socialResult = await autoGenerateSocialPosts(articleId)
+    } catch {
+      socialResult = { ok: false, reason: "Social draft generation failed", posts: [] }
+    }
 
     await prisma.newsletter.updateMany({
       where: {
@@ -60,21 +75,30 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    await prisma.socialPost.updateMany({
-      where: {
-        articleId,
-        status: "review-required",
-      },
-      data: {
-        status: "approved",
-      },
-    })
+    if (existingPostIds.length > 0) {
+      await prisma.socialPost.updateMany({
+        where: {
+          id: { in: existingPostIds },
+          status: "review-required",
+        },
+        data: {
+          status: "approved",
+        },
+      })
+    }
 
     return NextResponse.json({
       ok: true,
       article: publishedArticle,
       message:
-        "Article published, newsletter approved, and social posts approved.",
+        "Article published, newsletter approved, and social posts processed.",
+      socialDrafts: socialResult
+        ? {
+            generated: socialResult.ok,
+            reason: socialResult.reason,
+            count: socialResult.posts.length,
+          }
+        : undefined,
     })
   } catch (error) {
     return NextResponse.json(

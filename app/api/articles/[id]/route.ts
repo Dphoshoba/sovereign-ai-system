@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { publicationGuard } from "../../../../lib/publishing/publication-guard"
+import { autoGenerateSocialPosts } from "../../../../lib/social/auto-generate-social"
 
 export async function PATCH(
   request: Request,
@@ -36,6 +37,9 @@ export async function PATCH(
       }
     }
 
+    const transitioningToPublished =
+      body.status === "published" && existingArticle.status !== "published"
+
     const article = await prisma.article.update({
       where: { id },
       data: {
@@ -59,7 +63,26 @@ export async function PATCH(
       },
     })
 
-    return NextResponse.json({ ok: true, article })
+    let socialResult = null
+    if (transitioningToPublished) {
+      try {
+        socialResult = await autoGenerateSocialPosts(article.id)
+      } catch {
+        socialResult = { ok: false, reason: "Social draft generation failed", posts: [] }
+      }
+    }
+
+    return NextResponse.json({
+      ok: true,
+      article,
+      socialDrafts: socialResult
+        ? {
+            generated: socialResult.ok,
+            reason: socialResult.reason,
+            count: socialResult.posts.length,
+          }
+        : undefined,
+    })
   } catch (error) {
     console.error(error)
     return NextResponse.json(
