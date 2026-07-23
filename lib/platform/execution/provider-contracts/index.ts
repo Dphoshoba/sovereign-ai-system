@@ -30,3 +30,4 @@ export type {
   IdempotencyCheckResult,
   IdempotencyService,
 } from './idempotency-service';
+export * from './social-provider';
