@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
         })
         if (meResponse.ok) {
           const meData = await meResponse.json()
-          authorUrn = meData.id ? `urn:li:person:${meData.id}` : null
+          authorUrn = meData.id ? `urn:li:person:${meData.id}` : undefined
         }
       } catch {
         // /v2/me unavailable — member URN cannot be resolved
