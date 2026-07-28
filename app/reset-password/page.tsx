@@ -16,9 +16,70 @@ export default function ResetPasswordPage() {
   )
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSessionValid(!!data.session)
-    })
+    let canceled = false
+
+    async function establishSession() {
+      const url = new URL(window.location.href)
+      const code = url.searchParams.get("code")
+
+      if (code) {
+        const { error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code)
+        if (!exchangeErr && !canceled) {
+          window.history.replaceState({}, "", "/reset-password")
+          setSessionValid(true)
+          return
+        }
+      }
+
+      const hash = window.location.hash
+      if (hash && hash.includes("access_token")) {
+        const params = new URLSearchParams(hash.slice(1))
+        const accessToken = params.get("access_token")
+        const refreshToken = params.get("refresh_token")
+        const type = params.get("type")
+
+        if (accessToken && refreshToken && type === "recovery") {
+          const { error: setErr } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          })
+          if (!setErr && !canceled) {
+            window.history.replaceState({}, "", "/reset-password")
+            setSessionValid(true)
+            return
+          }
+        }
+      }
+
+      const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+        if (canceled) return
+        if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
+          if (session) {
+            window.history.replaceState({}, "", "/reset-password")
+            setSessionValid(true)
+          }
+        }
+      })
+
+      const { data } = await supabase.auth.getSession()
+      if (!canceled) {
+        if (data.session) {
+          setSessionValid(true)
+        } else {
+          setTimeout(() => {
+            if (!canceled) {
+              supabase.auth.getSession().then(({ data: d2 }) => {
+                if (!canceled) setSessionValid(!!d2.session)
+              })
+            }
+          }, 1500)
+        }
+        subscription.subscription.unsubscribe()
+      }
+    }
+
+    establishSession()
+    return () => { canceled = true }
   }, [])
 
   async function handleSubmit(event: React.FormEvent) {
@@ -69,7 +130,7 @@ export default function ResetPasswordPage() {
   if (sessionValid === null) {
     return (
       <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
-        <p>Loading...</p>
+        <p>Establishing secure session...</p>
       </main>
     )
   }
