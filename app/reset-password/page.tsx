@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { createBrowserClient } from "@supabase/ssr"
 
 export default function ResetPasswordPage() {
@@ -10,12 +10,17 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState("")
   const [sessionValid, setSessionValid] = useState<boolean | null>(null)
 
+  const recoveryEstablished = useRef(false)
+
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
   useEffect(() => {
+    if (recoveryEstablished.current) return
+    recoveryEstablished.current = true
+
     let canceled = false
 
     async function establishSession() {
@@ -24,10 +29,12 @@ export default function ResetPasswordPage() {
 
       if (code) {
         const { error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code)
-        if (!exchangeErr && !canceled) {
+        if (!canceled) {
           window.history.replaceState({}, "", "/reset-password")
-          setSessionValid(true)
-          return
+          if (!exchangeErr) {
+            setSessionValid(true)
+            return
+          }
         }
       }
 
@@ -43,39 +50,41 @@ export default function ResetPasswordPage() {
             access_token: accessToken,
             refresh_token: refreshToken,
           })
-          if (!setErr && !canceled) {
+          if (!canceled) {
             window.history.replaceState({}, "", "/reset-password")
-            setSessionValid(true)
-            return
+            if (!setErr) {
+              setSessionValid(true)
+              return
+            }
           }
         }
       }
 
-      const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+      supabase.auth.onAuthStateChange((event, session) => {
         if (canceled) return
-        if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
-          if (session) {
-            window.history.replaceState({}, "", "/reset-password")
-            setSessionValid(true)
-          }
+        if (session && (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN")) {
+          window.history.replaceState({}, "", "/reset-password")
+          setSessionValid(true)
         }
       })
 
       const { data } = await supabase.auth.getSession()
-      if (!canceled) {
-        if (data.session) {
-          setSessionValid(true)
-        } else {
-          setTimeout(() => {
-            if (!canceled) {
-              supabase.auth.getSession().then(({ data: d2 }) => {
-                if (!canceled) setSessionValid(!!d2.session)
-              })
-            }
-          }, 1500)
-        }
-        subscription.subscription.unsubscribe()
+      if (canceled) return
+
+      if (data.session) {
+        setSessionValid(true)
+        return
       }
+
+      setTimeout(() => {
+        if (canceled) return
+        supabase.auth.getSession().then(({ data: d2 }) => {
+          if (canceled) return
+          if (!d2.session) {
+            setSessionValid(false)
+          }
+        })
+      }, 1500)
     }
 
     establishSession()
