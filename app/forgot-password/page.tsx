@@ -20,14 +20,7 @@ export default function ForgotPasswordPage() {
     setLoading(true)
     setError("")
 
-    const redirectTo =
-      typeof window !== "undefined"
-        ? `${window.location.origin}/reset-password`
-        : ""
-
-    const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo,
-    })
+    const { error: err } = await supabase.auth.resetPasswordForEmail(email)
 
     setLoading(false)
 
@@ -45,11 +38,11 @@ export default function ForgotPasswordPage() {
         <h1>Check Your Email</h1>
         <div style={{ maxWidth: 420 }}>
           <p style={{ fontSize: 16, color: "#333", lineHeight: 1.6 }}>
-            If an account exists for that email address, a password reset link has been sent.
-            Please check your inbox and follow the instructions.
+            If an account exists for that email address, a recovery code has been sent.
+            Please check your inbox, copy the code, and proceed to the reset page.
           </p>
-          <Link href="/login" style={{ fontSize: 14, color: "#555" }}>
-            Back to login
+          <Link href="/reset-password" style={{ display: "inline-block", marginTop: 16, fontSize: 14, color: "#555" }}>
+            Enter your recovery code
           </Link>
         </div>
       </main>
@@ -62,7 +55,7 @@ export default function ForgotPasswordPage() {
 
       <form onSubmit={handleSubmit} style={{ maxWidth: 420, display: "grid", gap: 16 }}>
         <p style={{ fontSize: 14, color: "#555" }}>
-          Enter your email address and we will send you a password reset link.
+          Enter your email address and we will send you a recovery code.
         </p>
 
         <input
@@ -79,7 +72,7 @@ export default function ForgotPasswordPage() {
         )}
 
         <button style={buttonStyle} disabled={loading}>
-          {loading ? "Sending..." : "Send Reset Link"}
+          {loading ? "Sending..." : "Send Recovery Code"}
         </button>
 
         <Link href="/login" style={{ textAlign: "center", fontSize: 14, color: "#555" }}>
@@ -91,17 +84,9 @@ export default function ForgotPasswordPage() {
 }
 
 const inputStyle: React.CSSProperties = {
-  padding: 12,
-  borderRadius: 8,
-  border: "1px solid #ccc",
-  fontSize: 16,
+  padding: 12, borderRadius: 8, border: "1px solid #ccc", fontSize: 16,
 }
 
 const buttonStyle: React.CSSProperties = {
-  padding: 12,
-  borderRadius: 8,
-  border: "none",
-  background: "#111",
-  color: "#fff",
-  fontWeight: "bold",
+  padding: 12, borderRadius: 8, border: "none", background: "#111", color: "#fff", fontWeight: "bold",
 }

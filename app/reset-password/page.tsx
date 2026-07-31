@@ -1,97 +1,58 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState } from "react"
 import { createBrowserClient } from "@supabase/ssr"
 
 export default function ResetPasswordPage() {
+  const [email, setEmail] = useState("")
+  const [recoveryCode, setRecoveryCode] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [stage, setStage] = useState<"enter-code" | "set-password">("enter-code")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const [sessionValid, setSessionValid] = useState<boolean | null>(null)
-
-  const recoveryEstablished = useRef(false)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  useEffect(() => {
-    if (recoveryEstablished.current) return
-    recoveryEstablished.current = true
+  async function handleVerifyCode(event: React.FormEvent) {
+    event.preventDefault()
+    setError("")
 
-    let canceled = false
-
-    async function establishSession() {
-      const url = new URL(window.location.href)
-      const code = url.searchParams.get("code")
-
-      if (code) {
-        const { error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code)
-        if (!canceled) {
-          window.history.replaceState({}, "", "/reset-password")
-          if (!exchangeErr) {
-            setSessionValid(true)
-            return
-          }
-        }
-      }
-
-      const hash = window.location.hash
-      if (hash && hash.includes("access_token")) {
-        const params = new URLSearchParams(hash.slice(1))
-        const accessToken = params.get("access_token")
-        const refreshToken = params.get("refresh_token")
-        const type = params.get("type")
-
-        if (accessToken && refreshToken && type === "recovery") {
-          const { error: setErr } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          })
-          if (!canceled) {
-            window.history.replaceState({}, "", "/reset-password")
-            if (!setErr) {
-              setSessionValid(true)
-              return
-            }
-          }
-        }
-      }
-
-      supabase.auth.onAuthStateChange((event, session) => {
-        if (canceled) return
-        if (session && (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN")) {
-          window.history.replaceState({}, "", "/reset-password")
-          setSessionValid(true)
-        }
-      })
-
-      const { data } = await supabase.auth.getSession()
-      if (canceled) return
-
-      if (data.session) {
-        setSessionValid(true)
-        return
-      }
-
-      setTimeout(() => {
-        if (canceled) return
-        supabase.auth.getSession().then(({ data: d2 }) => {
-          if (canceled) return
-          if (!d2.session) {
-            setSessionValid(false)
-          }
-        })
-      }, 1500)
+    if (!email || !recoveryCode) {
+      setError("Email and recovery code are required.")
+      return
     }
 
-    establishSession()
-    return () => { canceled = true }
-  }, [])
+    setLoading(true)
 
-  async function handleSubmit(event: React.FormEvent) {
+    const { error: err } = await supabase.auth.verifyOtp({
+      email,
+      token: recoveryCode,
+      type: "recovery",
+    })
+
+    setLoading(false)
+
+    if (err) {
+      if (err.message.includes("expired") || err.message.includes("Expired")) {
+        setError("This recovery code has expired. Please request a new one.")
+      } else if (err.message.includes("not found") || err.message.includes("NotFound")) {
+        setError("Invalid recovery code. Please check and try again.")
+      } else if (err.message.includes("rate") || err.message.includes("Rate")) {
+        setError("Too many attempts. Please wait and try again.")
+      } else {
+        setError("Unable to verify code. Please check your email and code, then try again.")
+      }
+      return
+    }
+
+    setStage("set-password")
+  }
+
+  async function handleSetPassword(event: React.FormEvent) {
     event.preventDefault()
     setError("")
 
@@ -119,27 +80,42 @@ export default function ResetPasswordPage() {
     window.location.href = "/login?passwordReset=success"
   }
 
-  if (sessionValid === false) {
+  if (stage === "enter-code") {
     return (
       <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
-        <h1>Reset Link Expired</h1>
-        <div style={{ maxWidth: 420 }}>
-          <p style={{ fontSize: 16, color: "#333", lineHeight: 1.6 }}>
-            This password reset link is invalid or has expired.
-            Please request a new password reset link.
-          </p>
-          <a href="/forgot-password" style={{ fontSize: 14, color: "#555" }}>
-            Request a new reset link
-          </a>
-        </div>
-      </main>
-    )
-  }
+        <h1>Reset Password</h1>
 
-  if (sessionValid === null) {
-    return (
-      <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
-        <p>Establishing secure session...</p>
+        <form onSubmit={handleVerifyCode} style={{ maxWidth: 420, display: "grid", gap: 16 }}>
+          <p style={{ fontSize: 14, color: "#555" }}>
+            Enter the email address you requested recovery for and the code sent to your inbox.
+          </p>
+
+          <input
+            type="email"
+            placeholder="Email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={inputStyle}
+          />
+
+          <input
+            type="text"
+            placeholder="Recovery code"
+            required
+            value={recoveryCode}
+            onChange={(e) => setRecoveryCode(e.target.value)}
+            style={inputStyle}
+          />
+
+          {error && (
+            <p style={{ color: "#cc0000", fontSize: 14, margin: 0 }}>{error}</p>
+          )}
+
+          <button style={buttonStyle} disabled={loading}>
+            {loading ? "Verifying..." : "Verify Code"}
+          </button>
+        </form>
       </main>
     )
   }
@@ -148,7 +124,7 @@ export default function ResetPasswordPage() {
     <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
       <h1>Set New Password</h1>
 
-      <form onSubmit={handleSubmit} style={{ maxWidth: 420, display: "grid", gap: 16 }}>
+      <form onSubmit={handleSetPassword} style={{ maxWidth: 420, display: "grid", gap: 16 }}>
         <p style={{ fontSize: 14, color: "#555" }}>
           Choose a new password. Minimum 12 characters.
         </p>
@@ -186,17 +162,9 @@ export default function ResetPasswordPage() {
 }
 
 const inputStyle: React.CSSProperties = {
-  padding: 12,
-  borderRadius: 8,
-  border: "1px solid #ccc",
-  fontSize: 16,
+  padding: 12, borderRadius: 8, border: "1px solid #ccc", fontSize: 16,
 }
 
 const buttonStyle: React.CSSProperties = {
-  padding: 12,
-  borderRadius: 8,
-  border: "none",
-  background: "#111",
-  color: "#fff",
-  fontWeight: "bold",
+  padding: 12, borderRadius: 8, border: "none", background: "#111", color: "#fff", fontWeight: "bold",
 }

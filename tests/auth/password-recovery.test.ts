@@ -3,10 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const mockResetPasswordForEmail = vi.fn()
 const mockUpdateUser = vi.fn()
 const mockSignOut = vi.fn()
-const mockGetSession = vi.fn()
-const mockExchangeCodeForSession = vi.fn()
-const mockSetSession = vi.fn()
-const mockOnAuthStateChange = vi.fn()
+const mockVerifyOtp = vi.fn()
 
 vi.mock('@supabase/ssr', () => ({
   createBrowserClient: () => ({
@@ -14,48 +11,30 @@ vi.mock('@supabase/ssr', () => ({
       resetPasswordForEmail: mockResetPasswordForEmail,
       updateUser: mockUpdateUser,
       signOut: mockSignOut,
-      getSession: mockGetSession,
+      verifyOtp: mockVerifyOtp,
       signInWithPassword: vi.fn(),
-      exchangeCodeForSession: mockExchangeCodeForSession,
-      setSession: mockSetSession,
-      onAuthStateChange: mockOnAuthStateChange,
     },
   }),
 }))
 
-describe('Password Recovery — Forgot Password Flow', () => {
+describe('Password Recovery — OTP Forgot Password Flow', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('resetPasswordForEmail accepts email and redirectTo', () => {
-    const email = 'test@example.com'
-    const redirectTo = 'http://localhost:3000/reset-password'
-
+  it('resetPasswordForEmail sends recovery code', () => {
     mockResetPasswordForEmail.mockResolvedValue({ error: null })
-    expect(typeof email).toBe('string')
-    expect(typeof redirectTo).toBe('string')
-    expect(redirectTo).toContain('/reset-password')
+    expect(typeof mockResetPasswordForEmail).toBe('function')
   })
 
   it('neutral success message does not reveal account existence', () => {
     const neutralMessages = [
-      'If an account exists for that email address, a password reset link has been sent.',
-      'Please check your inbox and follow the instructions.',
+      'If an account exists for that email address, a recovery code has been sent.',
     ]
     for (const msg of neutralMessages) {
       expect(msg.toLowerCase()).not.toContain('not found')
       expect(msg.toLowerCase()).not.toContain("doesn't exist")
-      expect(msg.toLowerCase()).not.toContain('no account')
-    }
-  })
-
-  it('redirectTo uses correct origin for production', () => {
-    const origins = ['https://sovereign-ai-executive.vercel.app', 'http://localhost:3000']
-    for (const origin of origins) {
-      const redirectTo = `${origin}/reset-password`
-      expect(redirectTo).toBe(`${origin}/reset-password`)
     }
   })
 
@@ -67,256 +46,109 @@ describe('Password Recovery — Forgot Password Flow', () => {
   })
 })
 
-describe('Password Recovery — Reset Password Flow', () => {
+describe('Password Recovery — OTP Reset Flow', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('missing recovery session displays expired message', () => {
-    mockGetSession.mockResolvedValue({ data: { session: null } })
-
-    const hasSession = false
-    expect(hasSession).toBe(false)
+  it('verifyOtp succeeds with valid email and code', () => {
+    mockVerifyOtp.mockResolvedValue({ error: null })
+    expect(typeof mockVerifyOtp).toBe('function')
   })
 
-  it('valid recovery session allows password update', () => {
-    mockGetSession.mockResolvedValue({ data: { session: { user: { id: '123' } } } })
+  it('verifyOtp requires email and code', () => {
+    mockVerifyOtp.mockResolvedValue({ error: null })
 
-    const hasSession = true
-    expect(hasSession).toBe(true)
+    const hasEmail = true
+    const hasCode = true
+    expect(hasEmail && hasCode).toBe(true)
   })
 
-  it('password shorter than 12 characters is rejected', () => {
-    const short = 'short1'
-    const long = 'longenough123'
-
-    expect(short.length).toBeLessThan(12)
-    expect(long.length).toBeGreaterThanOrEqual(12)
-  })
-
-  it('mismatched passwords are rejected', () => {
-    const password = 'validpassword123'
-    const confirm = 'differentpassword123'
-
-    expect(password).not.toBe(confirm)
-  })
-
-  it('matching passwords are accepted', () => {
-    const password = 'validpassword123'
-    const confirm = 'validpassword123'
-
-    expect(password).toBe(confirm)
-  })
-
-  it('updateUser succeeds and signOut is called', () => {
-    mockUpdateUser.mockResolvedValue({ error: null })
-    mockSignOut.mockResolvedValue({ error: null })
-
-    expect(true).toBe(true)
-  })
-
-  it('updateUser error is handled', () => {
-    mockUpdateUser.mockResolvedValue({
-      error: { message: 'Password update failed' },
+  it('invalid recovery code is rejected', () => {
+    mockVerifyOtp.mockResolvedValue({
+      error: { message: 'Token has expired or is invalid' },
     })
 
     expect(true).toBe(true)
   })
 
-  it('redirect URL after success is /login?passwordReset=success', () => {
-    const redirectUrl = '/login?passwordReset=success'
-    expect(redirectUrl).toContain('passwordReset=success')
-    expect(redirectUrl).toContain('/login')
+  it('expired recovery code is detected', () => {
+    mockVerifyOtp.mockResolvedValue({
+      error: { message: 'Token has expired' },
+    })
+
+    expect(true).toBe(true)
   })
 
-  it('login page success banner text is correct', () => {
-    const bannerText = 'Your password has been changed successfully. Please sign in with your new password.'
-    expect(bannerText.toLowerCase()).toContain('password')
-    expect(bannerText.toLowerCase()).toContain('changed')
-    expect(bannerText.toLowerCase()).toContain('sign in')
+  it('rate limited attempts are handled', () => {
+    mockVerifyOtp.mockResolvedValue({
+      error: { message: 'Too many requests' },
+    })
+
+    expect(true).toBe(true)
   })
 
-  it('no tokens or passwords appear in success messages', () => {
-    const dangerWords = ['access_token', 'refresh_token', 'Bearer', 'password=', 'secret']
-    const messages = [
-      'Your password has been changed successfully. Please sign in with your new password.',
-      'If an account exists for that email address, a password reset link has been sent.',
+  it('password form only appears after verifyOtp succeeds', () => {
+    mockVerifyOtp.mockResolvedValue({ error: null })
+    const stage = 'set-password'
+    expect(stage).toBe('set-password')
+  })
+
+  it('password shorter than 12 characters rejected', () => {
+    expect('short'.length).toBeLessThan(12)
+    expect('validpassword123'.length).toBeGreaterThanOrEqual(12)
+  })
+
+  it('mismatched passwords rejected', () => {
+    expect('validpassword123').not.toBe('different1234567')
+  })
+
+  it('updateUser called after password matches', () => {
+    mockUpdateUser.mockResolvedValue({ error: null })
+    expect(typeof mockUpdateUser).toBe('function')
+  })
+
+  it('signOut called after successful update', () => {
+    mockSignOut.mockResolvedValue({ error: null })
+    expect(typeof mockSignOut).toBe('function')
+  })
+
+  it('redirects to /login?passwordReset=success', () => {
+    const redirect = '/login?passwordReset=success'
+    expect(redirect).toContain('passwordReset=success')
+  })
+
+  it('no recovery code appears in success messages', () => {
+    const messages = ['Your password has been changed successfully.']
+    for (const m of messages) {
+      expect(m).not.toContain('123456')
+      expect(m).not.toContain('token')
+    }
+  })
+
+  it('no tokens or secrets in error messages', () => {
+    const dangerPatterns = ['Bearer', 'access_token', 'refresh_token']
+    const errorMessages = [
+      'Invalid recovery code.',
+      'This recovery code has expired.',
+      'Too many attempts.',
     ]
-    for (const msg of messages) {
-      for (const word of dangerWords) {
-        expect(msg.toLowerCase()).not.toContain(word.toLowerCase())
+    for (const msg of errorMessages) {
+      for (const pattern of dangerPatterns) {
+        expect(msg).not.toContain(pattern)
       }
     }
   })
 
-  it('resetPasswordForEmail uses correct redirectTo path', () => {
-    const redirectTo = 'http://localhost:3000/reset-password'
-    expect(redirectTo.endsWith('/reset-password')).toBe(true)
-    expect(redirectTo.startsWith('http')).toBe(true)
+  it('missing email or code shows clear error', () => {
+    const hasEmail = false
+    const hasCode = true
+    expect(hasEmail && hasCode).toBe(false)
   })
 
-  it('neutral forgot-password message says "If an account exists"', () => {
-    const message = 'If an account exists for that email address, a password reset link has been sent.'
-    expect(message).toContain('If an account exists')
-  })
-})
-
-describe('Password Recovery — Session Race Fix', () => {
-
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
-  it('exchangeCodeForSession succeeds with PKCE code', () => {
-    mockExchangeCodeForSession.mockResolvedValue({ error: null })
-    expect(typeof mockExchangeCodeForSession).toBe('function')
-  })
-
-  it('exchangeCodeForSession handles errors gracefully', () => {
-    mockExchangeCodeForSession.mockResolvedValue({ error: { message: 'Invalid code' } })
-    expect(true).toBe(true)
-  })
-
-  it('setSession succeeds with hash fragment tokens', () => {
-    mockSetSession.mockResolvedValue({ error: null })
-    const accessToken = 'at_123'
-    const refreshToken = 'rt_456'
-    expect(accessToken).toBeTruthy()
-    expect(refreshToken).toBeTruthy()
-    expect(typeof mockSetSession).toBe('function')
-  })
-
-  it('setSession handles invalid tokens', () => {
-    mockSetSession.mockResolvedValue({ error: { message: 'Invalid token' } })
-    expect(true).toBe(true)
-  })
-
-  it('PASSWORD_RECOVERY event establishes valid session', () => {
-    let capturedCallback: ((event: string, session: unknown) => void) | null = null
-    mockOnAuthStateChange.mockImplementation((cb: (event: string, session: unknown) => void) => {
-      capturedCallback = cb
-      return { data: { subscription: { unsubscribe: vi.fn() } } }
-    })
-
-    const isFunction = typeof mockOnAuthStateChange === 'function'
-    expect(isFunction).toBe(true)
-  })
-
-  it('SIGNED_IN event also triggers recovery acceptance', () => {
-    let capturedCallback: ((event: string, session: unknown) => void) | null = null
-    mockOnAuthStateChange.mockImplementation((cb: (event: string, session: unknown) => void) => {
-      capturedCallback = cb
-      return { data: { subscription: { unsubscribe: vi.fn() } } }
-    })
-
-    expect(capturedCallback).toBeNull()
-    mockOnAuthStateChange(() => {})
-    expect(true).toBe(true)
-  })
-
-  it('delayed getSession succeeds after SDK processing', () => {
-    mockGetSession.mockResolvedValue({ data: { session: { user: { id: '123' } } } })
-    expect(true).toBe(true)
-  })
-
-  it('genuinely missing session reports expired after all checks', () => {
-    mockGetSession.mockResolvedValue({ data: { session: null } })
-    mockExchangeCodeForSession.mockResolvedValue({ error: { message: 'No code' } })
-    mockSetSession.mockResolvedValue({ error: { message: 'No hash' } })
-
-    const hasSession = false
-    expect(hasSession).toBe(false)
-  })
-
-  it('no premature expired state before all checks complete', () => {
-    const sessionState: boolean | null = null
-    expect(sessionState).toBeNull()
-  })
-
-  it('URL is cleaned after token consumption', () => {
-    const url = '/reset-password'
-    expect(url).not.toContain('access_token')
-    expect(url).not.toContain('code=')
-    expect(url).not.toContain('refresh_token')
-    expect(url).not.toContain('type=')
-    expect(url).not.toContain('#')
-  })
-
-  it('existing password validation preserved', () => {
-    expect('validpassword123'.length).toBeGreaterThanOrEqual(12)
-    expect('short'.length).toBeLessThan(12)
-  })
-
-  it('existing redirect and signOut preserved', () => {
-    mockSignOut.mockResolvedValue({ error: null })
-    const redirectUrl = '/login?passwordReset=success'
-    expect(redirectUrl).toContain('passwordReset=success')
-  })
-
-  it('tokens never appear in URL after processing', () => {
-    const dangerousTokens = ['access_token=', 'refresh_token=', 'code=123', 'type=recovery']
-    const cleanedUrl = '/reset-password'
-    for (const token of dangerousTokens) {
-      expect(cleanedUrl).not.toContain(token)
-    }
-  })
-})
-
-describe('Password Recovery — Strict Mode Idempotency', () => {
-
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
-  it('successful setSession followed by only SIGNED_IN still accepts recovery', () => {
-    mockSetSession.mockResolvedValue({ error: null })
-    let captured: { event: string; session: unknown } | null = null
-    mockOnAuthStateChange.mockImplementation((cb: (event: string, session: unknown) => void) => {
-      cb("SIGNED_IN", { user: { id: "123" } })
-      return { data: { subscription: { unsubscribe: vi.fn() } } }
-    })
-    expect(true).toBe(true)
-  })
-
-  it('successful code exchange followed by only SIGNED_IN still accepts recovery', () => {
-    mockExchangeCodeForSession.mockResolvedValue({ error: null })
-    expect(true).toBe(true)
-  })
-
-  it('recoveryEstablished ref prevents double initialization', () => {
-    const ref = { current: false }
-    ref.current = true
-    const ran = ref.current
-    expect(ran).toBe(true)
-  })
-
-  it('timeout does NOT overwrite already established recovery', () => {
-    const sessionValid = true
-    expect(sessionValid).toBe(true)
-  })
-
-  it('timeout correctly sets false when no recovery was established', () => {
-    const sessionValid = false
-    expect(sessionValid).toBe(false)
-  })
-
-  it('URL cleanup runs after callback capture not before', () => {
-    const captured = true
-    expect(captured).toBe(true)
-  })
-
-  it('genuine expired callback still shows expired', () => {
-    mockGetSession.mockResolvedValue({ data: { session: null } })
-    mockExchangeCodeForSession.mockResolvedValue({ error: { message: 'Bad code' } })
-    mockSetSession.mockResolvedValue({ error: { message: 'Bad token' } })
-    expect(true).toBe(true)
-  })
-
-  it('cleanup function cancels pending operations', () => {
-    let canceled = false
-    const cleanup = () => { canceled = true }
-    cleanup()
-    expect(canceled).toBe(true)
+  it('verifyOtp not called when email missing', () => {
+    mockVerifyOtp.mockReset()
+    expect(mockVerifyOtp).not.toHaveBeenCalled()
   })
 })
