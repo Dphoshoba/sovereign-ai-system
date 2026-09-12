@@ -2,6 +2,7 @@ import Link from "next/link"
 import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { ArticleReviewActions } from "./ArticleReviewActions"
+import { PrepareForReviewButton } from "./PrepareForReviewButton"
 import { ScheduleArticleButton } from "./ScheduleArticleButton"
 import { ArticleActions } from "@/components/articles/ArticleActions"
 
@@ -294,6 +295,13 @@ export default async function AdminArticlesPage({
                   >
                     Audit
                   </Link>
+
+                  {!audit &&
+                    (article.status === "review" ||
+                      article.status === "draft" ||
+                      article.status === "review-required") && (
+                      <PrepareForReviewButton articleId={article.id} />
+                    )}
 
                   {article.status === "review-required" && (
                     <ArticleReviewActions articleId={article.id} />

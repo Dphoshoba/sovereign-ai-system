@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
+import { PrepareForReviewButton } from "../../PrepareForReviewButton"
 
 function scoreColor(score?: number | null) {
   if ((score ?? 0) >= 80) return "#15803d"
@@ -61,6 +62,13 @@ export default async function ArticleAuditPage({
         <div style={card}>
           <h3>No Research Audit</h3>
           <p>No audit record exists for this article.</p>
+          {(article.status === "review" ||
+            article.status === "draft" ||
+            article.status === "review-required") && (
+            <div style={{ marginTop: "12px" }}>
+              <PrepareForReviewButton articleId={article.id} />
+            </div>
+          )}
         </div>
       ) : (
         <>

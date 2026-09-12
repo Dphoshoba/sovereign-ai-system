@@ -105,6 +105,10 @@ function normalizeSources(sources: SourceRecord[]): SourceRecord[] {
   }))
 }
 
+export function scoreProvidedSources(sources: SourceRecord[]): SourceRecord[] {
+  return normalizeSources(sources)
+}
+
 export async function sourceCollector(
   topic: string,
   manualSources: SourceRecord[] = [],
