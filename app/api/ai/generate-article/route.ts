@@ -16,6 +16,7 @@ import { publicationGate } from "../../../../lib/research/publication-gate"
 import { encodingNormalizer } from "../../../../lib/research/encoding-normalizer"
 import { contentSafeNormalizer } from "../../../../lib/research/content-safe-normalizer"
 import { calculateEditorialQualityScore } from "../../../../lib/editorial/quality-score"
+import { generateAndPersistFeaturedImage } from "../../../../lib/ai/persist-featured-image"
 import { articleQualityScorer } from "../../../../lib/editorial/article-quality-scorer"
 import { seoScorer } from "../../../../lib/editorial/seo-scorer"
 
@@ -426,25 +427,12 @@ export async function POST(request: Request) {
     let updatedArticle = article
 
     try {
-      const imageResponse = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-        }/api/ai/generate-featured-image`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            articleId: article.id,
-          }),
-        }
-      )
+      const imageData = await generateAndPersistFeaturedImage({
+        articleId: article.id,
+      })
 
-      const imageData = await imageResponse.json()
-
-      if (imageData?.ok && imageData?.article) {
-        updatedArticle = imageData.article
+      if (imageData.ok && imageData.article && !imageData.articleUnchanged) {
+        updatedArticle = imageData.article as typeof updatedArticle
       }
     } catch (imageError) {
       console.error(

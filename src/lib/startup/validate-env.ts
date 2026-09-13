@@ -41,6 +41,21 @@ export const ENV_SPECS: EnvVarSpec[] = [
     description: "Supabase anonymous key for client-side auth.",
   },
   {
+    key: "SUPABASE_SERVICE_ROLE_KEY",
+    required: true,
+    productionOnly: true,
+    group: "authentication",
+    description:
+      "Server-only Supabase service-role key for article image storage. Never expose to the browser or NEXT_PUBLIC variables.",
+  },
+  {
+    key: "ARTICLE_IMAGES_BUCKET",
+    required: false,
+    group: "application",
+    description:
+      "Supabase Storage bucket for generated article images (default: article-images).",
+  },
+  {
     key: "OPENAI_API_KEY",
     required: false,
     group: "openai",
