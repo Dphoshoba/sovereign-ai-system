@@ -56,6 +56,13 @@ export const ENV_SPECS: EnvVarSpec[] = [
       "Supabase Storage bucket for generated article images (default: article-images).",
   },
   {
+    key: "CRON_SECRET",
+    required: false,
+    group: "application",
+    description:
+      "Server-only bearer token for scheduled publication triggers. Never expose to the browser or NEXT_PUBLIC variables.",
+  },
+  {
     key: "OPENAI_API_KEY",
     required: false,
     group: "openai",

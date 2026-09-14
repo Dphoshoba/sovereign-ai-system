@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { GET as runWeeklyPlanner } from "../workers/weekly-planner/route"
-import { GET as runPublishScheduled } from "../workers/publish-scheduled/route"
+import { publishDueArticles } from "../../../lib/publishing/publish-due-articles"
 import { POST as createSnapshot } from "../reports/snapshot/route"
 import { GET as runIntelligence } from "../reports/executive-intelligence/route"
 
@@ -20,12 +20,16 @@ export async function POST(req: NextRequest) {
       }
 
       case "publish-scheduled": {
-        const response = await runPublishScheduled()
-        const result = await response.json()
+        const result = await publishDueArticles({
+          source: "operations",
+        })
         return NextResponse.json({
           ok: true,
           message: "Publish scheduled worker completed.",
-          ...result,
+          invocationId: result.invocationId,
+          published: result.published,
+          skipped: result.skipped,
+          failed: result.failed,
         })
       }
 

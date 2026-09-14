@@ -28,24 +28,18 @@ async function logActivity({
 
 async function runJob(job: any) {
   if (job.type === "publish-scheduled") {
-    const now = new Date()
-
-    const result = await prisma.article.updateMany({
-      where: {
-        status: "scheduled",
-        scheduledFor: {
-          lte: now,
-        },
-      },
-      data: {
-        status: "published",
-        publishedAt: now,
-      },
+    const { publishDueArticles } = await import(
+      "../../../../../lib/publishing/publish-due-articles"
+    )
+    const result = await publishDueArticles({
+      source: "ai-job",
     })
 
     return {
       message: "Scheduled publishing checked",
-      published: result.count,
+      published: result.published,
+      skipped: result.skipped,
+      failed: result.failed,
     }
   }
 
