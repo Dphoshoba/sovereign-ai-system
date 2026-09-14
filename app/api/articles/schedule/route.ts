@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { publicationGuard } from "../../../../lib/publishing/publication-guard"
+import { parseSchedulingTimestamp } from "../../../../lib/publishing/adelaide-time"
 
 export async function POST(req: NextRequest) {
   try {
@@ -47,13 +48,12 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const date = new Date(scheduledFor)
-
-    if (isNaN(date.getTime())) {
+    const parsed = parseSchedulingTimestamp(scheduledFor)
+    if (!parsed.ok) {
       return NextResponse.json(
         {
           ok: false,
-          error: "Invalid schedule date.",
+          error: parsed.error,
         },
         { status: 400 }
       )
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       where: { id: articleId },
       data: {
         status: "scheduled",
-        scheduledFor: date,
+        scheduledFor: parsed.date,
         publishedAt: null,
       },
     })

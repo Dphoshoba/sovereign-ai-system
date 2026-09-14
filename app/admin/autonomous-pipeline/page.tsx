@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { fromAdelaideWallClock } from "../../../lib/publishing/adelaide-time"
+import { AdelaideTimezoneHint } from "@/components/articles/AdelaideTimezoneHint"
 
 export default function AutonomousPipelinePage() {
   const [topic, setTopic] = useState("")
@@ -15,6 +17,16 @@ export default function AutonomousPipelinePage() {
     setLoading(true)
     setResult(null)
 
+    let scheduledIso: string | null = null
+    if (scheduledFor) {
+      const converted = fromAdelaideWallClock(scheduledFor)
+      if (!converted.ok) {
+        alert(converted.error)
+        return
+      }
+      scheduledIso = converted.iso
+    }
+
     const response = await fetch("/api/ai/autonomous-pipeline", {
       method: "POST",
       headers: {
@@ -24,7 +36,7 @@ export default function AutonomousPipelinePage() {
         topic,
         category,
         mode,
-        scheduledFor,
+        scheduledFor: scheduledIso,
       }),
     })
 
@@ -92,8 +104,10 @@ export default function AutonomousPipelinePage() {
               value={scheduledFor}
               onChange={(e) => setScheduledFor(e.target.value)}
               required
+              aria-label="Scheduled publish time in Australia/Adelaide"
               style={inputStyle}
             />
+            <AdelaideTimezoneHint />
           </label>
         ) : null}
 

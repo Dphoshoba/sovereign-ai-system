@@ -13,6 +13,7 @@ import { factExtractor } from "../../../../lib/research/fact-extractor"
 import { factVerificationEngine } from "../../../../lib/research/fact-verification-engine"
 import { consensusEngine } from "../../../../lib/research/consensus-engine"
 import { publicationGate } from "../../../../lib/research/publication-gate"
+import { parseOptionalSchedulingTimestamp } from "../../../../lib/publishing/adelaide-time"
 import { encodingNormalizer } from "../../../../lib/research/encoding-normalizer"
 import { contentSafeNormalizer } from "../../../../lib/research/content-safe-normalizer"
 import { calculateEditorialQualityScore } from "../../../../lib/editorial/quality-score"
@@ -115,7 +116,14 @@ export async function POST(request: Request) {
 
     const topic = body.topic || "AI automation for creators"
     const category = body.category || "ai-automation"
-    const scheduledFor = body.scheduledFor
+    const parsedSchedule = parseOptionalSchedulingTimestamp(body.scheduledFor)
+    if (!parsedSchedule.ok) {
+      return NextResponse.json(
+        { ok: false, error: parsedSchedule.error },
+        { status: 400 }
+      )
+    }
+    const scheduledFor = parsedSchedule.date
     const manualSources: SourceRecord[] = Array.isArray(body.manualSources)
       ? body.manualSources
       : []
@@ -361,7 +369,7 @@ export async function POST(request: Request) {
           ? finalTextCleanup(parsed.seoKeywords)
           : null,
         publishedAt: null,
-        scheduledFor: scheduledFor ? new Date(scheduledFor) : null,
+        scheduledFor,
         editorialScore: editorialQuality.score,
         editorialGrade: editorialQuality.grade,
         editorialWarnings: editorialQuality.warnings,

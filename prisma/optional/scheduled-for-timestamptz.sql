@@ -1,0 +1,22 @@
+-- Optional follow-up only. Do not apply to Production in the Adelaide
+-- timezone milestone.
+--
+-- Prisma currently maps Article.scheduledFor to timestamp without time zone.
+-- Production Postgres session timezone is UTC, so Prisma Date values are stored
+-- as UTC wall-clock timestamps. New schedules send ISO-8601 instants with an
+-- explicit offset, so `scheduledFor <= now()` remains correct without this
+-- migration.
+--
+-- Conversion semantics if applied later:
+--   1. Confirm zero scheduled rows (or inventory every naive value).
+--   2. Do not assume naive values are Australia/Adelaide. Historical writes
+--      mixed UTC-server interpretation and local display conversion.
+--   3. Treat existing timestamp-without-time-zone values as UTC wall clocks
+--      because the production session timezone is UTC:
+--
+--      ALTER TABLE "Article"
+--        ALTER COLUMN "scheduledFor" TYPE timestamptz
+--        USING "scheduledFor" AT TIME ZONE 'UTC';
+--
+--   4. Repeat for "publishedAt" / "approvedAt" only after the same audit.
+--   5. Then add Prisma @db.Timestamptz to those DateTime fields.

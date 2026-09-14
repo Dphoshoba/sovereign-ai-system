@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { formatAdelaideDisplay } from "../../lib/publishing/adelaide-time"
 
 export default async function AiCommandCenterPage() {
   await connection()
@@ -162,7 +163,7 @@ export default async function AiCommandCenterPage() {
                   <br />
                   <small>
                     {article.scheduledFor
-                      ? new Date(article.scheduledFor).toLocaleString("en-AU")
+                      ? formatAdelaideDisplay(article.scheduledFor)
                       : "No date"}
                   </small>
                 </span>

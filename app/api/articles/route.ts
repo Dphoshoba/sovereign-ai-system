@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { parseOptionalSchedulingTimestamp } from "../../../lib/publishing/adelaide-time"
 
 export async function GET() {
   try {
@@ -27,6 +28,13 @@ export async function POST(request: Request) {
     const body = await request.json()
 
     const status = body.status || "draft"
+    const parsedSchedule = parseOptionalSchedulingTimestamp(body.scheduledFor)
+    if (!parsedSchedule.ok) {
+      return NextResponse.json(
+        { ok: false, error: parsedSchedule.error },
+        { status: 400 }
+      )
+    }
 
     const article = await prisma.article.create({
       data: {
@@ -44,7 +52,7 @@ export async function POST(request: Request) {
         seoKeywords: body.seoKeywords || null,
 
         publishedAt: status === "published" ? new Date() : null,
-        scheduledFor: body.scheduledFor ? new Date(body.scheduledFor) : null,
+        scheduledFor: parsedSchedule.date,
       },
     })
 

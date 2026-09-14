@@ -2,6 +2,11 @@
 
 import { useEffect, useState, use } from "react"
 import { useRouter } from "next/navigation"
+import {
+  fromAdelaideWallClock,
+  instantToAdelaideWallClock,
+} from "../../../../../lib/publishing/adelaide-time"
+import { AdelaideTimezoneHint } from "@/components/articles/AdelaideTimezoneHint"
 
 type Article = {
   id: string
@@ -38,8 +43,18 @@ export default function EditArticlePage({
       const response = await fetch("/api/articles")
       const result = await response.json()
       const found = result.articles.find((a: Article) => a.id === id)
+      if (!found) {
+        setArticle(null)
+        setLoading(false)
+        return
+      }
 
-      setArticle(found || null)
+      setArticle({
+        ...found,
+        scheduledFor: found.scheduledFor
+          ? instantToAdelaideWallClock(found.scheduledFor)
+          : null,
+      })
       setLoading(false)
     }
 
@@ -51,10 +66,23 @@ export default function EditArticlePage({
 
     if (!article) return
 
+    let scheduledFor: string | null = null
+    if (article.scheduledFor) {
+      const converted = fromAdelaideWallClock(article.scheduledFor)
+      if (!converted.ok) {
+        alert(converted.error)
+        return
+      }
+      scheduledFor = converted.iso
+    }
+
     const response = await fetch(`/api/articles/${article.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(article),
+      body: JSON.stringify({
+        ...article,
+        scheduledFor,
+      }),
     })
 
     const result = await response.json()
@@ -306,11 +334,7 @@ export default function EditArticlePage({
           Scheduled Publish Date
           <input
             type="datetime-local"
-            value={
-              article.scheduledFor
-                ? new Date(article.scheduledFor).toISOString().slice(0, 16)
-                : ""
-            }
+            value={article.scheduledFor || ""}
             onChange={(e) =>
               setArticle({
                 ...article,
@@ -318,8 +342,10 @@ export default function EditArticlePage({
                 status: e.target.value ? "scheduled" : article.status,
               })
             }
+            aria-label="Scheduled publish time in Australia/Adelaide"
             style={inputStyle}
           />
+          <AdelaideTimezoneHint />
         </label>
 
         <label>
@@ -328,9 +354,12 @@ export default function EditArticlePage({
             value={article.status}
             onChange={(e) => {
               const isScheduled = e.target.value === "scheduled"
-              const fallbackDate = isScheduled && !article.scheduledFor
-                ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16)
-                : null
+              const fallbackDate =
+                isScheduled && !article.scheduledFor
+                  ? instantToAdelaideWallClock(
+                      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                    )
+                  : null
               setArticle({
                 ...article,
                 status: e.target.value,

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { publicationGuard } from "../../../../lib/publishing/publication-guard"
 import { autoGenerateSocialPosts } from "../../../../lib/social/auto-generate-social"
+import { parseOptionalSchedulingTimestamp } from "../../../../lib/publishing/adelaide-time"
 
 export async function PATCH(
   request: Request,
@@ -40,6 +41,14 @@ export async function PATCH(
     const transitioningToPublished =
       body.status === "published" && existingArticle.status !== "published"
 
+    const parsedSchedule = parseOptionalSchedulingTimestamp(body.scheduledFor)
+    if (!parsedSchedule.ok) {
+      return NextResponse.json(
+        { ok: false, error: parsedSchedule.error },
+        { status: 400 }
+      )
+    }
+
     const article = await prisma.article.update({
       where: { id },
       data: {
@@ -57,9 +66,7 @@ export async function PATCH(
           body.status === "published"
             ? new Date()
             : existingArticle.publishedAt,
-        scheduledFor: body.scheduledFor
-          ? new Date(body.scheduledFor)
-          : null,
+        scheduledFor: parsedSchedule.date,
       },
     })
 

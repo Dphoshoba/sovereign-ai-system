@@ -2,6 +2,11 @@
 
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import {
+  fromAdelaideWallClock,
+  hasExplicitUtcOffset,
+  parseSchedulingTimestamp,
+} from "../../../lib/publishing/adelaide-time"
 
 export function ArticleActions({
   articleId,
@@ -92,10 +97,19 @@ export function ArticleActions({
           disabled={loading}
           onClick={async () => {
             const value = prompt(
-              "Enter schedule date/time, example: 2026-06-10T09:00:00"
+              "Enter Australia/Adelaide date/time, example: 2026-09-14T13:02"
             )
 
             if (!value) return
+
+            const parsed = hasExplicitUtcOffset(value)
+              ? parseSchedulingTimestamp(value)
+              : fromAdelaideWallClock(value)
+
+            if (!parsed.ok) {
+              alert(parsed.error)
+              return
+            }
 
             setLoading(true)
 
@@ -106,7 +120,7 @@ export function ArticleActions({
               },
               body: JSON.stringify({
                 articleId,
-                scheduledFor: value,
+                scheduledFor: parsed.iso,
               }),
             })
 

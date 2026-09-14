@@ -2,6 +2,8 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { fromAdelaideWallClock } from "../../../lib/publishing/adelaide-time"
+import { AdelaideTimezoneHint } from "@/components/articles/AdelaideTimezoneHint"
 
 export default function AiGeneratorPage() {
   const router = useRouter()
@@ -16,6 +18,16 @@ export default function AiGeneratorPage() {
     event.preventDefault()
     setLoading(true)
 
+    let scheduledIso: string | null = null
+    if (scheduledFor) {
+      const converted = fromAdelaideWallClock(scheduledFor)
+      if (!converted.ok) {
+        alert(converted.error)
+        return
+      }
+      scheduledIso = converted.iso
+    }
+
     const response = await fetch("/api/ai/generate-article", {
       method: "POST",
       headers: {
@@ -26,7 +38,7 @@ export default function AiGeneratorPage() {
         category,
         publishNow,
         status: publishNow ? "published" : "draft",
-        scheduledFor,
+        scheduledFor: scheduledIso,
       }),
     })
 
@@ -75,14 +87,18 @@ export default function AiGeneratorPage() {
         </label>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Schedule Publish Time</label>
+          <label className="text-sm font-medium">
+            Schedule Publish Time (Australia/Adelaide)
+          </label>
 
           <input
             type="datetime-local"
             value={scheduledFor}
             onChange={(e) => setScheduledFor(e.target.value)}
+            aria-label="Scheduled publish time in Australia/Adelaide"
             className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black"
           />
+          <AdelaideTimezoneHint />
         </div>
 
         <label style={{ display: "flex", gap: "8px", alignItems: "center", color: "var(--foreground)" }}>

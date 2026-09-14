@@ -2,6 +2,7 @@ import Link from "next/link"
 import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
 import OperationsActions from "@/components/operations/OperationsActions"
+import { formatAdelaideDisplay } from "../../../lib/publishing/adelaide-time"
 
 export default async function OperationsPage() {
   await connection()
@@ -143,7 +144,7 @@ export default async function OperationsPage() {
             <p>
               Scheduled For:{" "}
               {article.scheduledFor
-                ? new Date(article.scheduledFor).toLocaleString()
+                ? formatAdelaideDisplay(article.scheduledFor)
                 : "Not set"}
             </p>
           </div>

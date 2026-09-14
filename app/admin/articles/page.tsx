@@ -5,6 +5,7 @@ import { ArticleReviewActions } from "./ArticleReviewActions"
 import { PrepareForReviewButton } from "./PrepareForReviewButton"
 import { ScheduleArticleButton } from "./ScheduleArticleButton"
 import { ArticleActions } from "@/components/articles/ArticleActions"
+import { formatAdelaideDisplay } from "../../../lib/publishing/adelaide-time"
 
 const STATUS_FILTERS = [
   { key: "all", label: "All", status: null },
@@ -190,7 +191,7 @@ export default async function AdminArticlesPage({
                 {article.scheduledFor && (
                   <p>
                     <strong>Scheduled For:</strong>{" "}
-                    {new Date(article.scheduledFor).toLocaleString()}
+                    {formatAdelaideDisplay(article.scheduledFor)}
                   </p>
                 )}
 
