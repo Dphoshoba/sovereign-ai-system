@@ -2,31 +2,17 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { fromAdelaideWallClock } from "../../../lib/publishing/adelaide-time"
-import { AdelaideTimezoneHint } from "@/components/articles/AdelaideTimezoneHint"
 
 export default function AiGeneratorPage() {
   const router = useRouter()
 
   const [topic, setTopic] = useState("")
   const [category, setCategory] = useState("ai-automation")
-  const [publishNow, setPublishNow] = useState(false)
-  const [scheduledFor, setScheduledFor] = useState("")
   const [loading, setLoading] = useState(false)
   
   async function generateArticle(event: React.FormEvent) {
     event.preventDefault()
     setLoading(true)
-
-    let scheduledIso: string | null = null
-    if (scheduledFor) {
-      const converted = fromAdelaideWallClock(scheduledFor)
-      if (!converted.ok) {
-        alert(converted.error)
-        return
-      }
-      scheduledIso = converted.iso
-    }
 
     const response = await fetch("/api/ai/generate-article", {
       method: "POST",
@@ -36,9 +22,6 @@ export default function AiGeneratorPage() {
       body: JSON.stringify({
         topic,
         category,
-        publishNow,
-        status: publishNow ? "published" : "draft",
-        scheduledFor: scheduledIso,
       }),
     })
 
@@ -59,9 +42,10 @@ export default function AiGeneratorPage() {
       <h1>AI Auto-Publishing Workflow</h1>
 
       <p style={{ maxWidth: 760, color: "var(--muted)", lineHeight: 1.7 }}>
-        Generate a full article with Markdown content, SEO title, SEO
-        description, keywords, slug, and publishing status. Use draft mode for
-        review, or publish immediately.
+        Generate a full article with Markdown content, SEO metadata, and a
+        research audit. Generated articles enter human review as
+        review-required. They are not approved, scheduled, or published by this
+        workflow.
       </p>
 
       <form onSubmit={generateArticle} style={formStyle}>
@@ -86,36 +70,8 @@ export default function AiGeneratorPage() {
           />
         </label>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium">
-            Schedule Publish Time (Australia/Adelaide)
-          </label>
-
-          <input
-            type="datetime-local"
-            value={scheduledFor}
-            onChange={(e) => setScheduledFor(e.target.value)}
-            aria-label="Scheduled publish time in Australia/Adelaide"
-            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-black"
-          />
-          <AdelaideTimezoneHint />
-        </div>
-
-        <label style={{ display: "flex", gap: "8px", alignItems: "center", color: "var(--foreground)" }}>
-          <input
-            type="checkbox"
-            checked={publishNow}
-            onChange={(e) => setPublishNow(e.target.checked)}
-          />
-          Publish immediately
-        </label>
-
         <button disabled={loading} style={buttonStyle}>
-          {loading
-            ? "Generating..."
-            : publishNow
-              ? "Generate & Publish"
-              : "Generate Draft"}
+          {loading ? "Generating..." : "Generate for Review"}
         </button>
       </form>
     </main>

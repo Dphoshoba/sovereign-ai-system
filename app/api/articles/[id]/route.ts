@@ -1,121 +1,152 @@
-import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { publicationGuard } from "../../../../lib/publishing/publication-guard"
-import { autoGenerateSocialPosts } from "../../../../lib/social/auto-generate-social"
-import { parseOptionalSchedulingTimestamp } from "../../../../lib/publishing/adelaide-time"
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { updateArticleUnderGovernanceLock } from "../../../../lib/publishing/article-lifecycle";
+
+const GOVERNED_LIFECYCLE_STATUSES = new Set([
+  "approved",
+  "scheduled",
+  "published",
+  "rejected",
+  "archived",
+]);
+const DIRECTLY_EDITABLE_STATUSES = new Set([
+  "draft",
+  "review",
+  "review-required",
+]);
+const GOVERNED_LIFECYCLE_FIELDS = [
+  "approvedAt",
+  "approvedBy",
+  "scheduledFor",
+  "publishedAt",
+] as const;
 
 export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id } = await params
-    const body = await request.json()
-
-    const existingArticle = await prisma.article.findUnique({
-      where: { id },
-    })
-
-    if (!existingArticle) {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
       return NextResponse.json(
-        { ok: false, error: "Article not found" },
-        { status: 404 }
-      )
+        {
+          ok: false,
+          code: "AUTHENTICATION_REQUIRED",
+          error: "Authentication required.",
+          articleUnchanged: true,
+        },
+        { status: 401 },
+      );
     }
 
-    if (body.status === "published") {
-      const guard = publicationGuard(existingArticle.status)
+    const { id } = await params;
+    const body = await request.json();
 
-      if (!guard.allowed) {
-        return NextResponse.json(
-          {
-            ok: false,
-            error: guard.reason,
-            guard,
-          },
-          { status: 403 }
-        )
-      }
-    }
-
-    const transitioningToPublished =
-      body.status === "published" && existingArticle.status !== "published"
-
-    const parsedSchedule = parseOptionalSchedulingTimestamp(body.scheduledFor)
-    if (!parsedSchedule.ok) {
+    if (GOVERNED_LIFECYCLE_FIELDS.some((field) => field in body)) {
       return NextResponse.json(
-        { ok: false, error: parsedSchedule.error },
-        { status: 400 }
-      )
+        {
+          ok: false,
+          code: "GOVERNED_LIFECYCLE_FIELD_NOT_ALLOWED",
+          error:
+            "Use the dedicated governed lifecycle route to change lifecycle metadata.",
+          articleUnchanged: true,
+        },
+        { status: 409 },
+      );
     }
 
-    const article = await prisma.article.update({
-      where: { id },
-      data: {
-        title: body.title,
-        slug: body.slug,
-        category: body.category,
-        status: body.status,
-        excerpt: body.excerpt || null,
-        content: body.content || null,
-        featuredImage: body.featuredImage || null,
-        seoTitle: body.seoTitle || null,
-        seoDescription: body.seoDescription || null,
-        seoKeywords: body.seoKeywords || null,
-        publishedAt:
-          body.status === "published"
-            ? new Date()
-            : existingArticle.publishedAt,
-        scheduledFor: parsedSchedule.date,
-      },
-    })
+    if (GOVERNED_LIFECYCLE_STATUSES.has(body.status)) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "GOVERNED_LIFECYCLE_ROUTE_REQUIRED",
+          error:
+            "Use the dedicated governed lifecycle route for this status transition.",
+          articleUnchanged: true,
+        },
+        { status: 409 },
+      );
+    }
 
-    let socialResult = null
-    if (transitioningToPublished) {
-      try {
-        socialResult = await autoGenerateSocialPosts(article.id)
-      } catch {
-        socialResult = { ok: false, reason: "Social draft generation failed", posts: [] }
-      }
+    if (
+      body.status !== undefined &&
+      !DIRECTLY_EDITABLE_STATUSES.has(body.status)
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "UNSUPPORTED_ARTICLE_STATUS",
+          error: "Unsupported article status transition.",
+          articleUnchanged: true,
+        },
+        { status: 422 },
+      );
+    }
+
+    const changes: Record<string, unknown> = {};
+    for (const field of ["title", "slug", "category", "status"] as const) {
+      if (body[field] !== undefined) changes[field] = body[field];
+    }
+    for (const field of [
+      "excerpt",
+      "content",
+      "featuredImage",
+      "seoTitle",
+      "seoDescription",
+      "seoKeywords",
+    ] as const) {
+      if (body[field] !== undefined) changes[field] = body[field] || null;
+    }
+
+    const result = await updateArticleUnderGovernanceLock(
+      { articleId: id, changes },
+      { prisma },
+    );
+    if (!result.ok) {
+      return NextResponse.json(result, {
+        status:
+          result.code === "not_found"
+            ? 404
+            : result.code === "published_immutable"
+              ? 409
+              : 422,
+      });
     }
 
     return NextResponse.json({
       ok: true,
-      article,
-      socialDrafts: socialResult
-        ? {
-            generated: socialResult.ok,
-            reason: socialResult.reason,
-            count: socialResult.posts.length,
-          }
-        : undefined,
-    })
+      article: result.article,
+    });
   } catch (error) {
-    console.error(error)
+    console.error(error);
     return NextResponse.json(
       { ok: false, error: "Failed to update article" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 
 export async function DELETE(
   _request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id } = await params
+    const { id } = await params;
 
     await prisma.article.delete({
       where: { id },
-    })
+    });
 
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error(error)
+    console.error(error);
     return NextResponse.json(
       { ok: false, error: "Failed to delete article" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }

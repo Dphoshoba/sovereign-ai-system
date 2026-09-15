@@ -91,6 +91,10 @@ Return exactly:
           "Automatically created by the weekly planner.",
         content: "",
         status: "draft",
+        approvedAt: null,
+        approvedBy: null,
+        scheduledFor: null,
+        publishedAt: null,
       },
     })
 

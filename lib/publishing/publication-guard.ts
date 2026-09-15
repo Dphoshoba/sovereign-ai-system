@@ -12,7 +12,22 @@ export type PublicationGuardResult = {
   reason: string
 }
 
-export function publicationGuard(status: string): PublicationGuardResult {
+export function publicationGuard(
+  status: string,
+  auditState: { hasCurrentAudit: boolean },
+): PublicationGuardResult {
+  if (
+    (status === "approved" || status === "scheduled") &&
+    !auditState.hasCurrentAudit
+  ) {
+    return {
+      allowed: false,
+      status,
+      reason:
+        "Article requires a current research audit matching this content revision before publishing.",
+    }
+  }
+
   if (status === "approved") {
     return {
       allowed: true,

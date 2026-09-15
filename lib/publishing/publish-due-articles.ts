@@ -1,128 +1,144 @@
-import { randomUUID } from "node:crypto"
-import { autoGenerateSocialPosts } from "../social/auto-generate-social"
-import { generateNewsletterForArticle } from "../newsletter/generate-newsletter"
-import { publicationGuard } from "./publication-guard"
+import { randomUUID } from "node:crypto";
+import { autoGenerateSocialPosts } from "../social/auto-generate-social";
+import { generateNewsletterForArticle } from "../newsletter/generate-newsletter";
+import {
+  ArticleLifecycleStore,
+  transitionArticleLifecycle,
+} from "./article-lifecycle";
 
 export type DueArticle = {
-  id: string
-  status: string
-  scheduledFor: Date | null
-}
+  id: string;
+  title: string;
+  excerpt: string | null;
+  content: string | null;
+  category: string;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  seoKeywords: string | null;
+  featuredImage: string | null;
+  status: string;
+  scheduledFor: Date | null;
+  researchSources: Array<{
+    title: string | null;
+    url: string | null;
+    sourceType: string | null;
+    authorityScore: number;
+    trustScore: number;
+  }>;
+  researchAudits: Array<{
+    id: string;
+    createdAt: Date | string;
+  }>;
+  reviewNotes: Array<{ action: string; note: string | null }>;
+};
 
-export type PublishDueArticlesStore = {
+export type PublishDueArticlesStore = ArticleLifecycleStore & {
   article: {
     findMany: (args: {
       where: {
-        status: { in: string[] }
-        scheduledFor: { lte: Date }
-      }
-      select: { id: true; status: true; scheduledFor: true }
-    }) => Promise<DueArticle[]>
-    updateMany: (args: {
-      where: {
-        id: string
-        status: { in: string[] }
-        scheduledFor: { lte: Date }
-        publishedAt: null
-      }
-      data: {
-        status: "published"
-        publishedAt: Date
-      }
-    }) => Promise<{ count: number }>
-  }
-}
+        status: { in: string[] };
+        scheduledFor: { lte: Date };
+      };
+      include: {
+        researchSources: true;
+        researchAudits: true;
+        reviewNotes: true;
+      };
+    }) => Promise<DueArticle[]>;
+  };
+};
 
 export type PublishDueArticlesResult = {
-  ok: true
-  invocationId: string
-  source: string
-  startedAt: string
-  finishedAt: string
-  eligible: number
-  published: number
-  skipped: number
-  failed: number
-  publishedIds: string[]
-  skippedItems: { id: string; category: string }[]
-  failedItems: { id: string; category: string }[]
-}
+  ok: true;
+  invocationId: string;
+  source: string;
+  startedAt: string;
+  finishedAt: string;
+  eligible: number;
+  published: number;
+  skipped: number;
+  failed: number;
+  publishedIds: string[];
+  skippedItems: { id: string; category: string }[];
+  failedItems: { id: string; category: string }[];
+};
 
 async function defaultAfterPublish(articleId: string) {
-  await autoGenerateSocialPosts(articleId)
-  await generateNewsletterForArticle(articleId)
+  await autoGenerateSocialPosts(articleId);
+  await generateNewsletterForArticle(articleId);
 }
 
-export async function publishDueArticles(input: {
-  now?: Date
-  source?: string
-  invocationId?: string
-  prisma?: PublishDueArticlesStore
-  afterPublish?: (articleId: string) => Promise<void>
-} = {}): Promise<PublishDueArticlesResult> {
-  const now = input.now ?? new Date()
-  const source = input.source ?? "internal"
-  const invocationId = input.invocationId ?? randomUUID()
-  const startedAt = new Date()
+export async function publishDueArticles(
+  input: {
+    now?: Date;
+    source?: string;
+    invocationId?: string;
+    prisma?: PublishDueArticlesStore;
+    afterPublish?: (articleId: string) => Promise<void>;
+  } = {},
+): Promise<PublishDueArticlesResult> {
+  const now = input.now ?? new Date();
+  const source = input.source ?? "internal";
+  const invocationId = input.invocationId ?? randomUUID();
+  const startedAt = new Date();
   const store =
     input.prisma ??
-    ((await import("@/lib/prisma")).prisma as unknown as PublishDueArticlesStore)
-  const afterPublish = input.afterPublish ?? defaultAfterPublish
+    ((await import("@/lib/prisma"))
+      .prisma as unknown as PublishDueArticlesStore);
+  const afterPublish = input.afterPublish ?? defaultAfterPublish;
 
   const eligibleArticles = await store.article.findMany({
     where: {
       status: { in: ["approved", "scheduled"] },
       scheduledFor: { lte: now },
     },
-    select: { id: true, status: true, scheduledFor: true },
-  })
+    include: {
+      researchSources: true,
+      researchAudits: true,
+      reviewNotes: true,
+    },
+  });
 
-  const publishedIds: string[] = []
-  const skippedItems: { id: string; category: string }[] = []
-  const failedItems: { id: string; category: string }[] = []
+  const publishedIds: string[] = [];
+  const skippedItems: { id: string; category: string }[] = [];
+  const failedItems: { id: string; category: string }[] = [];
 
   for (const article of eligibleArticles) {
-    const guard = publicationGuard(article.status)
-    if (!guard.allowed) {
-      skippedItems.push({ id: article.id, category: "publication-guard" })
-      continue
-    }
-
-    let claimed = 0
+    let transition;
     try {
-      const claim = await store.article.updateMany({
-        where: {
-          id: article.id,
-          status: { in: ["approved", "scheduled"] },
-          scheduledFor: { lte: now },
-          publishedAt: null,
+      transition = await transitionArticleLifecycle(
+        {
+          articleId: article.id,
+          transition: "publish",
+          requireDueAt: now,
+          now,
         },
-        data: {
-          status: "published",
-          publishedAt: now,
-        },
-      })
-      claimed = claim.count
+        { prisma: store },
+      );
     } catch {
-      failedItems.push({ id: article.id, category: "claim-failed" })
-      continue
+      failedItems.push({ id: article.id, category: "claim-failed" });
+      continue;
     }
 
-    if (claimed !== 1) {
-      skippedItems.push({ id: article.id, category: "already-claimed" })
-      continue
+    if (!transition.ok) {
+      skippedItems.push({ id: article.id, category: transition.code });
+      continue;
+    }
+    if (transition.alreadyApplied) {
+      skippedItems.push({ id: article.id, category: "already-claimed" });
+      continue;
     }
 
     try {
-      await afterPublish(article.id)
-      publishedIds.push(article.id)
+      await afterPublish(article.id);
+      publishedIds.push(article.id);
     } catch {
-      publishedIds.push(article.id)
-      failedItems.push({ id: article.id, category: "side-effect" })
+      publishedIds.push(article.id);
+      failedItems.push({ id: article.id, category: "side-effect" });
     }
   }
 
-  const finishedAt = new Date()
+  const finishedAt = new Date();
   const result: PublishDueArticlesResult = {
     ok: true,
     invocationId,
@@ -136,7 +152,7 @@ export async function publishDueArticles(input: {
     publishedIds,
     skippedItems,
     failedItems,
-  }
+  };
 
   console.info(
     JSON.stringify({
@@ -152,8 +168,8 @@ export async function publishDueArticles(input: {
       publishedIds,
       skippedItems,
       failedItems,
-    })
-  )
+    }),
+  );
 
-  return result
+  return result;
 }

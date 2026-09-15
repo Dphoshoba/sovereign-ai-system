@@ -1,53 +1,60 @@
-import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { getOpenAI } from "@/lib/ai/openai"
-import { DAVID_WRITING_DNA } from "@/lib/ai/writing-dna"
-import { getMemoryContext } from "@/lib/ai/memory-context"
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getOpenAI } from "@/lib/ai/openai";
+import { DAVID_WRITING_DNA } from "@/lib/ai/writing-dna";
+import { getMemoryContext } from "@/lib/ai/memory-context";
 
 import {
   sourceCollector,
   type SourceRecord,
-} from "../../../../lib/research/source-collector"
-import { evidenceRegistry } from "../../../../lib/research/evidence-registry"
-import { factExtractor } from "../../../../lib/research/fact-extractor"
-import { factVerificationEngine } from "../../../../lib/research/fact-verification-engine"
-import { consensusEngine } from "../../../../lib/research/consensus-engine"
-import { publicationGate } from "../../../../lib/research/publication-gate"
-import { parseOptionalSchedulingTimestamp } from "../../../../lib/publishing/adelaide-time"
-import { encodingNormalizer } from "../../../../lib/research/encoding-normalizer"
-import { contentSafeNormalizer } from "../../../../lib/research/content-safe-normalizer"
-import { calculateEditorialQualityScore } from "../../../../lib/editorial/quality-score"
-import { generateAndPersistFeaturedImage } from "../../../../lib/ai/persist-featured-image"
-import { articleQualityScorer } from "../../../../lib/editorial/article-quality-scorer"
-import { seoScorer } from "../../../../lib/editorial/seo-scorer"
+} from "../../../../lib/research/source-collector";
+import { evidenceRegistry } from "../../../../lib/research/evidence-registry";
+import { factExtractor } from "../../../../lib/research/fact-extractor";
+import { factVerificationEngine } from "../../../../lib/research/fact-verification-engine";
+import { consensusEngine } from "../../../../lib/research/consensus-engine";
+import { publicationGate } from "../../../../lib/research/publication-gate";
+
+import { encodingNormalizer } from "../../../../lib/research/encoding-normalizer";
+import { contentSafeNormalizer } from "../../../../lib/research/content-safe-normalizer";
+import { calculateEditorialQualityScore } from "../../../../lib/editorial/quality-score";
+import { generateAndPersistFeaturedImage } from "../../../../lib/ai/persist-featured-image";
+import { articleQualityScorer } from "../../../../lib/editorial/article-quality-scorer";
+import { seoScorer } from "../../../../lib/editorial/seo-scorer";
+import { lockArticleForGovernance } from "../../../../lib/publishing/article-lifecycle";
+import { computeArticleAuditFingerprint } from "../../../../lib/research/article-audit-fingerprint";
+import {
+  RESEARCH_AUDIT_FINGERPRINT_ACTION,
+  serializeArticleAuditAssociation,
+} from "../../../../lib/research/article-audit-association";
+import { applyArticleSourceMutationInTransaction } from "../../../../lib/research/article-source-mutation";
 
 function slugify(value: string) {
   return value
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
+    .replace(/^-+|-+$/g, "");
 }
 
 async function createUniqueSlug(baseSlug: string, category: string) {
-  let slug = baseSlug
-  let counter = 2
+  let slug = baseSlug;
+  let counter = 2;
 
   while (true) {
     const existing = await prisma.article.findFirst({
       where: { slug, category },
       select: { id: true },
-    })
+    });
 
-    if (!existing) return slug
+    if (!existing) return slug;
 
-    slug = `${baseSlug}-${counter}`
-    counter++
+    slug = `${baseSlug}-${counter}`;
+    counter++;
   }
 }
 
 function finalTextCleanup(value: string): string {
-  const bad = String.fromCharCode(226)
+  const bad = String.fromCharCode(226);
 
   return value
     .replace(new RegExp(`([A-Za-z])${bad}s\\b`, "g"), "$1's")
@@ -100,7 +107,7 @@ function finalTextCleanup(value: string): string {
     .replace(/([a-z])\*\*/g, "$1 **")
     .replace(/\*\*([a-z])/g, "** $1")
     .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .trim()
+    .trim();
 }
 
 export async function POST(request: Request) {
@@ -108,36 +115,32 @@ export async function POST(request: Request) {
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
         { ok: false, error: "Missing OPENAI_API_KEY" },
-        { status: 500 }
-      )
+        { status: 500 },
+      );
     }
 
-    const body = await request.json()
+    const body = await request.json();
 
-    const topic = body.topic || "AI automation for creators"
-    const category = body.category || "ai-automation"
-    const parsedSchedule = parseOptionalSchedulingTimestamp(body.scheduledFor)
-    if (!parsedSchedule.ok) {
-      return NextResponse.json(
-        { ok: false, error: parsedSchedule.error },
-        { status: 400 }
-      )
-    }
-    const scheduledFor = parsedSchedule.date
+    const topic = body.topic || "AI automation for creators";
+    const category = body.category || "ai-automation";
     const manualSources: SourceRecord[] = Array.isArray(body.manualSources)
       ? body.manualSources
-      : []
+      : [];
 
-      const sourceCollection = await sourceCollector(topic, manualSources, category)
+    const sourceCollection = await sourceCollector(
+      topic,
+      manualSources,
+      category,
+    );
     const evidence = await evidenceRegistry(
       topic,
-      sourceCollection.collectedSources
-    )
+      sourceCollection.collectedSources,
+    );
 
-    const factExtraction = factExtractor(topic, evidence.evidence, category)
-    const factVerification = factVerificationEngine(factExtraction.facts)
-    const consensus = consensusEngine(factVerification.verifiedFacts)
-    const publicationDecision = publicationGate(consensus)
+    const factExtraction = factExtractor(topic, evidence.evidence, category);
+    const factVerification = factVerificationEngine(factExtraction.facts);
+    const consensus = consensusEngine(factVerification.verifiedFacts);
+    const publicationDecision = publicationGate(consensus);
 
     if (publicationDecision.status === "blocked") {
       return NextResponse.json(
@@ -153,19 +156,16 @@ export async function POST(request: Request) {
             evidenceCount: evidence.evidenceCount,
             factCount: factExtraction.factCount,
             verifiedCount: factVerification.verifiedCount,
-            averageVerificationScore:
-              factVerification.averageVerificationScore,
-            partiallyVerifiedCount:
-              factVerification.partiallyVerifiedCount,
+            averageVerificationScore: factVerification.averageVerificationScore,
+            partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
             unverifiedCount: factVerification.unverifiedCount,
             consensusScore: consensus.consensusScore,
             sourceQualityScore: consensus.sourceQualityScore,
-            publicationRecommendation:
-              consensus.publicationRecommendation,
+            publicationRecommendation: consensus.publicationRecommendation,
           },
         },
-        { status: 422 }
-      )
+        { status: 422 },
+      );
     }
 
     const consensusText = consensus.consensusGroups
@@ -173,37 +173,37 @@ export async function POST(request: Request) {
         (group) =>
           `Theme: ${group.theme}\n` +
           `Sources: ${group.sourceCount}\n` +
-          `Consensus: ${group.consensusStatement}`
+          `Consensus: ${group.consensusStatement}`,
       )
-      .join("\n\n")
+      .join("\n\n");
 
     const consensusBlock =
       consensus.consensusGroupCount > 0
         ? "CONSENSUS THEMES:\n\n" + consensusText
-        : "No consensus themes available."
+        : "No consensus themes available.";
 
     const publishableFacts = factVerification.verifiedFacts.filter(
       (fact) =>
         fact.verificationStatus === "verified" ||
-        fact.verificationStatus === "partially verified"
-    )
+        fact.verificationStatus === "partially verified",
+    );
 
     const verifiedFactsText = publishableFacts
       .map((fact, index) => {
         const sources = fact.supportingSources
           .map((source) => source.sourceUrl)
-          .join(", ")
+          .join(", ");
 
         return (
           `FACT ${index + 1}: ${fact.claim}\n` +
           `Verification: ${fact.verificationStatus}\n` +
           `Sources: ${sources || "none"}`
-        )
+        );
       })
-      .join("\n\n")
+      .join("\n\n");
 
     const hasVerifiedEvidence =
-      evidence.evidenceCount > 0 && publishableFacts.length > 0
+      evidence.evidenceCount > 0 && publishableFacts.length > 0;
 
     const factsBlock = hasVerifiedEvidence
       ? "EVIDENCE-SUPPORTED FACTS (the only factual material you may use):\n" +
@@ -211,13 +211,13 @@ export async function POST(request: Request) {
       : "There are NO verified facts available for this topic. " +
         "Write a cautious, clearly-framed draft that avoids specific factual " +
         "claims, statistics, quotes, names, dates, companies, or sources. " +
-        "Lean on principles, frameworks, and practical guidance rather than asserted facts."
+        "Lean on principles, frameworks, and practical guidance rather than asserted facts.";
 
     const memoryContext = await getMemoryContext({
       query: topic,
       types: ["strategy", "voice", "audience", "publishing"],
       limit: 8,
-    })
+    });
 
     const response = await getOpenAI().responses.create({
       model: "gpt-5.2",
@@ -265,7 +265,7 @@ export async function POST(request: Request) {
         "- Return valid JSON only.\n" +
         "- Use plain ASCII punctuation only.\n" +
         "- Use straight apostrophes (').\n" +
-        "- Use straight quotation marks (\").\n" +
+        '- Use straight quotation marks (").\n' +
         "- Use normal hyphens (-).\n" +
         "- Do not use smart quotes.\n" +
         "- Do not use curly apostrophes.\n" +
@@ -278,55 +278,55 @@ export async function POST(request: Request) {
         "- seoKeywords must include at least 3 comma-separated keyword phrases.\n" +
         "- faq must include 3 to 5 practical questions and answers.\n\n" +
         "Requirements: use Markdown in content, include headings, practical examples, clear human rhythm, and a subtle Echoes & Visions CTA near the end.",
-    })
+    });
 
-    const rawOutput = response.output_text || ""
+    const rawOutput = response.output_text || "";
 
     function extractJsonObject(text: string): string {
-      const start = text.indexOf("{")
-      const end = text.lastIndexOf("}")
+      const start = text.indexOf("{");
+      const end = text.lastIndexOf("}");
 
       if (start === -1 || end === -1 || end <= start) {
-        throw new Error("AI returned no JSON object.")
+        throw new Error("AI returned no JSON object.");
       }
 
-     return text.slice(start, end + 1)
+      return text.slice(start, end + 1);
     }
 
-    let parsed
+    let parsed;
 
     try {
-      parsed = JSON.parse(extractJsonObject(rawOutput))
+      parsed = JSON.parse(extractJsonObject(rawOutput));
     } catch (parseError) {
-      console.error("AI JSON parse failed. Raw output:", rawOutput)
-      throw parseError
+      console.error("AI JSON parse failed. Raw output:", rawOutput);
+      throw parseError;
     }
 
     const cleanedContent = parsed.content
       ? finalTextCleanup(
-          contentSafeNormalizer(encodingNormalizer(parsed.content))
+          contentSafeNormalizer(encodingNormalizer(parsed.content)),
         )
-      : null
+      : null;
 
-    const finalContent = cleanedContent
+    const finalContent = cleanedContent;
 
     const cleanedExcerpt = parsed.excerpt
       ? finalTextCleanup(encodingNormalizer(parsed.excerpt))
-      : null
+      : null;
 
     const cleanedSeoDescription = parsed.seoDescription
       ? finalTextCleanup(encodingNormalizer(parsed.seoDescription))
-      : null
+      : null;
 
-    const faq = Array.isArray(parsed.faq) ? parsed.faq : []
+    const faq = Array.isArray(parsed.faq) ? parsed.faq : [];
 
-    const title = finalTextCleanup(parsed.title || topic)
-    const baseSlug = slugify(title)
-    const slug = await createUniqueSlug(baseSlug, category)
+    const title = finalTextCleanup(parsed.title || topic);
+    const baseSlug = slugify(title);
+    const slug = await createUniqueSlug(baseSlug, category);
 
     const wordCount = finalContent
       ? finalContent.split(/\s+/).filter(Boolean).length
-      : 0
+      : 0;
 
     const editorialQuality = calculateEditorialQualityScore({
       wordCount,
@@ -340,119 +340,150 @@ export async function POST(request: Request) {
       partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
       unverifiedCount: factVerification.unverifiedCount,
       publicationRecommendation: consensus.publicationRecommendation,
-    })
+    });
 
     const qualityResult = articleQualityScorer({
       title,
       content: finalContent || "",
       faq,
-    })
+    });
 
     const seoResult = seoScorer({
       seoTitle: parsed.seoTitle || title,
       seoDescription: cleanedSeoDescription || cleanedExcerpt || "",
       seoKeywords: parsed.seoKeywords || "",
-    })
+    });
 
-    const article = await prisma.article.create({
-      data: {
-        title,
-        slug,
-        category,
-        status: "review-required",
-        excerpt: cleanedExcerpt,
-        content: finalContent,
-        featuredImage: null,
-        seoTitle: finalTextCleanup(parsed.seoTitle || title),
-        seoDescription: cleanedSeoDescription || cleanedExcerpt || null,
-        seoKeywords: parsed.seoKeywords
-          ? finalTextCleanup(parsed.seoKeywords)
-          : null,
-        publishedAt: null,
-        scheduledFor,
-        editorialScore: editorialQuality.score,
-        editorialGrade: editorialQuality.grade,
-        editorialWarnings: editorialQuality.warnings,
-        qualityScore: qualityResult.score,
-        qualityGrade: qualityResult.grade,
-        seoScore: seoResult.score,
-        seoGrade: seoResult.grade,
-      },
-    })
-
-    await prisma.articleResearchAudit.create({
-      data: {
-        articleId: article.id,
-        sourceCount: sourceCollection.sourceCount,
-        averageAuthorityScore: sourceCollection.averageAuthorityScore,
-        averageTrustScore: sourceCollection.averageTrustScore,
-        researchConfidence: sourceCollection.researchConfidence,
-        evidenceCount: evidence.evidenceCount,
-        factCount: factExtraction.factCount,
-        verifiedCount: factVerification.verifiedCount,
-        partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
-        unverifiedCount: factVerification.unverifiedCount,
-        averageVerificationScore:
-          factVerification.averageVerificationScore,
-        consensusScore: consensus.consensusScore,
-        sourceQualityScore: consensus.sourceQualityScore,
-        publicationRecommendation: consensus.publicationRecommendation,
-        sources: sourceCollection.collectedSources,
-        evidence: Array.isArray(evidence.evidence) ? evidence.evidence : [],
-        facts: factVerification.verifiedFacts,
-        consensus: consensus.consensusGroups,
-      },
-    })
-
-    for (const source of sourceCollection.collectedSources || []) {
-      await prisma.researchSource.create({
+    const article = await prisma.$transaction(async (tx) => {
+      const createdArticle = await tx.article.create({
         data: {
-          articleId: article.id,
-          title: source.title || null,
-          url: source.url || null,
-          publisher: null,
-          authorityScore: source.authorityScore || 0,
-          trustScore: source.trustScore || 0,
-          sourceType: source.sourceType || null,
+          title,
+          slug,
           category,
+          status: "review-required",
+          approvedAt: null,
+          approvedBy: null,
+          excerpt: cleanedExcerpt,
+          content: finalContent,
+          featuredImage: null,
+          seoTitle: finalTextCleanup(parsed.seoTitle || title),
+          seoDescription: cleanedSeoDescription || cleanedExcerpt || null,
+          seoKeywords: parsed.seoKeywords
+            ? finalTextCleanup(parsed.seoKeywords)
+            : null,
+          publishedAt: null,
+          scheduledFor: null,
+          editorialScore: editorialQuality.score,
+          editorialGrade: editorialQuality.grade,
+          editorialWarnings: editorialQuality.warnings,
+          qualityScore: qualityResult.score,
+          qualityGrade: qualityResult.grade,
+          seoScore: seoResult.score,
+          seoGrade: seoResult.grade,
         },
-      })
-    }
+      });
 
-    for (const fact of factVerification.verifiedFacts || []) {
-      await prisma.researchFact.create({
+      await lockArticleForGovernance(tx, createdArticle.id);
+
+      const audit = await tx.articleResearchAudit.create({
         data: {
-          articleId: article.id,
-          claim: fact.claim || "",
-          verificationStatus: fact.verificationStatus || "unverified",
-          confidence: fact.confidence || null,
-          supportingSources: fact.supportingSources || [],
-          category,
+          articleId: createdArticle.id,
+          sourceCount: sourceCollection.sourceCount,
+          averageAuthorityScore: sourceCollection.averageAuthorityScore,
+          averageTrustScore: sourceCollection.averageTrustScore,
+          researchConfidence: sourceCollection.researchConfidence,
+          evidenceCount: evidence.evidenceCount,
+          factCount: factExtraction.factCount,
+          verifiedCount: factVerification.verifiedCount,
+          partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
+          unverifiedCount: factVerification.unverifiedCount,
+          averageVerificationScore: factVerification.averageVerificationScore,
+          consensusScore: consensus.consensusScore,
+          sourceQualityScore: consensus.sourceQualityScore,
+          publicationRecommendation: consensus.publicationRecommendation,
+          sources: sourceCollection.collectedSources,
+          evidence: Array.isArray(evidence.evidence) ? evidence.evidence : [],
+          facts: factVerification.verifiedFacts,
+          consensus: consensus.consensusGroups,
         },
-      })
-    }
+      });
 
-    let updatedArticle = article
+      const sourceMutation = await applyArticleSourceMutationInTransaction(
+        tx as never,
+        {
+          articleId: createdArticle.id,
+          operation: "replace",
+          sources: (sourceCollection.collectedSources || []).map((source) => ({
+            title: source.title || null,
+            url: source.url || null,
+            publisher: null,
+            authorityScore: source.authorityScore || 0,
+            trustScore: source.trustScore || 0,
+            sourceType: source.sourceType || null,
+            category,
+          })),
+        },
+      );
+      if (!sourceMutation.ok) {
+        throw new Error(sourceMutation.error);
+      }
+
+      for (const fact of factVerification.verifiedFacts || []) {
+        await tx.researchFact.create({
+          data: {
+            articleId: createdArticle.id,
+            claim: fact.claim || "",
+            verificationStatus: fact.verificationStatus || "unverified",
+            confidence: fact.confidence || null,
+            supportingSources: fact.supportingSources || [],
+            category,
+          },
+        });
+      }
+
+      const contentFingerprint = computeArticleAuditFingerprint(
+        createdArticle,
+        (sourceCollection.collectedSources || [])
+          .map((source) => source.url)
+          .filter((url): url is string => Boolean(url)),
+      );
+      await tx.articleReviewNote.create({
+        data: {
+          articleId: createdArticle.id,
+          reviewer: "system",
+          action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+          note: serializeArticleAuditAssociation({
+            auditId: audit.id,
+            contentFingerprint,
+            createdAt: audit.createdAt,
+          }),
+        },
+      });
+
+      return createdArticle;
+    });
+
+    let updatedArticle = article;
 
     try {
       const imageData = await generateAndPersistFeaturedImage({
         articleId: article.id,
-      })
+      });
 
       if (imageData.ok && imageData.article && !imageData.articleUnchanged) {
-        updatedArticle = imageData.article as typeof updatedArticle
+        updatedArticle = imageData.article as typeof updatedArticle;
       }
     } catch (imageError) {
       console.error(
         "Article created, but featured image generation failed:",
-        imageError
-      )
+        imageError,
+      );
     }
 
     const editorialWarning =
       consensus.publicationRecommendation === "blocked"
         ? "Research pipeline marked this article as blocked for publication readiness because the available facts lack sufficient cross-source verification. The article was still saved as review-required for human editorial review."
-        : null
+        : null;
 
     return NextResponse.json({
       ok: true,
@@ -471,8 +502,7 @@ export async function POST(request: Request) {
         evidenceCount: evidence.evidenceCount,
         factCount: factExtraction.factCount,
         verifiedCount: factVerification.verifiedCount,
-        averageVerificationScore:
-          factVerification.averageVerificationScore,
+        averageVerificationScore: factVerification.averageVerificationScore,
         partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
         unverifiedCount: factVerification.unverifiedCount,
         consensusScore: consensus.consensusScore,
@@ -482,9 +512,9 @@ export async function POST(request: Request) {
         editorialWarning,
         editorialQuality,
       },
-    })
+    });
   } catch (error) {
-    console.error("AI article generation failed:", error)
+    console.error("AI article generation failed:", error);
 
     return NextResponse.json(
       {
@@ -492,7 +522,7 @@ export async function POST(request: Request) {
         error:
           error instanceof Error ? error.message : "Failed to generate article",
       },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }

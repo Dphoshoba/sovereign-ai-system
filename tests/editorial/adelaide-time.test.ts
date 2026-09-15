@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest"
 import { publishDueArticles } from "../../lib/publishing/publish-due-articles"
+import { computeArticleAuditFingerprint } from "../../lib/research/article-audit-fingerprint"
+import {
+  RESEARCH_AUDIT_FINGERPRINT_ACTION,
+  serializeArticleAuditAssociation,
+} from "../../lib/research/article-audit-association"
 import {
   NAIVE_SCHEDULE_ERROR,
   formatInstantWithTimeZone,
@@ -76,10 +81,10 @@ describe("Adelaide publication timezone", () => {
 
   it("redisplays a stored instant as Australia/Adelaide wall-clock time", () => {
     expect(instantToAdelaideWallClock("2026-09-14T03:32:00.000Z")).toBe(
-      "2026-09-14T13:02"
+      "2026-09-14T13:02",
     )
     expect(instantToAdelaideWallClock("2026-12-15T02:32:00.000Z")).toBe(
-      "2026-12-15T13:02"
+      "2026-12-15T13:02",
     )
   })
 
@@ -89,22 +94,72 @@ describe("Adelaide publication timezone", () => {
     if (!scheduled.ok) return
 
     function createStore(now: Date) {
-      const rows =
-        scheduled.date <= now
-          ? [
-              {
-                id: "due-adelaide",
-                status: "scheduled" as const,
-                scheduledFor: scheduled.date,
-              },
-            ]
-          : []
-
-      return {
+      const createdAt = new Date("2026-09-15T00:00:00.000Z")
+      const article = {
+        id: "due-adelaide",
+        title: "Governed AI",
+        excerpt: "Evidence-backed operations.",
+        content: "See [NIST](https://www.nist.gov/artificial-intelligence).",
+        category: "ai-tools",
+        seoTitle: "Governed AI",
+        seoDescription: "Evidence-backed operations.",
+        seoKeywords: "AI governance",
+        featuredImage: null,
+        status: "scheduled" as const,
+        scheduledFor: scheduled.date,
+        publishedAt: null,
+        approvedAt: new Date("2026-09-13T00:00:00.000Z"),
+        approvedBy: "editor",
+        researchSources: [],
+        researchAudits: [
+          {
+            id: "audit-current",
+            articleId: "due-adelaide",
+            createdAt,
+          },
+        ],
+        reviewNotes: [
+          {
+            action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+            note: serializeArticleAuditAssociation({
+              auditId: "audit-current",
+              contentFingerprint: computeArticleAuditFingerprint(
+                {
+                  title: "Governed AI",
+                  excerpt: "Evidence-backed operations.",
+                  content:
+                    "See [NIST](https://www.nist.gov/artificial-intelligence).",
+                  category: "ai-tools",
+                  seoTitle: "Governed AI",
+                  seoDescription: "Evidence-backed operations.",
+                  seoKeywords: "AI governance",
+                },
+                ["https://www.nist.gov/artificial-intelligence"],
+              ),
+              createdAt,
+            }),
+          },
+        ],
+      }
+      const rows = scheduled.date <= now ? [article] : []
+      const tx = {
+        $queryRaw: async () => [{ id: article.id }],
         article: {
           findMany: async () => rows,
-          updateMany: async () => ({ count: rows.length }),
+          findUnique: async () => (rows[0] ?? null),
+          update: async ({ data }: { data: Record<string, unknown> }) => {
+            Object.assign(article, data)
+            return { ...article }
+          },
         },
+        articleReviewNote: { create: async () => ({ id: "note-1" }) },
+        publishingQueue: { update: async () => ({ id: "queue-1" }) },
+      }
+
+      return {
+        article: tx.article,
+        $transaction: async (callback: (client: typeof tx) => unknown) =>
+          callback(tx),
       }
     }
 

@@ -31,6 +31,10 @@ export async function POST(req: NextRequest) {
           "A planned article generated from the Echoes & Visions content planning system.",
         content: "",
         status: "draft",
+        approvedAt: null,
+        approvedBy: null,
+        scheduledFor: null,
+        publishedAt: null,
       },
     })
 

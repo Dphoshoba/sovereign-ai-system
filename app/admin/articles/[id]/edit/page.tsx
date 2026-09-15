@@ -3,7 +3,6 @@
 import { useEffect, useState, use } from "react"
 import { useRouter } from "next/navigation"
 import {
-  fromAdelaideWallClock,
   instantToAdelaideWallClock,
 } from "../../../../../lib/publishing/adelaide-time"
 import { AdelaideTimezoneHint } from "@/components/articles/AdelaideTimezoneHint"
@@ -66,22 +65,24 @@ export default function EditArticlePage({
 
     if (!article) return
 
-    let scheduledFor: string | null = null
-    if (article.scheduledFor) {
-      const converted = fromAdelaideWallClock(article.scheduledFor)
-      if (!converted.ok) {
-        alert(converted.error)
-        return
-      }
-      scheduledFor = converted.iso
-    }
+    const editableStatus = ["draft", "review", "review-required"].includes(
+      article.status
+    )
 
     const response = await fetch(`/api/articles/${article.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        ...article,
-        scheduledFor,
+        title: article.title,
+        slug: article.slug,
+        category: article.category,
+        excerpt: article.excerpt,
+        content: article.content,
+        featuredImage: article.featuredImage,
+        seoTitle: article.seoTitle,
+        seoDescription: article.seoDescription,
+        seoKeywords: article.seoKeywords,
+        ...(editableStatus ? { status: article.status } : {}),
       }),
     })
 
@@ -335,47 +336,32 @@ export default function EditArticlePage({
           <input
             type="datetime-local"
             value={article.scheduledFor || ""}
-            onChange={(e) =>
-              setArticle({
-                ...article,
-                scheduledFor: e.target.value || null,
-                status: e.target.value ? "scheduled" : article.status,
-              })
-            }
+            disabled
             aria-label="Scheduled publish time in Australia/Adelaide"
             style={inputStyle}
           />
           <AdelaideTimezoneHint />
+          <small>Use the governed scheduling action to change this value.</small>
         </label>
 
         <label>
           Status
           <select
             value={article.status}
-            onChange={(e) => {
-              const isScheduled = e.target.value === "scheduled"
-              const fallbackDate =
-                isScheduled && !article.scheduledFor
-                  ? instantToAdelaideWallClock(
-                      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-                    )
-                  : null
-              setArticle({
-                ...article,
-                status: e.target.value,
-                scheduledFor:
-                  isScheduled
-                    ? article.scheduledFor || fallbackDate
-                    : null,
-              })
-            }}
+            onChange={(e) =>
+              setArticle({ ...article, status: e.target.value })
+            }
+            disabled={!["draft", "review", "review-required"].includes(
+              article.status
+            )}
             style={inputStyle}
           >
             <option value="draft">Draft</option>
             <option value="review">Review</option>
-            <option value="approved">Approved</option>
-            <option value="scheduled">Scheduled</option>
-            <option value="published">Published</option>
+            <option value="review-required">Review Required</option>
+            {!["draft", "review", "review-required"].includes(article.status) ? (
+              <option value={article.status}>{article.status}</option>
+            ) : null}
           </select>
         </label>
 

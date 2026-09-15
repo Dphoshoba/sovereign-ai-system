@@ -1,6 +1,25 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { parseOptionalSchedulingTimestamp } from "../../../lib/publishing/adelaide-time"
+import { createSupabaseServerClient } from "@/lib/supabase/server"
+
+const GOVERNED_INITIAL_STATUSES = new Set([
+  "approved",
+  "scheduled",
+  "published",
+  "rejected",
+  "archived",
+])
+const ALLOWED_INITIAL_STATUSES = new Set([
+  "draft",
+  "review",
+  "review-required",
+])
+const LIFECYCLE_METADATA_FIELDS = [
+  "approvedAt",
+  "approvedBy",
+  "scheduledFor",
+  "publishedAt",
+] as const
 
 export async function GET() {
   try {
@@ -25,14 +44,60 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const supabase = await createSupabaseServerClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "AUTHENTICATION_REQUIRED",
+          error: "Authentication required.",
+          articleUnchanged: true,
+        },
+        { status: 401 }
+      )
+    }
+
     const body = await request.json()
 
     const status = body.status || "draft"
-    const parsedSchedule = parseOptionalSchedulingTimestamp(body.scheduledFor)
-    if (!parsedSchedule.ok) {
+    if (GOVERNED_INITIAL_STATUSES.has(status)) {
       return NextResponse.json(
-        { ok: false, error: parsedSchedule.error },
-        { status: 400 }
+        {
+          ok: false,
+          code: "GOVERNED_INITIAL_STATUS_NOT_ALLOWED",
+          error: "Use the governed lifecycle routes after article creation.",
+          articleUnchanged: true,
+        },
+        { status: 409 }
+      )
+    }
+    if (!ALLOWED_INITIAL_STATUSES.has(status)) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "UNSUPPORTED_ARTICLE_STATUS",
+          error: "Unsupported initial article status.",
+          articleUnchanged: true,
+        },
+        { status: 422 }
+      )
+    }
+    if (
+      LIFECYCLE_METADATA_FIELDS.some((field) =>
+        Object.prototype.hasOwnProperty.call(body, field)
+      )
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "LIFECYCLE_METADATA_NOT_ALLOWED",
+          error: "Lifecycle timestamps and approval metadata are server-managed.",
+          articleUnchanged: true,
+        },
+        { status: 422 }
       )
     }
 
@@ -51,8 +116,10 @@ export async function POST(request: Request) {
         seoDescription: body.seoDescription || null,
         seoKeywords: body.seoKeywords || null,
 
-        publishedAt: status === "published" ? new Date() : null,
-        scheduledFor: parsedSchedule.date,
+        approvedAt: null,
+        approvedBy: null,
+        scheduledFor: null,
+        publishedAt: null,
       },
     })
 

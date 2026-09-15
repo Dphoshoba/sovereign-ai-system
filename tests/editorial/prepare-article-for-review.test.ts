@@ -7,6 +7,12 @@ import type {
 } from "../../lib/research/prepare-article-for-review"
 import type { EvidenceRegistryResult } from "../../lib/research/evidence-registry"
 import { sourceCollector } from "../../lib/research/source-collector"
+import { computeArticleAuditFingerprint } from "../../lib/research/article-audit-fingerprint"
+import {
+  RESEARCH_AUDIT_FINGERPRINT_ACTION,
+  parseArticleAuditAssociation,
+  serializeArticleAuditAssociation,
+} from "../../lib/research/article-audit-association"
 
 vi.mock("../../lib/research/source-collector", async () => {
   const actual = await vi.importActual<
@@ -21,12 +27,14 @@ vi.mock("../../lib/research/source-collector", async () => {
 
 const USEFUL_EVIDENCE_TEXT =
   "A government research report on workflow automation shows that artificial intelligence can reduce repetitive creator tasks and improve productivity across content pipelines. Responsible governance remains essential for trustworthy publishing."
+const auditCreatedAt = new Date("2026-09-15T00:00:00.000Z")
 
 function usefulEvidence(url: string): EvidenceRegistryResult {
   return {
     topic: "Manual article",
     evidenceCount: 1,
-    registryStatus: "Evidence registry created from filtered and ranked evidence chunks.",
+    registryStatus:
+      "Evidence registry created from filtered and ranked evidence chunks.",
     evidence: [
       {
         id: "nist-ai-chunk-1",
@@ -42,7 +50,7 @@ function usefulEvidence(url: string): EvidenceRegistryResult {
 }
 
 function baseArticle(
-  overrides: Partial<PrepareForReviewArticle> = {}
+  overrides: Partial<PrepareForReviewArticle> = {},
 ): PrepareForReviewArticle {
   return {
     id: "article-1",
@@ -60,6 +68,7 @@ function baseArticle(
     seoKeywords: "ai automation, editorial judgment, creator workflow",
     researchSources: [],
     researchAudits: [],
+    reviewNotes: [],
     ...overrides,
   }
 }
@@ -68,30 +77,47 @@ function createStore(article: PrepareForReviewArticle | null) {
   const createdAudits: unknown[] = []
   const articleUpdates: unknown[] = []
   const reviewNotes: unknown[] = []
-  let auditCount = article?.researchAudits.length ?? 0
+  const audits = [...(article?.researchAudits ?? [])]
+  let transactionQueue = Promise.resolve()
+  const persistReviewNote = async (args: { data: Record<string, unknown> }) => {
+    reviewNotes.push(args)
+    article?.reviewNotes.push({
+      action: String(args.data.action),
+      note: typeof args.data.note === "string" ? args.data.note : null,
+    })
+    return { id: `note-${reviewNotes.length}` }
+  }
 
   const tx = {
     article: {
-      findUnique: vi.fn(),
-      update: vi.fn(async (args: { where: { id: string }; data: Record<string, unknown> }) => {
-        articleUpdates.push(args)
-        return { id: article?.id, ...args.data }
-      }),
+      findUnique: vi.fn(async () => article),
+      update: vi.fn(
+        async (args: {
+          where: { id: string }
+          data: Record<string, unknown>
+        }) => {
+          articleUpdates.push(args)
+          return { id: article?.id, ...args.data }
+        },
+      ),
     },
     articleResearchAudit: {
-      count: vi.fn(async () => auditCount),
-      create: vi.fn(async (args: unknown) => {
-        auditCount += 1
+      create: vi.fn(async (args: { data: Record<string, unknown> }) => {
+        const audit = {
+          id: `audit-${audits.length + 1}`,
+          articleId: String(args.data.articleId),
+          createdAt: new Date("2026-09-15T00:00:00.000Z"),
+        }
+        audits.push(audit)
+        article?.researchAudits.push(audit)
         createdAudits.push(args)
-        return { id: "audit-1" }
+        return audit
       }),
     },
     articleReviewNote: {
-      create: vi.fn(async (args: unknown) => {
-        reviewNotes.push(args)
-        return { id: "note-1" }
-      }),
+      create: vi.fn(persistReviewNote),
     },
+    $queryRaw: vi.fn(async () => [{ id: article?.id }]),
   }
 
   const store: PrepareForReviewStore = {
@@ -101,10 +127,73 @@ function createStore(article: PrepareForReviewArticle | null) {
     },
     articleResearchAudit: tx.articleResearchAudit,
     articleReviewNote: tx.articleReviewNote,
-    $transaction: vi.fn(async (fn) => fn(tx)),
+    $queryRaw: tx.$queryRaw,
+    $transaction: vi.fn(async (fn) => {
+      const run = transactionQueue.then(async () => {
+        const snapshots = {
+          createdAudits: createdAudits.length,
+          articleUpdates: articleUpdates.length,
+          reviewNotes: reviewNotes.length,
+          audits: audits.length,
+          articleAudits: article?.researchAudits.length ?? 0,
+          articleNotes: article?.reviewNotes.length ?? 0,
+        }
+        try {
+          return await fn(tx)
+        } catch (error) {
+          createdAudits.splice(snapshots.createdAudits)
+          articleUpdates.splice(snapshots.articleUpdates)
+          reviewNotes.splice(snapshots.reviewNotes)
+          audits.splice(snapshots.audits)
+          article?.researchAudits.splice(snapshots.articleAudits)
+          article?.reviewNotes.splice(snapshots.articleNotes)
+          throw error
+        }
+      })
+      transactionQueue = run.then(
+        () => undefined,
+        () => undefined,
+      )
+      return run
+    }),
   }
 
-  return { store, createdAudits, articleUpdates, reviewNotes, tx }
+  return {
+    store,
+    createdAudits,
+    articleUpdates,
+    reviewNotes,
+    tx,
+    persistReviewNote,
+  }
+}
+
+function associationNote(
+  auditId: string,
+  contentFingerprint: string,
+): { action: string; note: string } {
+  return {
+    action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+    note: serializeArticleAuditAssociation({
+      auditId,
+      contentFingerprint,
+      createdAt: new Date("2026-09-15T00:00:00.000Z"),
+    }),
+  }
+}
+
+function fingerprintFor(article: PrepareForReviewArticle): string {
+  const sources = extractArticleSourceLinks({
+    content: article.content,
+    excerpt: article.excerpt,
+    featuredImage: article.featuredImage,
+    researchSources: article.researchSources,
+  })
+
+  return computeArticleAuditFingerprint(
+    article,
+    sources.map((source) => source.url),
+  )
 }
 
 describe("extractArticleSourceLinks", () => {
@@ -128,7 +217,9 @@ describe("extractArticleSourceLinks", () => {
       "https://oecd.ai/en/",
       "https://www.nist.gov/artificial-intelligence",
     ])
-    expect(sources.find((source) => source.url.includes("nist.gov"))?.authorityScore).toBe(95)
+    expect(
+      sources.find((source) => source.url.includes("nist.gov"))?.authorityScore,
+    ).toBe(95)
   })
 
   it("ignores featured images and returns no sources when none exist", () => {
@@ -149,9 +240,10 @@ describe("prepareArticleForReview", () => {
 
   it("records supported audit results and moves the article to review-required", async () => {
     const article = baseArticle()
-    const { store, createdAudits, articleUpdates } = createStore(article)
+    const { store, createdAudits, articleUpdates, reviewNotes, tx } =
+      createStore(article)
     const collectEvidence = vi.fn(async () =>
-      usefulEvidence("https://www.nist.gov/artificial-intelligence")
+      usefulEvidence("https://www.nist.gov/artificial-intelligence"),
     )
 
     const result = await prepareArticleForReview(article.id, {
@@ -174,6 +266,31 @@ describe("prepareArticleForReview", () => {
     expect(collectEvidence).toHaveBeenCalledTimes(1)
     expect(createdAudits).toHaveLength(1)
     expect(articleUpdates).toHaveLength(1)
+
+    const auditCreate = createdAudits[0] as {
+      data: Record<string, unknown>
+    }
+    expect(auditCreate.data).not.toHaveProperty("contentFingerprint")
+
+    const associationCreate = reviewNotes.find(
+      (entry) =>
+        (entry as { data: { action: string } }).data.action ===
+        RESEARCH_AUDIT_FINGERPRINT_ACTION,
+    ) as { data: { action: string; note: string } }
+    expect(parseArticleAuditAssociation(associationCreate.data)).toMatchObject({
+      auditId: result.audit.id,
+      contentFingerprint: fingerprintFor(article),
+      createdAt: result.audit.createdAt,
+      algorithm: "sha256",
+      version: 1,
+    })
+    expect(tx.$queryRaw).toHaveBeenCalledTimes(1)
+    expect(String(tx.$queryRaw.mock.calls[0]?.[0]?.raw?.[0])).toContain(
+      'SELECT "id" FROM "Article" WHERE "id" = ',
+    )
+    expect(String(tx.$queryRaw.mock.calls[0]?.[0]?.raw?.[1])).toContain(
+      "FOR UPDATE",
+    )
 
     const update = articleUpdates[0] as { data: Record<string, unknown> }
     expect(update.data.status).toBe("review-required")
@@ -252,7 +369,7 @@ describe("prepareArticleForReview", () => {
       articleUnchanged: true,
     })
     expect(result.ok === false && result.error).toContain(
-      "The article was left unchanged"
+      "The article was left unchanged",
     )
     expect(store.$transaction).not.toHaveBeenCalled()
     expect(createdAudits).toHaveLength(0)
@@ -263,8 +380,10 @@ describe("prepareArticleForReview", () => {
     const article = baseArticle({
       title: "Original title",
       slug: "original-slug",
-      excerpt: "Original excerpt with https://www.nist.gov/artificial-intelligence",
-      content: "Original body with https://www.nist.gov/artificial-intelligence",
+      excerpt:
+        "Original excerpt with https://www.nist.gov/artificial-intelligence",
+      content:
+        "Original body with https://www.nist.gov/artificial-intelligence",
       featuredImage: "/generated/keep-me.png",
     })
     const { store, articleUpdates } = createStore(article)
@@ -290,10 +409,14 @@ describe("prepareArticleForReview", () => {
     }
   })
 
-  it("refuses to create a second audit record", async () => {
-    const article = baseArticle({
-      researchAudits: [{ id: "audit-existing" }],
-    })
+  it("refuses to create a second audit for identical content", async () => {
+    const article = baseArticle()
+    article.researchAudits = [
+      { id: "audit-existing", articleId: article.id, createdAt: auditCreatedAt },
+    ]
+    article.reviewNotes = [
+      associationNote("audit-existing", fingerprintFor(article)),
+    ]
     const { store, createdAudits, articleUpdates } = createStore(article)
     const collectEvidence = vi.fn()
 
@@ -313,10 +436,71 @@ describe("prepareArticleForReview", () => {
     expect(articleUpdates).toHaveLength(0)
   })
 
-  it("prevents a duplicate audit if one appears during the write transaction", async () => {
+  it("allows revised content to create a new audit while preserving the previous audit", async () => {
+    const previous = baseArticle({ title: "Previous title" })
+    const article = baseArticle({
+      researchAudits: [
+        {
+          id: "audit-previous",
+          articleId: "article-1",
+          createdAt: auditCreatedAt,
+        },
+      ],
+      reviewNotes: [
+        associationNote("audit-previous", fingerprintFor(previous)),
+      ],
+    })
+    const { store, createdAudits, articleUpdates } = createStore(article)
+
+    const result = await prepareArticleForReview(article.id, {
+      prisma: store,
+      collectEvidence: async () =>
+        usefulEvidence("https://www.nist.gov/artificial-intelligence"),
+    })
+
+    expect(result.ok).toBe(true)
+    expect(article.researchAudits).toHaveLength(2)
+    expect(article.researchAudits[0]?.id).toBe("audit-previous")
+    expect(createdAudits).toHaveLength(1)
+    expect(articleUpdates).toHaveLength(1)
+  })
+
+  it("treats a legacy audit without an association as stale", async () => {
+    const article = baseArticle({
+      researchAudits: [
+        {
+          id: "audit-legacy",
+          articleId: "article-1",
+          createdAt: auditCreatedAt,
+        },
+      ],
+    })
+    const { store, createdAudits } = createStore(article)
+
+    const result = await prepareArticleForReview(article.id, {
+      prisma: store,
+      collectEvidence: async () =>
+        usefulEvidence("https://www.nist.gov/artificial-intelligence"),
+    })
+
+    expect(result.ok).toBe(true)
+    expect(createdAudits).toHaveLength(1)
+  })
+
+  it("prevents a duplicate audit if its association appears after the preflight", async () => {
     const article = baseArticle()
     const { store, createdAudits, articleUpdates, tx } = createStore(article)
-    tx.articleResearchAudit.count.mockResolvedValueOnce(1)
+    tx.article.findUnique.mockImplementationOnce(async () => {
+      article.researchAudits.push({
+        id: "audit-concurrent",
+        articleId: article.id,
+        createdAt: auditCreatedAt,
+      })
+      article.reviewNotes.push(
+        associationNote("audit-concurrent", fingerprintFor(article)),
+      )
+      return article
+    })
 
     const result = await prepareArticleForReview(article.id, {
       prisma: store,
@@ -331,5 +515,54 @@ describe("prepareArticleForReview", () => {
     })
     expect(createdAudits).toHaveLength(0)
     expect(articleUpdates).toHaveLength(0)
+  })
+
+  it("serializes concurrent requests so the revision creates one audit", async () => {
+    const article = baseArticle()
+    const { store, createdAudits, articleUpdates } = createStore(article)
+    const collectEvidence = vi.fn(async () =>
+      usefulEvidence("https://www.nist.gov/artificial-intelligence"),
+    )
+
+    const [first, second] = await Promise.all([
+      prepareArticleForReview(article.id, { prisma: store, collectEvidence }),
+      prepareArticleForReview(article.id, { prisma: store, collectEvidence }),
+    ])
+
+    expect([first.ok, second.ok].filter(Boolean)).toHaveLength(1)
+    expect([first, second].find((result) => !result.ok)).toMatchObject({
+      code: "duplicate_audit",
+      articleUnchanged: true,
+    })
+    expect(createdAudits).toHaveLength(1)
+    expect(articleUpdates).toHaveLength(1)
+  })
+
+  it("rolls back the audit and association when a later write fails", async () => {
+    const article = baseArticle()
+    const {
+      store,
+      createdAudits,
+      articleUpdates,
+      reviewNotes,
+      tx,
+      persistReviewNote,
+    } = createStore(article)
+    tx.articleReviewNote.create
+      .mockImplementationOnce(persistReviewNote)
+      .mockRejectedValueOnce(new Error("review note write failed"))
+
+    const result = await prepareArticleForReview(article.id, {
+      prisma: store,
+      collectEvidence: async () =>
+        usefulEvidence("https://www.nist.gov/artificial-intelligence"),
+    })
+
+    expect(result).toMatchObject({ ok: false, code: "audit_failure" })
+    expect(createdAudits).toHaveLength(0)
+    expect(articleUpdates).toHaveLength(0)
+    expect(reviewNotes).toHaveLength(0)
+    expect(article.researchAudits).toHaveLength(0)
+    expect(article.reviewNotes).toHaveLength(0)
   })
 })

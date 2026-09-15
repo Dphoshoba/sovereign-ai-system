@@ -1,4 +1,5 @@
 import { calculateEditorialQualityScore } from "../editorial/quality-score"
+import { updateArticleUnderGovernanceLock } from "../publishing/article-lifecycle"
 import {
   persistFeaturedImageBytes,
   type AllowedFeaturedImageMime,
@@ -17,18 +18,14 @@ type ArticleRecord = {
 }
 
 type FeaturedImageStore = {
+  $transaction?: (fn: (tx: unknown) => Promise<unknown>) => Promise<unknown>
   article: {
     findUnique: (args: {
       where: { id: string }
     }) => Promise<ArticleRecord | null>
-    update: (args: {
+    update?: (args: {
       where: { id: string }
-      data: {
-        featuredImage: string
-        editorialScore: number
-        editorialGrade: "reject" | "review" | "approval-candidate"
-        editorialWarnings: string[]
-      }
+      data: Record<string, unknown>
     }) => Promise<ArticleRecord>
   }
 }
@@ -159,19 +156,31 @@ export async function generateAndPersistFeaturedImage(input: {
     publicationRecommendation: "review-required",
   })
 
-  const updatedArticle = await store.article.update({
-    where: { id: article.id },
-    data: {
-      featuredImage: persisted.imageUrl,
-      editorialScore: editorialQuality.score,
-      editorialGrade: editorialQuality.grade,
-      editorialWarnings: editorialQuality.warnings,
+  const lockedUpdate = await updateArticleUnderGovernanceLock(
+    {
+      articleId: article.id,
+      changes: {
+        featuredImage: persisted.imageUrl,
+        editorialScore: editorialQuality.score,
+        editorialGrade: editorialQuality.grade,
+        editorialWarnings: editorialQuality.warnings,
+      },
     },
-  })
+    { prisma: store },
+  )
+
+  if (!lockedUpdate.ok) {
+    return {
+      ok: false as const,
+      error: lockedUpdate.error,
+      code: lockedUpdate.code,
+      articleUnchanged: true as const,
+    }
+  }
 
   return {
     ok: true as const,
-    article: updatedArticle,
+    article: lockedUpdate.article as unknown as ArticleRecord,
     imageUrl: persisted.imageUrl,
     editorialQuality,
     articleUnchanged: false as const,

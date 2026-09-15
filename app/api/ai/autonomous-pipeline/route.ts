@@ -2,7 +2,6 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getOpenAI } from "@/lib/ai/openai"
 import { DAVID_WRITING_DNA } from "@/lib/ai/writing-dna"
-import { parseOptionalSchedulingTimestamp } from "../../../../lib/publishing/adelaide-time"
 
 function slugify(value: string) {
   return value
@@ -35,21 +34,6 @@ export async function POST(request: Request) {
 
     const topic = body.topic || "AI automation for creators"
     const category = body.category || "ai-automation"
-    const mode = body.mode || "draft"
-    const parsedSchedule = parseOptionalSchedulingTimestamp(body.scheduledFor)
-    if (!parsedSchedule.ok) {
-      return NextResponse.json(
-        { ok: false, error: parsedSchedule.error },
-        { status: 400 }
-      )
-    }
-    if (mode === "schedule" && !parsedSchedule.date) {
-      return NextResponse.json(
-        { ok: false, error: "Please choose a schedule date and time." },
-        { status: 400 }
-      )
-    }
-    const scheduledFor = parsedSchedule.date
 
     const response = await getOpenAI().responses.create({
       model: "gpt-5.2",
@@ -82,29 +66,34 @@ export async function POST(request: Request) {
     const title = parsed.title || topic
     const slug = await createUniqueSlug(slugify(title), category)
 
-    const status =
-      mode === "publish" ? "published" : mode === "schedule" ? "scheduled" : "review-required"
-
     const article = await prisma.article.create({
       data: {
         title,
         slug,
         category,
-        status,
+        status: "review-required",
         excerpt: parsed.excerpt || null,
         content: parsed.content || null,
         featuredImage: null,
         seoTitle: parsed.seoTitle || title,
         seoDescription: parsed.seoDescription || parsed.excerpt || null,
         seoKeywords: parsed.seoKeywords || null,
-        publishedAt: mode === "publish" ? new Date() : null,
-        scheduledFor: mode === "schedule" ? scheduledFor : null,
+        approvedAt: null,
+        approvedBy: null,
+        scheduledFor: null,
+        publishedAt: null,
       },
     })
 
     return NextResponse.json({
       ok: true,
       article,
+      workflow: {
+        status: "review-required",
+        requiresHumanReview: true,
+        message:
+          "The generated package is ready for human review. It has not been approved, scheduled, or published.",
+      },
       assets: {
         thumbnailText: parsed.thumbnailText || null,
         thumbnailPrompt: parsed.thumbnailPrompt || null,

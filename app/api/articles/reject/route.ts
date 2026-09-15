@@ -1,46 +1,55 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { transitionArticleLifecycle } from "../../../../lib/publishing/article-lifecycle"
 
 export async function POST(req: NextRequest) {
   try {
-    const { articleId, rejectedBy, rejectionReason } = await req.json()
+    const supabase = await createSupabaseServerClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "AUTHENTICATION_REQUIRED",
+          error: "Authentication required.",
+          articleUnchanged: true,
+        },
+        { status: 401 },
+      )
+    }
+
+    const { articleId, rejectionReason } = await req.json()
 
     if (!articleId) {
       return NextResponse.json({ ok: false, error: "Missing articleId" }, { status: 400 })
     }
 
-    const article = await prisma.article.findUnique({
-      where: { id: articleId },
-    })
-
-    if (!article) {
-      return NextResponse.json({ ok: false, error: "Article not found" }, { status: 404 })
-    }
-
-    const reviewer = rejectedBy || "system"
+    const reviewer = user.email || user.id
     const note = rejectionReason || "Rejected during editorial review"
 
-    const updatedArticle = await prisma.article.update({
-      where: { id: articleId },
-      data: {
-        status: "rejected",
-        approvedAt: null,
-        approvedBy: null,
-      },
-    })
-
-    await prisma.articleReviewNote.create({
-      data: {
+    const result = await transitionArticleLifecycle(
+      {
         articleId,
-        action: "rejected",
-        reviewer,
-        note,
+        transition: "reject",
+        actor: reviewer,
+        reviewNote: note,
       },
-    })
+      { prisma },
+    )
+    if (!result.ok) {
+      return NextResponse.json(result, {
+        status: result.code === "not_found" ? 404 : 409,
+      })
+    }
 
     return NextResponse.json({
       ok: true,
-      article: updatedArticle,
+      article: result.article,
+      alreadyApplied: result.alreadyApplied,
+      articleUnchanged: result.articleUnchanged,
       rejection: {
         rejectedBy: reviewer,
         rejectionReason: note,

@@ -11,7 +11,42 @@ const article = {
   excerpt: "Excerpt",
   seoTitle: "SEO title",
   seoDescription: "SEO description",
+  seoKeywords: null,
   featuredImage: null,
+  status: "review-required",
+  approvedAt: null,
+  approvedBy: null,
+  scheduledFor: null,
+  publishedAt: null,
+  researchSources: [],
+  researchAudits: [],
+  reviewNotes: [],
+}
+
+function createStore(update: ReturnType<typeof vi.fn>) {
+  const current = { ...article }
+  const tx = {
+    $queryRaw: vi.fn(async () => [{ id: current.id }]),
+    article: {
+      findUnique: vi.fn(async () => current),
+      update: async ({ data }: { data: Record<string, unknown> }) => {
+        Object.assign(current, data)
+        return update({
+          where: { id: current.id },
+          data,
+        })
+      },
+    },
+    articleReviewNote: { create: vi.fn() },
+    publishingQueue: { update: vi.fn() },
+  }
+  return {
+    $transaction: async (fn: (client: typeof tx) => unknown) => fn(tx),
+    article: {
+      findUnique: async () => current,
+      update,
+    },
+  }
 }
 
 describe("generateAndPersistFeaturedImage", () => {
@@ -20,12 +55,7 @@ describe("generateAndPersistFeaturedImage", () => {
 
     const result = await generateAndPersistFeaturedImage({
       articleId: article.id,
-      prisma: {
-        article: {
-          findUnique: async () => article,
-          update,
-        },
-      },
+      prisma: createStore(update),
       generateImage: async () => MINIMAL_PNG.toString("base64"),
       persistImage: async () => ({
         ok: true,
@@ -53,12 +83,7 @@ describe("generateAndPersistFeaturedImage", () => {
 
     const result = await generateAndPersistFeaturedImage({
       articleId: article.id,
-      prisma: {
-        article: {
-          findUnique: async () => article,
-          update,
-        },
-      },
+      prisma: createStore(update),
       generateImage: async () => MINIMAL_PNG.toString("base64"),
       persistImage: async () => ({
         ok: false,
@@ -79,12 +104,7 @@ describe("generateAndPersistFeaturedImage", () => {
 
     const result = await generateAndPersistFeaturedImage({
       articleId: article.id,
-      prisma: {
-        article: {
-          findUnique: async () => article,
-          update,
-        },
-      },
+      prisma: createStore(update),
       generateImage: async () => undefined,
     })
 

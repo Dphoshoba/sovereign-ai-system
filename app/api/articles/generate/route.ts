@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getOpenAI } from "@/lib/ai/openai"
+import { updateArticleUnderGovernanceLock } from "../../../../lib/publishing/article-lifecycle"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireEditorAuth()
+    if (!auth.ok) return auth.response
+
     const { articleId } = await req.json()
 
     const article = await prisma.article.findUnique({
@@ -69,24 +74,33 @@ Return:
       raw.replace(/```json|```/g, "").trim()
     )
 
-    const updatedArticle =
-      await prisma.article.update({
-        where: {
-          id: articleId,
-        },
-        data: {
+    const result = await updateArticleUnderGovernanceLock(
+      {
+        articleId,
+        changes: {
           excerpt: generated.excerpt,
           seoTitle: generated.seoTitle,
-          seoDescription:
-            generated.seoDescription,
+          seoDescription: generated.seoDescription,
           content: generated.content,
           status: "review-required",
         },
+      },
+      { prisma },
+    )
+    if (!result.ok) {
+      return NextResponse.json(result, {
+        status:
+          result.code === "not_found"
+            ? 404
+            : result.code === "published_immutable"
+              ? 409
+              : 422,
       })
+    }
 
     return NextResponse.json({
       ok: true,
-      article: updatedArticle,
+      article: result.article,
       faq: generated.faq,
     })
   } catch (error) {
