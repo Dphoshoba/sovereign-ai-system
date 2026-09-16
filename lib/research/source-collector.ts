@@ -21,7 +21,7 @@ export type SourceCollectionResult = {
   collectionStatus: string
 }
 
-function scoreAuthority(url: string): number {
+export function scoreAuthority(url: string): number {
   const lower = url.toLowerCase()
 
   if (lower.includes(".gov")) return 100
@@ -45,7 +45,7 @@ function scoreAuthority(url: string): number {
   return 50
 }
 
-function scoreTrust(url: string): number {
+export function scoreTrust(url: string): number {
   const lower = url.toLowerCase()
 
   if (lower.includes(".gov")) return 95

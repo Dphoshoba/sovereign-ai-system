@@ -9,6 +9,7 @@ import {
 const ERROR_STATUS: Record<string, number> = {
   not_found: 404,
   missing_evidence: 422,
+  insufficient_article_evidence: 422,
   audit_failure: 500,
   duplicate_audit: 409,
   invalid_status: 409,

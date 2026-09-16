@@ -65,8 +65,14 @@ export function extractArticleSourceLinks(input: {
       title: source.title?.trim() || hostnameTitle(source.url),
       url: source.url,
       sourceType: source.sourceType || "stored-research-source",
-      authorityScore: source.authorityScore ?? undefined,
-      trustScore: source.trustScore ?? undefined,
+      authorityScore:
+        source.authorityScore && source.authorityScore > 0
+          ? source.authorityScore
+          : undefined,
+      trustScore:
+        source.trustScore && source.trustScore > 0
+          ? source.trustScore
+          : undefined,
       relevanceScore: 70,
     })
   }

@@ -14,6 +14,8 @@ import { mutateArticleSources } from "../../lib/research/article-source-mutation
 import { prepareArticleForReview } from "../../lib/research/prepare-article-for-review";
 import { resolveArticleAuditState } from "../../lib/research/current-article-audit";
 
+import { GROUNDED_ARTICLE_CLAIM, GROUNDED_EVIDENCE_TEXT } from "../fixtures/research-audit/article-2";
+
 const PORT = "55432";
 const CONTAINER = `ev-audit-lifecycle-${process.pid}`;
 const DATABASE_URL = `postgresql://postgres:test@127.0.0.1:${PORT}/audit_lifecycle?connect_timeout=10`;
@@ -121,8 +123,7 @@ CREATE TRIGGER fail_association_note_trigger
   FOR EACH ROW EXECUTE PROCEDURE fail_association_note();
 `;
 
-const EVIDENCE_TEXT =
-  "A government research report on workflow automation shows that artificial intelligence can reduce repetitive creator tasks and improve productivity across content pipelines. Responsible governance remains essential for trustworthy publishing.";
+const EVIDENCE_TEXT = GROUNDED_EVIDENCE_TEXT;
 
 function createPrisma() {
   return new PrismaClient({
@@ -155,9 +156,9 @@ async function seedArticle(
       slug: `governed-${id.slice(0, 8)}`,
       category: "ai-tools",
       status: "review-required",
-      excerpt: "Evidence-backed operations.",
+      excerpt: GROUNDED_ARTICLE_CLAIM,
       content:
-        "See [NIST](https://www.nist.gov/artificial-intelligence) for the research basis.",
+        `${GROUNDED_ARTICLE_CLAIM} See [NIST](https://www.nist.gov/artificial-intelligence) for the research basis.`,
       seoTitle: "Governed concurrency article",
       seoDescription: "Evidence-backed operations for creators.",
       seoKeywords: "AI governance",
@@ -170,7 +171,11 @@ async function seedArticle(
   });
 }
 
-async function attachCurrentAudit(prisma: PrismaClient, article: { id: string }) {
+async function attachCurrentAudit(
+  prisma: PrismaClient,
+  article: { id: string },
+  engineRevision?: string,
+) {
   const loaded = await prisma.article.findUniqueOrThrow({
     where: { id: article.id },
     include: { researchSources: true },
@@ -197,6 +202,7 @@ async function attachCurrentAudit(prisma: PrismaClient, article: { id: string })
         auditId: audit.id,
         contentFingerprint: fingerprint,
         createdAt: audit.createdAt,
+        ...(engineRevision ? { engineRevision } : {}),
       }),
     },
   });
@@ -496,5 +502,39 @@ describe("real PostgreSQL article governance concurrency", () => {
     });
     expect(audits).toHaveLength(0);
     expect(notes).toHaveLength(0);
+  });
+
+  it("creates one replacement audit for an obsolete engine revision and keeps the older audit", async () => {
+    const article = await seedArticle(prismaA, { status: "draft" });
+    const obsolete = await attachCurrentAudit(
+      prismaA,
+      article,
+      "legacy-chrome-v0",
+    );
+    const [first, second] = await Promise.all([
+      prepareArticleForReview(article.id, {
+        prisma: prismaA as never,
+        collectEvidence,
+      }),
+      prepareArticleForReview(article.id, {
+        prisma: prismaB as never,
+        collectEvidence,
+      }),
+    ]);
+    expect([first.ok, second.ok].filter(Boolean)).toHaveLength(1);
+    expect(
+      [first, second].filter((result) => !result.ok && result.code === "duplicate_audit"),
+    ).toHaveLength(1);
+    const loaded = await prismaA.article.findUniqueOrThrow({
+      where: { id: article.id },
+      include: { researchAudits: true, researchSources: true, reviewNotes: true },
+    });
+    expect(loaded.researchAudits).toHaveLength(2);
+    expect(loaded.researchAudits.some((audit) => audit.id === obsolete.id)).toBe(
+      true,
+    );
+    const { currentAudit, historicalAudits } = resolveArticleAuditState(loaded);
+    expect(currentAudit?.id).not.toBe(obsolete.id);
+    expect(historicalAudits.some((audit) => audit.id === obsolete.id)).toBe(true);
   });
 });

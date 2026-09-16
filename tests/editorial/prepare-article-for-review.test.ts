@@ -13,6 +13,8 @@ import {
   parseArticleAuditAssociation,
   serializeArticleAuditAssociation,
 } from "../../lib/research/article-audit-association"
+import { CURRENT_RESEARCH_AUDIT_ENGINE_REVISION } from "../../lib/research/research-audit-engine-revision"
+import { GROUNDED_ARTICLE_CLAIM, GROUNDED_EVIDENCE_TEXT } from "../fixtures/research-audit/article-2"
 
 vi.mock("../../lib/research/source-collector", async () => {
   const actual = await vi.importActual<
@@ -25,8 +27,7 @@ vi.mock("../../lib/research/source-collector", async () => {
   }
 })
 
-const USEFUL_EVIDENCE_TEXT =
-  "A government research report on workflow automation shows that artificial intelligence can reduce repetitive creator tasks and improve productivity across content pipelines. Responsible governance remains essential for trustworthy publishing."
+const USEFUL_EVIDENCE_TEXT = GROUNDED_EVIDENCE_TEXT
 const auditCreatedAt = new Date("2026-09-15T00:00:00.000Z")
 
 function usefulEvidence(url: string): EvidenceRegistryResult {
@@ -58,9 +59,9 @@ function baseArticle(
     slug: "creators-automation-judgment",
     category: "ai-tools",
     status: "review",
-    excerpt: "A manual draft with linked research.",
+    excerpt: GROUNDED_ARTICLE_CLAIM,
     content:
-      "Creators can keep judgment while using tools. See [NIST AI](https://www.nist.gov/artificial-intelligence) for the research basis.",
+      `${GROUNDED_ARTICLE_CLAIM} See [NIST AI](https://www.nist.gov/artificial-intelligence) for the research basis.`,
     featuredImage: "/generated/manual-cover.png",
     seoTitle: "How creators can use automation without losing judgment",
     seoDescription:
@@ -282,7 +283,8 @@ describe("prepareArticleForReview", () => {
       contentFingerprint: fingerprintFor(article),
       createdAt: result.audit.createdAt,
       algorithm: "sha256",
-      version: 1,
+      version: 2,
+      engineRevision: CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
     })
     expect(tx.$queryRaw).toHaveBeenCalledTimes(1)
     expect(String(tx.$queryRaw.mock.calls[0]?.[0]?.raw?.[0])).toContain(
@@ -380,10 +382,9 @@ describe("prepareArticleForReview", () => {
     const article = baseArticle({
       title: "Original title",
       slug: "original-slug",
-      excerpt:
-        "Original excerpt with https://www.nist.gov/artificial-intelligence",
+      excerpt: GROUNDED_ARTICLE_CLAIM,
       content:
-        "Original body with https://www.nist.gov/artificial-intelligence",
+        `${GROUNDED_ARTICLE_CLAIM} Original body with https://www.nist.gov/artificial-intelligence`,
       featuredImage: "/generated/keep-me.png",
     })
     const { store, articleUpdates } = createStore(article)
@@ -564,5 +565,71 @@ describe("prepareArticleForReview", () => {
     expect(reviewNotes).toHaveLength(0)
     expect(article.researchAudits).toHaveLength(0)
     expect(article.reviewNotes).toHaveLength(0)
+  })
+
+  it("returns insufficient_article_evidence and writes nothing when the article has no auditable claims", async () => {
+    const article = baseArticle({
+      title: "Notes",
+      excerpt: "Short notes.",
+      content: "See [NIST AI](https://www.nist.gov/artificial-intelligence).",
+    })
+    const { store, createdAudits, articleUpdates } = createStore(article)
+    const collectEvidence = vi.fn()
+
+    const result = await prepareArticleForReview(article.id, {
+      prisma: store,
+      collectEvidence,
+    })
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: "insufficient_article_evidence",
+      articleUnchanged: true,
+    })
+    expect(collectEvidence).not.toHaveBeenCalled()
+    expect(store.$transaction).not.toHaveBeenCalled()
+    expect(createdAudits).toHaveLength(0)
+    expect(articleUpdates).toHaveLength(0)
+  })
+
+  it("allows one replacement audit after an audit-engine revision change", async () => {
+    const article = baseArticle()
+    article.researchAudits = [
+      { id: "audit-obsolete", articleId: article.id, createdAt: auditCreatedAt },
+    ]
+    article.reviewNotes = [
+      {
+        action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+        note: serializeArticleAuditAssociation({
+          auditId: "audit-obsolete",
+          contentFingerprint: fingerprintFor(article),
+          createdAt: auditCreatedAt,
+          engineRevision: "legacy-chrome-v0",
+        }),
+      },
+    ]
+    const { store, createdAudits, articleUpdates } = createStore(article)
+
+    const result = await prepareArticleForReview(article.id, {
+      prisma: store,
+      collectEvidence: async () =>
+        usefulEvidence("https://www.nist.gov/artificial-intelligence"),
+    })
+
+    expect(result.ok).toBe(true)
+    expect(article.researchAudits.map((audit) => audit.id)).toEqual([
+      "audit-obsolete",
+      "audit-2",
+    ])
+    expect(createdAudits).toHaveLength(1)
+    expect(articleUpdates).toHaveLength(1)
+    expect(
+      parseArticleAuditAssociation(
+        article.reviewNotes.find(
+          (note) => note.action === RESEARCH_AUDIT_FINGERPRINT_ACTION &&
+            note.note?.includes("audit-2"),
+        ) ?? article.reviewNotes[article.reviewNotes.length - 2],
+      )?.engineRevision,
+    ).toBe(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION)
   })
 })

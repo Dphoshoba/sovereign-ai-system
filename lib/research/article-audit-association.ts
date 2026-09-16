@@ -2,6 +2,11 @@ import {
   computeArticleAuditFingerprint,
   type AuditableArticleState,
 } from "./article-audit-fingerprint";
+import {
+  CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
+  isCurrentResearchAuditEngineRevision,
+  isResearchAuditEngineRevision,
+} from "./research-audit-engine-revision";
 
 export const RESEARCH_AUDIT_FINGERPRINT_ACTION =
   "research-audit-fingerprint" as const;
@@ -11,16 +16,18 @@ const ASSOCIATION_KEYS = [
   "auditId",
   "contentFingerprint",
   "createdAt",
+  "engineRevision",
   "version",
 ] as const;
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 
 export type ArticleAuditAssociation = {
-  version: 1;
+  version: 2;
   auditId: string;
   contentFingerprint: string;
   algorithm: "sha256";
   createdAt: string;
+  engineRevision: string;
 };
 
 export type ArticleAuditAssociationNote = {
@@ -50,13 +57,15 @@ export function serializeArticleAuditAssociation(input: {
   auditId: string;
   contentFingerprint: string;
   createdAt: Date;
+  engineRevision?: string;
 }): string {
   const association: ArticleAuditAssociation = {
-    version: 1,
+    version: 2,
     auditId: input.auditId,
     contentFingerprint: input.contentFingerprint,
     algorithm: "sha256",
     createdAt: input.createdAt.toISOString(),
+    engineRevision: input.engineRevision ?? CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
   };
 
   return JSON.stringify(association);
@@ -85,24 +94,26 @@ export function parseArticleAuditAssociation(
     }
 
     if (
-      record.version !== 1 ||
+      record.version !== 2 ||
       record.algorithm !== "sha256" ||
       typeof record.auditId !== "string" ||
       record.auditId.length === 0 ||
       record.auditId.trim() !== record.auditId ||
       typeof record.contentFingerprint !== "string" ||
       !SHA256_PATTERN.test(record.contentFingerprint) ||
-      !isExactIsoTimestamp(record.createdAt)
+      !isExactIsoTimestamp(record.createdAt) ||
+      !isResearchAuditEngineRevision(record.engineRevision)
     ) {
       return null;
     }
 
     return {
-      version: 1,
+      version: 2,
       auditId: record.auditId,
       contentFingerprint: record.contentFingerprint,
       algorithm: "sha256",
       createdAt: record.createdAt,
+      engineRevision: record.engineRevision,
     };
   } catch {
     return null;
@@ -132,7 +143,8 @@ export function partitionAssociatedArticleAudits<
     .flatMap((association) => {
       if (
         !association ||
-        association.contentFingerprint !== currentFingerprint
+        association.contentFingerprint !== currentFingerprint ||
+        !isCurrentResearchAuditEngineRevision(association.engineRevision)
       ) {
         return [];
       }

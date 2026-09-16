@@ -43,6 +43,21 @@ function currentAssociation() {
   };
 }
 
+function obsoleteAssociation() {
+  const fingerprint = computeArticleAuditFingerprint(baseArticle, [
+    "https://www.nist.gov/artificial-intelligence",
+  ]);
+  return {
+    action: "research-audit-fingerprint",
+    note: serializeArticleAuditAssociation({
+      auditId: "audit-current",
+      contentFingerprint: fingerprint,
+      createdAt: auditCreatedAt,
+      engineRevision: "legacy-chrome-v0",
+    }),
+  };
+}
+
 function createStore(
   article = { ...baseArticle },
   options: { onLock?: () => void } = {},
@@ -133,6 +148,41 @@ describe("transitionArticleLifecycle", () => {
     });
     expect(tx.article.update).not.toHaveBeenCalled();
     expect(tx.articleReviewNote.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects approval, scheduling, and publication when the audit engine revision is obsolete", async () => {
+    const article = {
+      ...baseArticle,
+      reviewNotes: [obsoleteAssociation()],
+    };
+
+    for (const transition of ["approve", "schedule", "publish"] as const) {
+      const current = {
+        ...article,
+        status: transition === "approve" ? "review-required" : "approved",
+        approvedAt:
+          transition === "approve" ? null : new Date("2026-09-15T01:00:00.000Z"),
+        approvedBy: transition === "approve" ? null : "editor",
+      };
+      const { store, tx } = createStore(current);
+      const result = await transitionArticleLifecycle(
+        {
+          articleId: current.id,
+          transition,
+          actor: "editor@example.com",
+          scheduledFor: new Date("2026-09-20T00:00:00.000Z"),
+          now: new Date("2026-09-16T00:00:00.000Z"),
+        },
+        { prisma: store },
+      );
+
+      expect(result).toMatchObject({
+        ok: false,
+        code: "stale_audit",
+        articleUnchanged: true,
+      });
+      expect(tx.article.update).not.toHaveBeenCalled();
+    }
   });
 
   it("distinguishes a missing audit from a stale audit", async () => {

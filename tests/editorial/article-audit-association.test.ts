@@ -6,6 +6,7 @@ import {
   serializeArticleAuditAssociation,
 } from "../../lib/research/article-audit-association";
 import { computeArticleAuditFingerprint } from "../../lib/research/article-audit-fingerprint";
+import { CURRENT_RESEARCH_AUDIT_ENGINE_REVISION } from "../../lib/research/research-audit-engine-revision";
 
 const article = {
   id: "article-1",
@@ -41,42 +42,56 @@ describe("article audit associations", () => {
     expect(
       parseArticleAuditAssociation(associationNote("audit-current")),
     ).toEqual({
-      version: 1,
+      version: 2,
       auditId: "audit-current",
       contentFingerprint: fingerprint,
       algorithm: "sha256",
       createdAt: "2026-09-15T00:00:00.000Z",
+      engineRevision: CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
     });
   });
 
   it.each([
     ["malformed JSON", "not-json"],
-    ["missing key", JSON.stringify({ version: 1 })],
+    ["missing key", JSON.stringify({ version: 2 })],
     [
       "extra key",
       JSON.stringify({
-        version: 1,
+        version: 2,
         auditId: "audit-current",
         contentFingerprint: fingerprint,
         algorithm: "sha256",
         createdAt: "2026-09-15T00:00:00.000Z",
+        engineRevision: CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
         extra: true,
       }),
     ],
     [
       "wrong algorithm",
       JSON.stringify({
-        version: 1,
+        version: 2,
         auditId: "audit-current",
         contentFingerprint: fingerprint,
         algorithm: "sha1",
         createdAt: "2026-09-15T00:00:00.000Z",
+        engineRevision: CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
       }),
     ],
     [
       "wrong version",
       JSON.stringify({
-        version: 2,
+        version: 3,
+        auditId: "audit-current",
+        contentFingerprint: fingerprint,
+        algorithm: "sha256",
+        createdAt: "2026-09-15T00:00:00.000Z",
+        engineRevision: CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
+      }),
+    ],
+    [
+      "legacy v1 payload",
+      JSON.stringify({
+        version: 1,
         auditId: "audit-current",
         contentFingerprint: fingerprint,
         algorithm: "sha256",
@@ -86,31 +101,45 @@ describe("article audit associations", () => {
     [
       "blank audit ID",
       JSON.stringify({
-        version: 1,
+        version: 2,
         auditId: " ",
         contentFingerprint: fingerprint,
         algorithm: "sha256",
         createdAt: "2026-09-15T00:00:00.000Z",
+        engineRevision: CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
       }),
     ],
     [
       "invalid fingerprint",
       JSON.stringify({
-        version: 1,
+        version: 2,
         auditId: "audit-current",
         contentFingerprint: "not-a-sha256",
         algorithm: "sha256",
         createdAt: "2026-09-15T00:00:00.000Z",
+        engineRevision: CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
       }),
     ],
     [
       "invalid timestamp",
       JSON.stringify({
-        version: 1,
+        version: 2,
         auditId: "audit-current",
         contentFingerprint: fingerprint,
         algorithm: "sha256",
         createdAt: "yesterday",
+        engineRevision: CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
+      }),
+    ],
+    [
+      "invalid engine revision",
+      JSON.stringify({
+        version: 2,
+        auditId: "audit-current",
+        contentFingerprint: fingerprint,
+        algorithm: "sha256",
+        createdAt: "2026-09-15T00:00:00.000Z",
+        engineRevision: "Legacy Chrome",
       }),
     ],
   ])("rejects %s as historical", (_label, note) => {
@@ -265,5 +294,63 @@ describe("article audit associations", () => {
         ),
       ]),
     ).toEqual({ current: null, historical: [audit] });
+  });
+
+  it("keeps an older engine revision historical when the fingerprint still matches", () => {
+    const obsolete = {
+      id: "audit-obsolete",
+      articleId: article.id,
+      createdAt: new Date("2026-09-16T12:27:51.423Z"),
+    };
+    const replacement = {
+      id: "audit-current-engine",
+      articleId: article.id,
+      createdAt: new Date("2026-09-16T13:00:00.000Z"),
+    };
+
+    expect(
+      partitionAssociatedArticleAudits(
+        article,
+        sources,
+        [obsolete, replacement],
+        [
+          {
+            action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+            note: serializeArticleAuditAssociation({
+              auditId: obsolete.id,
+              contentFingerprint: fingerprint,
+              createdAt: obsolete.createdAt,
+              engineRevision: "legacy-chrome-v0",
+            }),
+          },
+          associationNote(replacement.id, fingerprint, replacement.createdAt),
+        ],
+      ),
+    ).toEqual({
+      current: replacement,
+      historical: [obsolete],
+    });
+  });
+
+  it("requires the current engine revision before selecting a current audit", () => {
+    const obsolete = {
+      id: "audit-obsolete",
+      articleId: article.id,
+      createdAt: new Date("2026-09-16T12:27:51.423Z"),
+    };
+
+    expect(
+      partitionAssociatedArticleAudits(article, sources, [obsolete], [
+        {
+          action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+          note: serializeArticleAuditAssociation({
+            auditId: obsolete.id,
+            contentFingerprint: fingerprint,
+            createdAt: obsolete.createdAt,
+            engineRevision: "legacy-chrome-v0",
+          }),
+        },
+      ]),
+    ).toEqual({ current: null, historical: [obsolete] });
   });
 });

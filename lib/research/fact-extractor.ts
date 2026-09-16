@@ -12,6 +12,7 @@ export type ExtractedFact = {
   evidenceText: string
   confidence: "high" | "medium" | "low"
   requiresHumanReview: boolean
+  articleExcerpt?: string
 }
 
 export type FactExtractionResult = {

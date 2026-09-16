@@ -6,14 +6,23 @@ import {
   serializeArticleAuditAssociation,
 } from "./article-audit-association";
 import { computeArticleAuditFingerprint } from "./article-audit-fingerprint";
+import { extractArticleClaims } from "./article-claim-extractor";
 import { extractArticleSourceLinks } from "./article-source-links";
-import { resolveArticleAuditState } from "./current-article-audit";
+import { groundedFactVerification } from "./claim-evidence-matcher";
 import { consensusEngine } from "./consensus-engine";
-import { evidenceRegistry } from "./evidence-registry";
-import { factExtractor } from "./fact-extractor";
-import { factVerificationEngine } from "./fact-verification-engine";
+import { resolveArticleAuditState } from "./current-article-audit";
+import {
+  evidenceRegistry,
+  type EvidenceRegistryOptions,
+  type EvidenceRegistryResult,
+} from "./evidence-registry";
 import { publicationGate } from "./publication-gate";
-import type { SourceRecord } from "./source-collector";
+import { CURRENT_RESEARCH_AUDIT_ENGINE_REVISION } from "./research-audit-engine-revision";
+import {
+  scoreAuthority,
+  scoreTrust,
+  type SourceRecord,
+} from "./source-collector";
 
 const PREPARABLE_STATUSES = new Set(["draft", "review", "review-required"]);
 
@@ -32,6 +41,7 @@ const CONTENT_FIELDS = [
 export type PrepareForReviewErrorCode =
   | "not_found"
   | "missing_evidence"
+  | "insufficient_article_evidence"
   | "audit_failure"
   | "duplicate_audit"
   | "invalid_status";
@@ -53,6 +63,7 @@ export type PrepareForReviewSuccess = {
     id: string;
     createdAt: string;
     contentFingerprint: string;
+    engineRevision: string;
     sourceCount: number;
     evidenceCount: number;
     factCount: number;
@@ -134,7 +145,11 @@ export type PrepareForReviewStore = {
 
 export type PrepareArticleForReviewDeps = {
   prisma: PrepareForReviewStore;
-  collectEvidence?: typeof evidenceRegistry;
+  collectEvidence?: (
+    topic: string,
+    sources: SourceRecord[],
+    options?: EvidenceRegistryOptions,
+  ) => Promise<EvidenceRegistryResult>;
   reviewer?: string;
 };
 
@@ -159,16 +174,38 @@ function average(values: number[]): number {
   );
 }
 
-function sourceSummary(sources: SourceRecord[]) {
-  const sourceCount = sources.length;
+function rescoreSources(sources: SourceRecord[]): SourceRecord[] {
+  return sources.map((source) => ({
+    ...source,
+    authorityScore:
+      source.authorityScore && source.authorityScore > 0
+        ? source.authorityScore
+        : scoreAuthority(source.url),
+    trustScore:
+      source.trustScore && source.trustScore > 0
+        ? source.trustScore
+        : scoreTrust(source.url),
+  }));
+}
+
+function sourceSummary(
+  sources: SourceRecord[],
+  acceptedUrls: string[],
+) {
+  const accepted = new Set(acceptedUrls);
+  const scoredSources =
+    accepted.size > 0
+      ? sources.filter((source) => accepted.has(source.url))
+      : [];
+  const sourceCount = scoredSources.length;
   const averageAuthorityScore = average(
-    sources.map((source) => source.authorityScore ?? 0),
+    scoredSources.map((source) => source.authorityScore ?? 0),
   );
   const averageTrustScore = average(
-    sources.map((source) => source.trustScore ?? 0),
+    scoredSources.map((source) => source.trustScore ?? 0),
   );
   const averageRelevanceScore = average(
-    sources.map((source) => source.relevanceScore ?? 0),
+    scoredSources.map((source) => source.relevanceScore ?? 0),
   );
 
   return {
@@ -226,12 +263,14 @@ export async function prepareArticleForReview(
     };
   }
 
-  const sources = extractArticleSourceLinks({
-    content: article.content,
-    excerpt: article.excerpt,
-    featuredImage: article.featuredImage,
-    researchSources: article.researchSources,
-  });
+  const sources = rescoreSources(
+    extractArticleSourceLinks({
+      content: article.content,
+      excerpt: article.excerpt,
+      featuredImage: article.featuredImage,
+      researchSources: article.researchSources,
+    }),
+  );
   const contentFingerprint = computeArticleAuditFingerprint(
     article,
     sources.map((source) => source.url),
@@ -253,8 +292,26 @@ export async function prepareArticleForReview(
     );
   }
 
+  const claimExtraction = extractArticleClaims({
+    title: article.title,
+    excerpt: article.excerpt,
+    content: article.content,
+  });
+
+  if (claimExtraction.claimCount === 0) {
+    return {
+      ok: false,
+      code: "insufficient_article_evidence",
+      error:
+        "No auditable claims occur in the current article title, excerpt, or body. The article was left unchanged.",
+      articleUnchanged: true,
+    };
+  }
+
   try {
-    const evidence = await collectEvidence(article.title, sources);
+    const evidence = await collectEvidence(article.title, sources, {
+      claimTexts: claimExtraction.claims.map((claim) => claim.claim),
+    });
 
     if (evidence.evidenceCount === 0) {
       return missingEvidence(
@@ -262,20 +319,29 @@ export async function prepareArticleForReview(
       );
     }
 
-    const factExtraction = factExtractor(
-      article.title,
+    const verification = groundedFactVerification(
+      claimExtraction.claims,
       evidence.evidence,
-      article.category,
+      claimExtraction.normalizedArticleText,
     );
 
-    if (factExtraction.factCount === 0) {
+    if (verification.facts.length === 0) {
+      return {
+        ok: false,
+        code: "insufficient_article_evidence",
+        error:
+          "No auditable claims occur in the current article title, excerpt, or body. The article was left unchanged.",
+        articleUnchanged: true,
+      };
+    }
+
+    if (verification.acceptedEvidence.length === 0) {
       return missingEvidence(
-        "The existing source links did not yield extractable facts. Add clearer source URLs or supporting research sources, then try again.",
+        "Linked sources were reachable but did not yield claim-relevant evidence. The article was left unchanged.",
       );
     }
 
-    const verification = factVerificationEngine(factExtraction.facts);
-    const consensus = consensusEngine(verification.verifiedFacts);
+    const consensus = consensusEngine(verification.facts);
     publicationGate(consensus);
 
     const editorialQuality = calculateEditorialQualityScore({
@@ -303,7 +369,10 @@ export async function prepareArticleForReview(
       seoKeywords: article.seoKeywords || undefined,
     });
 
-    const sourceStats = sourceSummary(sources);
+    const acceptedUrls = verification.acceptedEvidence.map(
+      (record) => record.sourceUrl,
+    );
+    const sourceStats = sourceSummary(sources, acceptedUrls);
 
     const auditData = {
       articleId: article.id,
@@ -311,8 +380,8 @@ export async function prepareArticleForReview(
       averageAuthorityScore: sourceStats.averageAuthorityScore,
       averageTrustScore: sourceStats.averageTrustScore,
       researchConfidence: sourceStats.researchConfidence,
-      evidenceCount: evidence.evidenceCount,
-      factCount: factExtraction.factCount,
+      evidenceCount: verification.acceptedEvidence.length,
+      factCount: verification.facts.length,
       verifiedCount: verification.verifiedCount,
       partiallyVerifiedCount: verification.partiallyVerifiedCount,
       unverifiedCount: verification.unverifiedCount,
@@ -321,8 +390,8 @@ export async function prepareArticleForReview(
       sourceQualityScore: consensus.sourceQualityScore,
       publicationRecommendation: consensus.publicationRecommendation,
       sources,
-      evidence: evidence.evidence,
-      facts: verification.verifiedFacts,
+      evidence: verification.acceptedEvidence,
+      facts: verification.facts,
       consensus: consensus.consensusGroups,
     };
 
@@ -396,6 +465,7 @@ export async function prepareArticleForReview(
             auditId: audit.id,
             contentFingerprint: lockedFingerprint,
             createdAt: audit.createdAt,
+            engineRevision: CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
           }),
         },
       });
@@ -434,9 +504,10 @@ export async function prepareArticleForReview(
         id: createdAudit.id,
         createdAt: createdAudit.createdAt.toISOString(),
         contentFingerprint,
+        engineRevision: CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
         sourceCount: sourceStats.sourceCount,
-        evidenceCount: evidence.evidenceCount,
-        factCount: factExtraction.factCount,
+        evidenceCount: verification.acceptedEvidence.length,
+        factCount: verification.facts.length,
         verifiedCount: verification.verifiedCount,
         partiallyVerifiedCount: verification.partiallyVerifiedCount,
         unverifiedCount: verification.unverifiedCount,
