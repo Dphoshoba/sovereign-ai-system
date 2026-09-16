@@ -1,72 +1,24 @@
-import { inflateRawSync, inflateSync } from "node:zlib";
+import { extractText } from "unpdf";
+import { ResearchSourceFetchError } from "./source-acquisition";
 
-function decodePdfLiteral(raw: string): string {
-  return raw
-    .replace(/\\n/g, "\n")
-    .replace(/\\r/g, "\r")
-    .replace(/\\t/g, "\t")
-    .replace(/\\\(/g, "(")
-    .replace(/\\\)/g, ")")
-    .replace(/\\\\/g, "\\")
-    .replace(/\\([0-7]{1,3})/g, (_match, octal: string) =>
-      String.fromCharCode(parseInt(octal, 8)),
-    );
+export class PdfExtractionError extends ResearchSourceFetchError {
+  constructor(
+    category: "encrypted_pdf" | "malformed_pdf" | "pdf_extraction_empty",
+    message: string,
+  ) {
+    super(category, message);
+    this.name = "PdfExtractionError";
+  }
 }
 
-function extractShownText(content: string): string[] {
-  const parts: string[] = [];
-  const literal = /\((?:\\.|[^\\)])*\)/g;
-  const show = /\((?:\\.|[^\\)])*\)\s*Tj/g;
-  const arrayShow = /\[(?:[^\[\]]|\[[^\[\]]*\])*\]\s*TJ/g;
-
-  for (const match of content.matchAll(show)) {
-    const inner = match[0].slice(1, match[0].lastIndexOf(")"));
-    parts.push(decodePdfLiteral(inner));
-  }
-
-  for (const match of content.matchAll(arrayShow)) {
-    const body = match[0];
-    for (const literalMatch of body.matchAll(literal)) {
-      const inner = literalMatch[0].slice(1, -1);
-      parts.push(decodePdfLiteral(inner));
-    }
-  }
-
-  return parts;
+function latin1Head(bytes: Uint8Array, max = 32_768): string {
+  return Buffer.from(bytes.subarray(0, Math.min(bytes.byteLength, max))).toString(
+    "latin1",
+  );
 }
 
-function inflatePdfStream(payload: Buffer): string {
-  for (const inflate of [inflateSync, inflateRawSync]) {
-    try {
-      return inflate(payload).toString("latin1");
-    } catch {
-      continue;
-    }
-  }
-  return "";
-}
-
-export function extractPdfText(bytes: Uint8Array): string {
-  if (bytes.byteLength < 5) return "";
-  const header = Buffer.from(bytes.subarray(0, 5)).toString("latin1");
-  if (header !== "%PDF-") return "";
-
-  const latin1 = Buffer.from(bytes).toString("latin1");
-  const parts = extractShownText(latin1);
-
-  const streamPattern = /stream\r?\n([\s\S]*?)endstream/g;
-  for (const match of latin1.matchAll(streamPattern)) {
-    const payload = Buffer.from(match[1], "latin1");
-    const decoded = inflatePdfStream(payload);
-    if (decoded) {
-      parts.push(...extractShownText(decoded));
-    }
-  }
-
-  return parts
-    .join(" ")
-    .replace(/\s+/g, " ")
-    .trim();
+export function isEncryptedPdf(bytes: Uint8Array): boolean {
+  return /\/Encrypt(?:[\s\/>])/.test(latin1Head(bytes));
 }
 
 export function looksLikePdf(bytes: Uint8Array, contentType = "", url = ""): boolean {
@@ -74,10 +26,53 @@ export function looksLikePdf(bytes: Uint8Array, contentType = "", url = ""): boo
     const header = Buffer.from(bytes.subarray(0, 5)).toString("latin1");
     if (header === "%PDF-") return true;
   }
-  if (contentType.toLowerCase().includes("application/pdf")) return true;
+
+  const type = contentType.toLowerCase();
+  if (type.includes("text/html") || type.includes("application/xhtml")) {
+    return false;
+  }
+  if (type.includes("application/pdf")) return true;
+
   try {
     return new URL(url).pathname.toLowerCase().endsWith(".pdf");
   } catch {
-    return url.toLowerCase().includes(".pdf");
+    return false;
+  }
+}
+
+export async function extractPdfText(bytes: Uint8Array): Promise<string> {
+  if (bytes.byteLength < 5) {
+    throw new PdfExtractionError("malformed_pdf", "PDF is malformed or unsupported.");
+  }
+  const header = Buffer.from(bytes.subarray(0, 5)).toString("latin1");
+  if (header !== "%PDF-") {
+    throw new PdfExtractionError("malformed_pdf", "PDF is malformed or unsupported.");
+  }
+  if (isEncryptedPdf(bytes)) {
+    throw new PdfExtractionError("encrypted_pdf", "Encrypted PDFs are not opened.");
+  }
+
+  try {
+    const extracted = await extractText(new Uint8Array(bytes), { mergePages: true });
+    const raw = Array.isArray(extracted.text)
+      ? extracted.text.join("\n")
+      : extracted.text;
+    const text = String(raw || "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!text) {
+      throw new PdfExtractionError(
+        "pdf_extraction_empty",
+        "PDF was fetched but yielded no extractable text.",
+      );
+    }
+    return text;
+  } catch (error) {
+    if (error instanceof PdfExtractionError) throw error;
+    const message = error instanceof Error ? error.message : "";
+    if (/password|encrypt/i.test(message)) {
+      throw new PdfExtractionError("encrypted_pdf", "Encrypted PDFs are not opened.");
+    }
+    throw new PdfExtractionError("malformed_pdf", "PDF is malformed or unsupported.");
   }
 }

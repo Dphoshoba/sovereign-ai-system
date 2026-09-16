@@ -19,6 +19,10 @@ import {
 import { publicationGate } from "./publication-gate";
 import { CURRENT_RESEARCH_AUDIT_ENGINE_REVISION } from "./research-audit-engine-revision";
 import {
+  logSourceAcquisition,
+  type SourceAcquisitionDiagnostic,
+} from "./source-acquisition";
+import {
   scoreAuthority,
   scoreTrust,
   type SourceRecord,
@@ -72,6 +76,8 @@ export type PrepareForReviewSuccess = {
     unverifiedCount: number;
     consensusScore: number;
     publicationRecommendation: string | null;
+    sourceCoverage: number;
+    unavailableSourceCount: number;
   };
   preservedFields: typeof CONTENT_FIELDS;
 };
@@ -81,6 +87,7 @@ export type PrepareForReviewFailure = {
   code: PrepareForReviewErrorCode;
   error: string;
   articleUnchanged: true;
+  sourceDiagnostics?: SourceAcquisitionDiagnostic[];
 };
 
 export type PrepareForReviewResult =
@@ -153,12 +160,16 @@ export type PrepareArticleForReviewDeps = {
   reviewer?: string;
 };
 
-function missingEvidence(error: string): PrepareForReviewFailure {
+function missingEvidence(
+  error: string,
+  sourceDiagnostics: SourceAcquisitionDiagnostic[] = [],
+): PrepareForReviewFailure {
   return {
     ok: false,
     code: "missing_evidence",
     error,
     articleUnchanged: true,
+    sourceDiagnostics,
   };
 }
 
@@ -191,6 +202,7 @@ function rescoreSources(sources: SourceRecord[]): SourceRecord[] {
 function sourceSummary(
   sources: SourceRecord[],
   acceptedUrls: string[],
+  listedSourceCount = sources.length,
 ) {
   const accepted = new Set(acceptedUrls);
   const scoredSources =
@@ -207,19 +219,24 @@ function sourceSummary(
   const averageRelevanceScore = average(
     scoredSources.map((source) => source.relevanceScore ?? 0),
   );
+  const coverage =
+    listedSourceCount <= 0 ? 0 : Math.min(1, sourceCount / listedSourceCount);
+  const baseConfidence =
+    sourceCount === 0
+      ? 0
+      : average([
+          averageAuthorityScore,
+          averageTrustScore,
+          averageRelevanceScore,
+        ]);
 
   return {
     sourceCount,
     averageAuthorityScore,
     averageTrustScore,
-    researchConfidence:
-      sourceCount === 0
-        ? 0
-        : average([
-            averageAuthorityScore,
-            averageTrustScore,
-            averageRelevanceScore,
-          ]),
+    sourceCoverage: Math.round(coverage * 100),
+    unavailableSourceCount: Math.max(0, listedSourceCount - sourceCount),
+    researchConfidence: Math.round(baseConfidence * coverage),
   };
 }
 
@@ -312,10 +329,15 @@ export async function prepareArticleForReview(
     const evidence = await collectEvidence(article.title, sources, {
       claimTexts: claimExtraction.claims.map((claim) => claim.claim),
     });
+    const sourceDiagnostics = evidence.sourceDiagnostics ?? [];
+    if (sourceDiagnostics.length > 0) {
+      logSourceAcquisition(sourceDiagnostics);
+    }
 
     if (evidence.evidenceCount === 0) {
       return missingEvidence(
         "Required evidence could not be collected from the article's source links. Check that the linked sources are reachable and contain usable research text, then try again.",
+        sourceDiagnostics,
       );
     }
 
@@ -338,6 +360,7 @@ export async function prepareArticleForReview(
     if (verification.acceptedEvidence.length === 0) {
       return missingEvidence(
         "Linked sources were reachable but did not yield claim-relevant evidence. The article was left unchanged.",
+        sourceDiagnostics,
       );
     }
 
@@ -372,7 +395,8 @@ export async function prepareArticleForReview(
     const acceptedUrls = verification.acceptedEvidence.map(
       (record) => record.sourceUrl,
     );
-    const sourceStats = sourceSummary(sources, acceptedUrls);
+    const listedSourceCount = evidence.listedSourceCount ?? sources.length;
+    const sourceStats = sourceSummary(sources, acceptedUrls, listedSourceCount);
 
     const auditData = {
       articleId: article.id,
@@ -513,6 +537,8 @@ export async function prepareArticleForReview(
         unverifiedCount: verification.unverifiedCount,
         consensusScore: consensus.consensusScore,
         publicationRecommendation: consensus.publicationRecommendation,
+        sourceCoverage: sourceStats.sourceCoverage,
+        unavailableSourceCount: sourceStats.unavailableSourceCount,
       },
       preservedFields: CONTENT_FIELDS,
     };

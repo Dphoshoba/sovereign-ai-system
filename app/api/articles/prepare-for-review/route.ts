@@ -6,6 +6,8 @@ import {
   type PrepareForReviewStore,
 } from "../../../../lib/research/prepare-article-for-review"
 
+export const runtime = "nodejs"
+
 const ERROR_STATUS: Record<string, number> = {
   not_found: 404,
   missing_evidence: 422,
@@ -50,6 +52,7 @@ export async function POST(req: NextRequest) {
           error: result.error,
           code: result.code,
           articleUnchanged: true,
+          sourceDiagnostics: result.sourceDiagnostics ?? [],
         },
         { status: ERROR_STATUS[result.code] ?? 400 }
       )

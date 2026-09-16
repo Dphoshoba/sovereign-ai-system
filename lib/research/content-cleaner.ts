@@ -85,6 +85,5 @@ export function contentCleaner(text: string): string {
     .replace(/\n{2,}/g, "\n")
     .trim()
 
-  // Preserve more real article content than before (5000 vs 3000).
-  return cleaned.slice(0, 5000)
+  return cleaned.slice(0, 100_000)
 }

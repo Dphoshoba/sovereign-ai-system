@@ -21,8 +21,9 @@ import {
   ARTICLE_2_BODY,
   ARTICLE_2_EXCERPT,
   ARTICLE_2_TITLE,
-  CDO_CHROME_HTML,
+  CDO_ARTICLE_HTML,
   CREATOR_TEMPLATE_STRINGS,
+  DELOITTE_ARTICLE_HTML,
   DELOITTE_CHROME_HTML,
   NIST_PDF_PASSAGE,
   PWC_ARTICLE_HTML,
@@ -164,8 +165,12 @@ describe("research-audit extraction integrity", () => {
 
     expect(extracted.claimCount).toBeGreaterThan(0);
     for (const claim of extracted.claims) {
+      expect(claim.kind).toBe("factual");
       expect(normalized).toContain(claim.articleExcerpt);
       expect(normalized).toContain(claim.claim);
+      expect(claim.section === "title" || claim.section === "excerpt" || claim.section === "body").toBe(
+        true,
+      );
     }
     expect(
       extracted.claims.some((claim) =>
@@ -183,6 +188,37 @@ describe("research-audit extraction integrity", () => {
     }
   });
 
+  it("excludes headings, rhetorical framing, and cross-block concatenation", () => {
+    const extracted = extractArticleClaims({
+      title: ARTICLE_2_TITLE,
+      excerpt: ARTICLE_2_EXCERPT,
+      content: ARTICLE_2_BODY,
+    });
+    const claims = extracted.claims.map((claim) => claim.claim);
+
+    expect(claims.some((claim) => /from creator tools to organizational infrastructure/i.test(claim))).toBe(
+      false,
+    );
+    expect(claims.some((claim) => /that can be useful/i.test(claim))).toBe(false);
+    expect(claims.some((claim) => /this article takes the next step/i.test(claim))).toBe(false);
+    expect(claims.some((claim) => /see nist ai rmf/i.test(claim))).toBe(false);
+    expect(
+      claims.some((claim) =>
+        claim.includes("organizational infrastructure A one-off"),
+      ),
+    ).toBe(false);
+    expect(
+      extracted.claims.some((claim) =>
+        claim.claim.includes("AI risk management should be integrated"),
+      ),
+    ).toBe(true);
+    expect(
+      extracted.claims.some((claim) =>
+        claim.claim.includes("Deloitte reports that enterprise AI applications"),
+      ),
+    ).toBe(true);
+  });
+
   it("rejects HTML boilerplate and retains relevant HTML passages", () => {
     const chrome = extractHtmlDocument(DELOITTE_CHROME_HTML);
     const relevant = extractHtmlDocument(PWC_ARTICLE_HTML);
@@ -194,8 +230,8 @@ describe("research-audit extraction integrity", () => {
     expect(relevant.extractedText).not.toMatch(/subscribe to our newsletter/i);
   });
 
-  it("extracts PDF passages and maps them to the matching article claim", () => {
-    const pdfText = extractPdfText(buildUncompressedPdf(NIST_PDF_PASSAGE));
+  it("extracts PDF passages and maps them to the matching article claim", async () => {
+    const pdfText = await extractPdfText(await buildUncompressedPdf(NIST_PDF_PASSAGE));
     expect(pdfText).toContain(
       "AI risk management should be integrated into broader enterprise risk processes",
     );
@@ -280,7 +316,7 @@ describe("research-audit extraction integrity", () => {
     ).toBe(true);
   });
 
-  it("collects PDF and relevant HTML evidence while dropping chrome", async () => {
+  it("collects PDF and relevant HTML evidence while dropping chrome and recording a 403 as unavailable", async () => {
     const sources = [
       {
         title: "NIST AI RMF",
@@ -316,7 +352,7 @@ describe("research-audit extraction integrity", () => {
       claimTexts: claims.claims.map((claim) => claim.claim),
       lookup: PUBLIC_LOOKUP,
       fetch: mockFetch({
-        [NIST_URL]: new Response(Buffer.from(buildUncompressedPdf(NIST_PDF_PASSAGE)), {
+        [NIST_URL]: new Response(Buffer.from(await buildUncompressedPdf(NIST_PDF_PASSAGE)), {
           status: 200,
           headers: { "content-type": "application/pdf" },
         }),
@@ -324,11 +360,11 @@ describe("research-audit extraction integrity", () => {
           status: 200,
           headers: { "content-type": "text/html; charset=utf-8" },
         }),
-        [DELOITTE_URL]: new Response(DELOITTE_CHROME_HTML, {
+        [DELOITTE_URL]: new Response(DELOITTE_ARTICLE_HTML, {
           status: 200,
           headers: { "content-type": "text/html" },
         }),
-        [CDO_URL]: new Response(CDO_CHROME_HTML, {
+        [CDO_URL]: new Response(CDO_ARTICLE_HTML, {
           status: 200,
           headers: { "content-type": "text/html" },
         }),
@@ -342,10 +378,10 @@ describe("research-audit extraction integrity", () => {
       true,
     );
     expect(result.evidence.some((item) => item.sourceUrl === DELOITTE_URL)).toBe(
-      false,
+      true,
     );
     expect(result.evidence.some((item) => item.sourceUrl === CDO_URL)).toBe(
-      false,
+      true,
     );
     expect(
       result.evidence.some((item) =>
@@ -443,5 +479,138 @@ describe("research-audit extraction integrity", () => {
         /javascript|register now|cookie/i.test(item.extractedText),
       ),
     ).toBe(false);
+  });
+
+  it("keeps independent HTML/PDF evidence when one source is forbidden", async () => {
+    const sources = [
+      {
+        title: "NIST AI RMF",
+        url: NIST_URL,
+        sourceType: "government",
+        relevanceScore: 90,
+      },
+      {
+        title: "PwC 2026",
+        url: PWC_URL,
+        sourceType: "industry-research",
+        relevanceScore: 80,
+      },
+      {
+        title: "Deloitte survey",
+        url: DELOITTE_URL,
+        sourceType: "industry-research",
+        relevanceScore: 80,
+      },
+    ];
+    const claims = extractArticleClaims({
+      title: ARTICLE_2_TITLE,
+      excerpt: ARTICLE_2_EXCERPT,
+      content: ARTICLE_2_BODY,
+    });
+    const result = await evidenceRegistry(ARTICLE_2_TITLE, sources, {
+      claimTexts: claims.claims.map((claim) => claim.claim),
+      lookup: PUBLIC_LOOKUP,
+      fetch: mockFetch({
+        [NIST_URL]: new Response(Buffer.from(await buildUncompressedPdf(NIST_PDF_PASSAGE)), {
+          status: 200,
+          headers: { "content-type": "application/pdf" },
+        }),
+        [PWC_URL]: new Response("forbidden", {
+          status: 403,
+          headers: { "content-type": "text/html" },
+        }),
+        [DELOITTE_URL]: new Response(DELOITTE_ARTICLE_HTML, {
+          status: 200,
+          headers: { "content-type": "text/html" },
+        }),
+      }),
+    });
+
+    expect(result.evidence.some((item) => item.sourceUrl === NIST_URL)).toBe(true);
+    expect(result.evidence.some((item) => item.sourceUrl === DELOITTE_URL)).toBe(true);
+    expect(result.evidence.some((item) => item.sourceUrl === PWC_URL)).toBe(false);
+    expect(
+      result.sourceDiagnostics?.find((item) => item.hostname === "www.pwc.com")?.category,
+    ).toBe("http_forbidden");
+    expect(result.unavailableSourceCount).toBe(1);
+    expect(JSON.stringify(result.sourceDiagnostics)).not.toMatch(
+      /authorization|set-cookie|cookie=|192\.168|stack|ECONNREFUSED/i,
+    );
+  });
+
+  it("returns structured diagnostics and writes nothing when every source is unusable", async () => {
+    const article = article2();
+    const { store, createdAudits, articleUpdates } = createStore(article);
+    const result = await prepareArticleForReview(article.id, {
+      prisma: store,
+      collectEvidence: async () => ({
+        topic: article.title,
+        evidence: [],
+        evidenceCount: 0,
+        registryStatus: "No useful evidence available after filtering.",
+        listedSourceCount: 2,
+        acceptedSourceCount: 0,
+        unavailableSourceCount: 2,
+        sourceDiagnostics: [
+          {
+            sourceId: "pwc-2026",
+            hostname: "www.pwc.com",
+            documentType: "unknown",
+            category: "http_forbidden",
+            httpStatusCategory: "forbidden",
+            bytesReceived: 0,
+            extractedCharacterCount: 0,
+            acceptedPassageCount: 0,
+            rejectionReason: "Source refused the request.",
+          },
+        ],
+      }),
+    });
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: "missing_evidence",
+      articleUnchanged: true,
+    });
+    if (!result.ok) {
+      expect(result.sourceDiagnostics?.[0]?.category).toBe("http_forbidden");
+      expect(JSON.stringify(result.sourceDiagnostics)).not.toMatch(
+        /secret|authorization|set-cookie|stack/i,
+      );
+    }
+    expect(createdAudits).toHaveLength(0);
+    expect(articleUpdates).toHaveLength(0);
+  });
+
+  it("lowers coverage when a listed source is unavailable but others are accepted", async () => {
+    const article = article2();
+    const { store } = createStore(article);
+    const result = await prepareArticleForReview(article.id, {
+      prisma: store,
+      collectEvidence: async () => ({
+        topic: article.title,
+        evidenceCount: 1,
+        registryStatus: "ok",
+        listedSourceCount: 4,
+        acceptedSourceCount: 1,
+        unavailableSourceCount: 3,
+        evidence: [
+          {
+            id: "nist-chunk-1",
+            sourceTitle: "NIST AI RMF",
+            sourceUrl: NIST_URL,
+            sourceType: "government",
+            extractedText: NIST_PDF_PASSAGE,
+            confidence: 95,
+            requiresHumanReview: true,
+          },
+        ],
+      }),
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.audit.unavailableSourceCount).toBe(3);
+    expect(result.audit.sourceCoverage).toBe(25);
   });
 });

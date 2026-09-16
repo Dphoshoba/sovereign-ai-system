@@ -1,8 +1,34 @@
 import { lookup as defaultLookup } from "node:dns/promises";
+import https from "node:https";
+import { Readable } from "node:stream";
+import {
+  ResearchSourceFetchError,
+  type SourceAcquisitionCategory,
+} from "./source-acquisition";
 
-export const RESEARCH_FETCH_TIMEOUT_MS = 10_000;
-export const RESEARCH_FETCH_MAX_BYTES = 2_097_152;
+export const RESEARCH_FETCH_TIMEOUT_MS = 8_000;
+export const RESEARCH_FETCH_MAX_BYTES = 4_194_304;
 export const RESEARCH_FETCH_MAX_REDIRECTS = 3;
+
+export type ResolvedResearchTarget = {
+  url: URL;
+  addresses: Array<{ address: string; family: number }>;
+};
+
+const RESEARCH_REQUEST_HEADERS = {
+  Accept: "text/html,application/xhtml+xml,application/pdf,text/plain;q=0.9",
+  "User-Agent":
+    "EchoesVisionsResearchBot/1.1 (research-audit; +https://sovereign-ai-executive.vercel.app)",
+} as const;
+
+export function selectPinnedAddress(
+  addresses: Array<{ address: string; family: number }>,
+): { address: string; family: number } {
+  const ipv4 = addresses.find(
+    (record) => record.family === 4 || !record.address.includes(":"),
+  );
+  return ipv4 ?? addresses[0];
+}
 
 export type LookupFn = (
   hostname: string,
@@ -13,9 +39,12 @@ export type GuardedFetchDeps = {
   fetch?: typeof fetch;
 };
 
-export class UnsafeResearchUrlError extends Error {
-  constructor(message: string) {
-    super(message);
+export class UnsafeResearchUrlError extends ResearchSourceFetchError {
+  constructor(
+    message: string,
+    category: SourceAcquisitionCategory = "unsafe_url",
+  ) {
+    super(category, message);
     this.name = "UnsafeResearchUrlError";
   }
 }
@@ -39,7 +68,12 @@ function isBlockedIPv4(address: string): boolean {
 function isBlockedIPv6(address: string): boolean {
   const lower = address.toLowerCase();
   if (lower === "::1" || lower === "::") return true;
-  if (lower.startsWith("fe80:") || lower.startsWith("fc") || lower.startsWith("fd")) {
+  if (
+    lower.startsWith("fe80:") ||
+    lower.startsWith("fc00:") ||
+    lower.startsWith("fd") ||
+    lower.startsWith("fc")
+  ) {
     return true;
   }
   const mapped = lower.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
@@ -57,10 +91,10 @@ function isBlockedHostname(hostname: string): boolean {
   return false;
 }
 
-export async function assertSafeResearchUrl(
+export async function resolveSafeResearchTarget(
   rawUrl: string,
   deps: GuardedFetchDeps = {},
-): Promise<URL> {
+): Promise<ResolvedResearchTarget> {
   let parsed: URL;
   try {
     parsed = new URL(rawUrl);
@@ -78,96 +112,222 @@ export async function assertSafeResearchUrl(
     throw new UnsafeResearchUrlError("Source URLs must use the default https port.");
   }
   if (isBlockedHostname(parsed.hostname)) {
-    throw new UnsafeResearchUrlError("Source hostname is not allowed.");
+    throw new UnsafeResearchUrlError(
+      "Source hostname is not allowed.",
+      "dns_rejected",
+    );
   }
 
   if (parsed.hostname.startsWith("[") && parsed.hostname.endsWith("]")) {
     const ip = parsed.hostname.slice(1, -1);
     if (isBlockedIPv6(ip)) {
-      throw new UnsafeResearchUrlError("Source address is not allowed.");
+      throw new UnsafeResearchUrlError(
+        "Source address is not allowed.",
+        "dns_rejected",
+      );
     }
-    return parsed;
+    return { url: parsed, addresses: [{ address: ip, family: 6 }] };
   }
 
   if (/^\d+\.\d+\.\d+\.\d+$/.test(parsed.hostname)) {
     if (isBlockedIPv4(parsed.hostname)) {
-      throw new UnsafeResearchUrlError("Source address is not allowed.");
+      throw new UnsafeResearchUrlError(
+        "Source address is not allowed.",
+        "dns_rejected",
+      );
     }
-    return parsed;
+    return { url: parsed, addresses: [{ address: parsed.hostname, family: 4 }] };
   }
 
   const lookup = deps.lookup ?? (async (hostname: string) => defaultLookup(hostname, { all: true }));
-  const addresses = await lookup(parsed.hostname);
+  let addresses: Array<{ address: string; family: number }>;
+  try {
+    addresses = await lookup(parsed.hostname);
+  } catch {
+    throw new UnsafeResearchUrlError(
+      "Source hostname could not be resolved.",
+      "dns_rejected",
+    );
+  }
   if (!addresses.length) {
-    throw new UnsafeResearchUrlError("Source hostname could not be resolved.");
+    throw new UnsafeResearchUrlError(
+      "Source hostname could not be resolved.",
+      "dns_rejected",
+    );
   }
   for (const record of addresses) {
     if (record.family === 6 || record.address.includes(":")) {
       if (isBlockedIPv6(record.address)) {
-        throw new UnsafeResearchUrlError("Source address is not allowed.");
+        throw new UnsafeResearchUrlError(
+          "Source address is not allowed.",
+          "dns_rejected",
+        );
       }
     } else if (isBlockedIPv4(record.address)) {
-      throw new UnsafeResearchUrlError("Source address is not allowed.");
+      throw new UnsafeResearchUrlError(
+        "Source address is not allowed.",
+        "dns_rejected",
+      );
     }
   }
 
-  return parsed;
+  return { url: parsed, addresses };
+}
+
+export async function assertSafeResearchUrl(
+  rawUrl: string,
+  deps: GuardedFetchDeps = {},
+): Promise<URL> {
+  return (await resolveSafeResearchTarget(rawUrl, deps)).url;
+}
+
+function fetchPinnedHttps(target: ResolvedResearchTarget): Promise<Response> {
+  const pinned = selectPinnedAddress(target.addresses);
+  const ip = pinned.address.replace(/^\[|\]$/g, "");
+  const { url } = target;
+
+  return new Promise((resolve, reject) => {
+    const req = https.request(
+      {
+        protocol: "https:",
+        hostname: ip,
+        port: 443,
+        path: `${url.pathname}${url.search}`,
+        method: "GET",
+        servername: url.hostname,
+        headers: {
+          ...RESEARCH_REQUEST_HEADERS,
+          Host: url.hostname,
+        },
+        timeout: RESEARCH_FETCH_TIMEOUT_MS,
+      },
+      (incoming) => {
+        const headers = new Headers();
+        for (const [key, value] of Object.entries(incoming.headers)) {
+          if (value == null) continue;
+          headers.set(key, Array.isArray(value) ? value.join(", ") : value);
+        }
+        const body = Readable.toWeb(incoming) as ReadableStream<Uint8Array>;
+        resolve(
+          new Response(body, {
+            status: incoming.statusCode || 0,
+            headers,
+          }),
+        );
+      },
+    );
+    req.on("timeout", () => {
+      req.destroy();
+      reject(new ResearchSourceFetchError("timeout", "Source fetch timed out."));
+    });
+    req.on("error", (error) => reject(mapFetchException(error)));
+    req.end();
+  });
 }
 
 export async function fetchGuardedResearchSource(
   rawUrl: string,
   deps: GuardedFetchDeps = {},
-): Promise<{ url: string; contentType: string; body: Uint8Array }> {
-  const fetchImpl = deps.fetch ?? fetch;
+): Promise<{ url: string; contentType: string; body: Uint8Array; httpStatus: number }> {
   let current = rawUrl;
 
   for (let hop = 0; hop <= RESEARCH_FETCH_MAX_REDIRECTS; hop += 1) {
-    const safeUrl = await assertSafeResearchUrl(current, deps);
-    const response = await fetchImpl(safeUrl.toString(), {
-      method: "GET",
-      redirect: "manual",
-      headers: {
-        Accept: "text/html,application/xhtml+xml,application/pdf,text/plain;q=0.9",
-        "User-Agent": "EchoesVisionsResearchBot/1.0",
-      },
-      signal: AbortSignal.timeout(RESEARCH_FETCH_TIMEOUT_MS),
-    });
+    const target = await resolveSafeResearchTarget(current, deps);
+    let response: Response;
+    try {
+      response = deps.fetch
+        ? await deps.fetch(target.url.toString(), {
+            method: "GET",
+            redirect: "manual",
+            headers: RESEARCH_REQUEST_HEADERS,
+            signal: AbortSignal.timeout(RESEARCH_FETCH_TIMEOUT_MS),
+          })
+        : await fetchPinnedHttps(target);
+    } catch (error) {
+      throw mapFetchException(error);
+    }
 
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get("location");
       if (!location) {
-        throw new UnsafeResearchUrlError("Redirect is missing a Location header.");
+        throw new UnsafeResearchUrlError(
+          "Redirect is missing a Location header.",
+          "redirect_rejected",
+        );
       }
-      current = new URL(location, safeUrl).toString();
+      let nextUrl: string;
+      try {
+        nextUrl = new URL(location, target.url).toString();
+      } catch {
+        throw new UnsafeResearchUrlError(
+          "Redirect target is not a valid URL.",
+          "redirect_rejected",
+        );
+      }
+      current = nextUrl;
       continue;
     }
 
+    if (response.status === 401 || response.status === 403 || response.status === 407) {
+      throw new ResearchSourceFetchError(
+        "http_forbidden",
+        "Source refused the request.",
+        response.status,
+      );
+    }
+
     if (!response.ok) {
-      throw new Error(`Source fetch failed with status ${response.status}.`);
+      throw new ResearchSourceFetchError(
+        "http_error",
+        "Source returned an HTTP error.",
+        response.status,
+      );
     }
 
     const contentType = response.headers.get("content-type") || "";
     const buffer = await readLimitedBody(response);
     return {
-      url: safeUrl.toString(),
+      url: target.url.toString(),
       contentType,
       body: buffer,
+      httpStatus: response.status,
     };
   }
 
-  throw new UnsafeResearchUrlError("Too many redirects.");
+  throw new UnsafeResearchUrlError("Too many redirects.", "redirect_rejected");
+}
+
+function mapFetchException(error: unknown): ResearchSourceFetchError {
+  if (error instanceof ResearchSourceFetchError) return error;
+  const name = error instanceof Error ? error.name : "";
+  const message = error instanceof Error ? error.message.toLowerCase() : "";
+  if (
+    name === "TimeoutError" ||
+    name === "AbortError" ||
+    message.includes("timeout") ||
+    message.includes("aborted")
+  ) {
+    return new ResearchSourceFetchError("timeout", "Source fetch timed out.");
+  }
+  return new ResearchSourceFetchError("fetch_failed", "Source fetch failed.");
 }
 
 async function readLimitedBody(response: Response): Promise<Uint8Array> {
   const declared = Number(response.headers.get("content-length") || "0");
-  if (declared > RESEARCH_FETCH_MAX_BYTES) {
-    throw new Error("Source payload exceeds the allowed size.");
+  if (Number.isFinite(declared) && declared > RESEARCH_FETCH_MAX_BYTES) {
+    throw new ResearchSourceFetchError(
+      "payload_too_large",
+      "Source payload exceeded the bounded size cap.",
+    );
   }
 
   if (!response.body) {
     const fallback = new Uint8Array(await response.arrayBuffer());
     if (fallback.byteLength > RESEARCH_FETCH_MAX_BYTES) {
-      throw new Error("Source payload exceeds the allowed size.");
+      throw new ResearchSourceFetchError(
+        "payload_too_large",
+        "Source payload exceeded the bounded size cap.",
+      );
     }
     return fallback;
   }
@@ -182,7 +342,10 @@ async function readLimitedBody(response: Response): Promise<Uint8Array> {
     received += value.byteLength;
     if (received > RESEARCH_FETCH_MAX_BYTES) {
       await reader.cancel();
-      throw new Error("Source payload exceeds the allowed size.");
+      throw new ResearchSourceFetchError(
+        "payload_too_large",
+        "Source payload exceeded the bounded size cap.",
+      );
     }
     chunks.push(value);
   }

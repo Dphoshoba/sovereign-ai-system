@@ -12,16 +12,53 @@ const STRIP_SELECTORS = [
   "form",
   "iframe",
   "button",
+  "svg",
   "[role='navigation']",
   "[role='banner']",
   "[role='contentinfo']",
   "[role='dialog']",
+  "[role='complementary']",
+  "[id*='cookie']",
+  "[class*='cookie']",
+  "[id*='consent']",
+  "[class*='consent']",
+  "[class*='newsletter']",
+  "[id*='newsletter']",
+  "[class*='subscribe']",
+  "[class*='social']",
+  "[class*='share-bar']",
+  "[class*='related']",
+  "[class*='recommend']",
+  "[class*='promo']",
 ].join(", ");
 
-function collectText($: ReturnType<typeof load>, selector: string): string {
-  return $(selector)
-    .map((_, element) => $(element).text())
+const PREFERRED_SELECTORS = [
+  "article",
+  "main",
+  "[role='main']",
+  ".article-body",
+  ".article-content",
+  ".insight-article",
+  ".c-article",
+  "#content",
+];
+
+function collectParagraphs($: ReturnType<typeof load>, root: ReturnType<typeof $>,): string {
+  const blocks = root
+    .find("p, h1, h2, h3, li")
+    .map((_, element) => $(element).text().replace(/\s+/g, " ").trim())
     .get()
+    .filter((line) => line.length >= 40 && !isChromePassage(line));
+
+  if (blocks.length >= 2) {
+    return blocks.join("\n");
+  }
+
+  return root
+    .text()
+    .split(/\n+/)
+    .map((line) => line.replace(/\s+/g, " ").trim())
+    .filter((line) => line.length >= 40 && !isChromePassage(line))
     .join("\n");
 }
 
@@ -33,18 +70,22 @@ export function extractHtmlDocument(html: string): {
   const title = $("title").first().text().replace(/\s+/g, " ").trim();
   $(STRIP_SELECTORS).remove();
 
-  const preferred = ["article", "main", "[role='main']", ".article-body", "#content"]
-    .map((selector) => collectText($, selector).trim())
-    .find((text) => text.length >= 80);
+  let extractedText = "";
+  for (const selector of PREFERRED_SELECTORS) {
+    const node = $(selector).first();
+    if (!node.length) continue;
+    const candidate = collectParagraphs($, node);
+    if (candidate.length >= 80) {
+      extractedText = candidate;
+      break;
+    }
+  }
 
-  const raw = preferred || $("body").text() || $.root().text();
-  const extractedText = raw
-    .split(/\n+/)
-    .map((line) => line.replace(/\s+/g, " ").trim())
-    .filter((line) => line.length >= 20 && !isChromePassage(line))
-    .join("\n")
-    .replace(/\n{2,}/g, "\n")
-    .trim();
+  if (!extractedText) {
+    extractedText = collectParagraphs($, $("body").length ? $("body") : $.root());
+  }
+
+  extractedText = extractedText.replace(/\n{2,}/g, "\n").trim();
 
   return { title, extractedText };
 }

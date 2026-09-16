@@ -111,6 +111,8 @@ export function groundedFactVerification(
     facts.push({
       ...base,
       articleExcerpt: claim.articleExcerpt,
+      articleSection: claim.section,
+      blockType: claim.blockType,
       verificationCount,
       verificationStatus,
       verificationMethod:

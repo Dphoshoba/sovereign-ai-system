@@ -17,16 +17,37 @@ export const CREATOR_TEMPLATE_CLAIMS = [
   "Human review remains important before publishing AI-assisted content.",
 ] as const;
 
+export type ArticleSection = "title" | "excerpt" | "body";
+
+export type ArticleBlockType =
+  | "heading"
+  | "paragraph"
+  | "list"
+  | "blockquote"
+  | "link";
+
+export type ArticleClaimKind = "factual" | "authorial";
+
 export type ArticleClaim = {
   claim: string;
   articleExcerpt: string;
+  section: ArticleSection;
+  blockType: ArticleBlockType;
+  kind: ArticleClaimKind;
 };
 
 export type ArticleClaimExtractionResult = {
   claims: ArticleClaim[];
   claimCount: number;
+  authorialCount: number;
   normalizedArticleText: string;
   extractionStatus: string;
+};
+
+export type ArticleBlock = {
+  section: ArticleSection;
+  blockType: ArticleBlockType;
+  text: string;
 };
 
 const STOP_WORDS = new Set([
@@ -64,8 +85,51 @@ const STOP_WORDS = new Set([
   "also",
   "than",
   "then",
-  "into",
 ]);
+
+const AUTHORIAL_PATTERNS = [
+  /^this article\b/i,
+  /^the shift begins\b/i,
+  /\bthat can be useful\b/i,
+  /^it is not\b/i,
+  /\bstart with\b/i,
+  /^founders may\b/i,
+  /\binfrastructure is dependable because\b/i,
+  /\bthis article'?s model\b/i,
+  /\bcalls? to action\b/i,
+  /\bin the next (section|step)\b/i,
+];
+
+const FACTUAL_SIGNAL = new RegExp(
+  [
+    "\\baccording to\\b",
+    "\\breports? that\\b",
+    "\\bfound that\\b",
+    "\\bshowed that\\b",
+    "\\bestimates? that\\b",
+    "\\bsurvey\\b",
+    "\\bstudy\\b",
+    "\\bresearch report\\b",
+    "\\bframework\\b",
+    "\\bprediction\\b",
+    "\\bnist\\b",
+    "\\bdeloitte\\b",
+    "\\bpwc\\b",
+    "\\bcdo magazine\\b",
+    "\\bcdo-style\\b",
+    "\\boecd\\b",
+    "\\brisk management\\b",
+    "\\bai rmf\\b",
+    "\\bknowledge layer\\b",
+    "\\brather than\\b.{0,80}\\b(tools|infrastructure)\\b",
+    "\\bshould be integrated\\b",
+    "\\bartificial intelligence\\b.{0,80}\\b(governance|infrastructure|risk)\\b",
+    "\\bgovernance\\b.{0,80}\\bartificial intelligence\\b",
+    "\\d+\\s*%",
+    "\\bpercent\\b",
+  ].join("|"),
+  "i",
+);
 
 export function normalizeArticleText(value: string): string {
   return value
@@ -92,6 +156,68 @@ export function articleContainsExcerpt(
   return normalizedArticleText.includes(needle);
 }
 
+export function splitMarkdownBlocks(
+  markdown: string,
+  section: ArticleSection,
+): ArticleBlock[] {
+  const lines = markdown.replace(/\r\n?/g, "\n").split("\n");
+  const blocks: ArticleBlock[] = [];
+  let currentType: ArticleBlockType = "paragraph";
+  let current: string[] = [];
+
+  const flush = () => {
+    const text = current.join("\n").trim();
+    if (text) {
+      blocks.push({ section, blockType: currentType, text });
+    }
+    current = [];
+    currentType = "paragraph";
+  };
+
+  for (const line of lines) {
+    if (/^#{1,6}\s+/.test(line)) {
+      flush();
+      blocks.push({
+        section,
+        blockType: "heading",
+        text: line.replace(/^#{1,6}\s+/, "").trim(),
+      });
+      continue;
+    }
+    if (/^>\s?/.test(line)) {
+      if (currentType !== "blockquote") flush();
+      currentType = "blockquote";
+      current.push(line.replace(/^>\s?/, ""));
+      continue;
+    }
+    if (/^\s*[-*+]\s+/.test(line) || /^\s*\d+\.\s+/.test(line)) {
+      if (currentType !== "list") flush();
+      currentType = "list";
+      current.push(line.replace(/^\s*(?:[-*+]|\d+\.)\s+/, ""));
+      continue;
+    }
+    if (!line.trim()) {
+      flush();
+      continue;
+    }
+    if (currentType !== "paragraph") flush();
+    currentType = "paragraph";
+    current.push(line);
+  }
+  flush();
+  return blocks;
+}
+
+export function splitBlockSentences(blockText: string): string[] {
+  const normalized = normalizeArticleText(blockText);
+  if (!normalized) return [];
+  if (!/[.!?]/.test(normalized)) return [normalized];
+  return normalized
+    .split(/(?<=\.)(?:\[\d+\])?\s+|(?<=[!?])\s+/)
+    .map((sentence) => sentence.replace(/\[\d+\]/g, "").trim())
+    .filter(Boolean);
+}
+
 function hasClaimShape(sentence: string): boolean {
   return /\b(is|are|was|were|be|can|could|may|might|will|has|have|helps|supports|improves|reduces|increases|requires|remains|shows|suggests|become|becomes|treats|treated|provides|integrate|integrated|should)\b/i.test(
     sentence,
@@ -107,52 +233,91 @@ function isCreatorTemplate(sentence: string, articleText: string): boolean {
   });
 }
 
+export function isAuthorialFraming(sentence: string): boolean {
+  const normalized = sentence.replace(/\s+/g, " ").trim();
+  return AUTHORIAL_PATTERNS.some((pattern) => pattern.test(normalized));
+}
+
+export function isExternallyVerifiableClaim(sentence: string): boolean {
+  if (isAuthorialFraming(sentence)) return false;
+  if (isChromePassage(sentence)) return false;
+  return FACTUAL_SIGNAL.test(sentence);
+}
+
 export function extractArticleClaims(input: {
   title?: string | null;
   excerpt?: string | null;
   content?: string | null;
 }): ArticleClaimExtractionResult {
-  const fields = [input.title, input.excerpt, input.content].filter(
-    (value): value is string => Boolean(value && value.trim()),
+  const fields: Array<{ section: ArticleSection; value: string }> = [
+    input.title ? { section: "title" as const, value: input.title } : null,
+    input.excerpt ? { section: "excerpt" as const, value: input.excerpt } : null,
+    input.content ? { section: "body" as const, value: input.content } : null,
+  ].filter((field): field is { section: ArticleSection; value: string } =>
+    Boolean(field && field.value.trim()),
   );
-  const normalizedArticleText = normalizeArticleText(fields.join("\n"));
-  const sentences: string[] = [];
 
-  for (const field of fields) {
-    const normalizedField = normalizeArticleText(field);
-    const parts = /[.!?]/.test(normalizedField)
-      ? normalizedField.split(/(?<=[.!?])\s+/).map((sentence) => sentence.trim())
-      : [normalizedField];
-    sentences.push(...parts.filter(Boolean));
-  }
+  const normalizedArticleText = normalizeArticleText(
+    fields.map((field) => field.value).join("\n"),
+  );
 
   const claims: ArticleClaim[] = [];
   const seen = new Set<string>();
+  let authorialCount = 0;
 
-  for (const sentence of sentences) {
-    if (sentence.length < 40 || sentence.length > 400) continue;
-    if (isChromePassage(sentence)) continue;
-    if (!hasClaimShape(sentence)) continue;
-    if (isCreatorTemplate(sentence, normalizedArticleText)) continue;
-    if (!articleContainsExcerpt(normalizedArticleText, sentence)) continue;
-    const key = sentence.toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    claims.push({
-      claim: sentence,
-      articleExcerpt: sentence,
-    });
+  for (const field of fields) {
+    const fieldBlocks =
+      field.section === "body"
+        ? splitMarkdownBlocks(field.value, field.section)
+        : [{ section: field.section, blockType: "paragraph" as const, text: field.value }];
+
+    for (const block of fieldBlocks) {
+      if (block.blockType === "heading") {
+        authorialCount += 1;
+        continue;
+      }
+
+      for (const sentence of splitBlockSentences(block.text)) {
+        if (sentence.length < 40 || sentence.length > 400) continue;
+        if (isChromePassage(sentence)) continue;
+        if (!hasClaimShape(sentence)) continue;
+        if (isCreatorTemplate(sentence, normalizedArticleText)) continue;
+        if (!articleContainsExcerpt(normalizedArticleText, sentence)) continue;
+        const key = sentence.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        const kind: ArticleClaimKind = isExternallyVerifiableClaim(sentence)
+          ? "factual"
+          : "authorial";
+        if (kind === "authorial") {
+          authorialCount += 1;
+          continue;
+        }
+
+        claims.push({
+          claim: sentence,
+          articleExcerpt: sentence,
+          section: block.section,
+          blockType: block.blockType,
+          kind,
+        });
+        if (claims.length >= 12) break;
+      }
+      if (claims.length >= 12) break;
+    }
     if (claims.length >= 12) break;
   }
 
   return {
     claims,
     claimCount: claims.length,
+    authorialCount,
     normalizedArticleText,
     extractionStatus:
       claims.length > 0
-        ? "Claims extracted from the current article."
-        : "No auditable claims occur in the current article.",
+        ? "Factual claims extracted from the current article."
+        : "No auditable factual claims occur in the current article.",
   };
 }
 

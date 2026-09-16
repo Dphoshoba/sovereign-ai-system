@@ -4,6 +4,12 @@ import { evidenceChunker } from "./evidence-chunker"
 import { chunkRanker } from "./chunk-ranker"
 import { isChromePassage } from "./evidence-chrome"
 import { passageSupportsClaim } from "./article-claim-extractor"
+import {
+  emptyDiagnostic,
+  rejectionReasonFor,
+  sourceIdFromTitle,
+  type SourceAcquisitionDiagnostic,
+} from "./source-acquisition"
 
 export type EvidenceRecord = {
   id: string
@@ -20,6 +26,10 @@ export type EvidenceRegistryResult = {
   evidence: EvidenceRecord[]
   evidenceCount: number
   registryStatus: string
+  sourceDiagnostics?: SourceAcquisitionDiagnostic[]
+  listedSourceCount?: number
+  acceptedSourceCount?: number
+  unavailableSourceCount?: number
 }
 
 export type EvidenceRegistryOptions = ContentFetchDeps & {
@@ -98,56 +108,124 @@ function sourceTypeBoost(sourceType: string): number {
   }
 }
 
+async function collectFromSource(
+  topic: string,
+  source: SourceRecord,
+  options: EvidenceRegistryOptions,
+): Promise<{
+  evidence: EvidenceRecord[]
+  diagnostic: SourceAcquisitionDiagnostic
+}> {
+  const fetchContent = options.fetchContent ?? contentFetcher
+  const claimTexts = options.claimTexts ?? []
+  const fetched = await fetchContent(source.url, source.title, options)
+  const diagnostic: SourceAcquisitionDiagnostic = {
+    ...fetched.diagnostic,
+    sourceId: fetched.diagnostic.sourceId || sourceIdFromTitle(source.title, source.url),
+  }
+
+  if (fetched.fetchStatus !== "success" || !fetched.extractedText) {
+    return { evidence: [], diagnostic }
+  }
+
+  if (isChromePassage(fetched.extractedText)) {
+    return {
+      evidence: [],
+      diagnostic: {
+        ...diagnostic,
+        category: "chrome_only",
+        acceptedPassageCount: 0,
+        rejectionReason: rejectionReasonFor("chrome_only"),
+      },
+    }
+  }
+
+  const chunks = evidenceChunker(fetched.extractedText, 120)
+  const rankedChunks = chunkRanker(
+    [topic, ...claimTexts].filter(Boolean).join(" "),
+    chunks,
+  )
+    .filter((chunk) => isUsefulEvidence(chunk.text, claimTexts))
+    .slice(0, 3)
+
+  if (rankedChunks.length === 0) {
+    return {
+      evidence: [],
+      diagnostic: {
+        ...diagnostic,
+        category: "no_relevant_passage",
+        acceptedPassageCount: 0,
+        rejectionReason: rejectionReasonFor("no_relevant_passage"),
+      },
+    }
+  }
+
+  const evidence = rankedChunks.map((chunk) => ({
+    id: `${source.title.toLowerCase().replace(/\s+/g, "-")}-${chunk.id}`,
+    sourceTitle: fetched.title || source.title,
+    sourceUrl: source.url,
+    sourceType: source.sourceType,
+    extractedText: chunk.text,
+    confidence: Math.min(
+      100,
+      (source.relevanceScore ?? 70) + sourceTypeBoost(source.sourceType),
+    ),
+    requiresHumanReview: true,
+  }))
+
+  return {
+    evidence,
+    diagnostic: {
+      ...diagnostic,
+      category: "accepted",
+      acceptedPassageCount: evidence.length,
+      rejectionReason: "",
+    },
+  }
+}
+
 export async function evidenceRegistry(
   topic: string,
   sources: SourceRecord[],
   options: EvidenceRegistryOptions = {},
 ): Promise<EvidenceRegistryResult> {
+  const collected = await Promise.all(
+    sources.map((source) => collectFromSource(topic, source, options)),
+  )
+
   const evidenceRecords: EvidenceRecord[] = []
-  const fetchContent = options.fetchContent ?? contentFetcher
-  const claimTexts = options.claimTexts ?? []
+  const sourceDiagnostics: SourceAcquisitionDiagnostic[] = []
 
-  for (const source of sources) {
-    const fetched = await fetchContent(source.url, source.title, options)
-
-    if (fetched.fetchStatus !== "success" || !fetched.extractedText) {
-      continue
-    }
-
-    const chunks = evidenceChunker(fetched.extractedText, 120)
-    const rankedChunks = chunkRanker(
-      [topic, ...claimTexts].filter(Boolean).join(" "),
-      chunks,
-    )
-      .filter((chunk) => isUsefulEvidence(chunk.text, claimTexts))
-      .slice(0, 3)
-
-    for (const chunk of rankedChunks) {
-      evidenceRecords.push({
-        id: `${source.title
-          .toLowerCase()
-          .replace(/\s+/g, "-")}-${chunk.id}`,
-
-        sourceTitle: fetched.title || source.title,
-        sourceUrl: source.url,
-        sourceType: source.sourceType,
-
-        extractedText: chunk.text,
-
-        confidence: Math.min(
-          100,
-          (source.relevanceScore ?? 70) + sourceTypeBoost(source.sourceType)
-        ),
-
-        requiresHumanReview: true,
-      })
-    }
+  for (const item of collected) {
+    sourceDiagnostics.push(item.diagnostic)
+    evidenceRecords.push(...item.evidence)
   }
+
+  const acceptedSourceCount = sourceDiagnostics.filter(
+    (diagnostic) => diagnostic.category === "accepted",
+  ).length
+  const unavailableSourceCount = sourceDiagnostics.filter(
+    (diagnostic) => diagnostic.category !== "accepted",
+  ).length
 
   return {
     topic,
     evidence: evidenceRecords,
     evidenceCount: evidenceRecords.length,
+    sourceDiagnostics:
+      sourceDiagnostics.length > 0
+        ? sourceDiagnostics
+        : sources.map((source) =>
+            emptyDiagnostic(
+              sourceIdFromTitle(source.title, source.url),
+              source.url,
+              "fetch_failed",
+              rejectionReasonFor("fetch_failed"),
+            ),
+          ),
+    listedSourceCount: sources.length,
+    acceptedSourceCount,
+    unavailableSourceCount,
     registryStatus:
       evidenceRecords.length > 0
         ? "Evidence registry created from filtered and ranked evidence chunks."

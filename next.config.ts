@@ -56,6 +56,7 @@ const nextConfig: NextConfig = {
     "fluent-ffmpeg",
     "googleapis",
     "sharp",
+    "unpdf",
   ],
   outputFileTracingExcludes,
   productionBrowserSourceMaps: false,

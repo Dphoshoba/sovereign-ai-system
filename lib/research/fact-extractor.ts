@@ -13,6 +13,8 @@ export type ExtractedFact = {
   confidence: "high" | "medium" | "low"
   requiresHumanReview: boolean
   articleExcerpt?: string
+  articleSection?: string
+  blockType?: string
 }
 
 export type FactExtractionResult = {
