@@ -332,16 +332,16 @@ describe("article audit associations", () => {
     });
   });
 
-  it("treats article-grounded-v2 as historical once article-grounded-v3 is current", () => {
+  it("treats article-grounded-v3 as historical once article-grounded-v4 is current", () => {
     const obsolete = {
-      id: "audit-v2",
-      articleId: article.id,
-      createdAt: new Date("2026-09-17T09:45:06.001Z"),
-    };
-    const replacement = {
       id: "audit-v3",
       articleId: article.id,
-      createdAt: new Date("2026-09-17T11:00:00.000Z"),
+      createdAt: new Date("2026-09-17T19:13:36.500Z"),
+    };
+    const replacement = {
+      id: "audit-v4",
+      articleId: article.id,
+      createdAt: new Date("2026-09-18T00:00:00.000Z"),
     };
 
     expect(
@@ -356,7 +356,7 @@ describe("article audit associations", () => {
               auditId: obsolete.id,
               contentFingerprint: fingerprint,
               createdAt: obsolete.createdAt,
-              engineRevision: "article-grounded-v2",
+              engineRevision: "article-grounded-v3",
             }),
           },
           associationNote(replacement.id, fingerprint, replacement.createdAt),
@@ -375,7 +375,7 @@ describe("article audit associations", () => {
             auditId: obsolete.id,
             contentFingerprint: fingerprint,
             createdAt: obsolete.createdAt,
-            engineRevision: "article-grounded-v2",
+            engineRevision: "article-grounded-v3",
           }),
         },
       ]),

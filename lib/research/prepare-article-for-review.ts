@@ -19,6 +19,7 @@ import {
 import { publicationGate } from "./publication-gate";
 import { CURRENT_RESEARCH_AUDIT_ENGINE_REVISION } from "./research-audit-engine-revision";
 import {
+  isUnavailableAcquisitionCategory,
   logSourceAcquisition,
   toPublicSourceDiagnostics,
   type SourceAcquisitionDiagnostic,
@@ -78,6 +79,8 @@ export type PrepareForReviewSuccess = {
     consensusScore: number;
     publicationRecommendation: string | null;
     sourceCoverage: number;
+    listedSourceAvailability: number;
+    acceptedEvidenceCoverage: number;
     unavailableSourceCount: number;
   };
   sourceDiagnostics: SourceAcquisitionDiagnostic[];
@@ -205,12 +208,34 @@ function sourceSummary(
   sources: SourceRecord[],
   acceptedUrls: string[],
   listedSourceCount = sources.length,
+  diagnostics: SourceAcquisitionDiagnostic[] = [],
+  registry?: {
+    acceptedSourceCount?: number;
+    availableSourceCount?: number;
+    unavailableSourceCount?: number;
+  },
 ) {
   const accepted = new Set(acceptedUrls);
   const scoredSources =
     accepted.size > 0
       ? sources.filter((source) => accepted.has(source.url))
       : [];
+  const acceptedSourceCount =
+    diagnostics.length > 0
+      ? diagnostics.filter((diagnostic) => diagnostic.category === "accepted").length
+      : registry?.acceptedSourceCount ?? scoredSources.length;
+  const unavailableSourceCount =
+    diagnostics.length > 0
+      ? diagnostics.filter((diagnostic) =>
+          isUnavailableAcquisitionCategory(diagnostic.category),
+        ).length
+      : registry?.unavailableSourceCount ??
+        Math.max(0, listedSourceCount - acceptedSourceCount);
+  const availableSourceCount =
+    diagnostics.length > 0
+      ? Math.max(0, listedSourceCount - unavailableSourceCount)
+      : registry?.availableSourceCount ??
+        Math.max(0, listedSourceCount - unavailableSourceCount);
   const sourceCount = scoredSources.length;
   const averageAuthorityScore = average(
     scoredSources.map((source) => source.authorityScore ?? 0),
@@ -221,8 +246,10 @@ function sourceSummary(
   const averageRelevanceScore = average(
     scoredSources.map((source) => source.relevanceScore ?? 0),
   );
-  const coverage =
-    listedSourceCount <= 0 ? 0 : Math.min(1, sourceCount / listedSourceCount);
+  const coverageRatio =
+    listedSourceCount <= 0 ? 0 : Math.min(1, acceptedSourceCount / listedSourceCount);
+  const availabilityRatio =
+    listedSourceCount <= 0 ? 0 : Math.min(1, availableSourceCount / listedSourceCount);
   const baseConfidence =
     sourceCount === 0
       ? 0
@@ -236,9 +263,11 @@ function sourceSummary(
     sourceCount,
     averageAuthorityScore,
     averageTrustScore,
-    sourceCoverage: Math.round(coverage * 100),
-    unavailableSourceCount: Math.max(0, listedSourceCount - sourceCount),
-    researchConfidence: Math.round(baseConfidence * coverage),
+    sourceCoverage: Math.round(coverageRatio * 100),
+    listedSourceAvailability: Math.round(availabilityRatio * 100),
+    acceptedEvidenceCoverage: Math.round(coverageRatio * 100),
+    unavailableSourceCount,
+    researchConfidence: Math.round(baseConfidence * coverageRatio),
   };
 }
 
@@ -402,7 +431,13 @@ export async function prepareArticleForReview(
       (record) => record.sourceUrl,
     );
     const listedSourceCount = evidence.listedSourceCount ?? sources.length;
-    const sourceStats = sourceSummary(sources, acceptedUrls, listedSourceCount);
+    const sourceStats = sourceSummary(
+      sources,
+      acceptedUrls,
+      listedSourceCount,
+      sourceDiagnostics,
+      evidence,
+    );
 
     const auditData = {
       articleId: article.id,
@@ -544,6 +579,8 @@ export async function prepareArticleForReview(
         consensusScore: consensus.consensusScore,
         publicationRecommendation: consensus.publicationRecommendation,
         sourceCoverage: sourceStats.sourceCoverage,
+        listedSourceAvailability: sourceStats.listedSourceAvailability,
+        acceptedEvidenceCoverage: sourceStats.acceptedEvidenceCoverage,
         unavailableSourceCount: sourceStats.unavailableSourceCount,
       },
       sourceDiagnostics,

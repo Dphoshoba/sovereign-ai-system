@@ -5,8 +5,10 @@ import { chunkRanker } from "./chunk-ranker"
 import { isChromePassage } from "./evidence-chrome"
 import { passageSupportsClaim } from "./article-claim-extractor"
 import { claimAllowsEvidence } from "./claim-source-attribution"
+import { collectPdfPassages } from "./pdf-evidence"
 import {
   emptyDiagnostic,
+  isUnavailableAcquisitionCategory,
   rejectionReasonFor,
   sourceIdFromTitle,
   type SourceAcquisitionDiagnostic,
@@ -30,7 +32,9 @@ export type EvidenceRegistryResult = {
   sourceDiagnostics?: SourceAcquisitionDiagnostic[]
   listedSourceCount?: number
   acceptedSourceCount?: number
+  availableSourceCount?: number
   unavailableSourceCount?: number
+  noRelevantPassageCount?: number
 }
 
 export type EvidenceRegistryOptions = ContentFetchDeps & {
@@ -38,7 +42,7 @@ export type EvidenceRegistryOptions = ContentFetchDeps & {
   claimTexts?: string[]
 }
 
-function isUsefulEvidence(
+function isUsefulHtmlEvidence(
   text: string,
   claimTexts: string[] = [],
   source?: { url: string; title?: string | null },
@@ -56,7 +60,7 @@ function isUsefulEvidence(
       ) {
         return false
       }
-      return passageSupportsClaim(claim, text)
+      return passageSupportsClaim(claim, text, { documentKind: "html" })
     })
   }
 
@@ -121,6 +125,25 @@ function sourceTypeBoost(sourceType: string): number {
   }
 }
 
+function evidenceFromChunks(
+  source: SourceRecord,
+  fetchedTitle: string,
+  chunks: Array<{ id: string; text: string }>,
+): EvidenceRecord[] {
+  return chunks.map((chunk) => ({
+    id: `${source.title.toLowerCase().replace(/\s+/g, "-")}-${chunk.id}`,
+    sourceTitle: fetchedTitle || source.title,
+    sourceUrl: source.url,
+    sourceType: source.sourceType,
+    extractedText: chunk.text,
+    confidence: Math.min(
+      100,
+      (source.relevanceScore ?? 70) + sourceTypeBoost(source.sourceType),
+    ),
+    requiresHumanReview: true,
+  }))
+}
+
 async function collectFromSource(
   topic: string,
   source: SourceRecord,
@@ -141,6 +164,43 @@ async function collectFromSource(
     return { evidence: [], diagnostic }
   }
 
+  const sourceIdentity = { url: source.url, title: source.title }
+
+  if (fetched.contentKind === "pdf") {
+    const scanned = collectPdfPassages({
+      pages: fetched.pdfPages ?? [{ pageNumber: 1, text: fetched.extractedText }],
+      claimTexts,
+      source: sourceIdentity,
+      pageLimitReached: fetched.pdfPageLimitReached,
+    })
+    const pdfDiagnostic: SourceAcquisitionDiagnostic = {
+      ...diagnostic,
+      pagesParsed: diagnostic.pagesParsed,
+      pagesScanned: scanned.pagesScanned,
+      textLimitReached: scanned.textLimitReached,
+    }
+    if (scanned.passages.length === 0) {
+      return {
+        evidence: [],
+        diagnostic: {
+          ...pdfDiagnostic,
+          category: scanned.categoryIfEmpty,
+          acceptedPassageCount: 0,
+          rejectionReason: rejectionReasonFor(scanned.categoryIfEmpty),
+        },
+      }
+    }
+    return {
+      evidence: evidenceFromChunks(source, fetched.title, scanned.passages),
+      diagnostic: {
+        ...pdfDiagnostic,
+        category: "accepted",
+        acceptedPassageCount: scanned.passages.length,
+        rejectionReason: "",
+      },
+    }
+  }
+
   if (isChromePassage(fetched.extractedText)) {
     return {
       evidence: [],
@@ -153,12 +213,11 @@ async function collectFromSource(
     }
   }
 
-  const sourceIdentity = { url: source.url, title: source.title }
   const chunks = evidenceChunker(fetched.extractedText, 120)
   const supporting: typeof chunks = []
   if (claimTexts.length > 0) {
     for (const chunk of chunks) {
-      if (!isUsefulEvidence(chunk.text, claimTexts, sourceIdentity)) continue
+      if (!isUsefulHtmlEvidence(chunk.text, claimTexts, sourceIdentity)) continue
       supporting.push(chunk)
       if (supporting.length >= 3) break
     }
@@ -170,7 +229,7 @@ async function collectFromSource(
       : chunkRanker(
           [topic, ...claimTexts].filter(Boolean).join(" "),
           chunks,
-        ).filter((chunk) => isUsefulEvidence(chunk.text, claimTexts, sourceIdentity))
+        ).filter((chunk) => isUsefulHtmlEvidence(chunk.text, claimTexts, sourceIdentity))
   ).slice(0, 3)
 
   if (rankedChunks.length === 0) {
@@ -185,25 +244,12 @@ async function collectFromSource(
     }
   }
 
-  const evidence = rankedChunks.map((chunk) => ({
-    id: `${source.title.toLowerCase().replace(/\s+/g, "-")}-${chunk.id}`,
-    sourceTitle: fetched.title || source.title,
-    sourceUrl: source.url,
-    sourceType: source.sourceType,
-    extractedText: chunk.text,
-    confidence: Math.min(
-      100,
-      (source.relevanceScore ?? 70) + sourceTypeBoost(source.sourceType),
-    ),
-    requiresHumanReview: true,
-  }))
-
   return {
-    evidence,
+    evidence: evidenceFromChunks(source, fetched.title, rankedChunks),
     diagnostic: {
       ...diagnostic,
       category: "accepted",
-      acceptedPassageCount: evidence.length,
+      acceptedPassageCount: rankedChunks.length,
       rejectionReason: "",
     },
   }
@@ -229,9 +275,15 @@ export async function evidenceRegistry(
   const acceptedSourceCount = sourceDiagnostics.filter(
     (diagnostic) => diagnostic.category === "accepted",
   ).length
-  const unavailableSourceCount = sourceDiagnostics.filter(
-    (diagnostic) => diagnostic.category !== "accepted",
+  const unavailableSourceCount = sourceDiagnostics.filter((diagnostic) =>
+    isUnavailableAcquisitionCategory(diagnostic.category),
   ).length
+  const noRelevantPassageCount = sourceDiagnostics.filter(
+    (diagnostic) =>
+      diagnostic.category === "no_relevant_passage" ||
+      diagnostic.category === "chrome_only",
+  ).length
+  const availableSourceCount = Math.max(0, sources.length - unavailableSourceCount)
 
   return {
     topic,
@@ -250,7 +302,9 @@ export async function evidenceRegistry(
           ),
     listedSourceCount: sources.length,
     acceptedSourceCount,
+    availableSourceCount,
     unavailableSourceCount,
+    noRelevantPassageCount,
     registryStatus:
       evidenceRecords.length > 0
         ? "Evidence registry created from filtered and ranked evidence chunks."

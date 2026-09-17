@@ -13,6 +13,8 @@ export const SOURCE_ACQUISITION_CATEGORIES = [
   "encrypted_pdf",
   "malformed_pdf",
   "pdf_parse_timeout",
+  "pdf_page_limit",
+  "pdf_text_limit",
   "chrome_only",
   "no_relevant_passage",
   "fetch_failed",
@@ -20,6 +22,36 @@ export const SOURCE_ACQUISITION_CATEGORIES = [
 
 export type SourceAcquisitionCategory =
   (typeof SOURCE_ACQUISITION_CATEGORIES)[number];
+
+export const UNAVAILABLE_SOURCE_CATEGORIES = [
+  "dns_rejected",
+  "redirect_rejected",
+  "unsafe_url",
+  "http_forbidden",
+  "http_error",
+  "timeout",
+  "unsupported_content_type",
+  "payload_too_large",
+  "pdf_extraction_empty",
+  "html_extraction_empty",
+  "encrypted_pdf",
+  "malformed_pdf",
+  "pdf_parse_timeout",
+  "pdf_page_limit",
+  "pdf_text_limit",
+  "fetch_failed",
+] as const satisfies readonly SourceAcquisitionCategory[];
+
+export type UnavailableSourceCategory =
+  (typeof UNAVAILABLE_SOURCE_CATEGORIES)[number];
+
+export function isUnavailableAcquisitionCategory(
+  category: SourceAcquisitionCategory,
+): category is UnavailableSourceCategory {
+  return (UNAVAILABLE_SOURCE_CATEGORIES as readonly string[]).includes(category);
+}
+
+export type ParseDurationCategory = "fast" | "bounded" | "timeout";
 
 export type HttpStatusCategory =
   | "ok"
@@ -41,6 +73,10 @@ export type SourceAcquisitionDiagnostic = {
   extractedCharacterCount: number;
   acceptedPassageCount: number;
   rejectionReason: string;
+  pagesParsed?: number;
+  pagesScanned?: number;
+  textLimitReached?: boolean;
+  parseDurationCategory?: ParseDurationCategory;
 };
 
 export class ResearchSourceFetchError extends Error {
@@ -121,7 +157,7 @@ export function emptyDiagnostic(
 export function toPublicSourceDiagnostic(
   diagnostic: SourceAcquisitionDiagnostic,
 ): SourceAcquisitionDiagnostic {
-  return {
+  const publicDiagnostic: SourceAcquisitionDiagnostic = {
     sourceId: diagnostic.sourceId,
     hostname: diagnostic.hostname,
     documentType: diagnostic.documentType,
@@ -132,6 +168,23 @@ export function toPublicSourceDiagnostic(
     acceptedPassageCount: diagnostic.acceptedPassageCount,
     rejectionReason: rejectionReasonFor(diagnostic.category),
   };
+  if (typeof diagnostic.pagesParsed === "number") {
+    publicDiagnostic.pagesParsed = diagnostic.pagesParsed;
+  }
+  if (typeof diagnostic.pagesScanned === "number") {
+    publicDiagnostic.pagesScanned = diagnostic.pagesScanned;
+  }
+  if (typeof diagnostic.textLimitReached === "boolean") {
+    publicDiagnostic.textLimitReached = diagnostic.textLimitReached;
+  }
+  if (
+    diagnostic.parseDurationCategory === "fast" ||
+    diagnostic.parseDurationCategory === "bounded" ||
+    diagnostic.parseDurationCategory === "timeout"
+  ) {
+    publicDiagnostic.parseDurationCategory = diagnostic.parseDurationCategory;
+  }
+  return publicDiagnostic;
 }
 
 export function toPublicSourceDiagnostics(
@@ -183,6 +236,10 @@ export function rejectionReasonFor(
       return "PDF is malformed or unsupported.";
     case "pdf_parse_timeout":
       return "PDF parsing exceeded the bounded time budget.";
+    case "pdf_page_limit":
+      return "PDF page count exceeded the bounded scan limit before relevant passages were found.";
+    case "pdf_text_limit":
+      return "PDF text exceeded the bounded scan limit before relevant passages were found.";
     case "chrome_only":
       return "Extracted text was only navigation, cookie, or site chrome.";
     case "no_relevant_passage":

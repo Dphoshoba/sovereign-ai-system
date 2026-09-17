@@ -30,6 +30,7 @@ import { withResearchTimeout } from "../../lib/research/source-fetch-guard";
 import {
   ARTICLE_2_BODY,
   ARTICLE_2_CLASSIFICATION_BODY,
+  ARTICLE_2_CDO_AUTHORIAL,
   ARTICLE_2_EXCERPT,
   ARTICLE_2_FIVE_LAYER_MODEL,
   ARTICLE_2_RECOMMENDATION,
@@ -205,7 +206,7 @@ function createStore(article: PrepareForReviewArticle) {
   return { store, createdAudits, articleUpdates };
 }
 
-describe("article-grounded-v3 attribution and classification", () => {
+describe("article-grounded-v4 attribution, PDF evidence, and classification", () => {
   it("does not let Deloitte evidence verify an explicit NIST claim", () => {
     expect(publishersNamedInClaim(NIST_CLAIM)).toEqual(["nist"]);
     expect(
@@ -294,6 +295,7 @@ describe("article-grounded-v3 attribution and classification", () => {
     expect(isAuthorialFraming(ARTICLE_2_SYNTHESIS_DISCLAIMER)).toBe(true);
     expect(isAuthorialFraming(ARTICLE_2_WORKING_DEFINITION)).toBe(true);
     expect(isAuthorialFraming(ARTICLE_2_RECOMMENDATION)).toBe(true);
+    expect(isAuthorialFraming(ARTICLE_2_CDO_AUTHORIAL)).toBe(true);
 
     const extracted = extractArticleClaims({
       title: ARTICLE_2_TITLE,
@@ -305,6 +307,8 @@ describe("article-grounded-v3 attribution and classification", () => {
     expect(claims.some((claim) => /our synthesis/i.test(claim))).toBe(false);
     expect(claims.some((claim) => /for this article/i.test(claim))).toBe(false);
     expect(claims.some((claim) => /start with one recurring/i.test(claim))).toBe(false);
+    expect(claims.some((claim) => /CDO Magazine distinguishes/i.test(claim))).toBe(true);
+    expect(claims.some((claim) => /architectural interpretation/i.test(claim))).toBe(false);
     expect(
       extracted.authorialAssertions.some((claim) =>
         claim.claim.includes("five parts"),
@@ -366,7 +370,7 @@ describe("article-grounded-v3 attribution and classification", () => {
     expect(success.ok).toBe(true);
     if (!success.ok) return;
     expect(success.sourceDiagnostics).toEqual(diagnostics);
-    expect(success.audit.engineRevision).toBe("article-grounded-v3");
+    expect(success.audit.engineRevision).toBe("article-grounded-v4");
     expect(JSON.stringify(success.sourceDiagnostics)).not.toMatch(
       /cookie|authorization|secret|192\.168|stack|ECONN/i,
     );
@@ -440,7 +444,7 @@ describe("article-grounded-v3 attribution and classification", () => {
     ).rejects.toMatchObject({ category: "pdf_parse_timeout" });
   });
 
-  it("makes a v2 audit historical under v3 and rejects it for approval and scheduling", () => {
+  it("makes a v3 audit historical under v4 and rejects it for approval and scheduling", () => {
     const article = {
       id: "article-2",
       title: ARTICLE_2_TITLE,
@@ -454,26 +458,26 @@ describe("article-grounded-v3 attribution and classification", () => {
       researchSources: [{ url: NIST_URL, title: "NIST" }],
       researchAudits: [
         {
-          id: "cmu5cfump000004l2yzycxzw3",
+          id: "cmu5wqygk000004l99516re6e",
           articleId: "article-2",
-          createdAt: new Date("2026-09-17T09:45:06.001Z"),
+          createdAt: new Date("2026-09-17T19:13:36.500Z"),
         },
       ],
       reviewNotes: [
         {
           action: "research-audit-fingerprint",
           note: serializeArticleAuditAssociation({
-            auditId: "cmu5cfump000004l2yzycxzw3",
+            auditId: "cmu5wqygk000004l99516re6e",
             contentFingerprint: "70d82efb37eeb458ed23403376bbb578d1bc0d54eb1927189397a1f82a04f0a9",
-            createdAt: new Date("2026-09-17T09:45:06.001Z"),
-            engineRevision: "article-grounded-v2",
+            createdAt: new Date("2026-09-17T19:13:36.500Z"),
+            engineRevision: "article-grounded-v3",
           }),
         },
       ],
     };
 
     const parsed = parseArticleAuditAssociation(article.reviewNotes[0]);
-    expect(parsed?.engineRevision).toBe("article-grounded-v2");
+    expect(parsed?.engineRevision).toBe("article-grounded-v3");
     expect(parsed?.engineRevision).not.toBe(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION);
 
     const partitioned = partitionAssociatedArticleAudits(
@@ -493,7 +497,7 @@ describe("article-grounded-v3 attribution and classification", () => {
     expect(publicationGuard("scheduled", { hasCurrentAudit: false }).allowed).toBe(false);
   });
 
-  it("permits exactly one v3 replacement and rejects a concurrent duplicate", async () => {
+  it("permits exactly one v4 replacement and rejects a concurrent duplicate", async () => {
     const article = article2();
     const { store, createdAudits } = createStore(article);
     const collectEvidence = async () => ({
@@ -526,7 +530,7 @@ describe("article-grounded-v3 attribution and classification", () => {
     });
     expect(createdAudits).toHaveLength(1);
     if (first.ok) {
-      expect(first.audit.engineRevision).toBe("article-grounded-v3");
+      expect(first.audit.engineRevision).toBe("article-grounded-v4");
     }
   });
 

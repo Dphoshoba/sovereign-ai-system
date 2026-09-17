@@ -1,12 +1,20 @@
 import { contentCleaner } from "./content-cleaner";
 import { extractHtmlDocument } from "./html-text-extractor";
-import { extractPdfText, looksLikePdf } from "./pdf-text-extractor";
+import {
+  extractPdfDocument,
+  looksLikePdf,
+  pdfExtractionToText,
+  pdfResultFromText,
+  type PdfExtractionResult,
+  type PdfPageText,
+} from "./pdf-text-extractor";
 import {
   emptyDiagnostic,
   httpStatusCategory,
   rejectionReasonFor,
   ResearchSourceFetchError,
   sourceIdFromTitle,
+  type ParseDurationCategory,
   type SourceAcquisitionCategory,
   type SourceAcquisitionDiagnostic,
   type SourceDocumentType,
@@ -18,21 +26,31 @@ import {
   type GuardedFetchDeps,
 } from "./source-fetch-guard";
 
+export type ExtractPdfFn = (
+  bytes: Uint8Array,
+) => Promise<string | PdfExtractionResult>;
+
 export type FetchedContent = {
   title: string;
   url: string;
   extractedText: string;
   fetchStatus: string;
   contentKind?: "html" | "pdf" | "text";
+  pdfPages?: PdfPageText[];
+  pdfPageLimitReached?: boolean;
   diagnostic: SourceAcquisitionDiagnostic;
 };
 
 export type ContentFetchDeps = GuardedFetchDeps & {
-  extractPdf?: typeof extractPdfText;
+  extractPdf?: ExtractPdfFn;
 };
 
 function decodeText(bytes: Uint8Array): string {
   return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+}
+
+function parseDurationCategory(elapsedMs: number): ParseDurationCategory {
+  return elapsedMs < 3_000 ? "fast" : "bounded";
 }
 
 function failedFetch(
@@ -53,6 +71,15 @@ function failedFetch(
   };
 }
 
+async function parsePdfResult(
+  bytes: Uint8Array,
+  extractPdf: ExtractPdfFn,
+): Promise<PdfExtractionResult> {
+  const parsed = await extractPdf(bytes);
+  if (typeof parsed === "string") return pdfResultFromText(parsed);
+  return parsed;
+}
+
 export async function contentFetcher(
   url: string,
   title: string,
@@ -70,31 +97,37 @@ export async function contentFetcher(
     };
 
     if (looksLikePdf(fetched.body, contentType, fetched.url)) {
-      const parsePdf = deps.extractPdf ?? extractPdfText;
+      const parsePdf = deps.extractPdf ?? extractPdfDocument;
+      const startedAt = Date.now();
       try {
-        const extractedText = contentCleaner(
-          await withResearchTimeout(
-            deps.pdfParseTimeoutMs ?? RESEARCH_PDF_PARSE_TIMEOUT_MS,
-            "pdf_parse_timeout",
-            "PDF parsing exceeded the bounded time budget.",
-            () => parsePdf(fetched.body),
-          ),
+        const extracted = await withResearchTimeout(
+          deps.pdfParseTimeoutMs ?? RESEARCH_PDF_PARSE_TIMEOUT_MS,
+          "pdf_parse_timeout",
+          "PDF parsing exceeded the bounded time budget.",
+          () => parsePdfResult(fetched.body, parsePdf),
         );
+        const extractedText = pdfExtractionToText(extracted);
         return {
           title,
           url: fetched.url,
           extractedText,
           fetchStatus: extractedText ? "success" : "failed",
           contentKind: "pdf",
+          pdfPages: extracted.pages,
+          pdfPageLimitReached: extracted.pageLimitReached,
           diagnostic: {
             ...base,
             documentType: "pdf",
             category: extractedText ? "accepted" : "pdf_extraction_empty",
-            extractedCharacterCount: extractedText.length,
+            extractedCharacterCount: extracted.extractedCharacterCount,
             acceptedPassageCount: 0,
             rejectionReason: extractedText
               ? ""
               : rejectionReasonFor("pdf_extraction_empty"),
+            pagesParsed: extracted.pagesParsed,
+            pagesScanned: 0,
+            textLimitReached: false,
+            parseDurationCategory: parseDurationCategory(Date.now() - startedAt),
           },
         };
       } catch (error) {
@@ -102,6 +135,10 @@ export async function contentFetcher(
           return failedFetch(title, url, error.category, {
             ...base,
             documentType: "pdf",
+            parseDurationCategory:
+              error.category === "pdf_parse_timeout"
+                ? "timeout"
+                : parseDurationCategory(Date.now() - startedAt),
           });
         }
         throw error;
@@ -164,6 +201,10 @@ export async function contentFetcher(
     if (error instanceof ResearchSourceFetchError) {
       return failedFetch(title, url, error.category, {
         httpStatusCategory: httpStatusCategory(error.httpStatus),
+        parseDurationCategory:
+          error.category === "timeout" || error.category === "pdf_parse_timeout"
+            ? "timeout"
+            : undefined,
       });
     }
     return failedFetch(title, url, "fetch_failed");

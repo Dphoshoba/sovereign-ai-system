@@ -94,6 +94,8 @@ const AUTHORIAL_PATTERNS = [
   /\bthat can be useful\b/i,
   /^it is not\b/i,
   /\bstart with\b/i,
+  /^see\b/i,
+  /^also see\b/i,
   /^founders may\b/i,
   /\binfrastructure is dependable because\b/i,
   /\bthis article'?s model\b/i,
@@ -112,6 +114,8 @@ const AUTHORIAL_PATTERNS = [
   /\bthe best first system\b/i,
   /\bchoose measures tied to the workflow\b/i,
   /\bthese are practical measurement suggestions\b/i,
+  /\bwe use that as an architectural interpretation\b/i,
+  /\barchitectural interpretation\b/i,
 ];
 
 const FACTUAL_SIGNAL = new RegExp(
@@ -232,10 +236,11 @@ export function splitBlockSentences(blockText: string): string[] {
     .filter(Boolean);
 }
 
+const CLAIM_SHAPE =
+  /\b(is|are|was|were|be|can|could|may|might|will|has|have|helps|supports|improves|reduces|increases|requires|remains|shows|suggests|become|becomes|treats|treated|provides|integrate|integrated|should|distinguishes|describes|argues|notes|emphasizes|states|says|warns)\b/i;
+
 function hasClaimShape(sentence: string): boolean {
-  return /\b(is|are|was|were|be|can|could|may|might|will|has|have|helps|supports|improves|reduces|increases|requires|remains|shows|suggests|become|becomes|treats|treated|provides|integrate|integrated|should)\b/i.test(
-    sentence,
-  );
+  return CLAIM_SHAPE.test(sentence);
 }
 
 function isCreatorTemplate(sentence: string, articleText: string): boolean {
@@ -347,8 +352,13 @@ export function significantTokens(value: string): string[] {
     .filter((token) => token.length > 2 && !STOP_WORDS.has(token));
 }
 
-export function passageSupportsClaim(claim: string, passage: string): boolean {
-  if (!passage || isChromePassage(passage)) return false;
+export function passageSupportsClaim(
+  claim: string,
+  passage: string,
+  options: { documentKind?: "html" | "pdf" } = {},
+): boolean {
+  if (!passage) return false;
+  if (options.documentKind !== "pdf" && isChromePassage(passage)) return false;
   const claimTokens = significantTokens(claim);
   if (claimTokens.length === 0) return false;
   const passageTokens = new Set(significantTokens(passage));

@@ -36,7 +36,12 @@ export function matchEvidenceToClaim(
     ) {
       return [];
     }
-    if (!passageSupportsClaim(claim.claim, evidence.extractedText)) return [];
+    const documentKind = /\.pdf(?:$|[?#])/i.test(evidence.sourceUrl)
+      ? "pdf"
+      : "html";
+    if (!passageSupportsClaim(claim.claim, evidence.extractedText, { documentKind })) {
+      return [];
+    }
     const overlap = significantTokens(claim.claim).filter((token) =>
       significantTokens(evidence.extractedText).includes(token),
     ).length;

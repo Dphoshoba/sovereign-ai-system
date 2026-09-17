@@ -572,7 +572,7 @@ describe("real PostgreSQL article governance concurrency", () => {
     expect(historicalAudits.some((audit) => audit.id === obsolete.id)).toBe(true);
     const winner = [first, second].find((result) => result.ok);
     expect(winner && winner.ok ? winner.audit.engineRevision : null).toBe(
-      "article-grounded-v3",
+      "article-grounded-v4",
     );
   });
 });

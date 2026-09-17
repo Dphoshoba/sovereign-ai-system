@@ -9,15 +9,23 @@ export const ARTICLE_2_BODY = [
   "That can be useful, but it is not infrastructure.",
   "This article takes the next step for teams that already use isolated tools.",
   "AI should be treated as business infrastructure rather than as a collection of isolated tools.",
-  "AI risk management should be integrated into broader enterprise risk processes.",
-  "A CDO-style knowledge layer can help organizations reuse decisions without replacing human review.",
+  "NIST’s AI Risk Management Framework says AI risk management should be integrated into broader enterprise risk processes, and that organizations need accountability mechanisms, defined roles, and responsibilities for risk management to be effective.",
+  "NIST emphasizes ongoing testing and monitoring for deployed AI systems and notes that human intervention may be needed when a system cannot detect or correct errors.",
+  "A secondary industry analysis from CDO Magazine distinguishes raw data from business-ready context and describes a knowledge layer that combines organizational information and domain knowledge for automation.",
+  "We use that as an architectural interpretation, not as proof that its proposed model is the only valid design.",
   "Deloitte reports that enterprise AI applications are moving from pilots into production.",
   "See [NIST AI RMF](https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf) and [PwC 2026](https://www.pwc.com/ai-predictions).",
   "Also see the [Deloitte survey](https://www.deloitte.com/ai-survey) and [CDO Magazine](https://www.cdomagazine.tech/knowledge-layer).",
 ].join("\n\n");
 
 export const NIST_PDF_PASSAGE =
-  "AI risk management should be integrated into broader enterprise risk processes and treated as an ongoing organizational capability.";
+  "AI risk management should be integrated into broader enterprise risk processes. Organizations need accountability mechanisms, defined roles, and responsibilities for risk management to be effective.";
+
+export const NIST_MONITORING_PASSAGE =
+  "Organizations should perform ongoing testing and monitoring of deployed AI systems. Human intervention may be needed when a system cannot detect or correct errors.";
+
+export const NIST_UNRELATED_PASSAGE =
+  "This glossary defines terms such as AI actor, bias, and trustworthy AI for use throughout the framework document without describing enterprise risk integration or deployed-system monitoring.";
 
 export const PWC_HTML_PASSAGE =
   "Leaders should treat AI as business infrastructure rather than a collection of isolated tools when they plan 2026 operating models.";
@@ -26,7 +34,10 @@ export const DELOITTE_SURVEY_PASSAGE =
   "Deloitte reports that enterprise AI applications are moving from pilots into production, while also warning that workload and operational complexity rise as organizations scale.";
 
 export const CDO_KNOWLEDGE_PASSAGE =
-  "A CDO-style knowledge layer can help organizations reuse decisions without replacing human review while automating recurring knowledge work.";
+  "A secondary industry analysis from CDO Magazine distinguishes raw data from business-ready context and describes a knowledge layer that combines organizational information and domain knowledge for automation.";
+
+export const ARTICLE_2_CDO_AUTHORIAL =
+  "We use that as an architectural interpretation, not as proof that its proposed model is the only valid design.";
 
 export const DELOITTE_CHROME_HTML = `<!doctype html>
 <html>
@@ -108,7 +119,10 @@ export const ARTICLE_2_CLASSIFICATION_BODY = [
   ARTICLE_2_SYNTHESIS_DISCLAIMER,
   ARTICLE_2_WORKING_DEFINITION,
   ARTICLE_2_RECOMMENDATION,
-  "NIST’s AI Risk Management Framework says AI risk management should be integrated into broader enterprise risk processes.",
+  "NIST’s AI Risk Management Framework says AI risk management should be integrated into broader enterprise risk processes, and that organizations need accountability mechanisms, defined roles, and responsibilities for risk management to be effective.",
+  "NIST emphasizes ongoing testing and monitoring for deployed AI systems and notes that human intervention may be needed when a system cannot detect or correct errors.",
+  CDO_KNOWLEDGE_PASSAGE,
+  ARTICLE_2_CDO_AUTHORIAL,
   DELOITTE_SURVEY_PASSAGE,
 ].join("\n\n");
 
@@ -138,18 +152,32 @@ export const CREATOR_TEMPLATE_STRINGS = [
 import { PDFDocument, StandardFonts } from "pdf-lib";
 
 export async function buildUncompressedPdf(text: string): Promise<Uint8Array> {
+  return buildPagedPdf([text]);
+}
+
+export async function buildPagedPdf(pages: string[]): Promise<Uint8Array> {
   const document = await PDFDocument.create();
-  const page = document.addPage([612, 792]);
   const font = await document.embedFont(StandardFonts.Helvetica);
-  page.drawText(text, {
-    x: 48,
-    y: 720,
-    size: 11,
-    font,
-    maxWidth: 516,
-    lineHeight: 14,
-  });
+  for (const text of pages) {
+    const page = document.addPage([612, 792]);
+    page.drawText(text, {
+      x: 48,
+      y: 720,
+      size: 11,
+      font,
+      maxWidth: 516,
+      lineHeight: 14,
+    });
+  }
   return document.save();
+}
+
+export function fillerPdfPage(pageNumber: number, chars = 2_200): string {
+  const header = `NIST AI RMF 1.0    Table of Contents    Page ${pageNumber}`;
+  const body = "Framework overview and introductory material. ".repeat(
+    Math.ceil(chars / 46),
+  );
+  return `${header}\n${body.slice(0, chars)}\nAll rights reserved.\n${pageNumber}`;
 }
 
 export async function buildLargeNistStylePdf(

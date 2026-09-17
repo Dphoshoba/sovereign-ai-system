@@ -10,6 +10,11 @@ export const RESEARCH_FETCH_TIMEOUT_MS = 20_000;
 export const RESEARCH_PDF_PARSE_TIMEOUT_MS = 12_000;
 export const RESEARCH_FETCH_MAX_BYTES = 4_194_304;
 export const RESEARCH_FETCH_MAX_REDIRECTS = 3;
+export const RESEARCH_PDF_MAX_SCAN_PAGES = 80;
+export const RESEARCH_PDF_HARD_PAGE_LIMIT = 200;
+export const RESEARCH_PDF_MAX_SCAN_CHARS = 400_000;
+export const RESEARCH_PDF_MAX_PAGE_CHARS = 20_000;
+export const RESEARCH_PDF_MAX_PASSAGES = 3;
 export async function withResearchTimeout<T>(
   ms: number,
   category: SourceAcquisitionCategory,

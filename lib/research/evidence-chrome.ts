@@ -1,3 +1,6 @@
+// HTML navigation/cookie/menu chrome only. Do not apply these phrases to a
+// full PDF extract — PDFs commonly include "table of contents" and copyright
+// lines that are not HTML chrome.
 const CHROME_PHRASES = [
   "please enable javascript",
   "enable javascript",
