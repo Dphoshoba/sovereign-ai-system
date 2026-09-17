@@ -7,6 +7,7 @@ import {
   passageSupportsClaim,
   significantTokens,
 } from "./article-claim-extractor";
+import { claimAllowsEvidence } from "./claim-source-attribution";
 
 export type GroundedEvidenceMatch = {
   evidence: EvidenceRecord;
@@ -26,6 +27,15 @@ export function matchEvidenceToClaim(
   evidenceRecords: EvidenceRecord[],
 ): GroundedEvidenceMatch[] {
   return evidenceRecords.flatMap((evidence) => {
+    if (
+      !claimAllowsEvidence(claim.claim, {
+        url: evidence.sourceUrl,
+        title: evidence.sourceTitle,
+        publisher: evidence.sourceTitle,
+      })
+    ) {
+      return [];
+    }
     if (!passageSupportsClaim(claim.claim, evidence.extractedText)) return [];
     const overlap = significantTokens(claim.claim).filter((token) =>
       significantTokens(evidence.extractedText).includes(token),
@@ -54,7 +64,9 @@ export function groundedFactVerification(
       continue;
     }
 
-    const matches = matchEvidenceToClaim(claim, evidenceRecords);
+    const matches = matchEvidenceToClaim(claim, evidenceRecords).sort(
+      (left, right) => right.overlap - left.overlap,
+    );
     const uniqueSources = new Map<string, EvidenceRecord>();
     for (const match of matches) {
       uniqueSources.set(match.evidence.sourceUrl, match.evidence);

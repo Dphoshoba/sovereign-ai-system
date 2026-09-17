@@ -91,6 +91,44 @@ export const PWC_ARTICLE_HTML = `<!doctype html>
   </body>
 </html>`;
 
+export const ARTICLE_2_FIVE_LAYER_MODEL =
+  "Echoes & Visions’ strategic framework: A useful AI operating layer has five parts—context and memory, orchestration, human approval, measurement, and audit and learning.";
+
+export const ARTICLE_2_SYNTHESIS_DISCLAIMER =
+  "This five-layer model is our synthesis for practical organizational design, not a standard issued by NIST or another source.";
+
+export const ARTICLE_2_WORKING_DEFINITION =
+  "For this article, AI business infrastructure means a repeatable, governed layer that helps an organization move work from intake to outcome while preserving human authority.";
+
+export const ARTICLE_2_RECOMMENDATION =
+  "Start with one recurring, bounded process: incoming enquiries and follow-up.";
+
+export const ARTICLE_2_CLASSIFICATION_BODY = [
+  ARTICLE_2_FIVE_LAYER_MODEL,
+  ARTICLE_2_SYNTHESIS_DISCLAIMER,
+  ARTICLE_2_WORKING_DEFINITION,
+  ARTICLE_2_RECOMMENDATION,
+  "NIST’s AI Risk Management Framework says AI risk management should be integrated into broader enterprise risk processes.",
+  DELOITTE_SURVEY_PASSAGE,
+].join("\n\n");
+
+export const CDO_DRUPAL_HTML = `<!doctype html>
+<html>
+  <head><title>CDO Magazine knowledge layer</title></head>
+  <body>
+    <div class="related-articles-wrap social-share-bar">
+      <nav>Magazine Menu Subscribe Sign in</nav>
+      <div class="node node-article">
+        <div class="field field--name-body">
+          <h1>Why the knowledge layer matters</h1>
+          <p>${CDO_KNOWLEDGE_PASSAGE}</p>
+        </div>
+      </div>
+      <footer>All rights reserved Cookie policy</footer>
+    </div>
+  </body>
+</html>`;
+
 export const CREATOR_TEMPLATE_STRINGS = [
   "content performance insights",
   "formatting and repurposing",

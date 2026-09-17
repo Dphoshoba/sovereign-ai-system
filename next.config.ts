@@ -58,6 +58,9 @@ const nextConfig: NextConfig = {
     "sharp",
     "unpdf",
   ],
+  outputFileTracingIncludes: {
+    "/api/articles/prepare-for-review": ["./node_modules/unpdf/**"],
+  },
   outputFileTracingExcludes,
   productionBrowserSourceMaps: false,
 }

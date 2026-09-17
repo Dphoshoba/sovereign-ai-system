@@ -22,6 +22,8 @@ import {
   ARTICLE_2_EXCERPT,
   ARTICLE_2_TITLE,
   CDO_ARTICLE_HTML,
+  CDO_DRUPAL_HTML,
+  CDO_KNOWLEDGE_PASSAGE,
   CREATOR_TEMPLATE_STRINGS,
   DELOITTE_ARTICLE_HTML,
   DELOITTE_CHROME_HTML,
@@ -228,6 +230,13 @@ describe("research-audit extraction integrity", () => {
     expect(isChromePassage(DELOITTE_CHROME_HTML)).toBe(true);
     expect(relevant.extractedText).toContain(PWC_HTML_PASSAGE);
     expect(relevant.extractedText).not.toMatch(/subscribe to our newsletter/i);
+
+    const cdo = extractHtmlDocument(CDO_DRUPAL_HTML);
+    expect(cdo.extractedText).toContain(CDO_KNOWLEDGE_PASSAGE);
+    expect(cdo.extractedText).not.toMatch(/subscribe sign in|cookie policy/i);
+    expect(extractHtmlDocument(CDO_ARTICLE_HTML).extractedText).toContain(
+      CDO_KNOWLEDGE_PASSAGE,
+    );
   });
 
   it("extracts PDF passages and maps them to the matching article claim", async () => {

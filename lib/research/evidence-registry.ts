@@ -4,6 +4,7 @@ import { evidenceChunker } from "./evidence-chunker"
 import { chunkRanker } from "./chunk-ranker"
 import { isChromePassage } from "./evidence-chrome"
 import { passageSupportsClaim } from "./article-claim-extractor"
+import { claimAllowsEvidence } from "./claim-source-attribution"
 import {
   emptyDiagnostic,
   rejectionReasonFor,
@@ -37,14 +38,26 @@ export type EvidenceRegistryOptions = ContentFetchDeps & {
   claimTexts?: string[]
 }
 
-function isUsefulEvidence(text: string, claimTexts: string[] = []): boolean {
+function isUsefulEvidence(
+  text: string,
+  claimTexts: string[] = [],
+  source?: { url: string; title?: string | null },
+): boolean {
   const normalized = text.toLowerCase().trim()
 
   if (normalized.length < 80) return false
   if (isChromePassage(text)) return false
 
   if (claimTexts.length > 0) {
-    return claimTexts.some((claim) => passageSupportsClaim(claim, text))
+    return claimTexts.some((claim) => {
+      if (
+        source &&
+        !claimAllowsEvidence(claim, { url: source.url, title: source.title })
+      ) {
+        return false
+      }
+      return passageSupportsClaim(claim, text)
+    })
   }
 
   const blocked = [
@@ -140,13 +153,25 @@ async function collectFromSource(
     }
   }
 
+  const sourceIdentity = { url: source.url, title: source.title }
   const chunks = evidenceChunker(fetched.extractedText, 120)
-  const rankedChunks = chunkRanker(
-    [topic, ...claimTexts].filter(Boolean).join(" "),
-    chunks,
-  )
-    .filter((chunk) => isUsefulEvidence(chunk.text, claimTexts))
-    .slice(0, 3)
+  const supporting: typeof chunks = []
+  if (claimTexts.length > 0) {
+    for (const chunk of chunks) {
+      if (!isUsefulEvidence(chunk.text, claimTexts, sourceIdentity)) continue
+      supporting.push(chunk)
+      if (supporting.length >= 3) break
+    }
+  }
+
+  const rankedChunks = (
+    supporting.length > 0
+      ? supporting
+      : chunkRanker(
+          [topic, ...claimTexts].filter(Boolean).join(" "),
+          chunks,
+        ).filter((chunk) => isUsefulEvidence(chunk.text, claimTexts, sourceIdentity))
+  ).slice(0, 3)
 
   if (rankedChunks.length === 0) {
     return {

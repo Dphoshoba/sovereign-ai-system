@@ -537,4 +537,42 @@ describe("real PostgreSQL article governance concurrency", () => {
     expect(currentAudit?.id).not.toBe(obsolete.id);
     expect(historicalAudits.some((audit) => audit.id === obsolete.id)).toBe(true);
   });
+
+  it("creates one v3 replacement for a current-fingerprint article-grounded-v2 audit", async () => {
+    const article = await seedArticle(prismaA, { status: "draft" });
+    const obsolete = await attachCurrentAudit(
+      prismaA,
+      article,
+      "article-grounded-v2",
+    );
+    const [first, second] = await Promise.all([
+      prepareArticleForReview(article.id, {
+        prisma: prismaA as never,
+        collectEvidence,
+      }),
+      prepareArticleForReview(article.id, {
+        prisma: prismaB as never,
+        collectEvidence,
+      }),
+    ]);
+    expect([first.ok, second.ok].filter(Boolean)).toHaveLength(1);
+    expect(
+      [first, second].filter((result) => !result.ok && result.code === "duplicate_audit"),
+    ).toHaveLength(1);
+    const loaded = await prismaA.article.findUniqueOrThrow({
+      where: { id: article.id },
+      include: { researchAudits: true, researchSources: true, reviewNotes: true },
+    });
+    expect(loaded.researchAudits).toHaveLength(2);
+    expect(loaded.researchAudits.some((audit) => audit.id === obsolete.id)).toBe(
+      true,
+    );
+    const { currentAudit, historicalAudits } = resolveArticleAuditState(loaded);
+    expect(currentAudit?.id).not.toBe(obsolete.id);
+    expect(historicalAudits.some((audit) => audit.id === obsolete.id)).toBe(true);
+    const winner = [first, second].find((result) => result.ok);
+    expect(winner && winner.ok ? winner.audit.engineRevision : null).toBe(
+      "article-grounded-v3",
+    );
+  });
 });

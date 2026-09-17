@@ -12,6 +12,7 @@ export const SOURCE_ACQUISITION_CATEGORIES = [
   "html_extraction_empty",
   "encrypted_pdf",
   "malformed_pdf",
+  "pdf_parse_timeout",
   "chrome_only",
   "no_relevant_passage",
   "fetch_failed",
@@ -117,13 +118,35 @@ export function emptyDiagnostic(
   };
 }
 
+export function toPublicSourceDiagnostic(
+  diagnostic: SourceAcquisitionDiagnostic,
+): SourceAcquisitionDiagnostic {
+  return {
+    sourceId: diagnostic.sourceId,
+    hostname: diagnostic.hostname,
+    documentType: diagnostic.documentType,
+    category: diagnostic.category,
+    httpStatusCategory: diagnostic.httpStatusCategory,
+    bytesReceived: diagnostic.bytesReceived,
+    extractedCharacterCount: diagnostic.extractedCharacterCount,
+    acceptedPassageCount: diagnostic.acceptedPassageCount,
+    rejectionReason: rejectionReasonFor(diagnostic.category),
+  };
+}
+
+export function toPublicSourceDiagnostics(
+  diagnostics: SourceAcquisitionDiagnostic[],
+): SourceAcquisitionDiagnostic[] {
+  return diagnostics.map(toPublicSourceDiagnostic);
+}
+
 export function logSourceAcquisition(
   diagnostics: SourceAcquisitionDiagnostic[],
 ): void {
   console.info(
     JSON.stringify({
       event: "research-source-acquisition",
-      sources: diagnostics,
+      sources: toPublicSourceDiagnostics(diagnostics),
     }),
   );
 }
@@ -158,6 +181,8 @@ export function rejectionReasonFor(
       return "Encrypted PDFs are not opened.";
     case "malformed_pdf":
       return "PDF is malformed or unsupported.";
+    case "pdf_parse_timeout":
+      return "PDF parsing exceeded the bounded time budget.";
     case "chrome_only":
       return "Extracted text was only navigation, cookie, or site chrome.";
     case "no_relevant_passage":

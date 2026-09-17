@@ -13,6 +13,8 @@ import {
 } from "./source-acquisition";
 import {
   fetchGuardedResearchSource,
+  RESEARCH_PDF_PARSE_TIMEOUT_MS,
+  withResearchTimeout,
   type GuardedFetchDeps,
 } from "./source-fetch-guard";
 
@@ -25,7 +27,9 @@ export type FetchedContent = {
   diagnostic: SourceAcquisitionDiagnostic;
 };
 
-export type ContentFetchDeps = GuardedFetchDeps;
+export type ContentFetchDeps = GuardedFetchDeps & {
+  extractPdf?: typeof extractPdfText;
+};
 
 function decodeText(bytes: Uint8Array): string {
   return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
@@ -66,24 +70,42 @@ export async function contentFetcher(
     };
 
     if (looksLikePdf(fetched.body, contentType, fetched.url)) {
-      const extractedText = contentCleaner(await extractPdfText(fetched.body));
-      return {
-        title,
-        url: fetched.url,
-        extractedText,
-        fetchStatus: extractedText ? "success" : "failed",
-        contentKind: "pdf",
-        diagnostic: {
-          ...base,
-          documentType: "pdf",
-          category: extractedText ? "accepted" : "pdf_extraction_empty",
-          extractedCharacterCount: extractedText.length,
-          acceptedPassageCount: 0,
-          rejectionReason: extractedText
-            ? ""
-            : rejectionReasonFor("pdf_extraction_empty"),
-        },
-      };
+      const parsePdf = deps.extractPdf ?? extractPdfText;
+      try {
+        const extractedText = contentCleaner(
+          await withResearchTimeout(
+            deps.pdfParseTimeoutMs ?? RESEARCH_PDF_PARSE_TIMEOUT_MS,
+            "pdf_parse_timeout",
+            "PDF parsing exceeded the bounded time budget.",
+            () => parsePdf(fetched.body),
+          ),
+        );
+        return {
+          title,
+          url: fetched.url,
+          extractedText,
+          fetchStatus: extractedText ? "success" : "failed",
+          contentKind: "pdf",
+          diagnostic: {
+            ...base,
+            documentType: "pdf",
+            category: extractedText ? "accepted" : "pdf_extraction_empty",
+            extractedCharacterCount: extractedText.length,
+            acceptedPassageCount: 0,
+            rejectionReason: extractedText
+              ? ""
+              : rejectionReasonFor("pdf_extraction_empty"),
+          },
+        };
+      } catch (error) {
+        if (error instanceof ResearchSourceFetchError) {
+          return failedFetch(title, url, error.category, {
+            ...base,
+            documentType: "pdf",
+          });
+        }
+        throw error;
+      }
     }
 
     if (

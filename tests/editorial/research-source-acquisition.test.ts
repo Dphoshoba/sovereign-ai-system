@@ -151,4 +151,51 @@ describe("research source acquisition safety", () => {
     ]);
     expect(pinned.address).toBe("93.184.216.34");
   });
+
+  it("bounds a slow response stream as a fetch timeout", async () => {
+    const fetched = await contentFetcher("https://example.com/stream", "Slow stream", {
+      lookup: PUBLIC_LOOKUP,
+      fetchTimeoutMs: 40,
+      fetch: (async () =>
+        new Response(
+          new ReadableStream({
+            async pull(controller) {
+              await new Promise((resolve) => setTimeout(resolve, 200));
+              controller.enqueue(new TextEncoder().encode("<p>late article body</p>"));
+              controller.close();
+            },
+          }),
+          {
+            status: 200,
+            headers: { "content-type": "text/html" },
+          },
+        )) as typeof fetch,
+    });
+    expect(fetched.diagnostic.category).toBe("timeout");
+    expect(fetched.extractedText).toBe("");
+    expect(JSON.stringify(fetched.diagnostic)).not.toMatch(/stack|ECONN|192\.168/i);
+  });
+
+  it("distinguishes a PDF parse timeout from a fetch timeout", async () => {
+    const pdf = await buildLargeNistStylePdf(NIST_PDF_PASSAGE);
+    const fetched = await contentFetcher("https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf", "NIST", {
+      lookup: PUBLIC_LOOKUP,
+      pdfParseTimeoutMs: 30,
+      fetch: mockFetch({
+        "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf": new Response(Buffer.from(pdf), {
+          status: 200,
+          headers: { "content-type": "application/pdf" },
+        }),
+      }),
+      extractPdf: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        return NIST_PDF_PASSAGE;
+      },
+    });
+    expect(fetched.diagnostic.category).toBe("pdf_parse_timeout");
+    expect(fetched.diagnostic.rejectionReason).toBe(
+      "PDF parsing exceeded the bounded time budget.",
+    );
+    expect(JSON.stringify(fetched.diagnostic)).not.toMatch(/stack|ECONN|192\.168/i);
+  });
 });

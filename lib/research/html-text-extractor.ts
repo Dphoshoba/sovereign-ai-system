@@ -1,18 +1,21 @@
 import { load } from "cheerio";
 import { isChromePassage } from "./evidence-chrome";
 
-const STRIP_SELECTORS = [
+const HARD_STRIP_SELECTORS = [
   "script",
   "style",
   "noscript",
+  "iframe",
+  "button",
+  "svg",
+  "form",
+].join(", ");
+
+const CHROME_STRIP_SELECTORS = [
   "nav",
   "header",
   "footer",
   "aside",
-  "form",
-  "iframe",
-  "button",
-  "svg",
   "[role='navigation']",
   "[role='banner']",
   "[role='contentinfo']",
@@ -25,11 +28,6 @@ const STRIP_SELECTORS = [
   "[class*='newsletter']",
   "[id*='newsletter']",
   "[class*='subscribe']",
-  "[class*='social']",
-  "[class*='share-bar']",
-  "[class*='related']",
-  "[class*='recommend']",
-  "[class*='promo']",
 ].join(", ");
 
 const PREFERRED_SELECTORS = [
@@ -40,6 +38,13 @@ const PREFERRED_SELECTORS = [
   ".article-content",
   ".insight-article",
   ".c-article",
+  ".entry-content",
+  ".post-content",
+  ".td-post-content",
+  ".node__content",
+  ".field--name-body",
+  ".field-name-body",
+  ".article__body",
   "#content",
 ];
 
@@ -68,7 +73,7 @@ export function extractHtmlDocument(html: string): {
 } {
   const $ = load(html);
   const title = $("title").first().text().replace(/\s+/g, " ").trim();
-  $(STRIP_SELECTORS).remove();
+  $(HARD_STRIP_SELECTORS).remove();
 
   let extractedText = "";
   for (const selector of PREFERRED_SELECTORS) {
@@ -82,6 +87,7 @@ export function extractHtmlDocument(html: string): {
   }
 
   if (!extractedText) {
+    $(CHROME_STRIP_SELECTORS).remove();
     extractedText = collectParagraphs($, $("body").length ? $("body") : $.root());
   }
 

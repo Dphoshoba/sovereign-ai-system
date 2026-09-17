@@ -20,6 +20,7 @@ import { publicationGate } from "./publication-gate";
 import { CURRENT_RESEARCH_AUDIT_ENGINE_REVISION } from "./research-audit-engine-revision";
 import {
   logSourceAcquisition,
+  toPublicSourceDiagnostics,
   type SourceAcquisitionDiagnostic,
 } from "./source-acquisition";
 import {
@@ -79,6 +80,7 @@ export type PrepareForReviewSuccess = {
     sourceCoverage: number;
     unavailableSourceCount: number;
   };
+  sourceDiagnostics: SourceAcquisitionDiagnostic[];
   preservedFields: typeof CONTENT_FIELDS;
 };
 
@@ -322,6 +324,7 @@ export async function prepareArticleForReview(
       error:
         "No auditable claims occur in the current article title, excerpt, or body. The article was left unchanged.",
       articleUnchanged: true,
+      sourceDiagnostics: [],
     };
   }
 
@@ -329,7 +332,9 @@ export async function prepareArticleForReview(
     const evidence = await collectEvidence(article.title, sources, {
       claimTexts: claimExtraction.claims.map((claim) => claim.claim),
     });
-    const sourceDiagnostics = evidence.sourceDiagnostics ?? [];
+    const sourceDiagnostics = toPublicSourceDiagnostics(
+      evidence.sourceDiagnostics ?? [],
+    );
     if (sourceDiagnostics.length > 0) {
       logSourceAcquisition(sourceDiagnostics);
     }
@@ -354,6 +359,7 @@ export async function prepareArticleForReview(
         error:
           "No auditable claims occur in the current article title, excerpt, or body. The article was left unchanged.",
         articleUnchanged: true,
+        sourceDiagnostics,
       };
     }
 
@@ -540,6 +546,7 @@ export async function prepareArticleForReview(
         sourceCoverage: sourceStats.sourceCoverage,
         unavailableSourceCount: sourceStats.unavailableSourceCount,
       },
+      sourceDiagnostics,
       preservedFields: CONTENT_FIELDS,
     };
   } catch (error) {

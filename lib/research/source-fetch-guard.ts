@@ -6,9 +6,37 @@ import {
   type SourceAcquisitionCategory,
 } from "./source-acquisition";
 
-export const RESEARCH_FETCH_TIMEOUT_MS = 8_000;
+export const RESEARCH_FETCH_TIMEOUT_MS = 20_000;
+export const RESEARCH_PDF_PARSE_TIMEOUT_MS = 12_000;
 export const RESEARCH_FETCH_MAX_BYTES = 4_194_304;
 export const RESEARCH_FETCH_MAX_REDIRECTS = 3;
+export async function withResearchTimeout<T>(
+  ms: number,
+  category: SourceAcquisitionCategory,
+  message: string,
+  work: () => Promise<T>,
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let timedOut = false;
+  try {
+    return await Promise.race([
+      work().catch((error: unknown) => {
+        if (timedOut) {
+          return new Promise<T>(() => undefined);
+        }
+        throw error;
+      }),
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => {
+          timedOut = true;
+          reject(new ResearchSourceFetchError(category, message));
+        }, ms);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 
 export type ResolvedResearchTarget = {
   url: URL;
@@ -37,6 +65,8 @@ export type LookupFn = (
 export type GuardedFetchDeps = {
   lookup?: LookupFn;
   fetch?: typeof fetch;
+  fetchTimeoutMs?: number;
+  pdfParseTimeoutMs?: number;
 };
 
 export class UnsafeResearchUrlError extends ResearchSourceFetchError {
@@ -181,7 +211,10 @@ export async function assertSafeResearchUrl(
   return (await resolveSafeResearchTarget(rawUrl, deps)).url;
 }
 
-function fetchPinnedHttps(target: ResolvedResearchTarget): Promise<Response> {
+function fetchPinnedHttps(
+  target: ResolvedResearchTarget,
+  timeoutMs = RESEARCH_FETCH_TIMEOUT_MS,
+): Promise<Response> {
   const pinned = selectPinnedAddress(target.addresses);
   const ip = pinned.address.replace(/^\[|\]$/g, "");
   const { url } = target;
@@ -199,7 +232,7 @@ function fetchPinnedHttps(target: ResolvedResearchTarget): Promise<Response> {
           ...RESEARCH_REQUEST_HEADERS,
           Host: url.hostname,
         },
-        timeout: RESEARCH_FETCH_TIMEOUT_MS,
+        timeout: timeoutMs,
       },
       (incoming) => {
         const headers = new Headers();
@@ -233,17 +266,40 @@ export async function fetchGuardedResearchSource(
 
   for (let hop = 0; hop <= RESEARCH_FETCH_MAX_REDIRECTS; hop += 1) {
     const target = await resolveSafeResearchTarget(current, deps);
+    const fetchTimeoutMs = deps.fetchTimeoutMs ?? RESEARCH_FETCH_TIMEOUT_MS;
+    let inflight: Response | undefined;
     let response: Response;
+    let body: Uint8Array | null = null;
     try {
-      response = deps.fetch
-        ? await deps.fetch(target.url.toString(), {
-            method: "GET",
-            redirect: "manual",
-            headers: RESEARCH_REQUEST_HEADERS,
-            signal: AbortSignal.timeout(RESEARCH_FETCH_TIMEOUT_MS),
-          })
-        : await fetchPinnedHttps(target);
+      const fetched = await withResearchTimeout(
+        fetchTimeoutMs,
+        "timeout",
+        "Source fetch timed out.",
+        async () => {
+          const nextResponse = deps.fetch
+            ? await deps.fetch(target.url.toString(), {
+                method: "GET",
+                redirect: "manual",
+                headers: RESEARCH_REQUEST_HEADERS,
+                signal: AbortSignal.timeout(fetchTimeoutMs),
+              })
+            : await fetchPinnedHttps(target, fetchTimeoutMs);
+          inflight = nextResponse;
+          if (nextResponse.status >= 300 && nextResponse.status < 400) {
+            return { response: nextResponse, body: null as Uint8Array | null };
+          }
+          return {
+            response: nextResponse,
+            body: await readLimitedBody(nextResponse),
+          };
+        },
+      );
+      response = fetched.response;
+      body = fetched.body;
     } catch (error) {
+      if (inflight?.body) {
+        void inflight.body.cancel().catch(() => undefined);
+      }
       throw mapFetchException(error);
     }
 
@@ -285,11 +341,10 @@ export async function fetchGuardedResearchSource(
     }
 
     const contentType = response.headers.get("content-type") || "";
-    const buffer = await readLimitedBody(response);
     return {
       url: target.url.toString(),
       contentType,
-      body: buffer,
+      body: body ?? new Uint8Array(),
       httpStatus: response.status,
     };
   }
@@ -315,6 +370,7 @@ function mapFetchException(error: unknown): ResearchSourceFetchError {
 async function readLimitedBody(response: Response): Promise<Uint8Array> {
   const declared = Number(response.headers.get("content-length") || "0");
   if (Number.isFinite(declared) && declared > RESEARCH_FETCH_MAX_BYTES) {
+    void response.body?.cancel().catch(() => undefined);
     throw new ResearchSourceFetchError(
       "payload_too_large",
       "Source payload exceeded the bounded size cap.",
@@ -341,7 +397,7 @@ async function readLimitedBody(response: Response): Promise<Uint8Array> {
     if (!value) continue;
     received += value.byteLength;
     if (received > RESEARCH_FETCH_MAX_BYTES) {
-      await reader.cancel();
+      void reader.cancel().catch(() => undefined);
       throw new ResearchSourceFetchError(
         "payload_too_large",
         "Source payload exceeded the bounded size cap.",

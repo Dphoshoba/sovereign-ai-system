@@ -38,6 +38,7 @@ export type ArticleClaim = {
 
 export type ArticleClaimExtractionResult = {
   claims: ArticleClaim[];
+  authorialAssertions: ArticleClaim[];
   claimCount: number;
   authorialCount: number;
   normalizedArticleText: string;
@@ -98,6 +99,19 @@ const AUTHORIAL_PATTERNS = [
   /\bthis article'?s model\b/i,
   /\bcalls? to action\b/i,
   /\bin the next (section|step)\b/i,
+  /\bechoes\s*&\s*visions['’]?s?\s+strategic framework\b/i,
+  /\bfive-layer model\b/i,
+  /\bfive parts(?:—|-|,)/i,
+  /\bour synthesis\b/i,
+  /\bnot a (third-party )?standard issued by\b/i,
+  /\bfor this article,?\b.{0,120}\bmeans\b/i,
+  /\bwe (can help you|recommend|suggest)\b/i,
+  /\brequest an?\b.{0,80}\bconsultation\b/i,
+  /\bpractical advice\b/i,
+  /\bpractical (first )?workflow\b/i,
+  /\bthe best first system\b/i,
+  /\bchoose measures tied to the workflow\b/i,
+  /\bthese are practical measurement suggestions\b/i,
 ];
 
 const FACTUAL_SIGNAL = new RegExp(
@@ -110,7 +124,7 @@ const FACTUAL_SIGNAL = new RegExp(
     "\\bsurvey\\b",
     "\\bstudy\\b",
     "\\bresearch report\\b",
-    "\\bframework\\b",
+    "\\brisk management framework\\b",
     "\\bprediction\\b",
     "\\bnist\\b",
     "\\bdeloitte\\b",
@@ -262,6 +276,7 @@ export function extractArticleClaims(input: {
   );
 
   const claims: ArticleClaim[] = [];
+  const authorialAssertions: ArticleClaim[] = [];
   const seen = new Set<string>();
   let authorialCount = 0;
 
@@ -290,18 +305,20 @@ export function extractArticleClaims(input: {
         const kind: ArticleClaimKind = isExternallyVerifiableClaim(sentence)
           ? "factual"
           : "authorial";
-        if (kind === "authorial") {
-          authorialCount += 1;
-          continue;
-        }
-
-        claims.push({
+        const extractedClaim: ArticleClaim = {
           claim: sentence,
           articleExcerpt: sentence,
           section: block.section,
           blockType: block.blockType,
           kind,
-        });
+        };
+        if (kind === "authorial") {
+          authorialCount += 1;
+          authorialAssertions.push(extractedClaim);
+          continue;
+        }
+
+        claims.push(extractedClaim);
         if (claims.length >= 12) break;
       }
       if (claims.length >= 12) break;
@@ -311,6 +328,7 @@ export function extractArticleClaims(input: {
 
   return {
     claims,
+    authorialAssertions,
     claimCount: claims.length,
     authorialCount,
     normalizedArticleText,

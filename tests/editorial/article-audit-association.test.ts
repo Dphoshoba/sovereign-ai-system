@@ -332,12 +332,40 @@ describe("article audit associations", () => {
     });
   });
 
-  it("requires the current engine revision before selecting a current audit", () => {
+  it("treats article-grounded-v2 as historical once article-grounded-v3 is current", () => {
     const obsolete = {
-      id: "audit-obsolete",
+      id: "audit-v2",
       articleId: article.id,
-      createdAt: new Date("2026-09-16T12:27:51.423Z"),
+      createdAt: new Date("2026-09-17T09:45:06.001Z"),
     };
+    const replacement = {
+      id: "audit-v3",
+      articleId: article.id,
+      createdAt: new Date("2026-09-17T11:00:00.000Z"),
+    };
+
+    expect(
+      partitionAssociatedArticleAudits(
+        article,
+        sources,
+        [obsolete, replacement],
+        [
+          {
+            action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+            note: serializeArticleAuditAssociation({
+              auditId: obsolete.id,
+              contentFingerprint: fingerprint,
+              createdAt: obsolete.createdAt,
+              engineRevision: "article-grounded-v2",
+            }),
+          },
+          associationNote(replacement.id, fingerprint, replacement.createdAt),
+        ],
+      ),
+    ).toEqual({
+      current: replacement,
+      historical: [obsolete],
+    });
 
     expect(
       partitionAssociatedArticleAudits(article, sources, [obsolete], [
@@ -347,7 +375,7 @@ describe("article audit associations", () => {
             auditId: obsolete.id,
             contentFingerprint: fingerprint,
             createdAt: obsolete.createdAt,
-            engineRevision: "legacy-chrome-v0",
+            engineRevision: "article-grounded-v2",
           }),
         },
       ]),

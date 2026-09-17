@@ -632,4 +632,40 @@ describe("prepareArticleForReview", () => {
       )?.engineRevision,
     ).toBe(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION)
   })
+
+  it("allows one article-grounded-v3 replacement after an article-grounded-v2 audit", async () => {
+    const article = baseArticle()
+    article.researchAudits = [
+      { id: "audit-v2", articleId: article.id, createdAt: auditCreatedAt },
+    ]
+    article.reviewNotes = [
+      {
+        action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+        note: serializeArticleAuditAssociation({
+          auditId: "audit-v2",
+          contentFingerprint: fingerprintFor(article),
+          createdAt: auditCreatedAt,
+          engineRevision: "article-grounded-v2",
+        }),
+      },
+    ]
+    const { store, createdAudits, articleUpdates } = createStore(article)
+
+    const result = await prepareArticleForReview(article.id, {
+      prisma: store,
+      collectEvidence: async () =>
+        usefulEvidence("https://www.nist.gov/artificial-intelligence"),
+    })
+
+    expect(result.ok).toBe(true)
+    expect(createdAudits).toHaveLength(1)
+    expect(articleUpdates).toHaveLength(1)
+    expect(article.researchAudits.map((audit) => audit.id)).toEqual([
+      "audit-v2",
+      "audit-2",
+    ])
+    if (!result.ok) return
+    expect(result.audit.engineRevision).toBe("article-grounded-v3")
+    expect(result.sourceDiagnostics).toBeDefined()
+  })
 })

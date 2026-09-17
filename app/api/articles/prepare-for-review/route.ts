@@ -7,6 +7,7 @@ import {
 } from "../../../../lib/research/prepare-article-for-review"
 
 export const runtime = "nodejs"
+export const maxDuration = 60
 
 const ERROR_STATUS: Record<string, number> = {
   not_found: 404,
@@ -62,6 +63,7 @@ export async function POST(req: NextRequest) {
       ok: true,
       article: result.article,
       audit: result.audit,
+      sourceDiagnostics: result.sourceDiagnostics ?? [],
     })
   } catch (error) {
     return NextResponse.json(
