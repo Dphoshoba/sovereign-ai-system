@@ -471,7 +471,7 @@ export async function POST(request: Request) {
       });
 
       if (imageData.ok && imageData.article && !imageData.articleUnchanged) {
-        updatedArticle = imageData.article as typeof updatedArticle;
+        updatedArticle = imageData.article as unknown as typeof updatedArticle;
       }
     } catch (imageError) {
       console.error(

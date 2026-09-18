@@ -371,6 +371,7 @@ export async function updateArticleUnderGovernanceLock(
   input: {
     articleId: string;
     changes: Record<string, unknown>;
+    assert?: (article: LifecycleArticle) => ArticleLifecycleFailure | null;
   },
   deps?: { prisma?: unknown },
 ): Promise<ArticleLifecycleResult> {
@@ -388,6 +389,9 @@ export async function updateArticleUnderGovernanceLock(
       },
     });
     if (!article) return failure("not_found", "Article not found.");
+
+    const blocked = input.assert?.(article) ?? null;
+    if (blocked) return blocked;
 
     const auditedContentChanged = AUDITED_ARTICLE_FIELDS.some(
       (field) =>

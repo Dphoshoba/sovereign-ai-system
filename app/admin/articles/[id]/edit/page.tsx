@@ -6,6 +6,7 @@ import {
   instantToAdelaideWallClock,
 } from "../../../../../lib/publishing/adelaide-time"
 import { AdelaideTimezoneHint } from "@/components/articles/AdelaideTimezoneHint"
+import { FeaturedImagePromptPanel } from "../../FeaturedImagePromptPanel"
 
 type Article = {
   id: string
@@ -171,7 +172,9 @@ export default function EditArticlePage({
 
       if (!response.ok || !result.ok) {
         setImageGenerationError(
-          result.error || result.warning || "Image generation failed"
+          [result.code, result.error || result.warning]
+            .filter(Boolean)
+            .join(": ") || "Image generation failed"
         )
         return
       }
@@ -253,22 +256,22 @@ export default function EditArticlePage({
           />
         ) : null}
 
-        <div>
-          <button
-            type="button"
-            onClick={handleGenerateFeaturedImage}
-            disabled={isGeneratingImage}
-            style={generateButton}
-          >
-            {isGeneratingImage ? "Generating Image..." : "Generate Featured Image"}
-          </button>
-
-          {imageGenerationError ? (
-            <p style={{ color: "#cc0000", fontSize: "14px", marginTop: "8px" }}>
-              {imageGenerationError}
-            </p>
-          ) : null}
-        </div>
+        <FeaturedImagePromptPanel
+          articleId={article.id}
+          featuredImage={article.featuredImage}
+          generating={isGeneratingImage}
+          generationError={imageGenerationError}
+          onGenerate={handleGenerateFeaturedImage}
+          onArticleUpdate={(next) =>
+            setArticle({
+              ...article,
+              featuredImage:
+                next.featuredImage !== undefined
+                  ? next.featuredImage
+                  : article.featuredImage,
+            })
+          }
+        />
 
         <label>
           SEO Title
@@ -435,16 +438,6 @@ const deleteButton: React.CSSProperties = {
   border: "none",
   background: "#cc0000",
   color: "var(--hero-foreground)",
-  cursor: "pointer",
-  fontWeight: "bold",
-}
-
-const generateButton: React.CSSProperties = {
-  padding: "12px 18px",
-  borderRadius: "10px",
-  border: "1px solid var(--border)",
-  background: "var(--background)",
-  color: "var(--foreground)",
   cursor: "pointer",
   fontWeight: "bold",
 }

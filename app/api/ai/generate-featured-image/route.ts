@@ -1,35 +1,40 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 import { generateAndPersistFeaturedImage } from "../../../../lib/ai/persist-featured-image"
+
+export const runtime = "nodejs"
+export const maxDuration = 60
+
+const ERROR_STATUS: Record<string, number> = {
+  not_found: 404,
+  invalid_status: 409,
+  missing_audit: 409,
+  missing_approved_featured_image_prompt: 422,
+  stale_approved_featured_image_prompt: 422,
+  malformed_featured_image_prompt: 422,
+  ambiguous_featured_image_prompt: 422,
+  cross_article_featured_image_prompt: 422,
+  featured_image_generation_failed: 500,
+  featured_image_upload_failed: 500,
+  featured_image_invalid_payload: 422,
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json(
-        { ok: false, error: "Authentication required." },
-        { status: 401 }
-      )
-    }
-
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { ok: false, error: "Missing OPENAI_API_KEY" },
-        { status: 500 }
-      )
-    }
+    const auth = await requireEditorAuth()
+    if (!auth.ok) return auth.response
 
     const body = await request.json()
-    const articleId = body.articleId
+    const articleId = body?.articleId
 
     if (!articleId || typeof articleId !== "string") {
       return NextResponse.json(
-        { ok: false, error: "Missing articleId" },
-        { status: 400 }
+        {
+          ok: false,
+          error: "Missing articleId",
+          articleUnchanged: true,
+        },
+        { status: 400 },
       )
     }
 
@@ -40,19 +45,11 @@ export async function POST(request: NextRequest) {
         {
           ok: false,
           error: result.error,
+          code: result.code,
           articleUnchanged: true,
         },
-        { status: result.code === "not_found" ? 404 : 500 }
+        { status: ERROR_STATUS[result.code ?? ""] ?? 500 },
       )
-    }
-
-    if (result.warning) {
-      return NextResponse.json({
-        ok: true,
-        warning: result.warning,
-        article: result.article,
-        articleUnchanged: true,
-      })
     }
 
     return NextResponse.json({
@@ -60,6 +57,7 @@ export async function POST(request: NextRequest) {
       article: result.article,
       imageUrl: result.imageUrl,
       editorialQuality: result.editorialQuality,
+      articleUnchanged: false,
     })
   } catch (error) {
     console.error("Featured image generation failed:", error)
@@ -73,7 +71,7 @@ export async function POST(request: NextRequest) {
             : "Failed to generate featured image",
         articleUnchanged: true,
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

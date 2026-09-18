@@ -4,17 +4,22 @@ import {
   persistFeaturedImageBytes,
   type AllowedFeaturedImageMime,
 } from "../storage/article-images"
+import {
+  requireCurrentFeaturedImagePrompt,
+  type FeaturedImagePromptArticle,
+} from "./featured-image-prompt"
 
-type ArticleRecord = {
-  id: string
+type FeaturedImageArticle = FeaturedImagePromptArticle & {
   slug: string
-  title: string
-  category: string | null
-  content: string | null
+  featuredImage: string | null
+  approvedAt?: Date | string | null
+  approvedBy?: string | null
+  scheduledFor?: Date | string | null
+  publishedAt?: Date | string | null
   excerpt: string | null
+  content: string | null
   seoTitle: string | null
   seoDescription: string | null
-  featuredImage: string | null
 }
 
 type FeaturedImageStore = {
@@ -22,49 +27,22 @@ type FeaturedImageStore = {
   article: {
     findUnique: (args: {
       where: { id: string }
-    }) => Promise<ArticleRecord | null>
+      include?: {
+        researchSources: true
+        researchAudits: true
+        reviewNotes: true
+      }
+    }) => Promise<FeaturedImageArticle | null>
     update?: (args: {
       where: { id: string }
       data: Record<string, unknown>
-    }) => Promise<ArticleRecord>
+    }) => Promise<FeaturedImageArticle>
   }
 }
 
 function wordCount(value: string | null) {
   if (!value) return 0
   return value.split(/\s+/).filter(Boolean).length
-}
-
-function buildFallbackPrompt(article: ArticleRecord) {
-  const category = article.category?.toLowerCase() || ""
-
-  if (category.includes("bible")) {
-    return `Create a cinematic biblical blog cover image for this article: ${article.title}. Ancient Israel atmosphere, warm golden light, dramatic landscape, reverent spiritual tone, realistic but tasteful, no text, no logos, no watermarks.`
-  }
-
-  if (category.includes("history")) {
-    return `Create a cinematic history blog cover image for this article: ${article.title}. Historical atmosphere, documentary style, warm dramatic lighting, tasteful and realistic, no text, no logos, no watermarks.`
-  }
-
-  if (category.includes("health")) {
-    return `Create a clean health and wellness blog cover image for this article: ${article.title}. Calm professional medical wellness style, warm natural light, human-centered, no text, no logos, no watermarks.`
-  }
-
-  if (category.includes("space")) {
-    return `Create a cinematic space blog cover image for this article: ${article.title}. Deep space atmosphere, stars, planets, cosmic lighting, realistic premium editorial style, no text, no logos, no watermarks.`
-  }
-
-  if (category.includes("motivation")) {
-    return `Create an inspiring motivation blog cover image for this article: ${article.title}. Warm sunrise light, person overcoming challenge, hopeful cinematic tone, no text, no logos, no watermarks.`
-  }
-
-  return `Create a cinematic blog cover image for this article: ${article.title}. Modern AI automation, warm professional lighting, human-centered technology, elegant premium SaaS feel, abstract creator workspace, no text, no logos, no watermarks.`
-}
-
-export function resolveFeaturedImagePrompt(article: ArticleRecord) {
-  return article.featuredImage && !article.featuredImage.startsWith("/")
-    ? article.featuredImage
-    : buildFallbackPrompt(article)
 }
 
 export async function generateAndPersistFeaturedImage(input: {
@@ -80,6 +58,11 @@ export async function generateAndPersistFeaturedImage(input: {
 
   const article = await store.article.findUnique({
     where: { id: input.articleId },
+    include: {
+      researchSources: true,
+      researchAudits: true,
+      reviewNotes: true,
+    },
   })
 
   if (!article) {
@@ -91,7 +74,17 @@ export async function generateAndPersistFeaturedImage(input: {
     }
   }
 
-  const prompt = resolveFeaturedImagePrompt(article)
+  const required = requireCurrentFeaturedImagePrompt(article)
+  if (!required.ok) {
+    return {
+      ok: false as const,
+      error: required.error,
+      code: required.code,
+      articleUnchanged: true as const,
+    }
+  }
+
+  const prompt = required.prompt
   const generateImage =
     input.generateImage ??
     (async (imagePrompt: string) => {
@@ -110,10 +103,9 @@ export async function generateAndPersistFeaturedImage(input: {
     base64 = await generateImage(prompt)
   } catch {
     return {
-      ok: true as const,
-      warning:
-        "Featured image generation failed. Article remains saved without a generated image.",
-      article,
+      ok: false as const,
+      error: "Featured image generation failed.",
+      code: "featured_image_generation_failed",
       articleUnchanged: true as const,
     }
   }
@@ -122,6 +114,7 @@ export async function generateAndPersistFeaturedImage(input: {
     return {
       ok: false as const,
       error: "No image returned from OpenAI",
+      code: "featured_image_generation_failed",
       articleUnchanged: true as const,
     }
   }
@@ -138,6 +131,10 @@ export async function generateAndPersistFeaturedImage(input: {
     return {
       ok: false as const,
       error: persisted.error,
+      code:
+        persisted.error === "Image upload failed"
+          ? "featured_image_upload_failed"
+          : "featured_image_invalid_payload",
       articleUnchanged: true as const,
     }
   }
@@ -165,6 +162,23 @@ export async function generateAndPersistFeaturedImage(input: {
         editorialGrade: editorialQuality.grade,
         editorialWarnings: editorialQuality.warnings,
       },
+      assert: (locked) => {
+        const stillCurrent = requireCurrentFeaturedImagePrompt(locked)
+        if (
+          !stillCurrent.ok ||
+          stillCurrent.prompt !== prompt ||
+          stillCurrent.contentFingerprint !== required.contentFingerprint
+        ) {
+          return {
+            ok: false,
+            code: "stale_audit",
+            error:
+              "The approved featured-image prompt is no longer current. Article was left unchanged.",
+            articleUnchanged: true,
+          }
+        }
+        return null
+      },
     },
     { prisma: store },
   )
@@ -173,15 +187,19 @@ export async function generateAndPersistFeaturedImage(input: {
     return {
       ok: false as const,
       error: lockedUpdate.error,
-      code: lockedUpdate.code,
+      code:
+        lockedUpdate.code === "stale_audit"
+          ? "stale_approved_featured_image_prompt"
+          : lockedUpdate.code,
       articleUnchanged: true as const,
     }
   }
 
   return {
     ok: true as const,
-    article: lockedUpdate.article as unknown as ArticleRecord,
+    article: lockedUpdate.article as unknown as FeaturedImageArticle,
     imageUrl: persisted.imageUrl,
+    prompt,
     editorialQuality,
     articleUnchanged: false as const,
   }

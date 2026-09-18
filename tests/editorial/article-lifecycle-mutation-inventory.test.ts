@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -17,7 +17,7 @@ const RUNTIME_ROOTS = [
   "app/api/publishing",
   "lib/publishing",
   "lib/research",
-  "lib/ai/persist-featured-image.ts",
+  "lib/ai",
 ];
 
 const ALLOWED_DIRECT_ARTICLE_UPDATE = [
@@ -31,7 +31,6 @@ const ALLOWED_DIRECT_SOURCE_MUTATION = [
 ];
 
 function listRuntimeFiles(): string[] {
-  const { readdirSync, statSync } = require("node:fs") as typeof import("node:fs");
   const files: string[] = [];
   const visit = (relativePath: string) => {
     const absolute = join(process.cwd(), relativePath);
