@@ -58,3 +58,28 @@ export function isChromePassage(text: string): boolean {
   }
   return CHROME_PATTERNS.some((pattern) => pattern.test(normalized));
 }
+
+const OUTLINE_HEADING =
+  /\b[12]\s+samuel\s+\d+\s*[-–]\s*\d+\s*:/gi;
+
+export function isOutlineOrIndexPassage(text: string): boolean {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  if (!normalized) return true;
+  const headingHits = [...normalized.matchAll(OUTLINE_HEADING)];
+  if (headingHits.length >= 2) return true;
+  if (/\bkey information and resources\b/i.test(normalized)) return true;
+  if (
+    /\b(breadcrumb|jump to( section)?|in this guide|section index)\b/i.test(
+      normalized,
+    )
+  ) {
+    return true;
+  }
+  if (
+    /^part (one|two|three|\d+)\b/i.test(normalized) &&
+    normalized.split(/\s+/).length < 40
+  ) {
+    return true;
+  }
+  return false;
+}

@@ -1,4 +1,4 @@
-import { isChromePassage } from "./evidence-chrome";
+import { isChromePassage, isOutlineOrIndexPassage } from "./evidence-chrome";
 
 export const CREATOR_TEMPLATE_CLAIMS = [
   "AI-driven analytics can improve content performance insights.",
@@ -116,6 +116,9 @@ const AUTHORIAL_PATTERNS = [
   /\bthese are practical measurement suggestions\b/i,
   /\bwe use that as an architectural interpretation\b/i,
   /\barchitectural interpretation\b/i,
+  /^that is bibleproject/i,
+  /\bnamed-source reading\b/i,
+  /\bliterary reading\b/i,
 ];
 
 const FACTUAL_SIGNAL = new RegExp(
@@ -226,12 +229,15 @@ export function splitMarkdownBlocks(
   return blocks;
 }
 
+const SENTENCE_BOUNDARY =
+  /(?<=(?<!\b(?:Mr|Mrs|Ms|Dr|Prof|Sr|Jr|vs|etc|Vol|No|pp))[.!?](?:["“”'’)\]]+)?)(?:\[\d+\])?\s+/;
+
 export function splitBlockSentences(blockText: string): string[] {
   const normalized = normalizeArticleText(blockText);
   if (!normalized) return [];
   if (!/[.!?]/.test(normalized)) return [normalized];
   return normalized
-    .split(/(?<=\.)(?:\[\d+\])?\s+|(?<=[!?])\s+/)
+    .split(SENTENCE_BOUNDARY)
     .map((sentence) => sentence.replace(/\[\d+\]/g, "").trim())
     .filter(Boolean);
 }
@@ -344,12 +350,36 @@ export function extractArticleClaims(input: {
   };
 }
 
+const GENERIC_NAME_TOKENS = new Set([
+  "samuel",
+  "david",
+  "israel",
+  "saul",
+  "goliath",
+  "philistine",
+  "philistines",
+  "bibleproject",
+  "biblegateway",
+  "jesse",
+  "bethlehem",
+  "according",
+  "chapter",
+  "narrative",
+  "article",
+  "guide",
+  "books",
+]);
+
 export function significantTokens(value: string): string[] {
   return value
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, " ")
     .split(/\s+/)
     .filter((token) => token.length > 2 && !STOP_WORDS.has(token));
+}
+
+export function eventActionTokens(claim: string): string[] {
+  return significantTokens(claim).filter((token) => !GENERIC_NAME_TOKENS.has(token));
 }
 
 export function passageSupportsClaim(
@@ -359,6 +389,9 @@ export function passageSupportsClaim(
 ): boolean {
   if (!passage) return false;
   if (options.documentKind !== "pdf" && isChromePassage(passage)) return false;
+  if (options.documentKind !== "pdf" && isOutlineOrIndexPassage(passage)) {
+    return false;
+  }
   const claimTokens = significantTokens(claim);
   if (claimTokens.length === 0) return false;
   const passageTokens = new Set(significantTokens(passage));
@@ -367,5 +400,14 @@ export function passageSupportsClaim(
     Math.max(3, Math.ceil(claimTokens.length * 0.35)),
     claimTokens.length,
   );
-  return overlap.length >= required;
+  if (overlap.length < required) return false;
+
+  const actionTokens = eventActionTokens(claim);
+  if (actionTokens.length >= 2) {
+    const actionOverlap = actionTokens.filter((token) => passageTokens.has(token));
+    if (actionOverlap.length < Math.min(2, actionTokens.length)) {
+      return false;
+    }
+  }
+  return true;
 }

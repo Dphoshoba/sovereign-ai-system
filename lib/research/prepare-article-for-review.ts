@@ -379,6 +379,7 @@ export async function prepareArticleForReview(
       claimExtraction.claims,
       evidence.evidence,
       claimExtraction.normalizedArticleText,
+      sources.map((source) => ({ url: source.url, title: source.title })),
     );
 
     if (verification.facts.length === 0) {

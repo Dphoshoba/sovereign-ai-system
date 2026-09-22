@@ -13,6 +13,7 @@ import {
 import { mutateArticleSources } from "../../lib/research/article-source-mutation";
 import { prepareArticleForReview } from "../../lib/research/prepare-article-for-review";
 import { resolveArticleAuditState } from "../../lib/research/current-article-audit";
+import { CURRENT_RESEARCH_AUDIT_ENGINE_REVISION } from "../../lib/research/research-audit-engine-revision";
 
 import { GROUNDED_ARTICLE_CLAIM, GROUNDED_EVIDENCE_TEXT } from "../fixtures/research-audit/article-2";
 
@@ -572,7 +573,45 @@ describe("real PostgreSQL article governance concurrency", () => {
     expect(historicalAudits.some((audit) => audit.id === obsolete.id)).toBe(true);
     const winner = [first, second].find((result) => result.ok);
     expect(winner && winner.ok ? winner.audit.engineRevision : null).toBe(
+      CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
+    );
+  });
+
+  it("creates one v5 replacement for a current-fingerprint article-grounded-v4 audit", async () => {
+    const article = await seedArticle(prismaA, { status: "draft" });
+    const obsolete = await attachCurrentAudit(
+      prismaA,
+      article,
       "article-grounded-v4",
+    );
+    const [first, second] = await Promise.all([
+      prepareArticleForReview(article.id, {
+        prisma: prismaA as never,
+        collectEvidence,
+      }),
+      prepareArticleForReview(article.id, {
+        prisma: prismaB as never,
+        collectEvidence,
+      }),
+    ]);
+    expect([first.ok, second.ok].filter(Boolean)).toHaveLength(1);
+    expect(
+      [first, second].filter((result) => !result.ok && result.code === "duplicate_audit"),
+    ).toHaveLength(1);
+    const loaded = await prismaA.article.findUniqueOrThrow({
+      where: { id: article.id },
+      include: { researchAudits: true, researchSources: true, reviewNotes: true },
+    });
+    expect(loaded.researchAudits).toHaveLength(2);
+    expect(loaded.researchAudits.some((audit) => audit.id === obsolete.id)).toBe(
+      true,
+    );
+    const { currentAudit, historicalAudits } = resolveArticleAuditState(loaded);
+    expect(currentAudit?.id).not.toBe(obsolete.id);
+    expect(historicalAudits.some((audit) => audit.id === obsolete.id)).toBe(true);
+    const winner = [first, second].find((result) => result.ok);
+    expect(winner && winner.ok ? winner.audit.engineRevision : null).toBe(
+      "article-grounded-v5",
     );
   });
 });

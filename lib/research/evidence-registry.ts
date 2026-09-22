@@ -4,7 +4,10 @@ import { evidenceChunker } from "./evidence-chunker"
 import { chunkRanker } from "./chunk-ranker"
 import { isChromePassage } from "./evidence-chrome"
 import { passageSupportsClaim } from "./article-claim-extractor"
-import { claimAllowsEvidence } from "./claim-source-attribution"
+import {
+  claimAllowsEvidence,
+  type AttributableSource,
+} from "./claim-source-attribution"
 import { collectPdfPassages } from "./pdf-evidence"
 import {
   emptyDiagnostic,
@@ -40,12 +43,14 @@ export type EvidenceRegistryResult = {
 export type EvidenceRegistryOptions = ContentFetchDeps & {
   fetchContent?: typeof contentFetcher
   claimTexts?: string[]
+  listedSources?: AttributableSource[]
 }
 
 function isUsefulHtmlEvidence(
   text: string,
   claimTexts: string[] = [],
   source?: { url: string; title?: string | null },
+  listedSources: AttributableSource[] = [],
 ): boolean {
   const normalized = text.toLowerCase().trim()
 
@@ -56,7 +61,11 @@ function isUsefulHtmlEvidence(
     return claimTexts.some((claim) => {
       if (
         source &&
-        !claimAllowsEvidence(claim, { url: source.url, title: source.title })
+        !claimAllowsEvidence(
+          claim,
+          { url: source.url, title: source.title },
+          listedSources,
+        )
       ) {
         return false
       }
@@ -154,6 +163,7 @@ async function collectFromSource(
 }> {
   const fetchContent = options.fetchContent ?? contentFetcher
   const claimTexts = options.claimTexts ?? []
+  const listedSources = options.listedSources ?? []
   const fetched = await fetchContent(source.url, source.title, options)
   const diagnostic: SourceAcquisitionDiagnostic = {
     ...fetched.diagnostic,
@@ -171,6 +181,7 @@ async function collectFromSource(
       pages: fetched.pdfPages ?? [{ pageNumber: 1, text: fetched.extractedText }],
       claimTexts,
       source: sourceIdentity,
+      listedSources,
       pageLimitReached: fetched.pdfPageLimitReached,
     })
     const pdfDiagnostic: SourceAcquisitionDiagnostic = {
@@ -217,7 +228,7 @@ async function collectFromSource(
   const supporting: typeof chunks = []
   if (claimTexts.length > 0) {
     for (const chunk of chunks) {
-      if (!isUsefulHtmlEvidence(chunk.text, claimTexts, sourceIdentity)) continue
+      if (!isUsefulHtmlEvidence(chunk.text, claimTexts, sourceIdentity, listedSources)) continue
       supporting.push(chunk)
       if (supporting.length >= 3) break
     }
@@ -229,7 +240,9 @@ async function collectFromSource(
       : chunkRanker(
           [topic, ...claimTexts].filter(Boolean).join(" "),
           chunks,
-        ).filter((chunk) => isUsefulHtmlEvidence(chunk.text, claimTexts, sourceIdentity))
+        ).filter((chunk) =>
+          isUsefulHtmlEvidence(chunk.text, claimTexts, sourceIdentity, listedSources),
+        )
   ).slice(0, 3)
 
   if (rankedChunks.length === 0) {
@@ -260,8 +273,13 @@ export async function evidenceRegistry(
   sources: SourceRecord[],
   options: EvidenceRegistryOptions = {},
 ): Promise<EvidenceRegistryResult> {
+  const listedSources =
+    options.listedSources ??
+    sources.map((source) => ({ url: source.url, title: source.title }))
   const collected = await Promise.all(
-    sources.map((source) => collectFromSource(topic, source, options)),
+    sources.map((source) =>
+      collectFromSource(topic, source, { ...options, listedSources }),
+    ),
   )
 
   const evidenceRecords: EvidenceRecord[] = []

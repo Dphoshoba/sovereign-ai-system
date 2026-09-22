@@ -370,7 +370,7 @@ describe("article-grounded-v4 attribution, PDF evidence, and classification", ()
     expect(success.ok).toBe(true);
     if (!success.ok) return;
     expect(success.sourceDiagnostics).toEqual(diagnostics);
-    expect(success.audit.engineRevision).toBe("article-grounded-v4");
+    expect(success.audit.engineRevision).toBe(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION);
     expect(JSON.stringify(success.sourceDiagnostics)).not.toMatch(
       /cookie|authorization|secret|192\.168|stack|ECONN/i,
     );
@@ -530,7 +530,7 @@ describe("article-grounded-v4 attribution, PDF evidence, and classification", ()
     });
     expect(createdAudits).toHaveLength(1);
     if (first.ok) {
-      expect(first.audit.engineRevision).toBe("article-grounded-v4");
+      expect(first.audit.engineRevision).toBe(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION);
     }
   });
 

@@ -7,7 +7,11 @@ import {
   passageSupportsClaim,
   significantTokens,
 } from "./article-claim-extractor";
-import { claimAllowsEvidence } from "./claim-source-attribution";
+import {
+  claimAllowsEvidence,
+  evidenceCorroborationKey,
+  type AttributableSource,
+} from "./claim-source-attribution";
 
 export type GroundedEvidenceMatch = {
   evidence: EvidenceRecord;
@@ -22,17 +26,42 @@ function authorityScoreForUrl(url: string): number {
   return 50;
 }
 
-export function matchEvidenceToClaim(
-  claim: ArticleClaim,
+function listedSourcesFromEvidence(
   evidenceRecords: EvidenceRecord[],
-): GroundedEvidenceMatch[] {
-  return evidenceRecords.flatMap((evidence) => {
-    if (
-      !claimAllowsEvidence(claim.claim, {
+): AttributableSource[] {
+  const seen = new Map<string, AttributableSource>();
+  for (const evidence of evidenceRecords) {
+    if (!seen.has(evidence.sourceUrl)) {
+      seen.set(evidence.sourceUrl, {
         url: evidence.sourceUrl,
         title: evidence.sourceTitle,
         publisher: evidence.sourceTitle,
-      })
+      });
+    }
+  }
+  return Array.from(seen.values());
+}
+
+function sourceFromEvidence(evidence: EvidenceRecord): AttributableSource {
+  return {
+    url: evidence.sourceUrl,
+    title: evidence.sourceTitle,
+    publisher: evidence.sourceTitle,
+  };
+}
+
+export function matchEvidenceToClaim(
+  claim: ArticleClaim,
+  evidenceRecords: EvidenceRecord[],
+  listedSources: AttributableSource[] = [],
+): GroundedEvidenceMatch[] {
+  return evidenceRecords.flatMap((evidence) => {
+    if (
+      !claimAllowsEvidence(
+        claim.claim,
+        sourceFromEvidence(evidence),
+        listedSources,
+      )
     ) {
       return [];
     }
@@ -53,6 +82,7 @@ export function groundedFactVerification(
   claims: ArticleClaim[],
   evidenceRecords: EvidenceRecord[],
   normalizedArticleText: string,
+  listedSources: AttributableSource[] = [],
 ): {
   facts: VerifiedFact[];
   verifiedCount: number;
@@ -69,12 +99,23 @@ export function groundedFactVerification(
       continue;
     }
 
-    const matches = matchEvidenceToClaim(claim, evidenceRecords).sort(
+    const sources =
+      listedSources.length > 0
+        ? listedSources
+        : listedSourcesFromEvidence(evidenceRecords);
+    const matches = matchEvidenceToClaim(claim, evidenceRecords, sources).sort(
       (left, right) => right.overlap - left.overlap,
     );
     const uniqueSources = new Map<string, EvidenceRecord>();
     for (const match of matches) {
-      uniqueSources.set(match.evidence.sourceUrl, match.evidence);
+      const key = evidenceCorroborationKey(
+        claim.claim,
+        sourceFromEvidence(match.evidence),
+        sources,
+      );
+      if (!uniqueSources.has(key)) {
+        uniqueSources.set(key, match.evidence);
+      }
       acceptedById.set(match.evidence.id, match.evidence);
     }
 

@@ -1,7 +1,10 @@
 import type { EvidenceChunk } from "./evidence-chunker";
 import { evidenceChunker } from "./evidence-chunker";
 import { passageSupportsClaim, significantTokens } from "./article-claim-extractor";
-import { claimAllowsEvidence } from "./claim-source-attribution";
+import {
+  claimAllowsEvidence,
+  type AttributableSource,
+} from "./claim-source-attribution";
 import { isPdfChromeOnly, type PdfPageText } from "./pdf-text-extractor";
 import {
   RESEARCH_PDF_MAX_PASSAGES,
@@ -39,6 +42,7 @@ export function collectPdfPassages(input: {
   pages: PdfPageText[];
   claimTexts: string[];
   source: { url: string; title?: string | null };
+  listedSources?: AttributableSource[];
   pageLimitReached?: boolean;
 }): PdfEvidenceScan {
   const candidates: PdfPassageCandidate[] = [];
@@ -73,10 +77,14 @@ export function collectPdfPassages(input: {
       if (chunk.text.trim().length < 80) continue;
       const matchingClaims = input.claimTexts.filter((claim) => {
         if (
-          !claimAllowsEvidence(claim, {
-            url: input.source.url,
-            title: input.source.title,
-          })
+          !claimAllowsEvidence(
+            claim,
+            {
+              url: input.source.url,
+              title: input.source.title,
+            },
+            input.listedSources ?? [],
+          )
         ) {
           return false;
         }
