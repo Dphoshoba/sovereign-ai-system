@@ -8,10 +8,15 @@ import {
   significantTokens,
 } from "./article-claim-extractor";
 import {
+  canonicalSourceUrl,
   claimAllowsEvidence,
   evidenceCorroborationKey,
+  isBibleProjectClaim,
+  isBibleProjectSource,
+  resolveClaimSourceBinding,
   type AttributableSource,
 } from "./claim-source-attribution";
+import { RESEARCH_MAX_PASSAGES_PER_CLAIM } from "./source-fetch-guard";
 
 export type GroundedEvidenceMatch = {
   evidence: EvidenceRecord;
@@ -50,12 +55,37 @@ function sourceFromEvidence(evidence: EvidenceRecord): AttributableSource {
   };
 }
 
+function dropAmbiguousBibleProjectMatches(
+  claim: string,
+  matches: GroundedEvidenceMatch[],
+  listedSources: AttributableSource[],
+): GroundedEvidenceMatch[] {
+  const binding = resolveClaimSourceBinding(claim, listedSources);
+  if (binding.role !== "publisher" || !isBibleProjectClaim(claim)) {
+    return matches;
+  }
+  const documentUrls = new Set<string>();
+  for (const match of matches) {
+    if (
+      !isBibleProjectSource({
+        url: match.evidence.sourceUrl,
+        title: match.evidence.sourceTitle,
+      })
+    ) {
+      continue;
+    }
+    documentUrls.add(canonicalSourceUrl(match.evidence.sourceUrl));
+  }
+  if (documentUrls.size > 1) return [];
+  return matches;
+}
+
 export function matchEvidenceToClaim(
   claim: ArticleClaim,
   evidenceRecords: EvidenceRecord[],
   listedSources: AttributableSource[] = [],
 ): GroundedEvidenceMatch[] {
-  return evidenceRecords.flatMap((evidence) => {
+  const matches = evidenceRecords.flatMap((evidence) => {
     if (
       !claimAllowsEvidence(
         claim.claim,
@@ -76,6 +106,7 @@ export function matchEvidenceToClaim(
     ).length;
     return [{ evidence, overlap }];
   });
+  return dropAmbiguousBibleProjectMatches(claim.claim, matches, listedSources);
 }
 
 export function groundedFactVerification(
@@ -103,10 +134,11 @@ export function groundedFactVerification(
       listedSources.length > 0
         ? listedSources
         : listedSourcesFromEvidence(evidenceRecords);
-    const matches = matchEvidenceToClaim(claim, evidenceRecords, sources).sort(
-      (left, right) => right.overlap - left.overlap,
-    );
+    const matches = matchEvidenceToClaim(claim, evidenceRecords, sources)
+      .sort((left, right) => right.overlap - left.overlap || left.evidence.id.localeCompare(right.evidence.id))
+      .slice(0, RESEARCH_MAX_PASSAGES_PER_CLAIM);
     const uniqueSources = new Map<string, EvidenceRecord>();
+    const mappedPassages: EvidenceRecord[] = [];
     for (const match of matches) {
       const key = evidenceCorroborationKey(
         claim.claim,
@@ -116,10 +148,14 @@ export function groundedFactVerification(
       if (!uniqueSources.has(key)) {
         uniqueSources.set(key, match.evidence);
       }
+      if (!mappedPassages.some((record) => record.id === match.evidence.id)) {
+        mappedPassages.push(match.evidence);
+      }
       acceptedById.set(match.evidence.id, match.evidence);
     }
 
     const supporting = Array.from(uniqueSources.values());
+    const mapped = mappedPassages.length > 0 ? mappedPassages : supporting;
     const verificationCount = supporting.length;
     const sourceAuthorityAverage =
       supporting.length === 0
@@ -175,7 +211,7 @@ export function groundedFactVerification(
       verificationStatus,
       verificationMethod:
         verificationCount > 1 ? "exact" : "single-source-supported",
-      supportingSources: supporting.map((evidence) => ({
+      supportingSources: mapped.map((evidence) => ({
         sourceTitle: evidence.sourceTitle,
         sourceUrl: evidence.sourceUrl,
         evidenceId: evidence.id,

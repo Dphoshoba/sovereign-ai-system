@@ -15,6 +15,9 @@ export const RESEARCH_PDF_HARD_PAGE_LIMIT = 200;
 export const RESEARCH_PDF_MAX_SCAN_CHARS = 400_000;
 export const RESEARCH_PDF_MAX_PAGE_CHARS = 20_000;
 export const RESEARCH_PDF_MAX_PASSAGES = 3;
+export const RESEARCH_MAX_PASSAGES_PER_CLAIM = 2;
+export const RESEARCH_MAX_UNIQUE_AUDIT_PASSAGES = 24;
+export const RESEARCH_MAX_CHUNKS_PER_DOCUMENT = 250;
 export async function withResearchTimeout<T>(
   ms: number,
   category: SourceAcquisitionCategory,

@@ -577,12 +577,12 @@ describe("real PostgreSQL article governance concurrency", () => {
     );
   });
 
-  it("creates one v5 replacement for a current-fingerprint article-grounded-v4 audit", async () => {
+  it("creates one v6 replacement for a current-fingerprint article-grounded-v5 audit", async () => {
     const article = await seedArticle(prismaA, { status: "draft" });
     const obsolete = await attachCurrentAudit(
       prismaA,
       article,
-      "article-grounded-v4",
+      "article-grounded-v5",
     );
     const [first, second] = await Promise.all([
       prepareArticleForReview(article.id, {
@@ -611,7 +611,7 @@ describe("real PostgreSQL article governance concurrency", () => {
     expect(historicalAudits.some((audit) => audit.id === obsolete.id)).toBe(true);
     const winner = [first, second].find((result) => result.ok);
     expect(winner && winner.ok ? winner.audit.engineRevision : null).toBe(
-      "article-grounded-v5",
+      "article-grounded-v6",
     );
   });
 });

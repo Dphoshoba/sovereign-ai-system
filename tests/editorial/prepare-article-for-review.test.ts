@@ -705,19 +705,19 @@ describe("prepareArticleForReview", () => {
     expect(result.sourceDiagnostics).toBeDefined()
   })
 
-  it("allows one article-grounded-v5 replacement after an article-grounded-v4 audit", async () => {
+  it("allows one article-grounded-v6 replacement after an article-grounded-v5 audit", async () => {
     const article = baseArticle()
     article.researchAudits = [
-      { id: "audit-v4", articleId: article.id, createdAt: auditCreatedAt },
+      { id: "audit-v5", articleId: article.id, createdAt: auditCreatedAt },
     ]
     article.reviewNotes = [
       {
         action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
         note: serializeArticleAuditAssociation({
-          auditId: "audit-v4",
+          auditId: "audit-v5",
           contentFingerprint: fingerprintFor(article),
           createdAt: auditCreatedAt,
-          engineRevision: "article-grounded-v4",
+          engineRevision: "article-grounded-v5",
         }),
       },
     ]
@@ -733,11 +733,11 @@ describe("prepareArticleForReview", () => {
     expect(createdAudits).toHaveLength(1)
     expect(articleUpdates).toHaveLength(1)
     expect(article.researchAudits.map((audit) => audit.id)).toEqual([
-      "audit-v4",
+      "audit-v5",
       "audit-2",
     ])
     if (!result.ok) return
-    expect(result.audit.engineRevision).toBe("article-grounded-v5")
+    expect(result.audit.engineRevision).toBe("article-grounded-v6")
     expect(result.sourceDiagnostics).toBeDefined()
   })
 })

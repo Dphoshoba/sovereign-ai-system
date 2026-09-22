@@ -1,14 +1,19 @@
 import type { SourceRecord } from "./source-collector"
 import { contentFetcher, type ContentFetchDeps } from "./content-fetcher"
 import { evidenceChunker } from "./evidence-chunker"
-import { chunkRanker } from "./chunk-ranker"
 import { isChromePassage } from "./evidence-chrome"
-import { passageSupportsClaim } from "./article-claim-extractor"
 import {
-  claimAllowsEvidence,
   type AttributableSource,
 } from "./claim-source-attribution"
+import {
+  selectClaimAwareEvidence,
+  type SelectableDocument,
+} from "./claim-evidence-selector"
 import { collectPdfPassages } from "./pdf-evidence"
+import {
+  RESEARCH_MAX_CHUNKS_PER_DOCUMENT,
+  RESEARCH_MAX_UNIQUE_AUDIT_PASSAGES,
+} from "./source-fetch-guard"
 import {
   emptyDiagnostic,
   isUnavailableAcquisitionCategory,
@@ -38,81 +43,15 @@ export type EvidenceRegistryResult = {
   availableSourceCount?: number
   unavailableSourceCount?: number
   noRelevantPassageCount?: number
+  factualClaimCount?: number
+  mappedClaimCount?: number
+  claimEvidenceCoverage?: number
 }
 
 export type EvidenceRegistryOptions = ContentFetchDeps & {
   fetchContent?: typeof contentFetcher
   claimTexts?: string[]
   listedSources?: AttributableSource[]
-}
-
-function isUsefulHtmlEvidence(
-  text: string,
-  claimTexts: string[] = [],
-  source?: { url: string; title?: string | null },
-  listedSources: AttributableSource[] = [],
-): boolean {
-  const normalized = text.toLowerCase().trim()
-
-  if (normalized.length < 80) return false
-  if (isChromePassage(text)) return false
-
-  if (claimTexts.length > 0) {
-    return claimTexts.some((claim) => {
-      if (
-        source &&
-        !claimAllowsEvidence(
-          claim,
-          { url: source.url, title: source.title },
-          listedSources,
-        )
-      ) {
-        return false
-      }
-      return passageSupportsClaim(claim, text, { documentKind: "html" })
-    })
-  }
-
-  const blocked = [
-    "cookie",
-    "privacy policy",
-    "terms of service",
-    "subscribe",
-    "newsletter",
-    "contact us",
-    "sign up",
-    "menu",
-    "copyright",
-    "all rights reserved",
-    "read more",
-    "follow us",
-    "table of contents",
-  ]
-
-  if (blocked.some((phrase) => normalized.includes(phrase))) {
-    return false
-  }
-
-  const useful = [
-    "research",
-    "study",
-    "survey",
-    "report",
-    "analysis",
-    "evidence",
-    "automation",
-    "artificial intelligence",
-    "generative ai",
-    "workflow",
-    "productivity",
-    "ethics",
-    "responsible",
-    "governance",
-    "risk",
-    "trend",
-  ]
-
-  return useful.some((word) => normalized.includes(word))
 }
 
 function sourceTypeBoost(sourceType: string): number {
@@ -153,14 +92,23 @@ function evidenceFromChunks(
   }))
 }
 
+type CollectedDocument = {
+  document: SelectableDocument | null
+  diagnostic: SourceAcquisitionDiagnostic
+}
+
+function htmlDocumentChunks(extractedText: string) {
+  return evidenceChunker(extractedText, 120)
+    .slice(0, RESEARCH_MAX_CHUNKS_PER_DOCUMENT)
+    .filter(
+      (chunk) => chunk.text.trim().length >= 80 && !isChromePassage(chunk.text),
+    )
+}
+
 async function collectFromSource(
-  topic: string,
   source: SourceRecord,
   options: EvidenceRegistryOptions,
-): Promise<{
-  evidence: EvidenceRecord[]
-  diagnostic: SourceAcquisitionDiagnostic
-}> {
+): Promise<CollectedDocument> {
   const fetchContent = options.fetchContent ?? contentFetcher
   const claimTexts = options.claimTexts ?? []
   const listedSources = options.listedSources ?? []
@@ -169,12 +117,11 @@ async function collectFromSource(
     ...fetched.diagnostic,
     sourceId: fetched.diagnostic.sourceId || sourceIdFromTitle(source.title, source.url),
   }
+  const sourceIdentity = { url: source.url, title: source.title }
 
   if (fetched.fetchStatus !== "success" || !fetched.extractedText) {
-    return { evidence: [], diagnostic }
+    return { document: null, diagnostic }
   }
-
-  const sourceIdentity = { url: source.url, title: source.title }
 
   if (fetched.contentKind === "pdf") {
     const scanned = collectPdfPassages({
@@ -192,7 +139,7 @@ async function collectFromSource(
     }
     if (scanned.passages.length === 0) {
       return {
-        evidence: [],
+        document: null,
         diagnostic: {
           ...pdfDiagnostic,
           category: scanned.categoryIfEmpty,
@@ -202,19 +149,22 @@ async function collectFromSource(
       }
     }
     return {
-      evidence: evidenceFromChunks(source, fetched.title, scanned.passages),
-      diagnostic: {
-        ...pdfDiagnostic,
-        category: "accepted",
-        acceptedPassageCount: scanned.passages.length,
-        rejectionReason: "",
+      document: {
+        url: source.url,
+        title: source.title,
+        fetchedTitle: fetched.title,
+        sourceType: source.sourceType,
+        relevanceScore: source.relevanceScore,
+        extractedText: fetched.extractedText,
+        chunks: scanned.passages,
       },
+      diagnostic: pdfDiagnostic,
     }
   }
 
   if (isChromePassage(fetched.extractedText)) {
     return {
-      evidence: [],
+      document: null,
       diagnostic: {
         ...diagnostic,
         category: "chrome_only",
@@ -224,30 +174,10 @@ async function collectFromSource(
     }
   }
 
-  const chunks = evidenceChunker(fetched.extractedText, 120)
-  const supporting: typeof chunks = []
-  if (claimTexts.length > 0) {
-    for (const chunk of chunks) {
-      if (!isUsefulHtmlEvidence(chunk.text, claimTexts, sourceIdentity, listedSources)) continue
-      supporting.push(chunk)
-      if (supporting.length >= 3) break
-    }
-  }
-
-  const rankedChunks = (
-    supporting.length > 0
-      ? supporting
-      : chunkRanker(
-          [topic, ...claimTexts].filter(Boolean).join(" "),
-          chunks,
-        ).filter((chunk) =>
-          isUsefulHtmlEvidence(chunk.text, claimTexts, sourceIdentity, listedSources),
-        )
-  ).slice(0, 3)
-
-  if (rankedChunks.length === 0) {
+  const chunks = htmlDocumentChunks(fetched.extractedText)
+  if (chunks.length === 0 && fetched.extractedText.trim().length < 80) {
     return {
-      evidence: [],
+      document: null,
       diagnostic: {
         ...diagnostic,
         category: "no_relevant_passage",
@@ -258,14 +188,43 @@ async function collectFromSource(
   }
 
   return {
-    evidence: evidenceFromChunks(source, fetched.title, rankedChunks),
-    diagnostic: {
-      ...diagnostic,
-      category: "accepted",
-      acceptedPassageCount: rankedChunks.length,
-      rejectionReason: "",
+    document: {
+      url: source.url,
+      title: source.title,
+      fetchedTitle: fetched.title,
+      sourceType: source.sourceType,
+      relevanceScore: source.relevanceScore,
+      extractedText: fetched.extractedText,
+      chunks,
     },
+    diagnostic,
   }
+}
+
+function applySelectedPassages(
+  collected: CollectedDocument[],
+  selected: EvidenceRecord[],
+): SourceAcquisitionDiagnostic[] {
+  return collected.map((item) => {
+    if (!item.document) return item.diagnostic
+    const acceptedPassageCount = selected.filter(
+      (record) => record.sourceUrl === item.document?.url,
+    ).length
+    if (acceptedPassageCount === 0) {
+      return {
+        ...item.diagnostic,
+        category: "no_relevant_passage",
+        acceptedPassageCount: 0,
+        rejectionReason: rejectionReasonFor("no_relevant_passage"),
+      }
+    }
+    return {
+      ...item.diagnostic,
+      category: "accepted",
+      acceptedPassageCount,
+      rejectionReason: "",
+    }
+  })
 }
 
 export async function evidenceRegistry(
@@ -276,19 +235,44 @@ export async function evidenceRegistry(
   const listedSources =
     options.listedSources ??
     sources.map((source) => ({ url: source.url, title: source.title }))
+  const claimTexts = options.claimTexts ?? []
   const collected = await Promise.all(
     sources.map((source) =>
-      collectFromSource(topic, source, { ...options, listedSources }),
+      collectFromSource(source, { ...options, listedSources }),
     ),
   )
 
-  const evidenceRecords: EvidenceRecord[] = []
-  const sourceDiagnostics: SourceAcquisitionDiagnostic[] = []
+  const documents = collected
+    .map((item) => item.document)
+    .filter((document): document is SelectableDocument => Boolean(document))
 
-  for (const item of collected) {
-    sourceDiagnostics.push(item.diagnostic)
-    evidenceRecords.push(...item.evidence)
-  }
+  const selection =
+    claimTexts.length > 0
+      ? selectClaimAwareEvidence({
+          claims: claimTexts,
+          documents,
+          listedSources,
+        })
+      : {
+          evidence: documents.flatMap((document) =>
+            evidenceFromChunks(
+              {
+                title: document.title,
+                url: document.url,
+                sourceType: document.sourceType,
+                relevanceScore: document.relevanceScore,
+              } as SourceRecord,
+              document.fetchedTitle || document.title,
+              document.chunks,
+            ),
+          ).slice(0, RESEARCH_MAX_UNIQUE_AUDIT_PASSAGES),
+          mappings: [],
+          uniquePassageCount: 0,
+          bounded: false,
+        }
+
+  const evidenceRecords = selection.evidence
+  const sourceDiagnostics = applySelectedPassages(collected, evidenceRecords)
 
   const acceptedSourceCount = sourceDiagnostics.filter(
     (diagnostic) => diagnostic.category === "accepted",
@@ -302,6 +286,10 @@ export async function evidenceRegistry(
       diagnostic.category === "chrome_only",
   ).length
   const availableSourceCount = Math.max(0, sources.length - unavailableSourceCount)
+  const mappedClaimCount = selection.mappings.filter(
+    (mapping) => mapping.evidenceIds.length > 0,
+  ).length
+  const factualClaimCount = claimTexts.length
 
   return {
     topic,
@@ -323,6 +311,12 @@ export async function evidenceRegistry(
     availableSourceCount,
     unavailableSourceCount,
     noRelevantPassageCount,
+    factualClaimCount,
+    mappedClaimCount,
+    claimEvidenceCoverage:
+      factualClaimCount <= 0
+        ? 0
+        : Math.round(Math.min(1, mappedClaimCount / factualClaimCount) * 100),
     registryStatus:
       evidenceRecords.length > 0
         ? "Evidence registry created from filtered and ranked evidence chunks."

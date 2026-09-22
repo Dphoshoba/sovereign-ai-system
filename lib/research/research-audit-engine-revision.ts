@@ -1,5 +1,5 @@
 export const CURRENT_RESEARCH_AUDIT_ENGINE_REVISION =
-  "article-grounded-v5" as const;
+  "article-grounded-v6" as const;
 
 export const RESEARCH_AUDIT_ENGINE_REVISION_PATTERN =
   /^[a-z0-9]+(?:-[a-z0-9]+)*$/;

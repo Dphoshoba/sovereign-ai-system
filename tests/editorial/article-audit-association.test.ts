@@ -382,16 +382,16 @@ describe("article audit associations", () => {
     ).toEqual({ current: null, historical: [obsolete] });
   });
 
-  it("treats article-grounded-v4 as historical once article-grounded-v5 is current", () => {
+  it("treats article-grounded-v5 as historical once article-grounded-v6 is current", () => {
     const obsolete = {
-      id: "audit-v4",
-      articleId: article.id,
-      createdAt: new Date("2026-09-21T18:56:27.259Z"),
-    };
-    const replacement = {
       id: "audit-v5",
       articleId: article.id,
-      createdAt: new Date("2026-09-22T00:00:00.000Z"),
+      createdAt: new Date("2026-09-22T06:30:57.453Z"),
+    };
+    const replacement = {
+      id: "audit-v6",
+      articleId: article.id,
+      createdAt: new Date("2026-09-22T07:00:00.000Z"),
     };
 
     expect(
@@ -406,7 +406,7 @@ describe("article audit associations", () => {
               auditId: obsolete.id,
               contentFingerprint: fingerprint,
               createdAt: obsolete.createdAt,
-              engineRevision: "article-grounded-v4",
+              engineRevision: "article-grounded-v5",
             }),
           },
           associationNote(replacement.id, fingerprint, replacement.createdAt),
@@ -425,7 +425,7 @@ describe("article audit associations", () => {
             auditId: obsolete.id,
             contentFingerprint: fingerprint,
             createdAt: obsolete.createdAt,
-            engineRevision: "article-grounded-v4",
+            engineRevision: "article-grounded-v5",
           }),
         },
       ]),

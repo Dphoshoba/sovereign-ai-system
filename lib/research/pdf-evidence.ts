@@ -7,7 +7,7 @@ import {
 } from "./claim-source-attribution";
 import { isPdfChromeOnly, type PdfPageText } from "./pdf-text-extractor";
 import {
-  RESEARCH_PDF_MAX_PASSAGES,
+  RESEARCH_MAX_CHUNKS_PER_DOCUMENT,
   RESEARCH_PDF_MAX_SCAN_CHARS,
   RESEARCH_PDF_MAX_SCAN_PAGES,
 } from "./source-fetch-guard";
@@ -103,8 +103,11 @@ export function collectPdfPassages(input: {
   }
 
   const passages = candidates
-    .sort((left, right) => right.overlap - left.overlap || left.pageNumber - right.pageNumber)
-    .slice(0, RESEARCH_PDF_MAX_PASSAGES)
+    .sort(
+      (left, right) =>
+        left.pageNumber - right.pageNumber || left.id.localeCompare(right.id),
+    )
+    .slice(0, RESEARCH_MAX_CHUNKS_PER_DOCUMENT)
     .map((passage, index) => ({
       ...passage,
       id: `page-${passage.pageNumber}-chunk-${index + 1}`,

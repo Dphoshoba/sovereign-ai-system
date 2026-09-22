@@ -86,29 +86,82 @@ export const ARTICLE_3_BODY = [
   `See [${BIBLEGATEWAY_TITLE}](${BIBLEGATEWAY_URL}), [${BIBLEPROJECT_SAMUEL_GUIDE_TITLE}](${BIBLEPROJECT_SAMUEL_GUIDE_URL}), and [${BIBLEPROJECT_KING_DAVID_TITLE}](${BIBLEPROJECT_KING_DAVID_URL}).`,
 ].join("\n\n");
 
+function padNarrative(core: string, minWords = 120): string {
+  const pad =
+    "The KJV narrator continues this same verse window in measured historical prose without introducing later combat details.";
+  const words = core.trim().split(/\s+/).filter(Boolean);
+  while (words.length < minWords) {
+    words.push(...pad.split(/\s+/));
+  }
+  return words.slice(0, minWords).join(" ");
+}
+
+export const BIBLEGATEWAY_OPENING_PASSAGE = padNarrative(
+  "1 Now the Philistines gathered together their armies to battle, and were gathered together at Shochoh, which belongeth to Judah. 2 And Saul and the men of Israel were gathered together, and pitched by the valley of Elah, and set the battle in array against the Philistines. 3 The Philistine and Israelite forces faced one another while Saul was king of Israel.",
+);
+export const BIBLEGATEWAY_CHALLENGE_PASSAGE = padNarrative(
+  "11 When Saul and all Israel heard those words of the Philistine, they were dismayed, and greatly afraid. 16 And the Philistine drew near morning and evening, and presented himself forty days. The challenge is public, repeated, and frightening before the armies.",
+);
+export const BIBLEGATEWAY_JESSE_PASSAGE = padNarrative(
+  "12 Now David was the son of that Ephrathite of Bethlehemjudah, whose name was Jesse. 13 And the three eldest sons of Jesse went and followed Saul to the battle. 14 And David was the youngest: and the three eldest followed Saul. 15 But David went and returned from Saul to feed his father's sheep at Bethlehem.",
+);
+export const BIBLEGATEWAY_HEARS_PASSAGE = padNarrative(
+  "23 And as he talked with them, behold, there came up the champion, the Philistine of Gath, Goliath by name, out of the armies of the Philistines, and spake according to the same words: and David heard them. While he is speaking with his brothers, Goliath repeats his challenge, and David hears it.",
+);
+export const BIBLEGATEWAY_VOLUNTEER_PASSAGE = padNarrative(
+  "32 And David said to Saul, Let no man's heart fail because of him; thy servant will go and fight with this Philistine. 37 David said moreover, The LORD that delivered me out of the paw of the lion, and out of the paw of the bear, he will deliver me out of the hand of this Philistine. He volunteers, names the Lord’s deliverance, and goes.",
+);
+export const BIBLEGATEWAY_ARMOUR_PASSAGE = padNarrative(
+  "38 And Saul armed David with his armour, and he put an helmet of brass upon his head; also he armed him with a coat of mail. 39 And David said unto Saul, I cannot go with these; for I have not tested them. And David put them off him. David has not tested them and so refuses the armour.",
+);
+export const BIBLEGATEWAY_STONES_PASSAGE = padNarrative(
+  "40 And he took his staff in his hand, and chose him five smooth stones out of the brook, and put them in a shepherd's bag which he had, even in a scrip; and his sling was in his hand: and he drew near to the Philistine.",
+);
+export const BIBLEGATEWAY_VICTORY_PASSAGE = padNarrative(
+  "50 So David prevailed over the Philistine with a sling and with a stone, and smote the Philistine, and slew him; but there was no sword in the hand of David. 51 Therefore David ran, and stood upon the Philistine, and took his sword, and slew him, and cut off his head therewith.",
+);
+
 export const BIBLEGATEWAY_CHAPTER_PASSAGE = [
-  "Now the Philistines gathered together their armies to battle, and were gathered together at Shochoh, which belongeth to Judah.",
-  "Saul and the men of Israel were gathered together, and pitched by the valley of Elah.",
-  "The Philistine and Israelite forces faced one another while Saul was king of Israel.",
-  "And the Philistine drew near morning and evening, and presented himself forty days.",
-  "Saul and all Israel were dismayed and greatly afraid.",
-  "David was Jesse’s youngest son; his three eldest brothers followed Saul to the battle, and David went back and forth from Saul to feed his father’s sheep at Bethlehem.",
-  "And as he talked with them, behold, there came up the champion, the Philistine of Gath, Goliath by name, out of the armies of the Philistines, and spoke according to the same words: and David heard them.",
-  "David said, The LORD that delivered me will deliver me out of the hand of this Philistine.",
-  "And Saul armed David with his armour. And David said unto Saul, I cannot go with these; for I have not tested them. And David put them off him.",
-  "And he took his staff in his hand, and chose him five smooth stones out of the brook, and put them in a shepherd’s bag; and his sling was in his hand as he approaches.",
-  "So David prevailed over the Philistine with a sling and with a stone, and smote the Philistine, and slew him; but there was no sword in the hand of David.",
-  "Therefore David ran, and stood upon the Philistine, and took his sword, and slew him, and cut off his head therewith.",
+  BIBLEGATEWAY_OPENING_PASSAGE,
+  BIBLEGATEWAY_CHALLENGE_PASSAGE,
+  BIBLEGATEWAY_JESSE_PASSAGE,
+  BIBLEGATEWAY_HEARS_PASSAGE,
+  BIBLEGATEWAY_VOLUNTEER_PASSAGE,
+  BIBLEGATEWAY_ARMOUR_PASSAGE,
+  BIBLEGATEWAY_STONES_PASSAGE,
+  BIBLEGATEWAY_VICTORY_PASSAGE,
 ].join(" ");
 
+export const BIBLEPROJECT_SAMUEL_GUIDE_LEADERS_PASSAGE = padNarrative(
+  "The story focuses on three main characters: Samuel, Saul, and David. These three were important leaders whose actions would transition Israel from a group of tribes ruled by judges into a unified kingdom ruled by King David in Jerusalem.",
+);
+export const BIBLEPROJECT_SAMUEL_GUIDE_FILLER_ONE = padNarrative(
+  "Hannah’s poem introduces how God opposes the proud and exalts the humble. Samuel grows up as a prophet while the ark is treated as a trophy and then returned. This early section does not yet describe Goliath or later royal collapse.",
+);
+export const BIBLEPROJECT_SAMUEL_GUIDE_FILLER_TWO = padNarrative(
+  "Israel demands a king like the other nations. Saul appears full of outward promise as a tall candidate, and Samuel warns that only a humble king will benefit the people. This still does not quote the Goliath trust sentence.",
+);
+export const BIBLEPROJECT_SAMUEL_GUIDE_TRUST_PASSAGE = padNarrative(
+  "Through the famous story of David and Goliath (1 Samuel 17), we are shown that God’s choice of David is not based on his status but rather his radical and humble trust in the God of Israel. This story embodies the proud brought low while the humble David is exalted.",
+);
+export const BIBLEPROJECT_SAMUEL_GUIDE_FAILURE_PASSAGE = padNarrative(
+  "David’s story is told in two movements. He first rides the wave of success, followed by his own tragic failure and the slow self-destruction of his family and kingdom. The same books go on to show David’s later failure; readers should not freeze David as a permanent hero.",
+);
+
 export const BIBLEPROJECT_SAMUEL_GUIDE_PASSAGE = [
-  "Samuel, Saul, and David are the three leaders through whom Israel moves from tribes ruled by judges toward a unified kingdom.",
-  "1 Samuel 17 shows God’s choice of David is not based on status but on radical and humble trust in the God of Israel.",
-  "The same books go on to show David’s later failure; readers should not freeze David as a permanent hero.",
+  BIBLEPROJECT_SAMUEL_GUIDE_LEADERS_PASSAGE,
+  BIBLEPROJECT_SAMUEL_GUIDE_FILLER_ONE,
+  BIBLEPROJECT_SAMUEL_GUIDE_FILLER_TWO,
+  BIBLEPROJECT_SAMUEL_GUIDE_TRUST_PASSAGE,
+  BIBLEPROJECT_SAMUEL_GUIDE_FAILURE_PASSAGE,
 ].join(" ");
 
 export const BIBLEPROJECT_KING_DAVID_PASSAGE = [
   "David rejected Saul’s tactics for armor and weaponry and faced Goliath with only his slingshot and faith in his God.",
+  padNarrative(
+    "The contrast between Saul and David continues after that battlefield scene, with jealousy growing in the court while David waits for God’s timing.",
+    80,
+  ),
   "Saul’s larger arc is a warning about character: promise on the outside and an inability to deal honestly with failure.",
 ].join(" ");
 
@@ -127,7 +180,16 @@ export const BIBLEGATEWAY_HTML = `<!doctype html>
   <head><title>1 Samuel 17 KJV - Bible Gateway</title></head>
   <body>
     <nav>Main navigation Bible Gateway Sign in</nav>
-    <article><p>${BIBLEGATEWAY_CHAPTER_PASSAGE}</p></article>
+    <article>
+      <p>${BIBLEGATEWAY_OPENING_PASSAGE}</p>
+      <p>${BIBLEGATEWAY_CHALLENGE_PASSAGE}</p>
+      <p>${BIBLEGATEWAY_JESSE_PASSAGE}</p>
+      <p>${BIBLEGATEWAY_HEARS_PASSAGE}</p>
+      <p>${BIBLEGATEWAY_VOLUNTEER_PASSAGE}</p>
+      <p>${BIBLEGATEWAY_ARMOUR_PASSAGE}</p>
+      <p>${BIBLEGATEWAY_STONES_PASSAGE}</p>
+      <p>${BIBLEGATEWAY_VICTORY_PASSAGE}</p>
+    </article>
     <footer>All rights reserved Cookie settings Subscribe to our newsletter</footer>
   </body>
 </html>`;
@@ -137,7 +199,13 @@ export const BIBLEPROJECT_SAMUEL_GUIDE_HTML = `<!doctype html>
   <head><title>Books of 1 and 2 Samuel | Guide with Key Information and Resources</title></head>
   <body>
     <nav>Main navigation BibleProject Guides</nav>
-    <article><p>${BIBLEPROJECT_SAMUEL_GUIDE_PASSAGE}</p></article>
+    <article>
+      <p>${BIBLEPROJECT_SAMUEL_GUIDE_LEADERS_PASSAGE}</p>
+      <p>${BIBLEPROJECT_SAMUEL_GUIDE_FILLER_ONE}</p>
+      <p>${BIBLEPROJECT_SAMUEL_GUIDE_FILLER_TWO}</p>
+      <p>${BIBLEPROJECT_SAMUEL_GUIDE_TRUST_PASSAGE}</p>
+      <p>${BIBLEPROJECT_SAMUEL_GUIDE_FAILURE_PASSAGE}</p>
+    </article>
     <aside>${SAMUEL_GUIDE_OUTLINE_PASSAGE}</aside>
     <footer>All rights reserved Related content</footer>
   </body>

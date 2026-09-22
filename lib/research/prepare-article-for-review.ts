@@ -18,6 +18,7 @@ import {
 } from "./evidence-registry";
 import { publicationGate } from "./publication-gate";
 import { CURRENT_RESEARCH_AUDIT_ENGINE_REVISION } from "./research-audit-engine-revision";
+import { researchAuditCoverage } from "./research-audit-coverage";
 import {
   isUnavailableAcquisitionCategory,
   logSourceAcquisition,
@@ -214,6 +215,10 @@ function sourceSummary(
     availableSourceCount?: number;
     unavailableSourceCount?: number;
   },
+  mapping?: {
+    factualClaimCount: number;
+    mappedClaimCount: number;
+  },
 ) {
   const accepted = new Set(acceptedUrls);
   const scoredSources =
@@ -246,10 +251,17 @@ function sourceSummary(
   const averageRelevanceScore = average(
     scoredSources.map((source) => source.relevanceScore ?? 0),
   );
-  const coverageRatio =
-    listedSourceCount <= 0 ? 0 : Math.min(1, acceptedSourceCount / listedSourceCount);
-  const availabilityRatio =
-    listedSourceCount <= 0 ? 0 : Math.min(1, availableSourceCount / listedSourceCount);
+  const coverage = researchAuditCoverage({
+    listedSourceCount,
+    availableSourceCount,
+    acceptedSourceCount,
+    factualClaimCount: mapping?.factualClaimCount ?? 0,
+    mappedClaimCount: mapping?.mappedClaimCount ?? 0,
+  });
+  const claimCoverageRatio =
+    (mapping?.factualClaimCount ?? 0) <= 0
+      ? 0
+      : Math.min(1, (mapping?.mappedClaimCount ?? 0) / (mapping?.factualClaimCount ?? 1));
   const baseConfidence =
     sourceCount === 0
       ? 0
@@ -263,11 +275,11 @@ function sourceSummary(
     sourceCount,
     averageAuthorityScore,
     averageTrustScore,
-    sourceCoverage: Math.round(coverageRatio * 100),
-    listedSourceAvailability: Math.round(availabilityRatio * 100),
-    acceptedEvidenceCoverage: Math.round(coverageRatio * 100),
+    sourceCoverage: coverage.sourceCoverage,
+    listedSourceAvailability: coverage.listedSourceAvailability,
+    acceptedEvidenceCoverage: coverage.acceptedEvidenceCoverage,
     unavailableSourceCount,
-    researchConfidence: Math.round(baseConfidence * coverageRatio),
+    researchConfidence: Math.round(baseConfidence * claimCoverageRatio),
   };
 }
 
@@ -360,6 +372,10 @@ export async function prepareArticleForReview(
   try {
     const evidence = await collectEvidence(article.title, sources, {
       claimTexts: claimExtraction.claims.map((claim) => claim.claim),
+      listedSources: sources.map((source) => ({
+        url: source.url,
+        title: source.title,
+      })),
     });
     const sourceDiagnostics = toPublicSourceDiagnostics(
       evidence.sourceDiagnostics ?? [],
@@ -431,6 +447,9 @@ export async function prepareArticleForReview(
     const acceptedUrls = verification.acceptedEvidence.map(
       (record) => record.sourceUrl,
     );
+    const mappedClaimCount = verification.facts.filter(
+      (fact) => fact.supportingSources.length > 0,
+    ).length;
     const listedSourceCount = evidence.listedSourceCount ?? sources.length;
     const sourceStats = sourceSummary(
       sources,
@@ -438,6 +457,10 @@ export async function prepareArticleForReview(
       listedSourceCount,
       sourceDiagnostics,
       evidence,
+      {
+        factualClaimCount: verification.facts.length,
+        mappedClaimCount,
+      },
     );
 
     const auditData = {

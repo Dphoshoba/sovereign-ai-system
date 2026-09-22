@@ -589,7 +589,46 @@ describe("article-grounded-v4 PDF evidence and coverage", () => {
     expect(result.audit.unavailableSourceCount).toBe(1);
     expect(result.audit.listedSourceAvailability).toBe(75);
     expect(result.audit.sourceCoverage).toBe(50);
-    expect(result.audit.acceptedEvidenceCoverage).toBe(50);
+    expect(result.audit.acceptedEvidenceCoverage).not.toBe(
+      result.audit.listedSourceAvailability,
+    );
+    const extracted = extractArticleClaims({
+      title: ARTICLE_2_TITLE,
+      excerpt: ARTICLE_2_EXCERPT,
+      content: ARTICLE_2_BODY,
+    });
+    const verification = groundedFactVerification(
+      extracted.claims,
+      result.ok
+        ? [
+            {
+              id: "nist-1",
+              sourceTitle: "NIST AI RMF",
+              sourceUrl: NIST_URL,
+              sourceType: "government",
+              extractedText: NIST_PDF_PASSAGE,
+              confidence: 95,
+              requiresHumanReview: true,
+            },
+            {
+              id: "deloitte-1",
+              sourceTitle: "Deloitte",
+              sourceUrl: DELOITTE_URL,
+              sourceType: "primary-survey",
+              extractedText: DELOITTE_SURVEY_PASSAGE,
+              confidence: 70,
+              requiresHumanReview: true,
+            },
+          ]
+        : [],
+      extracted.normalizedArticleText,
+    );
+    const mapped = verification.facts.filter(
+      (fact) => fact.supportingSources.length > 0,
+    ).length;
+    expect(result.audit.acceptedEvidenceCoverage).toBe(
+      Math.round((mapped / verification.facts.length) * 100),
+    );
     expect(result.sourceDiagnostics.find((item) => item.hostname === "www.cdomagazine.tech")?.category).toBe(
       "no_relevant_passage",
     );

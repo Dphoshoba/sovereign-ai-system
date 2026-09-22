@@ -292,7 +292,7 @@ describe("article-grounded-v5 sentence boundaries", () => {
   });
 });
 
-describe("article-grounded-v5 source identity", () => {
+describe("article-grounded-v6 source identity", () => {
   it("binds According to 1 Samuel 17 only to the BibleGateway chapter source", () => {
     const binding = resolveClaimSourceBinding(SCRIPTURE_ARMIES_CLAIM, LISTED_SOURCES);
     expect(binding.role).toBe("primary-scripture");
@@ -477,7 +477,7 @@ describe("article-grounded-v5 source identity", () => {
   });
 });
 
-describe("article-grounded-v5 Article 3 integrity", () => {
+describe("article-grounded-v6 Article 3 integrity", () => {
   it("assigns every extracted factual claim only to the correctly attributed document", () => {
     const extracted = extractArticleClaims({
       title: ARTICLE_3_TITLE,
@@ -554,8 +554,8 @@ describe("article-grounded-v5 Article 3 integrity", () => {
   });
 });
 
-describe("article-grounded-v5 lifecycle", () => {
-  it("allows one v5 replacement after a same-fingerprint v4 audit and rejects a duplicate", async () => {
+describe("article-grounded-v6 lifecycle", () => {
+  it("allows one v6 replacement after a same-fingerprint v5 audit and rejects a duplicate", async () => {
     const article = article3();
     const fingerprint = computeArticleAuditFingerprint(
       article,
@@ -563,7 +563,7 @@ describe("article-grounded-v5 lifecycle", () => {
     );
     article.researchAudits = [
       {
-        id: "cmuc69buj000004lbh2hr7uzs",
+        id: "cmucapfvx000004i4kx3xpc2v",
         articleId: article.id,
         createdAt: new Date("2026-09-21T18:56:27.259Z"),
       },
@@ -572,10 +572,10 @@ describe("article-grounded-v5 lifecycle", () => {
       {
         action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
         note: serializeArticleAuditAssociation({
-          auditId: "cmuc69buj000004lbh2hr7uzs",
+          auditId: "cmucapfvx000004i4kx3xpc2v",
           contentFingerprint: fingerprint,
           createdAt: new Date("2026-09-21T18:56:27.259Z"),
-          engineRevision: "article-grounded-v4",
+          engineRevision: "article-grounded-v5",
         }),
       },
     ];
@@ -592,7 +592,7 @@ describe("article-grounded-v5 lifecycle", () => {
 
     expect(first.ok).toBe(true);
     if (first.ok) {
-      expect(first.audit.engineRevision).toBe("article-grounded-v5");
+      expect(first.audit.engineRevision).toBe("article-grounded-v6");
     }
     expect(second).toMatchObject({
       ok: false,
@@ -604,7 +604,7 @@ describe("article-grounded-v5 lifecycle", () => {
     expect(article.researchAudits).toHaveLength(2);
   });
 
-  it("produces one audit from concurrent v5 attempts", async () => {
+  it("produces one audit from concurrent v6 attempts", async () => {
     const article = article3();
     const { store, createdAudits } = createStore(article);
     const [first, second] = await Promise.all([
@@ -628,43 +628,43 @@ describe("article-grounded-v5 lifecycle", () => {
     );
   });
 
-  it("keeps v4 historical and requires fingerprint plus v5 for current resolution", () => {
+  it("keeps v5 historical and requires fingerprint plus v6 for current resolution", () => {
     const article = article3();
     const fingerprint = computeArticleAuditFingerprint(
       article,
       ARTICLE_3_SOURCES.map((source) => source.url),
     );
-    const v4 = {
-      id: "cmuc69buj000004lbh2hr7uzs",
-      articleId: article.id,
-      createdAt: new Date("2026-09-21T18:56:27.259Z"),
-    };
     const v5 = {
-      id: "audit-v5",
+      id: "cmucapfvx000004i4kx3xpc2v",
       articleId: article.id,
-      createdAt: new Date("2026-09-22T05:00:00.000Z"),
+      createdAt: new Date("2026-09-22T06:30:57.453Z"),
     };
-    article.researchAudits = [v4];
+    const v6 = {
+      id: "audit-v6",
+      articleId: article.id,
+      createdAt: new Date("2026-09-22T07:00:00.000Z"),
+    };
+    article.researchAudits = [v5];
     article.reviewNotes = [
       {
         action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
         note: serializeArticleAuditAssociation({
-          auditId: v4.id,
+          auditId: v5.id,
           contentFingerprint: fingerprint,
-          createdAt: v4.createdAt,
-          engineRevision: "article-grounded-v4",
+          createdAt: v5.createdAt,
+          engineRevision: "article-grounded-v5",
         }),
       },
     ];
 
-    const v4Only = partitionAssociatedArticleAudits(
+    const v5Only = partitionAssociatedArticleAudits(
       article,
       ARTICLE_3_SOURCES.map((source) => source.url),
-      [v4],
+      [v5],
       article.reviewNotes,
     );
-    expect(v4Only.current).toBeNull();
-    expect(v4Only.historical).toEqual([v4]);
+    expect(v5Only.current).toBeNull();
+    expect(v5Only.historical).toEqual([v5]);
     expect(resolveArticleAuditState(article).currentAudit).toBeNull();
     expect(publicationGuard("approved", { hasCurrentAudit: false }).allowed).toBe(false);
     expect(publicationGuard("scheduled", { hasCurrentAudit: false }).allowed).toBe(false);
@@ -672,22 +672,22 @@ describe("article-grounded-v5 lifecycle", () => {
     const both = partitionAssociatedArticleAudits(
       article,
       ARTICLE_3_SOURCES.map((source) => source.url),
-      [v4, v5],
+      [v5, v6],
       [
         ...article.reviewNotes,
         {
           action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
           note: serializeArticleAuditAssociation({
-            auditId: v5.id,
+            auditId: v6.id,
             contentFingerprint: fingerprint,
-            createdAt: v5.createdAt,
-            engineRevision: "article-grounded-v5",
+            createdAt: v6.createdAt,
+            engineRevision: "article-grounded-v6",
           }),
         },
       ],
     );
-    expect(both.current).toEqual(v5);
-    expect(both.historical).toEqual([v4]);
+    expect(both.current).toEqual(v6);
+    expect(both.historical).toEqual([v5]);
   });
 
   it("writes nothing when preparation fails", async () => {
