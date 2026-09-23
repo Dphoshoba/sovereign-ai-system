@@ -740,4 +740,33 @@ describe("prepareArticleForReview", () => {
     expect(result.audit.engineRevision).toBe("article-grounded-v6")
     expect(result.sourceDiagnostics).toBeDefined()
   })
+
+  it("rejects Prepare for Review on a published article without a write", async () => {
+    const article = baseArticle({ status: "published" })
+    const { store, articleUpdates, createdAudits } = createStore(article)
+    const result = await prepareArticleForReview(article.id, {
+      prisma: store,
+      collectEvidence: async () =>
+        usefulEvidence("https://www.nist.gov/artificial-intelligence"),
+    })
+    expect(result).toMatchObject({
+      ok: false,
+      code: "invalid_status",
+      articleUnchanged: true,
+    })
+    expect(articleUpdates).toHaveLength(0)
+    expect(createdAudits).toHaveLength(0)
+  })
+
+  it("allows Prepare for Review after a published article returns to review-required", async () => {
+    const article = baseArticle({ status: "review-required" })
+    const { store, createdAudits } = createStore(article)
+    const result = await prepareArticleForReview(article.id, {
+      prisma: store,
+      collectEvidence: async () =>
+        usefulEvidence("https://www.nist.gov/artificial-intelligence"),
+    })
+    expect(result.ok).toBe(true)
+    expect(createdAudits).toHaveLength(1)
+  })
 })

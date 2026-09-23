@@ -7,6 +7,7 @@ import {
 } from "../../../../../lib/publishing/adelaide-time"
 import { AdelaideTimezoneHint } from "@/components/articles/AdelaideTimezoneHint"
 import { FeaturedImagePromptPanel } from "../../FeaturedImagePromptPanel"
+import { WithdrawForCorrectionPanel } from "../../WithdrawForCorrectionPanel"
 
 type Article = {
   id: string
@@ -37,6 +38,8 @@ export default function EditArticlePage({
   const [imageGenerationError, setImageGenerationError] = useState("")
   const [isApproving, setIsApproving] = useState(false)
   const [approvalMessage, setApprovalMessage] = useState("")
+  const [saveError, setSaveError] = useState("")
+  const [correctionMessage, setCorrectionMessage] = useState("")
 
   useEffect(() => {
     async function loadArticle() {
@@ -70,6 +73,7 @@ export default function EditArticlePage({
       article.status
     )
 
+    setSaveError("")
     const response = await fetch(`/api/articles/${article.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -90,7 +94,7 @@ export default function EditArticlePage({
     const result = await response.json()
 
     if (!result.ok) {
-      alert("Failed to update article")
+      setSaveError(result.error || "Failed to update article")
       return
     }
 
@@ -390,6 +394,50 @@ export default function EditArticlePage({
             )}
           </div>
         )}
+
+        {article.status === "published" ? (
+          <p style={{ fontSize: "14px", margin: 0 }}>
+            Published audited content cannot be saved in place. Use Withdraw for
+            Correction to take this article off the public site and return it to
+            review-required.
+          </p>
+        ) : null}
+
+        <WithdrawForCorrectionPanel
+          articleId={article.id}
+          status={article.status}
+          changes={{
+            title: article.title,
+            excerpt: article.excerpt,
+            content: article.content,
+            category: article.category,
+            seoTitle: article.seoTitle,
+            seoDescription: article.seoDescription,
+            seoKeywords: article.seoKeywords,
+          }}
+          onCorrected={(next) => {
+            setArticle({
+              ...article,
+              status: next.status,
+            })
+            setCorrectionMessage(
+              "Article withdrawn for correction. Status is now review-required. Prepare for Review is required before approval or publication.",
+            )
+            setSaveError("")
+          }}
+        />
+
+        {correctionMessage ? (
+          <p role="status" style={{ color: "#92400e", margin: 0 }}>
+            {correctionMessage}
+          </p>
+        ) : null}
+
+        {saveError ? (
+          <p role="alert" style={{ color: "#b91c1c", margin: 0 }}>
+            {saveError}
+          </p>
+        ) : null}
 
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
           <button type="submit" style={saveButton}>

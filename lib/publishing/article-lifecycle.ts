@@ -1,5 +1,13 @@
 import { publicationGuard } from "./publication-guard";
 import { resolveArticleAuditState } from "../research/current-article-audit";
+import { computeArticleAuditFingerprint } from "../research/article-audit-fingerprint";
+import {
+  collectEffectiveAuditedChanges,
+  serializeCorrectionGovernanceNote,
+  CORRECTED_AND_UNPUBLISHED_ACTION,
+  type CorrectableAuditedChanges,
+  type CorrectAndWithdrawResult,
+} from "./correct-and-withdraw";
 
 export type ArticleLifecycleTransition =
   | "approve"
@@ -428,6 +436,142 @@ export async function updateArticleUnderGovernanceLock(
       article: updated,
       alreadyApplied: false,
       articleUnchanged: false,
+    };
+  });
+}
+
+export async function correctAndWithdrawPublishedArticle(
+  input: {
+    articleId: string;
+    reason: string;
+    changes: CorrectableAuditedChanges;
+    actor: string;
+    now?: Date;
+  },
+  deps?: { prisma?: unknown },
+): Promise<CorrectAndWithdrawResult<LifecycleArticle>> {
+  const store = (deps?.prisma ??
+    (await import("@/lib/prisma")).prisma) as ArticleLifecycleStore;
+  const now = input.now ?? new Date();
+  const actor = input.actor;
+  const reason = input.reason.trim();
+  if (!reason) {
+    return {
+      ok: false,
+      code: "invalid_request",
+      error: "reason is required.",
+      articleUnchanged: true,
+    };
+  }
+
+  return store.$transaction(async (tx) => {
+    await lockArticleForGovernance(tx, input.articleId);
+    const article = await tx.article.findUnique({
+      where: { id: input.articleId },
+      include: {
+        researchSources: true,
+        researchAudits: true,
+        reviewNotes: true,
+      },
+    });
+    if (!article) {
+      return {
+        ok: false,
+        code: "article_not_found",
+        error: "Article not found.",
+        articleUnchanged: true,
+      };
+    }
+    if (article.status === "review-required") {
+      return {
+        ok: false,
+        code: "correction_conflict",
+        error:
+          "This article is already withdrawn for correction and cannot be corrected again until it is republished.",
+        articleUnchanged: true,
+      };
+    }
+    if (article.status !== "published") {
+      return {
+        ok: false,
+        code: "invalid_article_status",
+        error: "Only a published article can be withdrawn for correction.",
+        articleUnchanged: true,
+      };
+    }
+
+    const { changedFields, data: contentData } = collectEffectiveAuditedChanges(
+      article,
+      input.changes,
+    );
+    if (changedFields.length === 0) {
+      return {
+        ok: false,
+        code: "no_effective_change",
+        error: "The submitted correction does not change any audited field.",
+        articleUnchanged: true,
+      };
+    }
+
+    const { sourceUrls } = resolveArticleAuditState(article);
+    const previousFingerprint = computeArticleAuditFingerprint(
+      article,
+      sourceUrls,
+    );
+    const nextArticleState = { ...article, ...contentData };
+    const newFingerprint = computeArticleAuditFingerprint(
+      nextArticleState,
+      sourceUrls,
+    );
+
+    const note = serializeCorrectionGovernanceNote({
+      version: 1,
+      articleId: article.id,
+      reason,
+      changedFields,
+      previousStatus: "published",
+      newStatus: "review-required",
+      previousFingerprint,
+      newFingerprint,
+      correctedAt: now.toISOString(),
+      correctedBy: actor,
+    });
+
+    const updated = await tx.article.update({
+      where: { id: article.id },
+      data: {
+        ...contentData,
+        status: "review-required",
+        publishedAt: null,
+        scheduledFor: null,
+        approvedAt: null,
+        approvedBy: null,
+        editorialScore: null,
+        editorialGrade: null,
+        editorialWarnings: null,
+        qualityScore: null,
+        qualityGrade: null,
+        seoScore: null,
+        seoGrade: null,
+      },
+    });
+    await tx.articleReviewNote.create({
+      data: {
+        articleId: article.id,
+        action: CORRECTED_AND_UNPUBLISHED_ACTION,
+        reviewer: actor,
+        note,
+      },
+    });
+
+    return {
+      ok: true,
+      article: updated,
+      articleUnchanged: false,
+      changedFields,
+      previousFingerprint,
+      newFingerprint,
+      note,
     };
   });
 }

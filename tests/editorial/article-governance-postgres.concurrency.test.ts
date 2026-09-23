@@ -3,8 +3,12 @@ import { PrismaClient } from "@prisma/client";
 import { execFileSync, spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { updateArticleUnderGovernanceLock } from "../../lib/publishing/article-lifecycle";
-import { transitionArticleLifecycle } from "../../lib/publishing/article-lifecycle";
+import {
+  correctAndWithdrawPublishedArticle,
+  transitionArticleLifecycle,
+  updateArticleUnderGovernanceLock,
+} from "../../lib/publishing/article-lifecycle";
+import { CORRECTED_AND_UNPUBLISHED_ACTION } from "../../lib/publishing/correct-and-withdraw";
 import { computeArticleAuditFingerprint } from "../../lib/research/article-audit-fingerprint";
 import {
   RESEARCH_AUDIT_FINGERPRINT_ACTION,
@@ -16,6 +20,10 @@ import { resolveArticleAuditState } from "../../lib/research/current-article-aud
 import { CURRENT_RESEARCH_AUDIT_ENGINE_REVISION } from "../../lib/research/research-audit-engine-revision";
 
 import { GROUNDED_ARTICLE_CLAIM, GROUNDED_EVIDENCE_TEXT } from "../fixtures/research-audit/article-2";
+import {
+  ARTICLE_3_SAMUEL_17_32_AFTER,
+  ARTICLE_3_SAMUEL_17_32_BEFORE,
+} from "./fixtures/article-3-17-32-correction";
 
 const PORT = "55432";
 const CONTAINER = `ev-audit-lifecycle-${process.pid}`;
@@ -115,6 +123,13 @@ BEGIN
        WHERE "key" = 'fail_association' AND "value" = 'on'
      ) THEN
     RAISE EXCEPTION 'forced association failure';
+  END IF;
+  IF NEW.action = 'corrected-and-unpublished'
+     AND EXISTS (
+       SELECT 1 FROM "TestFlags"
+       WHERE "key" = 'fail_correction' AND "value" = 'on'
+     ) THEN
+    RAISE EXCEPTION 'forced correction note failure';
   END IF;
   RETURN NEW;
 END;
@@ -613,5 +628,134 @@ describe("real PostgreSQL article governance concurrency", () => {
     expect(winner && winner.ok ? winner.audit.engineRevision : null).toBe(
       "article-grounded-v6",
     );
+  });
+
+  it("lets only one concurrent published correction commit", async () => {
+    const article = await seedArticle(prismaA, {
+      status: "published",
+      content: `${ARTICLE_3_SAMUEL_17_32_BEFORE} See [1 Samuel 17:32](https://www.nist.gov/artificial-intelligence).`,
+      publishedAt: new Date("2026-09-21T00:00:00.000Z"),
+      scheduledFor: new Date("2026-09-20T00:00:00.000Z"),
+      approvedAt: new Date("2026-09-19T00:00:00.000Z"),
+      approvedBy: "editor",
+      editorialScore: 88,
+      editorialGrade: "approval-candidate",
+      editorialWarnings: [{ code: "tone" }],
+      qualityScore: 80,
+      qualityGrade: "review",
+      seoScore: 70,
+      seoGrade: "review",
+    });
+    const audit = await attachCurrentAudit(prismaA, article);
+    const firstContent = `${ARTICLE_3_SAMUEL_17_32_AFTER} See [1 Samuel 17:32](https://www.nist.gov/artificial-intelligence).`;
+    const secondContent = `${ARTICLE_3_SAMUEL_17_32_AFTER} Duplicate attempt. See [1 Samuel 17:32](https://www.nist.gov/artificial-intelligence).`;
+    const [first, second] = await Promise.all([
+      correctAndWithdrawPublishedArticle(
+        {
+          articleId: article.id,
+          reason: "First correction.",
+          changes: { content: firstContent },
+          actor: "admin-a@example.com",
+        },
+        { prisma: prismaA },
+      ),
+      correctAndWithdrawPublishedArticle(
+        {
+          articleId: article.id,
+          reason: "Second correction.",
+          changes: { content: secondContent },
+          actor: "admin-b@example.com",
+        },
+        { prisma: prismaB },
+      ),
+    ]);
+    const outcomes = [first, second];
+    expect(outcomes.filter((result) => result.ok)).toHaveLength(1);
+    expect(
+      outcomes.filter(
+        (result) => !result.ok && result.code === "correction_conflict",
+      ),
+    ).toHaveLength(1);
+    const loaded = await prismaA.article.findUniqueOrThrow({
+      where: { id: article.id },
+      include: {
+        researchAudits: true,
+        researchSources: true,
+        reviewNotes: true,
+      },
+    });
+    expect(loaded.status).toBe("review-required");
+    expect(loaded.publishedAt).toBeNull();
+    expect(loaded.scheduledFor).toBeNull();
+    expect(loaded.approvedAt).toBeNull();
+    expect(loaded.approvedBy).toBeNull();
+    expect(loaded.editorialScore).toBeNull();
+    expect(loaded.editorialGrade).toBeNull();
+    expect(loaded.editorialWarnings).toBeNull();
+    expect(loaded.qualityScore).toBeNull();
+    expect(loaded.qualityGrade).toBeNull();
+    expect(loaded.seoScore).toBeNull();
+    expect(loaded.seoGrade).toBeNull();
+    expect([firstContent, secondContent]).toContain(loaded.content);
+    expect(loaded.content === firstContent || loaded.content === secondContent).toBe(
+      true,
+    );
+    expect(loaded.content.includes(ARTICLE_3_SAMUEL_17_32_BEFORE)).toBe(false);
+    const correctionNotes = loaded.reviewNotes.filter(
+      (note) => note.action === CORRECTED_AND_UNPUBLISHED_ACTION,
+    );
+    expect(correctionNotes).toHaveLength(1);
+    expect(loaded.researchAudits.some((row) => row.id === audit.id)).toBe(true);
+    const { currentAudit } = resolveArticleAuditState(loaded);
+    expect(currentAudit).toBeNull();
+  });
+
+  it("rolls back a published correction when the governance note cannot be created", async () => {
+    const article = await seedArticle(prismaA, {
+      status: "published",
+      content: ARTICLE_3_SAMUEL_17_32_BEFORE,
+      publishedAt: new Date("2026-09-21T00:00:00.000Z"),
+      approvedAt: new Date("2026-09-19T00:00:00.000Z"),
+      approvedBy: "editor",
+      editorialScore: 70,
+      qualityScore: 71,
+      seoScore: 72,
+    });
+    await prismaA.$executeRawUnsafe(
+      `INSERT INTO "TestFlags" ("key", "value") VALUES ('fail_correction', 'on')
+       ON CONFLICT ("key") DO UPDATE SET "value" = 'on'`,
+    );
+    await expect(
+      correctAndWithdrawPublishedArticle(
+        {
+          articleId: article.id,
+          reason: "Correct 1 Samuel 17:32.",
+          changes: { content: ARTICLE_3_SAMUEL_17_32_AFTER },
+          actor: "admin@example.com",
+        },
+        { prisma: prismaA },
+      ),
+    ).rejects.toThrow(/forced correction note failure/);
+    await prismaA.$executeRawUnsafe(
+      `UPDATE "TestFlags" SET "value" = 'off' WHERE "key" = 'fail_correction'`,
+    );
+    const loaded = await prismaA.article.findUniqueOrThrow({
+      where: { id: article.id },
+    });
+    expect(loaded.content).toBe(ARTICLE_3_SAMUEL_17_32_BEFORE);
+    expect(loaded.status).toBe("published");
+    expect(loaded.publishedAt).not.toBeNull();
+    expect(loaded.approvedAt).not.toBeNull();
+    expect(loaded.approvedBy).toBe("editor");
+    expect(loaded.editorialScore).toBe(70);
+    expect(loaded.qualityScore).toBe(71);
+    expect(loaded.seoScore).toBe(72);
+    const notes = await prismaA.articleReviewNote.findMany({
+      where: {
+        articleId: article.id,
+        action: CORRECTED_AND_UNPUBLISHED_ACTION,
+      },
+    });
+    expect(notes).toHaveLength(0);
   });
 });
