@@ -2,11 +2,6 @@
 
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import {
-  fromAdelaideWallClock,
-  hasExplicitUtcOffset,
-  parseSchedulingTimestamp,
-} from "../../../lib/publishing/adelaide-time"
 
 export function ArticleActions({
   articleId,
@@ -77,70 +72,6 @@ export function ArticleActions({
         </button>
       )}
 
-      {status === "review-required" && (
-        <button
-          disabled={loading}
-          onClick={() =>
-            runAction(
-              "/api/articles/publish-package",
-              "Publish article and approve related newsletter/social posts?"
-            )
-          }
-          style={publishStyle}
-        >
-          Publish Package
-        </button>
-      )}
-
-      {status === "review-required" && (
-        <button
-          disabled={loading}
-          onClick={async () => {
-            const value = prompt(
-              "Enter Australia/Adelaide date/time, example: 2026-09-14T13:02"
-            )
-
-            if (!value) return
-
-            const parsed = hasExplicitUtcOffset(value)
-              ? parseSchedulingTimestamp(value)
-              : fromAdelaideWallClock(value)
-
-            if (!parsed.ok) {
-              alert(parsed.error)
-              return
-            }
-
-            setLoading(true)
-
-            const response = await fetch("/api/articles/schedule-package", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                articleId,
-                scheduledFor: parsed.iso,
-              }),
-            })
-
-            const result = await response.json()
-            setLoading(false)
-
-            if (!response.ok) {
-              alert(result.error || "Schedule failed")
-              return
-            }
-
-            alert("Package scheduled successfully.")
-            router.refresh()
-          }}
-          style={scheduleStyle}
-        >
-          Schedule Package
-        </button>
-      )}
-
       {status !== "archived" && (
         <button
           disabled={loading}
@@ -171,26 +102,6 @@ const generateStyle: React.CSSProperties = {
   borderRadius: "8px",
   border: "none",
   background: "#15803d",
-  color: "var(--button-foreground)",
-  fontWeight: "bold",
-  cursor: "pointer",
-}
-
-const publishStyle: React.CSSProperties = {
-  padding: "10px 14px",
-  borderRadius: "8px",
-  border: "none",
-  background: "#1d4ed8",
-  color: "var(--button-foreground)",
-  fontWeight: "bold",
-  cursor: "pointer",
-}
-
-const scheduleStyle: React.CSSProperties = {
-  padding: "10px 14px",
-  borderRadius: "8px",
-  border: "none",
-  background: "#7c3aed",
   color: "var(--button-foreground)",
   fontWeight: "bold",
   cursor: "pointer",

@@ -6,10 +6,16 @@ import { AdelaideTimezoneHint } from "@/components/articles/AdelaideTimezoneHint
 import { FeaturedImagePromptPanel } from "../../FeaturedImagePromptPanel"
 import { WithdrawForCorrectionPanel } from "../../WithdrawForCorrectionPanel"
 import { PrepareForReviewButton } from "../../PrepareForReviewButton"
+import { PublishPackageButton } from "../../PublishPackageButton"
 import {
   canShowApprovalActions,
   scoreDisplayValue,
 } from "../../ArticleAuditPanel"
+import {
+  canShowImmediatePublishAction,
+  canShowPrepareForReviewAction,
+  publicationReadinessMessage,
+} from "../../../../../lib/publishing/article-action-visibility"
 
 export type EditArticleFormArticle = {
   id: string
@@ -24,6 +30,8 @@ export type EditArticleFormArticle = {
   seoKeywords: string | null
   scheduledFor: string | null
   status: string
+  approvedAt?: string | null
+  approvedBy?: string | null
   editorialScore?: number | null
   editorialGrade?: string | null
   editorialWarnings?: unknown
@@ -56,9 +64,25 @@ export function EditArticleForm({
   const [correctionMessage, setCorrectionMessage] = useState("")
 
   const showApproval = canShowApprovalActions(article.status, hasCurrentAudit)
-  const canPrepareForReview =
-    !hasCurrentAudit &&
-    ["draft", "review", "review-required"].includes(article.status)
+  const canPrepareForReview = canShowPrepareForReviewAction({
+    status: article.status,
+    hasCurrentAudit,
+  })
+  const hasFeaturedImage = Boolean(article.featuredImage?.trim())
+  const showImmediatePublish = canShowImmediatePublishAction({
+    status: article.status,
+    hasCurrentAudit,
+    approvedAt: article.approvedAt,
+    approvedBy: article.approvedBy,
+    hasFeaturedImage,
+  })
+  const readinessMessage = publicationReadinessMessage({
+    status: article.status,
+    hasCurrentAudit,
+    approvedAt: article.approvedAt,
+    approvedBy: article.approvedBy,
+    hasFeaturedImage,
+  })
   const editorialGradeDisplay = scoreDisplayValue(
     hasCurrentAudit,
     historicalAuditCount,
@@ -144,6 +168,8 @@ export function EditArticleForm({
       setArticle({
         ...article,
         status: "approved",
+        approvedAt: new Date().toISOString(),
+        approvedBy: "admin",
       })
       setApprovalMessage("Article approved for publishing.")
     } catch (err) {
@@ -442,6 +468,18 @@ export function EditArticleForm({
             </p>
             <PrepareForReviewButton articleId={article.id} />
           </div>
+        ) : null}
+
+        {showImmediatePublish ? (
+          <div data-immediate-publish-visible="true">
+            <PublishPackageButton articleId={article.id} />
+          </div>
+        ) : null}
+
+        {readinessMessage ? (
+          <p role="status" style={{ fontSize: "14px", color: "#92400e", margin: 0 }}>
+            {readinessMessage}
+          </p>
         ) : null}
 
         {article.status === "published" ? (

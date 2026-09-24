@@ -28,4 +28,17 @@ describe("publicationGuard research-audit currency", () => {
     expect(result.allowed).toBe(false)
     expect(result.reason).toContain("current research audit")
   })
+
+  it("rejects an already published article", () => {
+    const result = publicationGuard("published", { hasCurrentAudit: true })
+
+    expect(result.allowed).toBe(false)
+    expect(result.reason).toContain("already been published")
+  })
+
+  it("allows a scheduled article with a current audit for the scheduler", () => {
+    const result = publicationGuard("scheduled", { hasCurrentAudit: true })
+
+    expect(result.allowed).toBe(true)
+  })
 })

@@ -19,6 +19,8 @@ describe("admin article audit currency labels", () => {
     expect(listPage).toContain('data-audit-state="current"');
     expect(listPage).toContain('data-audit-state="historical"');
     expect(listPage).toContain("canShowApprovalActions");
+    expect(listPage).toContain("canShowImmediatePublishAction");
+    expect(listPage).toContain("canShowScheduleAction");
     expect(listPage).toContain("Not current");
 
     const editPage = read("app/admin/articles/[id]/edit/page.tsx");

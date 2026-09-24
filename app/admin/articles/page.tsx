@@ -3,9 +3,16 @@ import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { ArticleReviewActions } from "./ArticleReviewActions"
 import { PrepareForReviewButton } from "./PrepareForReviewButton"
+import { PublishPackageButton } from "./PublishPackageButton"
 import { ScheduleArticleButton } from "./ScheduleArticleButton"
 import { ArticleActions } from "@/components/articles/ArticleActions"
 import { formatAdelaideDisplay } from "../../../lib/publishing/adelaide-time"
+import {
+  canShowImmediatePublishAction,
+  canShowPrepareForReviewAction,
+  canShowScheduleAction,
+  publicationReadinessMessage,
+} from "../../../lib/publishing/article-action-visibility"
 import { resolveArticleAuditState } from "../../../lib/research/current-article-audit"
 import { canShowApprovalActions } from "./ArticleAuditPanel"
 
@@ -152,6 +159,15 @@ export default async function AdminArticlesPage({
           articles.map((article) => {
             const { currentAudit: audit, historicalAudits } =
               resolveArticleAuditState(article)
+            const hasCurrentAudit = Boolean(audit)
+            const hasFeaturedImage = Boolean(article.featuredImage?.trim())
+            const readinessMessage = publicationReadinessMessage({
+              status: article.status,
+              hasCurrentAudit,
+              approvedAt: article.approvedAt,
+              approvedBy: article.approvedBy,
+              hasFeaturedImage,
+            })
 
             return (
               <div key={article.id} style={cardStyle}>
@@ -323,20 +339,41 @@ export default async function AdminArticlesPage({
                     Audit
                   </Link>
 
-                  {!audit &&
-                    (article.status === "review" ||
-                      article.status === "draft" ||
-                      article.status === "review-required") && (
-                      <PrepareForReviewButton articleId={article.id} />
-                    )}
+                  {canShowPrepareForReviewAction({
+                    status: article.status,
+                    hasCurrentAudit,
+                  }) && <PrepareForReviewButton articleId={article.id} />}
 
-                  {canShowApprovalActions(article.status, Boolean(audit)) && (
+                  {canShowApprovalActions(article.status, hasCurrentAudit) && (
                     <ArticleReviewActions articleId={article.id} />
                   )}
 
-                  {article.status === "approved" && (
-                    <ScheduleArticleButton articleId={article.id} />
-                  )}
+                  {canShowImmediatePublishAction({
+                    status: article.status,
+                    hasCurrentAudit,
+                    approvedAt: article.approvedAt,
+                    approvedBy: article.approvedBy,
+                    hasFeaturedImage,
+                  }) && <PublishPackageButton articleId={article.id} />}
+
+                  {canShowScheduleAction({
+                    status: article.status,
+                    hasCurrentAudit,
+                  }) && <ScheduleArticleButton articleId={article.id} />}
+
+                  {readinessMessage ? (
+                    <p
+                      role="status"
+                      style={{
+                        width: "100%",
+                        fontSize: "14px",
+                        color: "#92400e",
+                        margin: "0",
+                      }}
+                    >
+                      {readinessMessage}
+                    </p>
+                  ) : null}
 
                   <ArticleActions
                     articleId={article.id}

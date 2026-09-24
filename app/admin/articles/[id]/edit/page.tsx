@@ -44,6 +44,10 @@ export default async function EditArticlePage({
           ? instantToAdelaideWallClock(article.scheduledFor)
           : null,
         status: article.status,
+        approvedAt: article.approvedAt
+          ? article.approvedAt.toISOString()
+          : null,
+        approvedBy: article.approvedBy,
         editorialScore: article.editorialScore,
         editorialGrade: article.editorialGrade,
         editorialWarnings: article.editorialWarnings,

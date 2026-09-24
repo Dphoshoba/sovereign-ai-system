@@ -373,6 +373,52 @@ describe("transitionArticleLifecycle", () => {
     expect(tx.article.update).toHaveBeenCalledTimes(1);
   });
 
+  it("rejects publication from review-required even when a current audit exists", async () => {
+    const reviewRequired = {
+      ...baseArticle,
+      status: "review-required",
+      reviewNotes: [currentAssociation()],
+    };
+    const { store, tx } = createStore(reviewRequired);
+
+    const result = await transitionArticleLifecycle(
+      { articleId: reviewRequired.id, transition: "publish" },
+      { prisma: store },
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: "invalid_status",
+      articleUnchanged: true,
+    });
+    expect(result.ok === false && result.error).toContain("human review");
+    expect(tx.article.update).not.toHaveBeenCalled();
+  });
+
+  it("treats a repeated publication as an unchanged already-applied result", async () => {
+    const published = {
+      ...baseArticle,
+      status: "published",
+      publishedAt: new Date("2026-09-16T00:00:00.000Z"),
+      approvedAt: new Date("2026-09-15T01:00:00.000Z"),
+      approvedBy: "editor",
+      reviewNotes: [currentAssociation()],
+    };
+    const { store, tx } = createStore(published);
+
+    const result = await transitionArticleLifecycle(
+      { articleId: published.id, transition: "publish" },
+      { prisma: store },
+    );
+
+    expect(result).toMatchObject({
+      ok: true,
+      alreadyApplied: true,
+      articleUnchanged: true,
+    });
+    expect(tx.article.update).not.toHaveBeenCalled();
+  });
+
   it("returns a no-write result for an invalid transition", async () => {
     const draft = {
       ...baseArticle,
