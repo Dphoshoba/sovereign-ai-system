@@ -19,5 +19,13 @@ describe("admin article audit currency labels", () => {
     expect(listPage).toContain('data-audit-state="current"');
     expect(listPage).toContain('data-audit-state="historical"');
     expect(listPage).toContain("canShowApprovalActions");
+    expect(listPage).toContain("Not current");
+
+    const editPage = read("app/admin/articles/[id]/edit/page.tsx");
+    const editForm = read("app/admin/articles/[id]/edit/EditArticleForm.tsx");
+    expect(editPage).toContain("resolveArticleAuditState");
+    expect(editForm).toContain("canShowApprovalActions");
+    expect(editForm).toContain("scoreDisplayValue");
+    expect(editForm).toContain("A current research audit is required");
   });
 });

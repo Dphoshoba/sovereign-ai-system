@@ -277,7 +277,7 @@ export default async function AdminArticlesPage({
                     marginTop: "8px",
                   }}
                 >
-                  {audit ? gradeLabel(article.editorialGrade) : "Unscored"}
+                  {audit ? gradeLabel(article.editorialGrade) : "Not current"}
                 </div>
 
                 {audit &&

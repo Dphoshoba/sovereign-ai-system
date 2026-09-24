@@ -287,6 +287,13 @@ describe("prepareArticleForReview", () => {
       engineRevision: CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
     })
     expect(tx.$queryRaw).toHaveBeenCalledTimes(1)
+
+    const articleUpdate = articleUpdates[0] as {
+      data: Record<string, unknown>
+    }
+    expect(typeof articleUpdate.data.editorialScore).toBe("number")
+    expect(typeof articleUpdate.data.qualityScore).toBe("number")
+    expect(typeof articleUpdate.data.seoScore).toBe("number")
     expect(String(tx.$queryRaw.mock.calls[0]?.[0]?.raw?.[0])).toContain(
       'SELECT "id" FROM "Article" WHERE "id" = ',
     )
@@ -301,6 +308,35 @@ describe("prepareArticleForReview", () => {
     expect(update.data).not.toHaveProperty("excerpt")
     expect(update.data).not.toHaveProperty("content")
     expect(update.data).not.toHaveProperty("featuredImage")
+  })
+
+  it("writes fresh scores after a prior audited edit invalidated them", async () => {
+    const article = baseArticle({
+      status: "review-required",
+    })
+    const { store, articleUpdates } = createStore(article)
+    const collectEvidence = vi.fn(async () =>
+      usefulEvidence("https://www.nist.gov/artificial-intelligence"),
+    )
+
+    const result = await prepareArticleForReview(article.id, {
+      prisma: store,
+      collectEvidence,
+      reviewer: "editor@example.com",
+    })
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(typeof result.article.editorialScore).toBe("number")
+    expect(result.article.editorialScore).not.toBeNull()
+    expect(typeof result.article.qualityScore).toBe("number")
+    expect(typeof result.article.seoScore).toBe("number")
+    const articleUpdate = articleUpdates[0] as {
+      data: Record<string, unknown>
+    }
+    expect(articleUpdate.data.editorialScore).not.toBeNull()
+    expect(articleUpdate.data.qualityScore).not.toBeNull()
+    expect(articleUpdate.data.seoScore).not.toBeNull()
   })
 
   it("returns a missing-evidence error and leaves the article unchanged when no sources exist", async () => {

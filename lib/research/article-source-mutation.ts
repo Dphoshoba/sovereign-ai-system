@@ -1,4 +1,8 @@
-import { lockArticleForGovernance } from "../publishing/article-lifecycle";
+import { canonicalizeSourceUrl } from "./article-audit-fingerprint";
+import {
+  INVALIDATED_ARTICLE_SCORES,
+  lockArticleForGovernance,
+} from "../publishing/article-lifecycle";
 
 export type ArticleSourceRecord = {
   title?: string | null;
@@ -105,20 +109,47 @@ function shouldInvalidateLifecycle(status: string): boolean {
   return status === "approved" || status === "scheduled";
 }
 
-async function invalidateApprovalIfNeeded(
+function canonicalUrlSet(sources: Array<{ url?: string | null }>): string {
+  return Array.from(
+    new Set(
+      sources
+        .map((source) => source.url)
+        .filter((url): url is string => Boolean(url && url.trim()))
+        .map((url) => {
+          try {
+            return canonicalizeSourceUrl(url);
+          } catch {
+            return url.trim();
+          }
+        }),
+    ),
+  )
+    .sort()
+    .join("\n");
+}
+
+async function applySourceMutationArticleEffects(
   tx: SourceMutationTransaction,
   article: SourceMutationArticle,
+  urlsChanged: boolean,
 ): Promise<SourceMutationArticle> {
-  if (!shouldInvalidateLifecycle(article.status)) return article;
-  return tx.article.update({
-    where: { id: article.id },
-    data: {
+  const data: Record<string, unknown> = {};
+  if (shouldInvalidateLifecycle(article.status)) {
+    Object.assign(data, {
       status: "review-required",
       approvedAt: null,
       approvedBy: null,
       scheduledFor: null,
       publishedAt: null,
-    },
+    });
+  }
+  if (urlsChanged) {
+    Object.assign(data, INVALIDATED_ARTICLE_SCORES);
+  }
+  if (Object.keys(data).length === 0) return article;
+  return tx.article.update({
+    where: { id: article.id },
+    data,
   });
 }
 
@@ -138,6 +169,11 @@ export async function applyArticleSourceMutationInTransaction(
       "Research sources for a published article cannot be changed.",
     );
   }
+
+  const existingSources = (await tx.researchSource.findMany({
+    where: { articleId: article.id },
+  })) as Array<{ url?: string | null }>;
+  const previousUrls = canonicalUrlSet(existingSources);
 
   if (input.operation === "replace") {
     await tx.researchSource.deleteMany({ where: { articleId: article.id } });
@@ -184,15 +220,20 @@ export async function applyArticleSourceMutationInTransaction(
     await tx.researchSource.delete({ where: { id: input.sourceId } });
   }
 
-  const updatedArticle = await invalidateApprovalIfNeeded(tx, article);
-  const sources = await tx.researchSource.findMany({
+  const sources = (await tx.researchSource.findMany({
     where: { articleId: article.id },
-  });
+  })) as Array<{ url?: string | null }>;
+  const urlsChanged = canonicalUrlSet(sources) !== previousUrls;
+  const updatedArticle = await applySourceMutationArticleEffects(
+    tx,
+    article,
+    urlsChanged,
+  );
 
   return {
     ok: true,
     article: updatedArticle,
-    articleUnchanged: false,
+    articleUnchanged: !urlsChanged && updatedArticle === article,
     sources,
   };
 }

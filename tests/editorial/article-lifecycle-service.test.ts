@@ -17,6 +17,13 @@ const baseArticle = {
   seoDescription: "Build accountable AI workflows.",
   seoKeywords: "AI governance",
   featuredImage: null,
+  editorialScore: 95,
+  editorialGrade: "approval-candidate",
+  editorialWarnings: [],
+  qualityScore: 80,
+  qualityGrade: "good",
+  seoScore: 90,
+  seoGrade: "excellent",
   status: "review-required",
   scheduledFor: null,
   publishedAt: null,
@@ -86,6 +93,16 @@ function v4Association() {
       engineRevision: "article-grounded-v4",
     }),
   };
+}
+
+function dataHasNoLifecycleDemotion(data: Record<string, unknown>): boolean {
+  return (
+    data.status === undefined &&
+    data.approvedAt === undefined &&
+    data.approvedBy === undefined &&
+    data.scheduledFor === undefined &&
+    data.publishedAt === undefined
+  );
 }
 
 function createStore(
@@ -734,8 +751,175 @@ describe("transitionArticleLifecycle", () => {
         approvedAt: null,
         approvedBy: null,
         scheduledFor: null,
+        publishedAt: null,
+        editorialScore: null,
+        editorialGrade: null,
+        editorialWarnings: null,
+        qualityScore: null,
+        qualityGrade: null,
+        seoScore: null,
+        seoGrade: null,
       }),
     });
+    expect(approved.editorialScore).toBeNull();
+    expect(approved.editorialGrade).toBeNull();
+    expect(approved.editorialWarnings).toBeNull();
+    expect(approved.qualityScore).toBeNull();
+    expect(approved.qualityGrade).toBeNull();
+    expect(approved.seoScore).toBeNull();
+    expect(approved.seoGrade).toBeNull();
+  });
+
+  it("invalidates scores after an audited review-required edit and leaves no current audit", async () => {
+    const current = {
+      ...baseArticle,
+      reviewNotes: [currentAssociation()],
+    };
+    const previousFingerprint = computeArticleAuditFingerprint(current, []);
+    const { store, tx } = createStore(current);
+
+    const result = await updateArticleUnderGovernanceLock(
+      {
+        articleId: current.id,
+        changes: { content: `${current.content} Corrected attribution.` },
+      },
+      { prisma: store },
+    );
+
+    expect(result).toMatchObject({ ok: true, articleUnchanged: false });
+    expect(tx.article.update).toHaveBeenCalledWith({
+      where: { id: current.id },
+      data: expect.objectContaining({
+        editorialScore: null,
+        editorialGrade: null,
+        editorialWarnings: null,
+        qualityScore: null,
+        qualityGrade: null,
+        seoScore: null,
+        seoGrade: null,
+      }),
+    });
+    expect(current.status).toBe("review-required");
+    expect(current.editorialScore).toBeNull();
+    const nextFingerprint = computeArticleAuditFingerprint(current, []);
+    expect(nextFingerprint).not.toBe(previousFingerprint);
+  });
+
+  it.each(["draft", "review"] as const)(
+    "invalidates scores after an audited %s edit",
+    async (status) => {
+      const current = { ...baseArticle, status };
+      const { store, tx } = createStore(current);
+
+      const result = await updateArticleUnderGovernanceLock(
+        { articleId: current.id, changes: { excerpt: "Revised excerpt." } },
+        { prisma: store },
+      );
+
+      expect(result).toMatchObject({ ok: true });
+      expect(tx.article.update).toHaveBeenCalledWith({
+        where: { id: current.id },
+        data: expect.objectContaining({
+          excerpt: "Revised excerpt.",
+          editorialScore: null,
+          editorialGrade: null,
+          editorialWarnings: null,
+          qualityScore: null,
+          qualityGrade: null,
+          seoScore: null,
+          seoGrade: null,
+        }),
+      });
+      expect(dataHasNoLifecycleDemotion(tx.article.update.mock.calls[0][0].data)).toBe(
+        true,
+      );
+    },
+  );
+
+  it("invalidates scores and demotes a scheduled article after an audited edit", async () => {
+    const scheduled = {
+      ...baseArticle,
+      status: "scheduled",
+      approvedAt: new Date("2026-09-15T01:00:00.000Z"),
+      approvedBy: "editor",
+      scheduledFor: new Date("2026-09-20T00:00:00.000Z"),
+    };
+    const { store, tx } = createStore(scheduled);
+
+    const result = await updateArticleUnderGovernanceLock(
+      { articleId: scheduled.id, changes: { seoTitle: "Revised SEO title" } },
+      { prisma: store },
+    );
+
+    expect(result).toMatchObject({
+      ok: true,
+      article: { status: "review-required" },
+    });
+    expect(tx.article.update).toHaveBeenCalledWith({
+      where: { id: scheduled.id },
+      data: expect.objectContaining({
+        seoTitle: "Revised SEO title",
+        status: "review-required",
+        approvedAt: null,
+        approvedBy: null,
+        scheduledFor: null,
+        publishedAt: null,
+        editorialScore: null,
+        editorialGrade: null,
+        editorialWarnings: null,
+        qualityScore: null,
+        qualityGrade: null,
+        seoScore: null,
+        seoGrade: null,
+      }),
+    });
+  });
+
+  it("does not write when the PATCH has no effective field change", async () => {
+    const current = { ...baseArticle };
+    const { store, tx } = createStore(current);
+
+    const result = await updateArticleUnderGovernanceLock(
+      {
+        articleId: current.id,
+        changes: {
+          title: current.title,
+          excerpt: current.excerpt,
+          content: current.content,
+          category: current.category,
+        },
+      },
+      { prisma: store },
+    );
+
+    expect(result).toMatchObject({
+      ok: true,
+      alreadyApplied: true,
+      articleUnchanged: true,
+    });
+    expect(tx.article.update).not.toHaveBeenCalled();
+    expect(current.editorialScore).toBe(95);
+    expect(current.editorialGrade).toBe("approval-candidate");
+  });
+
+  it("does not invalidate scores when only a non-audited display field changes", async () => {
+    const current = { ...baseArticle };
+    const { store, tx } = createStore(current);
+
+    const result = await updateArticleUnderGovernanceLock(
+      {
+        articleId: current.id,
+        changes: { featuredImage: "/generated/new-cover.png" },
+      },
+      { prisma: store },
+    );
+
+    expect(result).toMatchObject({ ok: true, articleUnchanged: false });
+    expect(tx.article.update).toHaveBeenCalledWith({
+      where: { id: current.id },
+      data: { featuredImage: "/generated/new-cover.png" },
+    });
+    expect(current.editorialScore).toBe(95);
   });
 
   it("rejects audited content edits after publication", async () => {

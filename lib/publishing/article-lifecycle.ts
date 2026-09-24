@@ -373,7 +373,34 @@ const AUDITED_ARTICLE_FIELDS = [
   "seoTitle",
   "seoDescription",
   "seoKeywords",
+  "ctaType",
+  "ctaContent",
+  "ctaDestination",
 ] as const;
+
+export const INVALIDATED_ARTICLE_SCORES = {
+  editorialScore: null,
+  editorialGrade: null,
+  editorialWarnings: null,
+  qualityScore: null,
+  qualityGrade: null,
+  seoScore: null,
+  seoGrade: null,
+} as const;
+
+function collectEffectiveFieldChanges(
+  article: LifecycleArticle,
+  changes: Record<string, unknown>,
+): Record<string, unknown> {
+  const current = article as unknown as Record<string, unknown>;
+  const data: Record<string, unknown> = {};
+  for (const [field, value] of Object.entries(changes)) {
+    if (current[field] !== value) {
+      data[field] = value;
+    }
+  }
+  return data;
+}
 
 export async function updateArticleUnderGovernanceLock(
   input: {
@@ -401,10 +428,9 @@ export async function updateArticleUnderGovernanceLock(
     const blocked = input.assert?.(article) ?? null;
     if (blocked) return blocked;
 
-    const auditedContentChanged = AUDITED_ARTICLE_FIELDS.some(
-      (field) =>
-        Object.prototype.hasOwnProperty.call(input.changes, field) &&
-        input.changes[field] !== article[field],
+    const data = collectEffectiveFieldChanges(article, input.changes);
+    const auditedContentChanged = AUDITED_ARTICLE_FIELDS.some((field) =>
+      Object.prototype.hasOwnProperty.call(data, field),
     );
     if (auditedContentChanged && article.status === "published") {
       return failure(
@@ -413,18 +439,26 @@ export async function updateArticleUnderGovernanceLock(
       );
     }
 
-    const data = { ...input.changes };
-    if (
-      auditedContentChanged &&
-      (article.status === "approved" || article.status === "scheduled")
-    ) {
-      Object.assign(data, {
-        status: "review-required",
-        approvedAt: null,
-        approvedBy: null,
-        scheduledFor: null,
-        publishedAt: null,
-      });
+    if (Object.keys(data).length === 0) {
+      return {
+        ok: true,
+        article,
+        alreadyApplied: true,
+        articleUnchanged: true,
+      };
+    }
+
+    if (auditedContentChanged) {
+      Object.assign(data, INVALIDATED_ARTICLE_SCORES);
+      if (article.status === "approved" || article.status === "scheduled") {
+        Object.assign(data, {
+          status: "review-required",
+          approvedAt: null,
+          approvedBy: null,
+          scheduledFor: null,
+          publishedAt: null,
+        });
+      }
     }
 
     const updated = await tx.article.update({

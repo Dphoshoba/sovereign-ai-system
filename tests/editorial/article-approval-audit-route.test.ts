@@ -60,6 +60,34 @@ describe("POST /api/articles/approve audit currency", () => {
     createReviewNote.mockResolvedValue({ id: "note-1" });
   });
 
+  it("rejects approval when no current audit exists", async () => {
+    transitionArticleLifecycle.mockResolvedValue({
+      ok: false,
+      code: "missing_audit",
+      error:
+        "A current research audit matching this content revision is required.",
+      articleUnchanged: true,
+    });
+
+    const { POST } = await import("../../app/api/articles/approve/route");
+    const response = await POST(
+      new NextRequest("http://localhost/api/articles/approve", {
+        method: "POST",
+        body: JSON.stringify({ articleId: article.id }),
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body).toMatchObject({
+      ok: false,
+      code: "missing_audit",
+      articleUnchanged: true,
+    });
+    expect(update).not.toHaveBeenCalled();
+    expect(createReviewNote).not.toHaveBeenCalled();
+  });
+
   it("rejects approval when only stale and legacy audits exist", async () => {
     transitionArticleLifecycle.mockResolvedValue({
       ok: false,

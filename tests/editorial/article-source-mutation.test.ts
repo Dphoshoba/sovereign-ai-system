@@ -87,14 +87,118 @@ describe("article source mutation service", () => {
     expect(tx.researchSource.create).toHaveBeenCalledTimes(1);
     expect(tx.article.update).toHaveBeenCalledWith({
       where: { id: article.id },
-      data: {
+      data: expect.objectContaining({
         status: "review-required",
         approvedAt: null,
         approvedBy: null,
         scheduledFor: null,
         publishedAt: null,
-      },
+        editorialScore: null,
+        editorialGrade: null,
+        editorialWarnings: null,
+        qualityScore: null,
+        qualityGrade: null,
+        seoScore: null,
+        seoGrade: null,
+      }),
     });
+  });
+
+  it("invalidates scores when a canonical source URL changes", async () => {
+    const article = {
+      id: "article-1",
+      status: "review-required",
+      approvedAt: null,
+      approvedBy: null,
+      scheduledFor: null,
+      publishedAt: null,
+      editorialScore: 95,
+      editorialGrade: "approval-candidate",
+      sources: [{ id: "old", url: "https://example.com/old" }],
+    };
+    const { store, tx } = createStore(article);
+
+    const result = await mutateArticleSources(
+      {
+        articleId: article.id,
+        operation: "update",
+        sourceId: "old",
+        changes: { url: "https://www.nist.gov/artificial-intelligence" },
+      },
+      { prisma: store },
+    );
+
+    expect(result.ok).toBe(true);
+    expect(tx.article.update).toHaveBeenCalledWith({
+      where: { id: article.id },
+      data: expect.objectContaining({
+        editorialScore: null,
+        editorialGrade: null,
+        editorialWarnings: null,
+        qualityScore: null,
+        qualityGrade: null,
+        seoScore: null,
+        seoGrade: null,
+      }),
+    });
+    expect(article.editorialScore).toBeNull();
+  });
+
+  it("does not invalidate scores when only a source title changes", async () => {
+    const article = {
+      id: "article-1",
+      status: "review-required",
+      approvedAt: null,
+      approvedBy: null,
+      scheduledFor: null,
+      publishedAt: null,
+      editorialScore: 95,
+      editorialGrade: "approval-candidate",
+      sources: [{ id: "old", url: "https://example.com/old" }],
+    };
+    const { store, tx } = createStore(article);
+
+    const result = await mutateArticleSources(
+      {
+        articleId: article.id,
+        operation: "update",
+        sourceId: "old",
+        changes: { title: "Renamed source" },
+      },
+      { prisma: store },
+    );
+
+    expect(result.ok).toBe(true);
+    expect(tx.article.update).not.toHaveBeenCalled();
+    expect(article.editorialScore).toBe(95);
+  });
+
+  it("does not write article scores when a replace keeps the same canonical URLs", async () => {
+    const article = {
+      id: "article-1",
+      status: "draft",
+      approvedAt: null,
+      approvedBy: null,
+      scheduledFor: null,
+      publishedAt: null,
+      editorialScore: 95,
+      sources: [{ id: "old", url: "https://example.com/old/" }],
+    };
+    const { store, tx } = createStore(article);
+
+    const result = await mutateArticleSources(
+      {
+        articleId: article.id,
+        operation: "replace",
+        sources: [{ url: "https://example.com/old" }],
+      },
+      { prisma: store },
+    );
+
+    expect(result.ok).toBe(true);
+    expect(tx.researchSource.deleteMany).toHaveBeenCalledTimes(1);
+    expect(tx.article.update).not.toHaveBeenCalled();
+    expect(article.editorialScore).toBe(95);
   });
 
   it("rejects source mutation for published articles", async () => {

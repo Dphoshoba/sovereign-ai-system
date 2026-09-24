@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   ArticleAuditPanel,
   canShowApprovalActions,
+  scoreDisplayValue,
 } from "../../app/admin/articles/ArticleAuditPanel";
 import { RESEARCH_AUDIT_FINGERPRINT_ACTION } from "../../lib/research/article-audit-association";
 
@@ -104,9 +105,40 @@ describe("rendered article audit admin output", () => {
     expect(html).not.toContain(RESEARCH_AUDIT_FINGERPRINT_ACTION);
   });
 
+  it("does not treat stored scores as current without a matching audit", () => {
+    expect(scoreDisplayValue(true, 0, 95)).toBe(95);
+    expect(scoreDisplayValue(true, 0, "approval-candidate")).toBe(
+      "approval-candidate",
+    );
+    expect(scoreDisplayValue(false, 1, 95)).toBe("Not current");
+    expect(scoreDisplayValue(false, 1, "approval-candidate")).toBe(
+      "Not current",
+    );
+    expect(scoreDisplayValue(false, 0, null)).toBe("Not scored");
+  });
+
   it("hides approval without a current audit", () => {
     expect(canShowApprovalActions("review-required", false)).toBe(false);
     expect(canShowApprovalActions("review-required", true)).toBe(true);
+    expect(canShowApprovalActions("review", true)).toBe(true);
+    expect(canShowApprovalActions("review", false)).toBe(false);
     expect(canShowApprovalActions("approved", true)).toBe(false);
+    expect(canShowApprovalActions("scheduled", true)).toBe(false);
+    expect(canShowApprovalActions("published", true)).toBe(false);
+    expect(canShowApprovalActions("draft", true)).toBe(false);
+  });
+
+  it("renders stored scores as Not current when only historical audits remain", () => {
+    const html = renderToStaticMarkup(
+      createElement(ArticleAuditPanel, {
+        article,
+        currentAudit: null,
+        historicalAudits: article.researchAudits,
+      }),
+    );
+
+    expect(html).toContain("Not current");
+    expect(html).not.toContain("approval-candidate");
+    expect(html).not.toContain(">88<");
   });
 });

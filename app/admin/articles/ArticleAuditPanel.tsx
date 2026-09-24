@@ -74,15 +74,27 @@ export function ArticleAuditPanel({
       <div style={grid}>
         <Metric
           label="Editorial Score"
-          value={currentAudit ? article.editorialScore : null}
+          value={scoreDisplayValue(
+            Boolean(currentAudit),
+            historicalAudits.length,
+            article.editorialScore,
+          )}
         />
         <Metric
           label="Quality Score"
-          value={currentAudit ? article.qualityScore : null}
+          value={scoreDisplayValue(
+            Boolean(currentAudit),
+            historicalAudits.length,
+            article.qualityScore,
+          )}
         />
         <Metric
           label="SEO Score"
-          value={currentAudit ? article.seoScore : null}
+          value={scoreDisplayValue(
+            Boolean(currentAudit),
+            historicalAudits.length,
+            article.seoScore,
+          )}
         />
         <Metric label="Status" value={article.status} />
       </div>
@@ -90,15 +102,27 @@ export function ArticleAuditPanel({
       <div style={grid}>
         <Metric
           label="Editorial Grade"
-          value={currentAudit ? article.editorialGrade : null}
+          value={scoreDisplayValue(
+            Boolean(currentAudit),
+            historicalAudits.length,
+            article.editorialGrade,
+          )}
         />
         <Metric
           label="Quality Grade"
-          value={currentAudit ? article.qualityGrade : null}
+          value={scoreDisplayValue(
+            Boolean(currentAudit),
+            historicalAudits.length,
+            article.qualityGrade,
+          )}
         />
         <Metric
           label="SEO Grade"
-          value={currentAudit ? article.seoGrade : null}
+          value={scoreDisplayValue(
+            Boolean(currentAudit),
+            historicalAudits.length,
+            article.seoGrade,
+          )}
         />
         <Metric label="Category" value={article.category} />
       </div>
@@ -246,7 +270,19 @@ export function canShowApprovalActions(
   status: string,
   hasCurrentAudit: boolean,
 ): boolean {
-  return status === "review-required" && hasCurrentAudit;
+  return (
+    (status === "review-required" || status === "review") && hasCurrentAudit
+  );
+}
+
+export function scoreDisplayValue(
+  hasCurrentAudit: boolean,
+  historicalAuditCount: number,
+  value?: string | number | null,
+): string | number | null {
+  if (hasCurrentAudit) return value ?? "Not scored";
+  if (historicalAuditCount > 0) return "Not current";
+  return value == null ? "Not scored" : "Not current";
 }
 
 function Metric({
