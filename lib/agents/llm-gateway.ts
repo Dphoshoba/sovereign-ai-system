@@ -1,8 +1,16 @@
 import OpenAI from "openai"
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+function getOpenAI() {
+  const apiKey = process.env.OPENAI_API_KEY
+
+  if (!apiKey) {
+    throw new Error(
+      "OPENAI_API_KEY is not configured. Add it to your environment variables."
+    )
+  }
+
+  return new OpenAI({ apiKey })
+}
 
 type LLMProvider =
   | "openai"
@@ -26,7 +34,7 @@ export async function llmGateway(
 
   if (provider === "openai") {
     const completion =
-      await openai.chat.completions.create({
+      await getOpenAI().chat.completions.create({
         model: "gpt-4.1-mini",
 
         messages: [
