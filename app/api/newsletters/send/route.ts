@@ -2,8 +2,6 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { Resend } from "resend"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export async function POST(req: Request) {
   try {
     const { newsletterId } = await req.json()
@@ -15,7 +13,8 @@ export async function POST(req: Request) {
       )
     }
 
-    if (!process.env.RESEND_API_KEY) {
+    const apiKey = process.env.RESEND_API_KEY
+    if (!apiKey) {
       return NextResponse.json(
         { ok: false, error: "Missing RESEND_API_KEY" },
         { status: 500 }
@@ -62,6 +61,8 @@ export async function POST(req: Request) {
         { status: 400 }
       )
     }
+
+    const resend = new Resend(apiKey)
 
     for (const subscriber of subscribers) {
       await resend.emails.send({

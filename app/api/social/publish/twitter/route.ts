@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { twitterClient } from "@/lib/twitter"
+import { getTwitterClient } from "@/lib/twitter"
 import { getPlatformCapabilities } from "@/lib/platform/execution/provider-contracts/social-provider"
 
 export async function POST(req: Request) {
@@ -99,7 +99,7 @@ export async function POST(req: Request) {
       )
     }
 
-    const tweet = await twitterClient.v2.tweet(post.content)
+    const tweet = await getTwitterClient().v2.tweet(post.content)
 
     const updated = await prisma.socialPost.update({
       where: {

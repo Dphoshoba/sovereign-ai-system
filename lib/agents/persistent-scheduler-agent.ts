@@ -1,5 +1,13 @@
 import cron from "node-cron"
 
+let schedulerStarted = false
+
+export function startPersistentScheduler() {
+  if (schedulerStarted) return
+  schedulerStarted = true
+  persistentSchedulerAgent()
+}
+
 export function persistentSchedulerAgent() {
   cron.schedule("0 */6 * * *", async () => {
     console.log("Autonomous Director waking up...")
