@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { transitionArticleLifecycle } from "../../../../lib/publishing/article-lifecycle";
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth";
 
 export async function POST(req: Request) {
   try {
+    const auth = await requireEditorAuth();
+    if (!auth.ok) return auth.response;
+
     const { queueId, status } = await req.json();
 
     if (!queueId || !status) {
@@ -30,6 +34,7 @@ export async function POST(req: Request) {
           articleId: queueItem.articleId,
           transition: "publish",
           queueId,
+          actor: auth.actor,
         },
         { prisma },
       );

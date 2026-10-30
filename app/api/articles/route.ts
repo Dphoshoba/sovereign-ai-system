@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
 
 const GOVERNED_INITIAL_STATUSES = new Set([
   "approved",
@@ -23,6 +24,9 @@ const LIFECYCLE_METADATA_FIELDS = [
 
 export async function GET() {
   try {
+    const auth = await requireEditorAuth()
+    if (!auth.ok) return auth.response
+
     const articles = await prisma.article.findMany({
       orderBy: { createdAt: "desc" },
     })

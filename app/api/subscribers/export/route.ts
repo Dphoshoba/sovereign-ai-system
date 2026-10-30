@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 function escapeCsv(value: string) {
   return `"${value.replace(/"/g, '""')}"`
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const subscribers = await prisma.subscriber.findMany({
     orderBy: {
       createdAt: "desc",
