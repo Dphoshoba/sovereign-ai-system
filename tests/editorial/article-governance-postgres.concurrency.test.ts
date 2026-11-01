@@ -147,15 +147,36 @@ function createPrisma() {
   });
 }
 
+function probeSqlConnection() {
+  return spawnSync(
+    "docker",
+    [
+      "exec",
+      CONTAINER,
+      "psql",
+      "-U",
+      "postgres",
+      "-d",
+      "audit_lifecycle",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-c",
+      "SELECT 1",
+    ],
+    { encoding: "utf8" },
+  );
+}
+
 async function waitForReady() {
   for (let attempt = 0; attempt < 40; attempt += 1) {
-    const result = spawnSync(
-      "docker",
-      ["exec", CONTAINER, "pg_isready", "-U", "postgres"],
-      { encoding: "utf8" },
-    );
-    if (result.status === 0) return;
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const first = probeSqlConnection();
+    if (first.status === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const second = probeSqlConnection();
+      if (second.status === 0) return;
+    } else {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
   }
   throw new Error("Disposable PostgreSQL 16 did not become ready.");
 }
@@ -187,10 +208,17 @@ async function seedArticle(
   });
 }
 
+type StoredResearchScores = {
+  consensusScore: number;
+  sourceQualityScore: number;
+  publicationRecommendation: string | null;
+};
+
 async function attachCurrentAudit(
   prisma: PrismaClient,
   article: { id: string },
   engineRevision?: string,
+  scores?: StoredResearchScores,
 ) {
   const loaded = await prisma.article.findUniqueOrThrow({
     where: { id: article.id },
@@ -206,9 +234,11 @@ async function attachCurrentAudit(
       evidenceCount: 1,
       factCount: 1,
       verifiedCount: 1,
-      consensusScore: 80,
-      sourceQualityScore: 70,
-      publicationRecommendation: "publish-ready",
+      consensusScore: scores?.consensusScore ?? 80,
+      sourceQualityScore: scores?.sourceQualityScore ?? 70,
+      publicationRecommendation: scores
+        ? scores.publicationRecommendation
+        : "publish-ready",
     },
   });
   await prisma.articleReviewNote.create({
@@ -244,9 +274,97 @@ const collectEvidence = async () => ({
   ],
 });
 
+const BLOCKED_RESEARCH: StoredResearchScores = {
+  consensusScore: 53,
+  sourceQualityScore: 63,
+  publicationRecommendation: "review-required",
+};
+
+const CONFLICTING_RESEARCH: StoredResearchScores[] = [
+  {
+    consensusScore: 79,
+    sourceQualityScore: 70,
+    publicationRecommendation: "publish-ready",
+  },
+  {
+    consensusScore: 80,
+    sourceQualityScore: 69,
+    publicationRecommendation: "publish-ready",
+  },
+  {
+    consensusScore: 80,
+    sourceQualityScore: 70,
+    publicationRecommendation: "review-required",
+  },
+  {
+    consensusScore: 80,
+    sourceQualityScore: 70,
+    publicationRecommendation: null,
+  },
+];
+
 describe("real PostgreSQL article governance concurrency", () => {
   let prismaA: PrismaClient;
   let prismaB: PrismaClient;
+
+  async function seedApproved(scores?: StoredResearchScores) {
+    const article = await seedArticle(prismaA, {
+      status: "approved",
+      approvedAt: new Date("2026-09-15T00:00:00.000Z"),
+      approvedBy: "editor",
+    });
+    await attachCurrentAudit(prismaA, article, undefined, scores);
+    return article;
+  }
+
+  async function concurrentTransition(
+    articleId: string,
+    transition: "publish" | "schedule",
+  ) {
+    const input = {
+      articleId,
+      transition,
+      now: new Date("2026-09-16T00:00:00.000Z"),
+      ...(transition === "schedule"
+        ? { scheduledFor: new Date("2026-09-20T00:00:00.000Z") }
+        : {}),
+    };
+    return Promise.all([
+      transitionArticleLifecycle(input, { prisma: prismaA }),
+      transitionArticleLifecycle(input, { prisma: prismaB }),
+    ]);
+  }
+
+  async function expectBlockedAndUnchanged(
+    articleId: string,
+    transition: "publish" | "schedule",
+  ) {
+    const [first, second] = await concurrentTransition(articleId, transition);
+    expect(first).toMatchObject({
+      ok: false,
+      code: "research_not_publishable",
+      articleUnchanged: true,
+    });
+    expect(second).toMatchObject({
+      ok: false,
+      code: "research_not_publishable",
+      articleUnchanged: true,
+    });
+    const loaded = await prismaA.article.findUniqueOrThrow({
+      where: { id: articleId },
+    });
+    expect(loaded.status).toBe("approved");
+    expect(loaded.scheduledFor).toBeNull();
+    expect(loaded.publishedAt).toBeNull();
+    const queue = await prismaA.publishingQueue.findMany({
+      where: { articleId },
+    });
+    expect(queue).toHaveLength(0);
+    const notes = await prismaA.articleReviewNote.findMany({
+      where: { articleId, action: { not: RESEARCH_AUDIT_FINGERPRINT_ACTION } },
+    });
+    expect(notes).toHaveLength(0);
+  }
 
   beforeAll(async () => {
     const started = spawnSync(
@@ -759,5 +877,56 @@ describe("real PostgreSQL article governance concurrency", () => {
       },
     });
     expect(notes).toHaveLength(0);
+  });
+
+  it("blocks concurrent publication when research is below the policy", async () => {
+    const article = await seedApproved(BLOCKED_RESEARCH);
+    await expectBlockedAndUnchanged(article.id, "publish");
+  });
+
+  it("blocks concurrent scheduling when research is below the policy", async () => {
+    const article = await seedApproved(BLOCKED_RESEARCH);
+    await expectBlockedAndUnchanged(article.id, "schedule");
+  });
+
+  it.each(CONFLICTING_RESEARCH)(
+    "blocks concurrent publication and scheduling for consensus $consensusScore, source quality $sourceQualityScore, recommendation $publicationRecommendation",
+    async (scores) => {
+      const article = await seedApproved(scores);
+      await expectBlockedAndUnchanged(article.id, "publish");
+      await expectBlockedAndUnchanged(article.id, "schedule");
+    },
+  );
+
+  it("lets one identical schedule commit and treats the concurrent duplicate as already applied", async () => {
+    const article = await seedApproved();
+    const scheduledFor = new Date("2026-09-20T00:00:00.000Z");
+    const input = {
+      articleId: article.id,
+      transition: "schedule" as const,
+      scheduledFor,
+    };
+    const [first, second] = await Promise.all([
+      transitionArticleLifecycle(input, { prisma: prismaA }),
+      transitionArticleLifecycle(input, { prisma: prismaB }),
+    ]);
+    const applied = [first, second].filter(
+      (result) => result.ok && !result.alreadyApplied,
+    );
+    const repeated = [first, second].filter(
+      (result) => result.ok && result.alreadyApplied,
+    );
+    expect(applied).toHaveLength(1);
+    expect(repeated).toHaveLength(1);
+    const loaded = await prismaA.article.findUniqueOrThrow({
+      where: { id: article.id },
+    });
+    expect(loaded.status).toBe("scheduled");
+    expect(loaded.scheduledFor?.toISOString()).toBe(scheduledFor.toISOString());
+    expect(loaded.publishedAt).toBeNull();
+    const queue = await prismaA.publishingQueue.findMany({
+      where: { articleId: article.id },
+    });
+    expect(queue).toHaveLength(0);
   });
 });
