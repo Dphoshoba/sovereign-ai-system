@@ -450,8 +450,9 @@ export function consensusEngine(facts: VerifiedFact[]): ConsensusResult {
       : 0
 
   const verificationStrength =
-    verifiedFacts * 100 +
-    partiallyVerifiedFacts * 75
+    totalFacts === 0
+      ? 0
+      : (verifiedFacts * 100 + partiallyVerifiedFacts * 75) / totalFacts
 
   const corroborationStrength =
     stronglyCorroborated * 100 +
@@ -466,7 +467,7 @@ export function consensusEngine(facts: VerifiedFact[]): ConsensusResult {
           sourceQualityScore * 0.25
         )
 
-  const consensusScore = Math.min(rawConsensusScore, 100)
+  const consensusScore = Math.max(0, Math.min(rawConsensusScore, 100))
 
   const publicationRecommendation =
     consensusScore >= 80 && sourceQualityScore >= 70

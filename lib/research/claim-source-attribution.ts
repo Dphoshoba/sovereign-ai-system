@@ -222,6 +222,103 @@ export function publishersForSource(
   return ATTRIBUTED_PUBLISHERS.filter((id) => found.has(id));
 }
 
+const ATTRIBUTION_STRUCTURE_WORDS = new Set([
+  "guide",
+  "article",
+  "report",
+  "publication",
+  "source",
+  "magazine",
+  "blog",
+  "post",
+  "the",
+  "and",
+]);
+
+const HOST_LABEL_SUFFIXES = new Set([
+  "www",
+  "com",
+  "org",
+  "net",
+  "co",
+  "uk",
+  "io",
+  "ai",
+  "gov",
+  "edu",
+]);
+
+function normalizeAttributionName(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .split(/\s+/)
+    .filter((token) => token && !ATTRIBUTION_STRUCTURE_WORDS.has(token))
+    .join(" ")
+    .trim();
+}
+
+function explicitAttributionName(claim: string): string | null {
+  const match = claim.match(/\baccording to\s+(.+?)(?=,|\.|;|:|\s+that\b|$)/i);
+  if (!match) return null;
+  return normalizeAttributionName(match[1]);
+}
+
+function hostLabels(url: string): string[] {
+  return hostnameOf(url)
+    .split(".")
+    .filter((label) => label && !HOST_LABEL_SUFFIXES.has(label));
+}
+
+function sourceTitleIdentity(source: AttributableSource): string {
+  return normalizeAttributionName(`${source.title ?? ""} ${source.publisher ?? ""}`);
+}
+
+function sourceMatchesListedName(
+  source: AttributableSource,
+  name: string,
+): boolean {
+  const title = sourceTitleIdentity(source);
+  const nameTokens = name.split(" ").filter(Boolean);
+  if (nameTokens.length >= 2) return title.includes(name);
+  const token = nameTokens[0] ?? "";
+  if (token.length < 4) return false;
+  if (title.split(" ").includes(token)) return true;
+  if (token.length < 8) return false;
+  return hostLabels(source.url).some(
+    (label) => label === token || label.startsWith(token),
+  );
+}
+
+function resolveListedSourceAttribution(
+  claim: string,
+  listedSources: AttributableSource[],
+): { status: "none" } | { status: "unresolved" } | { status: "unique"; url: string } {
+  if (
+    isPrimaryScriptureClaim(claim) ||
+    isBibleProjectClaim(claim) ||
+    publishersNamedInClaim(claim).length > 0 ||
+    namedSecondaryDocuments(claim).length > 0
+  ) {
+    return { status: "none" };
+  }
+  const name = explicitAttributionName(claim);
+  if (name === null) return { status: "none" };
+  if (name.length < 4) return { status: "unresolved" };
+
+  const matches: string[] = [];
+  const seen = new Set<string>();
+  for (const source of listedSources) {
+    if (!source.url || !sourceMatchesListedName(source, name)) continue;
+    const url = canonicalSourceUrl(source.url);
+    if (seen.has(url)) continue;
+    seen.add(url);
+    matches.push(url);
+  }
+  if (matches.length === 1) return { status: "unique", url: matches[0] };
+  return { status: "unresolved" };
+}
+
 function resolveExclusiveUrl(
   listedSources: AttributableSource[],
   predicate: (source: AttributableSource) => boolean,
@@ -259,11 +356,35 @@ export function resolveClaimSourceBinding(
   }
 
   const namedPublishers = publishersNamedInClaim(claim);
+  if (namedPublishers.length > 0 || isBibleProjectClaim(claim)) {
+    return {
+      role: "publisher",
+      exclusiveUrl: null,
+      exclusiveDocumentKey: null,
+      isMultiSource: multiSource,
+    };
+  }
+
+  const listedAttribution = resolveListedSourceAttribution(claim, listedSources);
+  if (listedAttribution.status === "unique") {
+    return {
+      role: "unattributed",
+      exclusiveUrl: listedAttribution.url,
+      exclusiveDocumentKey: "listed-source",
+      isMultiSource: false,
+    };
+  }
+  if (listedAttribution.status === "unresolved") {
+    return {
+      role: "unattributed",
+      exclusiveUrl: null,
+      exclusiveDocumentKey: "unresolved-attribution",
+      isMultiSource: false,
+    };
+  }
+
   return {
-    role:
-      namedPublishers.length > 0 || isBibleProjectClaim(claim)
-        ? "publisher"
-        : "unattributed",
+    role: "unattributed",
     exclusiveUrl: null,
     exclusiveDocumentKey: null,
     isMultiSource: multiSource,
@@ -304,9 +425,16 @@ export function claimAllowsEvidence(
   }
 
   const named = publishersNamedInClaim(claim);
-  if (named.length === 0) return true;
-  const sourcePublishers = publishersForSource(source);
-  return named.some((id) => sourcePublishers.includes(id));
+  if (named.length > 0) {
+    const sourcePublishers = publishersForSource(source);
+    return named.some((id) => sourcePublishers.includes(id));
+  }
+
+  if (binding.exclusiveDocumentKey === "unresolved-attribution") return false;
+  if (binding.exclusiveUrl) {
+    return sameDocumentIdentity(source.url, binding.exclusiveUrl);
+  }
+  return true;
 }
 
 export function evidenceCorroborationKey(
