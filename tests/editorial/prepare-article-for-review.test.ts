@@ -773,8 +773,103 @@ describe("prepareArticleForReview", () => {
       "audit-2",
     ])
     if (!result.ok) return
-    expect(result.audit.engineRevision).toBe("article-grounded-v6")
+    expect(result.audit.engineRevision).toBe(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION)
     expect(result.sourceDiagnostics).toBeDefined()
+  })
+
+  it("keeps an unchanged article and article-grounded-v7 audit idempotent", async () => {
+    const article = baseArticle()
+    article.researchAudits = [
+      { id: "audit-v7", articleId: article.id, createdAt: auditCreatedAt },
+    ]
+    article.reviewNotes = [
+      {
+        action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+        note: serializeArticleAuditAssociation({
+          auditId: "audit-v7",
+          contentFingerprint: fingerprintFor(article),
+          createdAt: auditCreatedAt,
+          engineRevision: "article-grounded-v7",
+        }),
+      },
+    ]
+    const { store, createdAudits, articleUpdates } = createStore(article)
+    const collectEvidence = vi.fn()
+
+    const result = await prepareArticleForReview(article.id, {
+      prisma: store,
+      collectEvidence,
+    })
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: "duplicate_audit",
+      articleUnchanged: true,
+    })
+    expect(collectEvidence).not.toHaveBeenCalled()
+    expect(createdAudits).toHaveLength(0)
+    expect(articleUpdates).toHaveLength(0)
+    expect(article.researchAudits.map((audit) => audit.id)).toEqual(["audit-v7"])
+  })
+
+  it("allows one article-grounded-v7 audit after an unchanged article-grounded-v6 audit without touching another article", async () => {
+    const article = baseArticle()
+    const otherArticle = baseArticle({
+      id: "article-other",
+      slug: "untouched-article",
+      title: "An unrelated article",
+      status: "approved",
+      researchAudits: [
+        { id: "other-audit", articleId: "article-other", createdAt: auditCreatedAt },
+      ],
+    })
+    const otherBefore = structuredClone(otherArticle)
+    article.researchAudits = [
+      { id: "audit-v6", articleId: article.id, createdAt: auditCreatedAt },
+    ]
+    article.reviewNotes = [
+      {
+        action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+        note: serializeArticleAuditAssociation({
+          auditId: "audit-v6",
+          contentFingerprint: fingerprintFor(article),
+          createdAt: auditCreatedAt,
+          engineRevision: "article-grounded-v6",
+        }),
+      },
+    ]
+    const { store, createdAudits, articleUpdates } = createStore(article)
+
+    const first = await prepareArticleForReview(article.id, {
+      prisma: store,
+      collectEvidence: async () =>
+        usefulEvidence("https://www.nist.gov/artificial-intelligence"),
+    })
+    const second = await prepareArticleForReview(article.id, {
+      prisma: store,
+      collectEvidence: async () =>
+        usefulEvidence("https://www.nist.gov/artificial-intelligence"),
+    })
+
+    expect(first.ok).toBe(true)
+    if (!first.ok) return
+    expect(first.audit.engineRevision).toBe("article-grounded-v7")
+    expect(article.researchAudits.map((audit) => audit.id)).toEqual([
+      "audit-v6",
+      "audit-2",
+    ])
+    expect(second).toMatchObject({
+      ok: false,
+      code: "duplicate_audit",
+      articleUnchanged: true,
+    })
+    expect(createdAudits).toHaveLength(1)
+    expect(articleUpdates).toHaveLength(1)
+    expect(articleUpdates[0]).toMatchObject({ where: { id: article.id } })
+    expect(createdAudits[0]).toMatchObject({
+      data: { articleId: article.id },
+    })
+    expect(otherArticle).toEqual(otherBefore)
   })
 
   it("rejects Prepare for Review on a published article without a write", async () => {

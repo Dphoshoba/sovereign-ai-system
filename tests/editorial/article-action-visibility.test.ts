@@ -124,7 +124,7 @@ describe("admin article action visibility", () => {
   });
 
   it("treats the Article 3 fixture as an approved current-audit candidate without runtime hardcoding", () => {
-    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v6");
+    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v7");
 
     const article3Fixture = {
       title: ARTICLE_3_TITLE,

@@ -592,7 +592,7 @@ describe("article-grounded-v6 lifecycle", () => {
 
     expect(first.ok).toBe(true);
     if (first.ok) {
-      expect(first.audit.engineRevision).toBe("article-grounded-v6");
+      expect(first.audit.engineRevision).toBe(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION);
     }
     expect(second).toMatchObject({
       ok: false,
@@ -681,7 +681,7 @@ describe("article-grounded-v6 lifecycle", () => {
             auditId: v6.id,
             contentFingerprint: fingerprint,
             createdAt: v6.createdAt,
-            engineRevision: "article-grounded-v6",
+            engineRevision: CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
           }),
         },
       ],

@@ -431,4 +431,54 @@ describe("article audit associations", () => {
       ]),
     ).toEqual({ current: null, historical: [obsolete] });
   });
+
+  it("treats article-grounded-v6 as historical once article-grounded-v7 is current", () => {
+    const obsolete = {
+      id: "audit-v6",
+      articleId: article.id,
+      createdAt: new Date("2026-11-01T09:57:12.977Z"),
+    };
+    const replacement = {
+      id: "audit-v7",
+      articleId: article.id,
+      createdAt: new Date("2026-11-01T10:30:00.000Z"),
+    };
+
+    expect(
+      partitionAssociatedArticleAudits(
+        article,
+        sources,
+        [obsolete, replacement],
+        [
+          {
+            action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+            note: serializeArticleAuditAssociation({
+              auditId: obsolete.id,
+              contentFingerprint: fingerprint,
+              createdAt: obsolete.createdAt,
+              engineRevision: "article-grounded-v6",
+            }),
+          },
+          associationNote(replacement.id, fingerprint, replacement.createdAt),
+        ],
+      ),
+    ).toEqual({
+      current: replacement,
+      historical: [obsolete],
+    });
+
+    expect(
+      partitionAssociatedArticleAudits(article, sources, [obsolete], [
+        {
+          action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+          note: serializeArticleAuditAssociation({
+            auditId: obsolete.id,
+            contentFingerprint: fingerprint,
+            createdAt: obsolete.createdAt,
+            engineRevision: "article-grounded-v6",
+          }),
+        },
+      ]),
+    ).toEqual({ current: null, historical: [obsolete] });
+  });
 });
