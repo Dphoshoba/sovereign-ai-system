@@ -206,7 +206,9 @@ async function attachCurrentAudit(
       evidenceCount: 1,
       factCount: 1,
       verifiedCount: 1,
-      publicationRecommendation: "review",
+      consensusScore: 80,
+      sourceQualityScore: 70,
+      publicationRecommendation: "publish-ready",
     },
   });
   await prisma.articleReviewNote.create({

@@ -1,4 +1,7 @@
-import { publicationGuard } from "./publication-guard";
+import {
+  publicationGuard,
+  researchPublicationBlockReason,
+} from "./publication-guard";
 import { resolveArticleAuditState } from "../research/current-article-audit";
 import { computeArticleAuditFingerprint } from "../research/article-audit-fingerprint";
 import {
@@ -58,6 +61,9 @@ export type LifecycleArticle = {
     id: string;
     articleId: string;
     createdAt: Date | string;
+    consensusScore?: number | null;
+    sourceQualityScore?: number | null;
+    publicationRecommendation?: string | null;
   }>;
   reviewNotes: Array<{ action: string; note: string | null }>;
 };
@@ -114,6 +120,7 @@ export type ArticleLifecycleFailure = {
     | "invalid_status"
     | "missing_audit"
     | "stale_audit"
+    | "research_not_publishable"
     | "not_due"
     | "published_immutable";
   error: string;
@@ -311,6 +318,13 @@ export async function transitionArticleLifecycle(
     });
     if (!guard.allowed) {
       return failure("invalid_status", guard.reason);
+    }
+
+    if (input.transition === "schedule" || input.transition === "publish") {
+      const researchBlock = researchPublicationBlockReason(currentAudit);
+      if (researchBlock) {
+        return failure("research_not_publishable", researchBlock);
+      }
     }
 
     if (input.transition === "schedule") {

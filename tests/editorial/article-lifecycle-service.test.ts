@@ -31,7 +31,14 @@ const baseArticle = {
   approvedBy: null,
   researchSources: [],
   researchAudits: [
-    { id: "audit-current", articleId: "article-1", createdAt: auditCreatedAt },
+    {
+      id: "audit-current",
+      articleId: "article-1",
+      createdAt: auditCreatedAt,
+      consensusScore: 80,
+      sourceQualityScore: 70,
+      publicationRecommendation: "publish-ready",
+    },
   ],
   reviewNotes: [] as Array<{ action: string; note: string | null }>,
 };
@@ -77,6 +84,43 @@ function v2Association() {
       createdAt: auditCreatedAt,
       engineRevision: "article-grounded-v2",
     }),
+  };
+}
+
+function staleFingerprintAssociation() {
+  const fingerprint = computeArticleAuditFingerprint(
+    { ...baseArticle, content: "A different content revision." },
+    ["https://www.nist.gov/artificial-intelligence"],
+  );
+  return {
+    action: "research-audit-fingerprint",
+    note: serializeArticleAuditAssociation({
+      auditId: "audit-current",
+      contentFingerprint: fingerprint,
+      createdAt: auditCreatedAt,
+    }),
+  };
+}
+
+function approvedArticle(
+  scores: {
+    consensusScore?: number | string | null;
+    sourceQualityScore?: number | string | null;
+    publicationRecommendation?: string | null;
+  } = {},
+) {
+  return {
+    ...baseArticle,
+    status: "approved",
+    approvedAt: new Date("2026-09-15T01:00:00.000Z"),
+    approvedBy: "editor",
+    reviewNotes: [currentAssociation()],
+    researchAudits: [
+      {
+        ...baseArticle.researchAudits[0],
+        ...scores,
+      },
+    ],
   };
 }
 
@@ -1033,5 +1077,279 @@ describe("transitionArticleLifecycle", () => {
       articleUnchanged: true,
     });
     expect(tx.article.update).not.toHaveBeenCalled();
+  });
+
+  it("blocks publication when the current audit is not publish-ready", async () => {
+    const approved = approvedArticle({
+      consensusScore: 53,
+      sourceQualityScore: 63,
+      publicationRecommendation: "review-required",
+    });
+    const { store, tx, calls } = createStore(approved);
+
+    const result = await transitionArticleLifecycle(
+      { articleId: approved.id, transition: "publish" },
+      { prisma: store },
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: "research_not_publishable",
+      articleUnchanged: true,
+    });
+    expect(approved.status).toBe("approved");
+    expect(approved.scheduledFor).toBeNull();
+    expect(approved.publishedAt).toBeNull();
+    expect(calls).toEqual(["lock", "read"]);
+    expect(tx.article.update).not.toHaveBeenCalled();
+    expect(tx.articleReviewNote.create).not.toHaveBeenCalled();
+    expect(tx.publishingQueue.update).not.toHaveBeenCalled();
+  });
+
+  it("blocks scheduling when the current audit is not publish-ready", async () => {
+    const approved = approvedArticle({
+      consensusScore: 53,
+      sourceQualityScore: 63,
+      publicationRecommendation: "review-required",
+    });
+    const { store, tx, calls } = createStore(approved);
+
+    const result = await transitionArticleLifecycle(
+      {
+        articleId: approved.id,
+        transition: "schedule",
+        scheduledFor: new Date("2026-09-20T00:00:00.000Z"),
+      },
+      { prisma: store },
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: "research_not_publishable",
+      articleUnchanged: true,
+    });
+    expect(approved.status).toBe("approved");
+    expect(calls).toEqual(["lock", "read"]);
+    expect(tx.article.update).not.toHaveBeenCalled();
+    expect(tx.publishingQueue.update).not.toHaveBeenCalled();
+  });
+
+  it("passes the research gate at the stored policy thresholds", async () => {
+    const approved = approvedArticle({
+      consensusScore: 80,
+      sourceQualityScore: 70,
+      publicationRecommendation: "publish-ready",
+    });
+    const { store, tx } = createStore(approved);
+
+    const result = await transitionArticleLifecycle(
+      { articleId: approved.id, transition: "publish" },
+      { prisma: store },
+    );
+
+    expect(result).toMatchObject({
+      ok: true,
+      alreadyApplied: false,
+      article: { status: "published" },
+    });
+    expect(tx.article.update).toHaveBeenCalledTimes(1);
+  });
+
+  it("fails closed when the publication recommendation is missing", async () => {
+    const approved = approvedArticle({
+      consensusScore: 80,
+      sourceQualityScore: 70,
+      publicationRecommendation: null,
+    });
+    const { store, tx } = createStore(approved);
+
+    const result = await transitionArticleLifecycle(
+      { articleId: approved.id, transition: "publish" },
+      { prisma: store },
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: "research_not_publishable",
+      articleUnchanged: true,
+    });
+    expect(tx.article.update).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { consensusScore: null, sourceQualityScore: 70 },
+    { consensusScore: 80, sourceQualityScore: "70" },
+    { consensusScore: Number.NaN, sourceQualityScore: 70 },
+  ])(
+    "fails closed when a stored score is missing or invalid",
+    async (scores) => {
+      const approved = approvedArticle({
+        ...scores,
+        publicationRecommendation: "publish-ready",
+      });
+      const { store, tx } = createStore(approved);
+
+      const result = await transitionArticleLifecycle(
+        { articleId: approved.id, transition: "publish" },
+        { prisma: store },
+      );
+
+      expect(result).toMatchObject({
+        ok: false,
+        code: "research_not_publishable",
+        articleUnchanged: true,
+      });
+      expect(tx.article.update).not.toHaveBeenCalled();
+    },
+  );
+
+  it("fails closed when publish-ready is stored with scores below the policy", async () => {
+    const approved = approvedArticle({
+      consensusScore: 53,
+      sourceQualityScore: 63,
+      publicationRecommendation: "publish-ready",
+    });
+    const { store, tx } = createStore(approved);
+
+    const result = await transitionArticleLifecycle(
+      { articleId: approved.id, transition: "schedule", scheduledFor: new Date("2026-09-20T00:00:00.000Z") },
+      { prisma: store },
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: "research_not_publishable",
+      articleUnchanged: true,
+    });
+    expect(tx.article.update).not.toHaveBeenCalled();
+  });
+
+  it("still blocks a stale fingerprint before publication", async () => {
+    const approved = {
+      ...approvedArticle(),
+      reviewNotes: [staleFingerprintAssociation()],
+    };
+    const { store, tx } = createStore(approved);
+
+    const result = await transitionArticleLifecycle(
+      { articleId: approved.id, transition: "publish" },
+      { prisma: store },
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: "stale_audit",
+      articleUnchanged: true,
+    });
+    expect(tx.article.update).not.toHaveBeenCalled();
+  });
+
+  it("still blocks an unsupported v6 audit before publication", async () => {
+    const approved = {
+      ...approvedArticle(),
+      reviewNotes: [v6Association()],
+    };
+    const { store, tx } = createStore(approved);
+
+    const result = await transitionArticleLifecycle(
+      { articleId: approved.id, transition: "publish" },
+      { prisma: store },
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: "stale_audit",
+      articleUnchanged: true,
+    });
+    expect(tx.article.update).not.toHaveBeenCalled();
+  });
+
+  it("still blocks publication from review-required status", async () => {
+    const reviewRequired = {
+      ...baseArticle,
+      status: "review-required",
+      reviewNotes: [currentAssociation()],
+      researchAudits: [
+        {
+          ...baseArticle.researchAudits[0],
+          consensusScore: 53,
+          sourceQualityScore: 63,
+          publicationRecommendation: "review-required",
+        },
+      ],
+    };
+    const { store, tx } = createStore(reviewRequired);
+
+    const result = await transitionArticleLifecycle(
+      { articleId: reviewRequired.id, transition: "publish" },
+      { prisma: store },
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: "invalid_status",
+      articleUnchanged: true,
+    });
+    expect(tx.article.update).not.toHaveBeenCalled();
+  });
+
+  it("keeps an already published article idempotent regardless of research scores", async () => {
+    const published = {
+      ...approvedArticle({
+        consensusScore: 53,
+        sourceQualityScore: 63,
+        publicationRecommendation: "review-required",
+      }),
+      status: "published",
+      publishedAt: new Date("2026-09-16T00:00:00.000Z"),
+    };
+    const { store, tx } = createStore(published);
+
+    const result = await transitionArticleLifecycle(
+      { articleId: published.id, transition: "publish" },
+      { prisma: store },
+    );
+
+    expect(result).toMatchObject({
+      ok: true,
+      alreadyApplied: true,
+      articleUnchanged: true,
+    });
+    expect(tx.article.update).not.toHaveBeenCalled();
+  });
+
+  it("approves an article without applying publication eligibility", async () => {
+    const awaitingReview = {
+      ...baseArticle,
+      status: "review-required",
+      reviewNotes: [currentAssociation()],
+      researchAudits: [
+        {
+          ...baseArticle.researchAudits[0],
+          consensusScore: 53,
+          sourceQualityScore: 63,
+          publicationRecommendation: "review-required",
+        },
+      ],
+    };
+    const { store, tx } = createStore(awaitingReview);
+
+    const result = await transitionArticleLifecycle(
+      {
+        articleId: awaitingReview.id,
+        transition: "approve",
+        actor: "editor@example.com",
+      },
+      { prisma: store },
+    );
+
+    expect(result).toMatchObject({
+      ok: true,
+      alreadyApplied: false,
+      article: { status: "approved" },
+    });
+    expect(awaitingReview.scheduledFor).toBeNull();
+    expect(awaitingReview.publishedAt).toBeNull();
+    expect(tx.publishingQueue.update).not.toHaveBeenCalled();
   });
 });

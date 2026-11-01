@@ -1,3 +1,9 @@
+import {
+  PUBLISH_READY_CONSENSUS_SCORE,
+  PUBLISH_READY_RECOMMENDATION,
+  PUBLISH_READY_SOURCE_QUALITY_SCORE,
+} from "../research/consensus-engine"
+
 export type ArticlePublishStatus =
   | "draft"
   | "review-required"
@@ -10,6 +16,37 @@ export type PublicationGuardResult = {
   allowed: boolean
   status: ArticlePublishStatus | string
   reason: string
+}
+
+export type ResearchPublishabilityAudit = {
+  consensusScore?: unknown
+  sourceQualityScore?: unknown
+  publicationRecommendation?: unknown
+}
+
+function isFiniteScore(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value)
+}
+
+export function researchPublicationBlockReason(
+  audit: ResearchPublishabilityAudit | null | undefined,
+): string | null {
+  if (!audit) {
+    return "A current publish-ready research audit is required before scheduling or publication."
+  }
+
+  const consensusReady =
+    isFiniteScore(audit.consensusScore) &&
+    audit.consensusScore >= PUBLISH_READY_CONSENSUS_SCORE
+  const qualityReady =
+    isFiniteScore(audit.sourceQualityScore) &&
+    audit.sourceQualityScore >= PUBLISH_READY_SOURCE_QUALITY_SCORE
+  const recommendationReady =
+    audit.publicationRecommendation === PUBLISH_READY_RECOMMENDATION
+
+  if (consensusReady && qualityReady && recommendationReady) return null
+
+  return "Current research audit is not publish-ready."
 }
 
 export function publicationGuard(

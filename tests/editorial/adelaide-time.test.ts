@@ -116,6 +116,9 @@ describe("Adelaide publication timezone", () => {
             id: "audit-current",
             articleId: "due-adelaide",
             createdAt,
+            consensusScore: 80,
+            sourceQualityScore: 70,
+            publicationRecommendation: "publish-ready",
           },
         ],
         reviewNotes: [

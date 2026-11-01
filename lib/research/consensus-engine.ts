@@ -8,6 +8,10 @@ export type ConsensusGroup = {
   consensusStatement: string
 }
 
+export const PUBLISH_READY_CONSENSUS_SCORE = 80
+export const PUBLISH_READY_SOURCE_QUALITY_SCORE = 70
+export const PUBLISH_READY_RECOMMENDATION = "publish-ready" as const
+
 export type ConsensusResult = {
   totalFacts: number
   verifiedFacts: number
@@ -470,8 +474,9 @@ export function consensusEngine(facts: VerifiedFact[]): ConsensusResult {
   const consensusScore = Math.max(0, Math.min(rawConsensusScore, 100))
 
   const publicationRecommendation =
-    consensusScore >= 80 && sourceQualityScore >= 70
-      ? "publish-ready"
+    consensusScore >= PUBLISH_READY_CONSENSUS_SCORE &&
+    sourceQualityScore >= PUBLISH_READY_SOURCE_QUALITY_SCORE
+      ? PUBLISH_READY_RECOMMENDATION
       : consensusScore >= 50 || totalFacts >= 2
         ? "review-required"
         : "blocked"

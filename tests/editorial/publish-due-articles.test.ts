@@ -26,6 +26,9 @@ type DueFixture = {
     id: string
     articleId: string
     createdAt: Date
+    consensusScore?: number | null
+    sourceQualityScore?: number | null
+    publicationRecommendation?: string | null
   }>
   reviewNotes: Array<{ action: string; note: string | null }>
 }
@@ -56,7 +59,14 @@ function dueArticle(overrides: Partial<DueFixture> = {}): DueFixture {
     const auditId = `audit-${article.id}`
     const createdAt = new Date("2026-09-13T00:00:00.000Z")
     article.researchAudits = [
-      { id: auditId, articleId: article.id, createdAt },
+      {
+        id: auditId,
+        articleId: article.id,
+        createdAt,
+        consensusScore: 80,
+        sourceQualityScore: 70,
+        publicationRecommendation: "publish-ready",
+      },
     ]
     article.reviewNotes = [
       {
@@ -273,6 +283,54 @@ describe("publishDueArticles", () => {
       { id: "due-1", category: "not_due" },
     ])
     expect(store.tx.article.update).not.toHaveBeenCalled()
+    expect(afterPublish).not.toHaveBeenCalled()
+  })
+
+  it("skips a due article whose current audit is not publish-ready", async () => {
+    const createdAt = new Date("2026-09-13T00:00:00.000Z")
+    const blocked = dueArticle({
+      id: "blocked-1",
+      researchAudits: [
+        {
+          id: "audit-blocked-1",
+          articleId: "blocked-1",
+          createdAt,
+          consensusScore: 53,
+          sourceQualityScore: 63,
+          publicationRecommendation: "review-required",
+        },
+      ],
+    })
+    blocked.reviewNotes = [
+      {
+        action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+        note: serializeArticleAuditAssociation({
+          auditId: "audit-blocked-1",
+          contentFingerprint: computeArticleAuditFingerprint(blocked, [
+            "https://www.nist.gov/artificial-intelligence",
+          ]),
+          createdAt,
+        }),
+      },
+    ]
+    const store = createStore([blocked])
+    const afterPublish = vi.fn()
+
+    const result = await publishDueArticles({
+      now: new Date("2026-09-14T03:45:00.000Z"),
+      source: "test",
+      prisma: store,
+      afterPublish,
+    })
+
+    expect(result.published).toBe(0)
+    expect(result.skippedItems).toEqual([
+      { id: "blocked-1", category: "research_not_publishable" },
+    ])
+    expect(blocked.status).toBe("scheduled")
+    expect(blocked.publishedAt).toBeNull()
+    expect(store.tx.article.update).not.toHaveBeenCalled()
+    expect(store.tx.publishingQueue.update).not.toHaveBeenCalled()
     expect(afterPublish).not.toHaveBeenCalled()
   })
 })
