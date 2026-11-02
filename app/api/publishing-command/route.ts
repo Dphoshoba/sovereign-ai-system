@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma"
 import { getOpenAI } from "@/lib/ai/openai"
 import { DAVID_WRITING_DNA } from "@/lib/ai/writing-dna"
 
+export const dynamic = "force-dynamic"
+
 async function seedCadenceGoals() {
   const existing = await prisma.publishingCadenceGoal.findMany()
 
