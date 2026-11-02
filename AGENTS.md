@@ -49,3 +49,7 @@ These principles are part of the architecture itself, not merely implementation 
 ### Operational Principle
 
 *Capability through composition. Intelligence informs authority. Authority remains accountable.*
+
+## Editorial and production operations
+
+Before article selection, evidence review, editorial rewrites, production article changes, Vercel releases, or cron operations, read `.agents/skills/echoes-visions-editorial-operations/SKILL.md`. That file is a workflow and safety contract. It does not authorise writes, audits, publishing, or deployments.
