@@ -809,19 +809,19 @@ describe("prepareArticleForReview", () => {
     expect(result.sourceDiagnostics).toBeDefined()
   })
 
-  it("keeps an unchanged article and article-grounded-v7 audit idempotent", async () => {
+  it("keeps an unchanged article and article-grounded-v8 audit idempotent", async () => {
     const article = baseArticle()
     article.researchAudits = [
-      { id: "audit-v7", articleId: article.id, createdAt: auditCreatedAt },
+      { id: "audit-v8", articleId: article.id, createdAt: auditCreatedAt },
     ]
     article.reviewNotes = [
       {
         action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
         note: serializeArticleAuditAssociation({
-          auditId: "audit-v7",
+          auditId: "audit-v8",
           contentFingerprint: fingerprintFor(article),
           createdAt: auditCreatedAt,
-          engineRevision: "article-grounded-v7",
+          engineRevision: "article-grounded-v8",
         }),
       },
     ]
@@ -841,10 +841,10 @@ describe("prepareArticleForReview", () => {
     expect(collectEvidence).not.toHaveBeenCalled()
     expect(createdAudits).toHaveLength(0)
     expect(articleUpdates).toHaveLength(0)
-    expect(article.researchAudits.map((audit) => audit.id)).toEqual(["audit-v7"])
+    expect(article.researchAudits.map((audit) => audit.id)).toEqual(["audit-v8"])
   })
 
-  it("allows one article-grounded-v7 audit after an unchanged article-grounded-v6 audit without touching another article", async () => {
+  it("allows one article-grounded-v8 audit after an unchanged article-grounded-v7 audit without touching another article", async () => {
     const article = baseArticle()
     const otherArticle = baseArticle({
       id: "article-other",
@@ -856,18 +856,19 @@ describe("prepareArticleForReview", () => {
       ],
     })
     const otherBefore = structuredClone(otherArticle)
+    const historicalNote = serializeArticleAuditAssociation({
+      auditId: "audit-v7",
+      contentFingerprint: fingerprintFor(article),
+      createdAt: auditCreatedAt,
+      engineRevision: "article-grounded-v7",
+    })
     article.researchAudits = [
-      { id: "audit-v6", articleId: article.id, createdAt: auditCreatedAt },
+      { id: "audit-v7", articleId: article.id, createdAt: auditCreatedAt },
     ]
     article.reviewNotes = [
       {
         action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
-        note: serializeArticleAuditAssociation({
-          auditId: "audit-v6",
-          contentFingerprint: fingerprintFor(article),
-          createdAt: auditCreatedAt,
-          engineRevision: "article-grounded-v6",
-        }),
+        note: historicalNote,
       },
     ]
     const { store, createdAudits, articleUpdates } = createStore(article)
@@ -885,9 +886,15 @@ describe("prepareArticleForReview", () => {
 
     expect(first.ok).toBe(true)
     if (!first.ok) return
-    expect(first.audit.engineRevision).toBe("article-grounded-v7")
+    expect(first.audit.engineRevision).toBe("article-grounded-v8")
+    expect(article.reviewNotes[0]?.note).toBe(historicalNote)
+    expect(parseArticleAuditAssociation(article.reviewNotes[0])).toMatchObject({
+      auditId: "audit-v7",
+      engineRevision: "article-grounded-v7",
+      contentFingerprint: fingerprintFor(article),
+    })
     expect(article.researchAudits.map((audit) => audit.id)).toEqual([
-      "audit-v6",
+      "audit-v7",
       "audit-2",
     ])
     expect(second).toMatchObject({

@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { computeArticleAuditFingerprint } from "../../lib/research/article-audit-fingerprint";
-import { serializeArticleAuditAssociation } from "../../lib/research/article-audit-association";
+import {
+  parseArticleAuditAssociation,
+  serializeArticleAuditAssociation,
+} from "../../lib/research/article-audit-association";
+import { researchPublicationBlockReason } from "../../lib/publishing/publication-guard";
 import {
   transitionArticleLifecycle,
   updateArticleUnderGovernanceLock,
@@ -121,6 +125,21 @@ function approvedArticle(
         ...scores,
       },
     ],
+  };
+}
+
+function v7Association() {
+  const fingerprint = computeArticleAuditFingerprint(baseArticle, [
+    "https://www.nist.gov/artificial-intelligence",
+  ]);
+  return {
+    action: "research-audit-fingerprint",
+    note: serializeArticleAuditAssociation({
+      auditId: "audit-current",
+      contentFingerprint: fingerprint,
+      createdAt: auditCreatedAt,
+      engineRevision: "article-grounded-v7",
+    }),
   };
 }
 
@@ -359,6 +378,78 @@ describe("transitionArticleLifecycle", () => {
       });
       expect(tx.article.update).not.toHaveBeenCalled();
     }
+  });
+
+  it("rejects approval, scheduling, and publication of a historical article-grounded-v7 audit", async () => {
+    const storedAudit = {
+      ...baseArticle.researchAudits[0],
+      consensusScore: 28,
+      sourceQualityScore: 48,
+      publicationRecommendation: "review-required",
+    };
+    const article = {
+      ...baseArticle,
+      reviewNotes: [v7Association()],
+      researchAudits: [storedAudit],
+    };
+
+    expect(researchPublicationBlockReason(storedAudit)).toContain(
+      "not publish-ready",
+    );
+    expect(parseArticleAuditAssociation(article.reviewNotes[0])).toMatchObject({
+      engineRevision: "article-grounded-v7",
+      auditId: "audit-current",
+    });
+
+    for (const transition of ["approve", "schedule", "publish"] as const) {
+      const current = {
+        ...article,
+        status: transition === "approve" ? "review-required" : "approved",
+        approvedAt:
+          transition === "approve" ? null : new Date("2026-09-15T01:00:00.000Z"),
+        approvedBy: transition === "approve" ? null : "editor",
+        reviewNotes: [v7Association()],
+      };
+      const preservedNote = current.reviewNotes[0].note;
+      const { store, tx } = createStore(current);
+      const result = await transitionArticleLifecycle(
+        {
+          articleId: current.id,
+          transition,
+          actor: "editor@example.com",
+          scheduledFor: new Date("2026-09-20T00:00:00.000Z"),
+          now: new Date("2026-09-16T00:00:00.000Z"),
+        },
+        { prisma: store },
+      );
+
+      expect(result).toMatchObject({
+        ok: false,
+        code: "stale_audit",
+        articleUnchanged: true,
+      });
+      expect(current.reviewNotes[0].note).toBe(preservedNote);
+      expect(current.researchAudits).toEqual([storedAudit]);
+      expect(tx.article.update).not.toHaveBeenCalled();
+      expect(tx.articleReviewNote.create).not.toHaveBeenCalled();
+    }
+
+    const reviewRequired = {
+      ...article,
+      status: "review-required",
+      reviewNotes: [v7Association()],
+    };
+    const { store, tx } = createStore(reviewRequired);
+    const directPublish = await transitionArticleLifecycle(
+      { articleId: reviewRequired.id, transition: "publish" },
+      { prisma: store },
+    );
+    expect(directPublish).toMatchObject({
+      ok: false,
+      code: "stale_audit",
+      articleUnchanged: true,
+    });
+    expect(tx.article.update).not.toHaveBeenCalled();
   });
 
   it("rejects approval, scheduling, and publication when the audit engine revision is article-grounded-v6", async () => {

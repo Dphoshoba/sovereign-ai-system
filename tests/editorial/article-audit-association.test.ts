@@ -432,7 +432,7 @@ describe("article audit associations", () => {
     ).toEqual({ current: null, historical: [obsolete] });
   });
 
-  it("treats article-grounded-v6 as historical once article-grounded-v7 is current", () => {
+  it("treats article-grounded-v6 as historical under the current revision", () => {
     const obsolete = {
       id: "audit-v6",
       articleId: article.id,
@@ -480,5 +480,70 @@ describe("article audit associations", () => {
         },
       ]),
     ).toEqual({ current: null, historical: [obsolete] });
+  });
+
+  it("keeps an article-grounded-v7 note readable and historical once article-grounded-v8 is current", () => {
+    const historical = {
+      id: "audit-v7",
+      articleId: article.id,
+      createdAt: new Date("2026-11-02T20:34:25.561Z"),
+    };
+    const current = {
+      id: "audit-v8",
+      articleId: article.id,
+      createdAt: new Date("2026-11-03T00:00:00.000Z"),
+    };
+    const historicalNote = serializeArticleAuditAssociation({
+      auditId: historical.id,
+      contentFingerprint: fingerprint,
+      createdAt: historical.createdAt,
+      engineRevision: "article-grounded-v7",
+    });
+    const parsed = parseArticleAuditAssociation({
+      action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+      note: historicalNote,
+    });
+
+    expect(parsed).toMatchObject({
+      version: 2,
+      auditId: historical.id,
+      contentFingerprint: fingerprint,
+      algorithm: "sha256",
+      engineRevision: "article-grounded-v7",
+    });
+    expect(Object.keys(JSON.parse(historicalNote)).sort()).toEqual([
+      "algorithm",
+      "auditId",
+      "contentFingerprint",
+      "createdAt",
+      "engineRevision",
+      "version",
+    ]);
+    expect(
+      partitionAssociatedArticleAudits(
+        article,
+        sources,
+        [historical, current],
+        [
+          {
+            action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+            note: historicalNote,
+          },
+          associationNote(current.id, fingerprint, current.createdAt),
+        ],
+      ),
+    ).toEqual({
+      current,
+      historical: [historical],
+    });
+    expect(
+      partitionAssociatedArticleAudits(article, sources, [historical], [
+        {
+          action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+          note: historicalNote,
+        },
+      ]),
+    ).toEqual({ current: null, historical: [historical] });
+    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v8");
   });
 });
