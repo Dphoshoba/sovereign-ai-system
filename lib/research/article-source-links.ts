@@ -6,6 +6,22 @@ import {
 const MARKDOWN_LINK = /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/gi
 const BARE_URL = /https?:\/\/[^\s)\]>'"]+/gi
 const IMAGE_URL = /\.(png|jpe?g|gif|webp|svg|ico)(\?|#|$)/i
+const SAME_SITE_HOSTS = new Set([
+  "echoesandvisions.com",
+  "www.echoesandvisions.com",
+  "sovereign-ai-executive.vercel.app",
+])
+const SAME_SITE_RESEARCH_PATH = /^\/blog\/[^/]+\/?$/i
+
+export function isNonResearchNavigationUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    if (!SAME_SITE_HOSTS.has(parsed.hostname.toLowerCase())) return false
+    return !SAME_SITE_RESEARCH_PATH.test(parsed.pathname)
+  } catch {
+    return false
+  }
+}
 
 export type StoredArticleSource = {
   title?: string | null
@@ -51,6 +67,7 @@ export function extractArticleSourceLinks(input: {
   const add = (source: SourceRecord) => {
     const url = stripTrailingPunctuation(source.url.trim())
     if (!isUsableSourceUrl(url, input.featuredImage)) return
+    if (isNonResearchNavigationUrl(url)) return
     if (seen.has(url)) return
     seen.add(url)
     collected.push({

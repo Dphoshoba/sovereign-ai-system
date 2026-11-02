@@ -243,7 +243,13 @@ export function splitBlockSentences(blockText: string): string[] {
 }
 
 const CLAIM_SHAPE =
-  /\b(is|are|was|were|be|can|could|may|might|will|has|have|helps|supports|improves|reduces|increases|requires|remains|shows|suggests|become|becomes|treats|treated|provides|integrate|integrated|should|distinguishes|describes|argues|notes|emphasizes|states|says|warns)\b/i;
+  /\b(is|are|was|were|be|can|could|may|might|will|has|have|helps|supports|improves|reduces|increases|requires|remains|shows|suggests|become|becomes|treats|treated|provides|integrate|integrated|should|distinguishes|describes|argues|notes|emphasizes|states|says|warns|assigned|fell|found|rose)\b/i;
+
+const MEASURABLE_NUMERICAL_RESULT = /\b\d+(?:\.\d+)?\s*(?:%|percent)\b/i;
+
+function hasMeasurableNumericalResult(sentence: string): boolean {
+  return MEASURABLE_NUMERICAL_RESULT.test(sentence);
+}
 
 function hasClaimShape(sentence: string): boolean {
   return CLAIM_SHAPE.test(sentence);
@@ -304,7 +310,8 @@ export function extractArticleClaims(input: {
       }
 
       for (const sentence of splitBlockSentences(block.text)) {
-        if (sentence.length < 40 || sentence.length > 400) continue;
+        if (sentence.length > 400) continue;
+        if (sentence.length < 40 && !hasMeasurableNumericalResult(sentence)) continue;
         if (isChromePassage(sentence)) continue;
         if (!hasClaimShape(sentence)) continue;
         if (isCreatorTemplate(sentence, normalizedArticleText)) continue;

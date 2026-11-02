@@ -223,6 +223,38 @@ describe("extractArticleSourceLinks", () => {
     ).toBe(95)
   })
 
+  it("excludes same-site navigation and keeps external citations in the fingerprint", () => {
+    const article = {
+      title: "What AI Automation Changes in Content Creation",
+      excerpt: "A measured excerpt for the fingerprint.",
+      content: [
+        "See [Science](https://www.science.org/doi/10.1126/science.adh2586).",
+        "A prior essay remains citable at [earlier note](https://www.echoesandvisions.com/blog/measured-writing-study).",
+        "If you want a place to think that choice through, [Echoes & Visions](https://www.echoesandvisions.com/sovereign-ai) is there.",
+        "Privacy lives at [privacy](https://www.echoesandvisions.com/privacy).",
+      ].join(" "),
+      category: "ai-tools",
+      seoTitle: null,
+      seoDescription: null,
+      seoKeywords: null,
+    }
+    const sources = extractArticleSourceLinks(article)
+    const urls = sources.map((source) => source.url)
+
+    expect(urls).toContain("https://www.science.org/doi/10.1126/science.adh2586")
+    expect(urls).toContain("https://www.echoesandvisions.com/blog/measured-writing-study")
+    expect(urls).not.toContain("https://www.echoesandvisions.com/sovereign-ai")
+    expect(urls).not.toContain("https://www.echoesandvisions.com/privacy")
+
+    const classified = computeArticleAuditFingerprint(article, urls)
+    const withCallToAction = computeArticleAuditFingerprint(article, [
+      ...urls,
+      "https://www.echoesandvisions.com/sovereign-ai",
+    ])
+    expect(classified).not.toBe(withCallToAction)
+    expect(classified).toBe(computeArticleAuditFingerprint(article, urls))
+  })
+
   it("ignores featured images and returns no sources when none exist", () => {
     const sources = extractArticleSourceLinks({
       content: "A manually written article with no citations.",

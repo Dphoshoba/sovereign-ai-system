@@ -16,6 +16,11 @@ import type {
 } from "../../lib/research/prepare-article-for-review";
 import { isChromePassage } from "../../lib/research/evidence-chrome";
 import { CURRENT_RESEARCH_AUDIT_ENGINE_REVISION } from "../../lib/research/research-audit-engine-revision";
+import {
+  PUBLISH_READY_CONSENSUS_SCORE,
+  PUBLISH_READY_RECOMMENDATION,
+  PUBLISH_READY_SOURCE_QUALITY_SCORE,
+} from "../../lib/research/consensus-engine";
 import { assertSafeResearchUrl } from "../../lib/research/source-fetch-guard";
 import {
   ARTICLE_2_BODY,
@@ -621,5 +626,77 @@ describe("research-audit extraction integrity", () => {
     if (!result.ok) return;
     expect(result.audit.unavailableSourceCount).toBe(3);
     expect(result.audit.sourceCoverage).toBe(25);
+  });
+
+  it("extracts measured percentage claims and leaves ordinary numbers authorial", () => {
+    const timeClaim = "Average time fell by 40 percent.";
+    const qualityClaim =
+      "Output quality, graded by blinded professionals in the same occupations, rose by 18 percent.";
+    const errorClaim =
+      "They found minor factual errors in 28 percent of the documents and major factual errors in 12 percent.";
+    const sampleSize =
+      "They assigned occupation-specific writing tasks to 453 college-educated professionals and randomly gave half of them access to ChatGPT-3.5.";
+    const ordinaryNumber = "The meeting has 3 chairs in the room.";
+    const extracted = extractArticleClaims({
+      content: [timeClaim, qualityClaim, errorClaim, sampleSize, ordinaryNumber].join(" "),
+    });
+    const factual = extracted.claims.map((claim) => claim.claim);
+
+    expect(factual).toContain(timeClaim);
+    expect(factual).toContain(qualityClaim);
+    expect(factual).toContain(errorClaim);
+    expect(factual.some((claim) => claim.includes("453"))).toBe(false);
+    expect(factual.some((claim) => claim.includes("3 chairs"))).toBe(false);
+  });
+
+  it("keeps the existing overlap rule for supported and unsupported passages", () => {
+    const claim =
+      "Output quality, graded by blinded professionals in the same occupations, rose by 18 percent.";
+    const supported =
+      "Output quality graded by blinded professionals in the same occupations rose by 18 percent.";
+    const unsupported =
+      "Pick one repeating job and run it with your usual care before anything goes out.";
+
+    expect(passageSupportsClaim(claim, supported)).toBe(true);
+    expect(passageSupportsClaim(claim, unsupported)).toBe(false);
+  });
+
+  it("records HTTP 403 as unavailable and writes no audit when evidence is missing", async () => {
+    const forbiddenUrl = "https://doi.org/10.1126/sciadv.adn5290";
+    const fetched = await contentFetcher(forbiddenUrl, "Science Advances", {
+      lookup: PUBLIC_LOOKUP,
+      fetch: mockFetch({
+        [forbiddenUrl]: new Response("forbidden", {
+          status: 403,
+          headers: { "content-type": "text/html" },
+        }),
+      }),
+    });
+    expect(fetched.fetchStatus).toBe("failed");
+    expect(fetched.diagnostic.category).toBe("http_forbidden");
+
+    const article = article2();
+    const { store, createdAudits, articleUpdates } = createStore(article);
+    const result = await prepareArticleForReview(article.id, {
+      prisma: store,
+      collectEvidence: async () => ({
+        topic: article.title,
+        evidence: [],
+        evidenceCount: 0,
+        registryStatus: "No useful evidence available after filtering.",
+        sourceDiagnostics: [fetched.diagnostic],
+      }),
+    });
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: "missing_evidence",
+      articleUnchanged: true,
+    });
+    expect(createdAudits).toHaveLength(0);
+    expect(articleUpdates).toHaveLength(0);
+    expect(PUBLISH_READY_CONSENSUS_SCORE).toBe(80);
+    expect(PUBLISH_READY_SOURCE_QUALITY_SCORE).toBe(70);
+    expect(PUBLISH_READY_RECOMMENDATION).toBe("publish-ready");
   });
 });
