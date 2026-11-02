@@ -11,7 +11,8 @@ describe("GET /api/cron/run-pipeline daily cron compatibility", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     process.env.CRON_SECRET = SECRET
-    process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3000"
+    process.env.NEXT_PUBLIC_APP_URL = "https://sovereign-ai-executive.vercel.app"
+    delete process.env.VERCEL_URL
     vi.stubGlobal(
       "fetch",
       vi.fn(async (url: string, init?: RequestInit) => {
@@ -61,10 +62,11 @@ describe("GET /api/cron/run-pipeline daily cron compatibility", () => {
   it("forwards the Vercel Cron bearer token to publish-scheduled", async () => {
     const { GET } = await import("../../app/api/cron/run-pipeline/route")
     const response = await GET(
-      new NextRequest("http://localhost/api/cron/run-pipeline", {
+      new NextRequest("https://attacker.example/api/cron/run-pipeline", {
         headers: {
           Authorization: `Bearer ${SECRET}`,
           "user-agent": "vercel-cron/1.0",
+          "x-forwarded-host": "attacker.example",
         },
       })
     )
@@ -81,7 +83,25 @@ describe("GET /api/cron/run-pipeline daily cron compatibility", () => {
     const publishCall = vi
       .mocked(fetch)
       .mock.calls.find(([url]) => String(url).includes("/api/cron/publish-scheduled"))
+    const discoveryCall = vi
+      .mocked(fetch)
+      .mock.calls.find(([url]) => String(url).includes("/api/discovery/scheduled-run"))
 
+    expect(String(discoveryCall?.[0])).toBe("http://localhost:3000/api/discovery/scheduled-run")
+    expect(new Headers(discoveryCall?.[1]?.headers).get("authorization")).toBe(
+      `Bearer ${SECRET}`,
+    )
+    expect(String(publishCall?.[0])).toBe("http://localhost:3000/api/cron/publish-scheduled")
+    expect(
+      vi.mocked(fetch).mock.calls.every(([url]) => {
+        const href = String(url)
+        return (
+          href.startsWith("http://localhost:3000/") &&
+          !href.includes("sovereign-ai-executive.vercel.app") &&
+          !href.includes("attacker.example")
+        )
+      }),
+    ).toBe(true)
     expect(publishCall).toBeTruthy()
     const headers = new Headers(publishCall?.[1]?.headers)
     expect(headers.get("authorization")).toBe(`Bearer ${SECRET}`)

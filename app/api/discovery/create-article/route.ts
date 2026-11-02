@@ -2,8 +2,22 @@ import { NextResponse } from "next/server"
 import { topicDiscovery } from "../../../../lib/discovery/topic-discovery"
 import { topicScorer } from "../../../../lib/discovery/topic-scorer"
 import { topicOpportunityGenerator } from "../../../../lib/discovery/topic-opportunity-generator"
+import {
+  privilegedSameOriginHeaders,
+  requireEditorAuth,
+} from "../../../../lib/publishing/require-editor-auth"
+import {
+  trustedInternalUrl,
+  trustedOriginUnavailableResponse,
+} from "../../../../lib/publishing/trusted-internal-origin"
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
+  const generateUrl = trustedInternalUrl("/api/ai/generate-article")
+  if (!generateUrl) return trustedOriginUnavailableResponse()
+
   try {
     const body = await request.json().catch(() => ({}))
     const requestedCategory = body?.category as string | undefined
@@ -45,16 +59,10 @@ export async function POST(request: Request) {
         })
       }
 
-      const response = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-        }/api/ai/generate-article`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
+      const response = await fetch(generateUrl, {
+        method: "POST",
+        headers: privilegedSameOriginHeaders(request),
+        body: JSON.stringify({
             topic: bestTopic.title,
             category: bestTopic.category,
             status: "review-required",

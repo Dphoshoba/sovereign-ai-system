@@ -13,6 +13,17 @@ const factCreate = vi.fn();
 const queryRaw = vi.fn();
 const openAIResponsesCreate = vi.fn();
 
+vi.mock("@/lib/supabase/server", () => ({
+  createSupabaseServerClient: vi.fn(async () => ({
+    auth: {
+      getUser: vi.fn(async () => ({
+        data: { user: { id: "editor-1", email: "editor@example.com" } },
+        error: null,
+      })),
+    },
+  })),
+}));
+
 const createdSources: unknown[] = [];
 const tx = {
   article: {

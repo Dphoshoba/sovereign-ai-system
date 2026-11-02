@@ -3,6 +3,10 @@ import {
   authorizeCronRequest,
   cronUnauthorizedResponse,
 } from "../../../../lib/publishing/cron-auth"
+import {
+  trustedInternalUrl,
+  trustedOriginUnavailableResponse,
+} from "../../../../lib/publishing/trusted-internal-origin"
 
 type StageResult = {
   stage: string
@@ -11,29 +15,26 @@ type StageResult = {
   data?: unknown
 }
 
-function cronAuthorizationHeader(request: NextRequest) {
-  return request.headers.get("authorization") || `Bearer ${process.env.CRON_SECRET || ""}`
-}
-
 export async function GET(request: NextRequest) {
   const auth = authorizeCronRequest(request)
   if (!auth.ok) {
     return cronUnauthorizedResponse()
   }
 
+  const discoveryUrl = trustedInternalUrl("/api/discovery/scheduled-run")
+  const publishUrl = trustedInternalUrl("/api/cron/publish-scheduled")
+  if (!discoveryUrl || !publishUrl) return trustedOriginUnavailableResponse()
+
   const startedAt = new Date()
-
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-
+  const authorization = request.headers.get("authorization") || ""
   const results: StageResult[] = []
-  const authorization = cronAuthorizationHeader(request)
 
   try {
-    const discoveryRes = await fetch(`${baseUrl}/api/discovery/scheduled-run`, {
+    const discoveryRes = await fetch(discoveryUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: authorization,
       },
       body: JSON.stringify({
         saveLimit: 10,
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const publishRes = await fetch(`${baseUrl}/api/cron/publish-scheduled`, {
+    const publishRes = await fetch(publishUrl, {
       headers: {
         Authorization: authorization,
         "x-invocation-source": "vercel-pipeline",

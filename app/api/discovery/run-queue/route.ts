@@ -1,7 +1,21 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import {
+  privilegedSameOriginHeaders,
+  requireEditorAuth,
+} from "../../../../lib/publishing/require-editor-auth"
+import {
+  trustedInternalUrl,
+  trustedOriginUnavailableResponse,
+} from "../../../../lib/publishing/trusted-internal-origin"
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
+  const generateUrl = trustedInternalUrl("/api/ai/generate-article")
+  if (!generateUrl) return trustedOriginUnavailableResponse()
+
   try {
     const body = await request.json().catch(() => ({}))
     const limit = Number(body.limit || 3)
@@ -24,14 +38,10 @@ export async function POST(request: Request) {
         data: { status: "researching" },
       })
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/ai/generate-article`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
+      const response = await fetch(generateUrl, {
+        method: "POST",
+        headers: privilegedSameOriginHeaders(request),
+        body: JSON.stringify({
             topic: topic.title,
             category: topic.category,
           }),
@@ -92,6 +102,6 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
-  return POST(new Request("http://localhost"))
+export async function GET(request: Request) {
+  return POST(request)
 }

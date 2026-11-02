@@ -1,7 +1,8 @@
 import { Prisma } from "@prisma/client"
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { requireEditorAuth } from "../../../../../lib/publishing/require-editor-auth"
+import { requireEditorAuth, privilegedSameOriginHeaders } from "../../../../../lib/publishing/require-editor-auth"
+import { trustedInternalUrl } from "../../../../../lib/publishing/trusted-internal-origin"
 
 async function logActivity({
   type,
@@ -45,12 +46,15 @@ async function runJob(job: { type: string }, request: NextRequest) {
   }
 
   if (job.type === "run-discovery-cycle" || job.type === "run_discovery_cycle") {
-    const response = await fetch(
-      new URL("/api/discovery/scheduled-run", request.nextUrl.origin),
-      {
-        method: "POST",
-      }
-    )
+    const discoveryUrl = trustedInternalUrl("/api/discovery/scheduled-run")
+    if (!discoveryUrl) {
+      throw new Error("Trusted internal origin is unavailable.")
+    }
+
+    const response = await fetch(discoveryUrl, {
+      method: "POST",
+      headers: privilegedSameOriginHeaders(request),
+    })
 
     const result = await response.json()
 

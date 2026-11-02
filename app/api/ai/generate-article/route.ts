@@ -13,6 +13,7 @@ import { factExtractor } from "../../../../lib/research/fact-extractor";
 import { factVerificationEngine } from "../../../../lib/research/fact-verification-engine";
 import { consensusEngine } from "../../../../lib/research/consensus-engine";
 import { publicationGate } from "../../../../lib/research/publication-gate";
+import { authorizeEditorOrCron } from "../../../../lib/publishing/require-editor-auth";
 
 import { encodingNormalizer } from "../../../../lib/research/encoding-normalizer";
 import { contentSafeNormalizer } from "../../../../lib/research/content-safe-normalizer";
@@ -111,6 +112,9 @@ function finalTextCleanup(value: string): string {
 }
 
 export async function POST(request: Request) {
+  const auth = await authorizeEditorOrCron(request);
+  if (!auth.ok) return auth.response;
+
   try {
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(

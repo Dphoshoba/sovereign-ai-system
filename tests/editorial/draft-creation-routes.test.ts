@@ -5,6 +5,17 @@ const articleCreate = vi.fn();
 const articleFindMany = vi.fn();
 const chatCreate = vi.fn();
 
+vi.mock("@/lib/supabase/server", () => ({
+  createSupabaseServerClient: vi.fn(async () => ({
+    auth: {
+      getUser: vi.fn(async () => ({
+        data: { user: { id: "editor-1", email: "editor@example.com" } },
+        error: null,
+      })),
+    },
+  })),
+}));
+
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     article: {
