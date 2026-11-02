@@ -3,8 +3,29 @@ import { GET as runWeeklyPlanner } from "../workers/weekly-planner/route"
 import { publishDueArticles } from "../../../lib/publishing/publish-due-articles"
 import { POST as createSnapshot } from "../reports/snapshot/route"
 import { GET as runIntelligence } from "../reports/executive-intelligence/route"
+import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
+
+function editorSessionHeaders(request: NextRequest) {
+  const headers = new Headers()
+  const raw = request.headers.get("cookie")
+  if (!raw) return headers
+
+  const session = raw
+    .split(";")
+    .map((part) => part.trim())
+    .filter((part) => {
+      const name = part.split("=")[0] ?? ""
+      return name.startsWith("sb-") && name.includes("auth-token")
+    })
+
+  if (session.length > 0) headers.set("cookie", session.join("; "))
+  return headers
+}
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const { action } = await req.json()
 
@@ -54,8 +75,9 @@ export async function POST(req: NextRequest) {
       }
 
       case "pipeline": {
-        await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/pipeline`, {
+        await fetch(new URL("/api/pipeline", req.nextUrl.origin), {
           method: "POST",
+          headers: editorSessionHeaders(req),
         })
         return NextResponse.json({
           ok: true,

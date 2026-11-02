@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireEditorAuth } from "../../../../../lib/publishing/require-editor-auth"
 
 async function logActivity({
   type,
@@ -26,7 +27,7 @@ async function logActivity({
   })
 }
 
-async function runJob(job: any) {
+async function runJob(job: { type: string }, request: NextRequest) {
   if (job.type === "publish-scheduled") {
     const { publishDueArticles } = await import(
       "../../../../../lib/publishing/publish-due-articles"
@@ -45,7 +46,7 @@ async function runJob(job: any) {
 
   if (job.type === "run-discovery-cycle" || job.type === "run_discovery_cycle") {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/discovery/scheduled-run`,
+      new URL("/api/discovery/scheduled-run", request.nextUrl.origin),
       {
         method: "POST",
       }
@@ -71,7 +72,10 @@ async function runJob(job: any) {
   }
 }
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const now = new Date()
 
@@ -119,7 +123,7 @@ export async function POST() {
     })
 
     try {
-      const result = await runJob(job)
+      const result = await runJob(job, request)
 
       const completed = await prisma.aiJob.update({
         where: { id: job.id },

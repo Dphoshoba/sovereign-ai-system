@@ -1,15 +1,38 @@
 import { NextRequest, NextResponse } from "next/server"
+import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
+
+function editorSessionHeaders(request: NextRequest) {
+  const headers = new Headers()
+  const raw = request.headers.get("cookie")
+  if (!raw) return headers
+
+  const session = raw
+    .split(";")
+    .map((part) => part.trim())
+    .filter((part) => {
+      const name = part.split("=")[0] ?? ""
+      return name.startsWith("sb-") && name.includes("auth-token")
+    })
+
+  if (session.length > 0) headers.set("cookie", session.join("; "))
+  return headers
+}
+
+function internalApiUrl(request: NextRequest, path: string) {
+  return new URL(path, request.nextUrl.origin)
+}
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      "http://localhost:3000"
+    const sessionHeaders = editorSessionHeaders(req)
 
     // Step 1
-    const planner = await fetch(
-      `${baseUrl}/api/workers/weekly-planner`
-    )
+    const planner = await fetch(internalApiUrl(req, "/api/workers/weekly-planner"), {
+      headers: sessionHeaders,
+    })
 
     const plannerJson = await planner.json()
 
@@ -20,13 +43,14 @@ export async function POST(req: NextRequest) {
     const draft = plannerJson.draft
 
     // Step 2
+    const generateHeaders = new Headers(sessionHeaders)
+    generateHeaders.set("Content-Type", "application/json")
+
     const articleResponse = await fetch(
-      `${baseUrl}/api/articles/generate`,
+      internalApiUrl(req, "/api/articles/generate"),
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: generateHeaders,
         body: JSON.stringify({
           articleId: draft.id,
         }),
@@ -42,12 +66,10 @@ export async function POST(req: NextRequest) {
 
     // Step 3
     const packageResponse = await fetch(
-      `${baseUrl}/api/articles/generate-package`,
+      internalApiUrl(req, "/api/articles/generate-package"),
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: generateHeaders,
         body: JSON.stringify({
           articleId: draft.id,
         }),
@@ -63,13 +85,10 @@ export async function POST(req: NextRequest) {
 
     const scheduleResponse =
       await fetch(
-        `${baseUrl}/api/pipeline/auto-schedule`,
+        internalApiUrl(req, "/api/pipeline/auto-schedule"),
         {
           method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
+          headers: generateHeaders,
           body: JSON.stringify({
             articleId: draft.id,
           }),

@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { transitionArticleLifecycle } from "../../../../lib/publishing/article-lifecycle";
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth";
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth();
+  if (!auth.ok) return auth.response;
+
   try {
     const { articleId } = await req.json();
 
