@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { AppRouteRouteModule } from "next/dist/server/route-modules/app-route/module";
 import { RouteKind } from "next/dist/server/route-kind";
 
-const { operations } = vi.hoisted(() => {
+const { operations, mockGetUser } = vi.hoisted(() => {
   // Next chooses its AsyncLocalStorage when the route module is first imported.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { AsyncLocalStorage } = require("node:async_hooks") as {
@@ -14,6 +14,7 @@ const { operations } = vi.hoisted(() => {
   }
   return {
     operations: [] as Array<{ model: string; method: string }>,
+    mockGetUser: vi.fn(),
   };
 });
 
@@ -23,6 +24,12 @@ function resultFor(method: string) {
   if (method === "createMany") return { count: 1 };
   return [];
 }
+
+vi.mock("@/lib/supabase/server", () => ({
+  createSupabaseServerClient: vi.fn(async () => ({
+    auth: { getUser: mockGetUser },
+  })),
+}));
 
 vi.mock("@/lib/prisma", () => ({
   prisma: new Proxy(
@@ -124,6 +131,7 @@ function routeModule(
 describe("build prerender containment", () => {
   beforeEach(() => {
     operations.length = 0;
+    mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
   });
 
   it("does not execute a force-dynamic GET during static generation", async () => {
@@ -178,8 +186,39 @@ describe("build prerender containment", () => {
   );
 
   it.each(ROUTES)(
-    "preserves anonymous runtime writes for $name",
+    "rejects anonymous $name requests before any database call",
     async (entry) => {
+      const userland = await entry.load();
+      const response = await userland.GET();
+
+      expect(response.status).toBe(401);
+      await expect(response.json()).resolves.toMatchObject({
+        ok: false,
+        code: "AUTHENTICATION_REQUIRED",
+      });
+      expect(operations).toEqual([]);
+
+      if ("POST" in userland && typeof userland.POST === "function") {
+        const postResponse = await userland.POST(
+          new Request(`http://localhost:3000${entry.pathname}`, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ triggerType: "hot-lead-detected" }),
+          }),
+        );
+        expect(postResponse.status).toBe(401);
+        expect(operations).toEqual([]);
+      }
+    },
+  );
+
+  it.each(ROUTES)(
+    "preserves editor seed writes for $name",
+    async (entry) => {
+      mockGetUser.mockResolvedValue({
+        data: { user: { id: "editor-1", email: "editor@example.com" } },
+        error: null,
+      });
       const userland = await entry.load();
       const response = await userland.GET();
       const body = await response.json();
