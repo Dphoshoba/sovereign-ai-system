@@ -4,6 +4,10 @@ import { publishDueArticles } from "../../../lib/publishing/publish-due-articles
 import { POST as createSnapshot } from "../reports/snapshot/route"
 import { GET as runIntelligence } from "../reports/executive-intelligence/route"
 import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
+import {
+  trustedInternalUrl,
+  trustedOriginUnavailableResponse,
+} from "../../../lib/publishing/trusted-internal-origin"
 
 function editorSessionHeaders(request: NextRequest) {
   const headers = new Headers()
@@ -75,7 +79,10 @@ export async function POST(req: NextRequest) {
       }
 
       case "pipeline": {
-        await fetch(new URL("/api/pipeline", req.nextUrl.origin), {
+        const pipelineUrl = trustedInternalUrl("/api/pipeline")
+        if (!pipelineUrl) return trustedOriginUnavailableResponse()
+
+        await fetch(pipelineUrl, {
           method: "POST",
           headers: editorSessionHeaders(req),
         })

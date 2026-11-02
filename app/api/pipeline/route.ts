@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
+import {
+  trustedInternalUrl,
+  trustedOriginUnavailableResponse,
+} from "../../../lib/publishing/trusted-internal-origin"
 
 function editorSessionHeaders(request: NextRequest) {
   const headers = new Headers()
@@ -18,19 +22,23 @@ function editorSessionHeaders(request: NextRequest) {
   return headers
 }
 
-function internalApiUrl(request: NextRequest, path: string) {
-  return new URL(path, request.nextUrl.origin)
-}
-
 export async function POST(req: NextRequest) {
   const auth = await requireEditorAuth()
   if (!auth.ok) return auth.response
+
+  const plannerUrl = trustedInternalUrl("/api/workers/weekly-planner")
+  const generateUrl = trustedInternalUrl("/api/articles/generate")
+  const packageUrl = trustedInternalUrl("/api/articles/generate-package")
+  const scheduleUrl = trustedInternalUrl("/api/pipeline/auto-schedule")
+  if (!plannerUrl || !generateUrl || !packageUrl || !scheduleUrl) {
+    return trustedOriginUnavailableResponse()
+  }
 
   try {
     const sessionHeaders = editorSessionHeaders(req)
 
     // Step 1
-    const planner = await fetch(internalApiUrl(req, "/api/workers/weekly-planner"), {
+    const planner = await fetch(plannerUrl, {
       headers: sessionHeaders,
     })
 
@@ -47,7 +55,7 @@ export async function POST(req: NextRequest) {
     generateHeaders.set("Content-Type", "application/json")
 
     const articleResponse = await fetch(
-      internalApiUrl(req, "/api/articles/generate"),
+      generateUrl,
       {
         method: "POST",
         headers: generateHeaders,
@@ -66,7 +74,7 @@ export async function POST(req: NextRequest) {
 
     // Step 3
     const packageResponse = await fetch(
-      internalApiUrl(req, "/api/articles/generate-package"),
+      packageUrl,
       {
         method: "POST",
         headers: generateHeaders,
@@ -85,7 +93,7 @@ export async function POST(req: NextRequest) {
 
     const scheduleResponse =
       await fetch(
-        internalApiUrl(req, "/api/pipeline/auto-schedule"),
+        scheduleUrl,
         {
           method: "POST",
           headers: generateHeaders,
