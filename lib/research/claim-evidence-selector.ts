@@ -1,6 +1,6 @@
 import {
   passageSupportsClaim,
-  significantTokens,
+  uniqueContentOverlap,
 } from "./article-claim-extractor";
 import {
   canonicalSourceUrl,
@@ -124,10 +124,7 @@ function verseWindowRecords(
 }
 
 function overlapScore(claim: string, passage: string): number {
-  const claimTokens = significantTokens(claim);
-  if (claimTokens.length === 0) return 0;
-  const passageTokens = new Set(significantTokens(passage));
-  return claimTokens.filter((token) => passageTokens.has(token)).length;
+  return uniqueContentOverlap(claim, passage).overlap.length;
 }
 
 function compareCandidates(left: RankedCandidate, right: RankedCandidate): number {

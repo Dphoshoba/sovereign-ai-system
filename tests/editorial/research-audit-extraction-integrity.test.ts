@@ -3,6 +3,8 @@ import {
   CREATOR_TEMPLATE_CLAIMS,
   extractArticleClaims,
   passageSupportsClaim,
+  percentageValues,
+  uniqueContentOverlap,
 } from "../../lib/research/article-claim-extractor";
 import { groundedFactVerification } from "../../lib/research/claim-evidence-matcher";
 import { contentFetcher } from "../../lib/research/content-fetcher";
@@ -659,6 +661,46 @@ describe("research-audit extraction integrity", () => {
 
     expect(passageSupportsClaim(claim, supported)).toBe(true);
     expect(passageSupportsClaim(claim, unsupported)).toBe(false);
+  });
+
+  it("requires every claimed percentage and counts each content word once", () => {
+    const errorClaim =
+      "They found minor factual errors in 28 percent of the documents and major factual errors in 12 percent.";
+    const excerptClaim =
+      "A controlled study found that ChatGPT reduced time on specific professional writing tasks by 40% and increased reviewer-rated quality by 18%.";
+    const qualityClaim =
+      "Output quality, graded by blinded professionals in the same occupations, rose by 18 percent.";
+    const productivityPassage =
+      "Access to the assistive chatbot ChatGPT decreased the time it took workers to complete the tasks by 40 percent, and output quality, as measured by independent evaluators, rose by 18 percent.";
+    const figureFreePassage =
+      "The study offered a close-up look at the impact that tools like ChatGPT can have on certain writing tasks. The magnitude of time saved and quality increases are very large.";
+    const bothFigures =
+      "A controlled study found that ChatGPT reduced time on specific professional writing tasks by 40 percent and increased reviewer-rated quality by 18 percent.";
+    const errorPassage =
+      "They found minor factual errors in 28% of the documents and major factual errors in 12%.";
+    const repeatedWords =
+      "factual percent factual percent 28 percent 12 percent";
+    const noPercentageClaim = "A separate text-editing study shows why the check matters.";
+    const noPercentagePassage =
+      "A separate text-editing study shows why the check matters for authors.";
+    const ordinaryPassage =
+      "Pick one repeating job and run it with your usual care before anything goes out.";
+
+    expect(passageSupportsClaim(errorClaim, productivityPassage)).toBe(false);
+    expect(passageSupportsClaim(excerptClaim, figureFreePassage)).toBe(false);
+    expect(passageSupportsClaim(excerptClaim, bothFigures)).toBe(true);
+    expect(passageSupportsClaim(qualityClaim, productivityPassage)).toBe(true);
+    expect(passageSupportsClaim(errorClaim, errorPassage)).toBe(true);
+    expect(passageSupportsClaim(errorClaim, repeatedWords)).toBe(false);
+    expect(uniqueContentOverlap(errorClaim, repeatedWords).overlap).toEqual([
+      "factual",
+      "percent",
+    ]);
+    expect(percentageValues("Quality rose by 40% after 40 percent.")).toEqual([40, 40]);
+    expect(percentageValues("In 2023 the sample was 453 professionals and 200 documents.")).toEqual([]);
+    expect(passageSupportsClaim(noPercentageClaim, noPercentagePassage)).toBe(true);
+    expect(passageSupportsClaim(noPercentageClaim, ordinaryPassage)).toBe(false);
+    expect(passageSupportsClaim(qualityClaim, ordinaryPassage)).toBe(false);
   });
 
   it("records HTTP 403 as unavailable and writes no audit when evidence is missing", async () => {

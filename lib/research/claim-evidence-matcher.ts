@@ -5,7 +5,7 @@ import {
   type ArticleClaim,
   articleContainsExcerpt,
   passageSupportsClaim,
-  significantTokens,
+  uniqueContentOverlap,
 } from "./article-claim-extractor";
 import {
   canonicalSourceUrl,
@@ -101,9 +101,10 @@ export function matchEvidenceToClaim(
     if (!passageSupportsClaim(claim.claim, evidence.extractedText, { documentKind })) {
       return [];
     }
-    const overlap = significantTokens(claim.claim).filter((token) =>
-      significantTokens(evidence.extractedText).includes(token),
-    ).length;
+    const overlap = uniqueContentOverlap(
+      claim.claim,
+      evidence.extractedText,
+    ).overlap.length;
     return [{ evidence, overlap }];
   });
   return dropAmbiguousBibleProjectMatches(claim.claim, matches, listedSources);

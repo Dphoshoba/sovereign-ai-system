@@ -385,6 +385,39 @@ export function significantTokens(value: string): string[] {
     .filter((token) => token.length > 2 && !STOP_WORDS.has(token));
 }
 
+const PERCENTAGE_VALUE = /\b(\d+(?:\.\d+)?)(?:\s*%|\s+percent\b)/gi;
+
+export function percentageValues(text: string): number[] {
+  const values: number[] = [];
+  for (const match of text.matchAll(new RegExp(PERCENTAGE_VALUE.source, "gi"))) {
+    const value = Number(match[1]);
+    if (Number.isFinite(value)) values.push(value);
+  }
+  return values;
+}
+
+export function passageContainsClaimPercentages(claim: string, passage: string): boolean {
+  const required = new Set(percentageValues(claim));
+  if (required.size === 0) return true;
+  const present = new Set(percentageValues(passage));
+  for (const value of required) {
+    if (!present.has(value)) return false;
+  }
+  return true;
+}
+
+export function uniqueContentOverlap(claim: string, passage: string): {
+  claimTokens: string[];
+  overlap: string[];
+} {
+  const claimTokens = [...new Set(significantTokens(claim))];
+  const passageTokens = new Set(significantTokens(passage));
+  return {
+    claimTokens,
+    overlap: claimTokens.filter((token) => passageTokens.has(token)),
+  };
+}
+
 export function eventActionTokens(claim: string): string[] {
   return significantTokens(claim).filter((token) => !GENERIC_NAME_TOKENS.has(token));
 }
@@ -399,17 +432,17 @@ export function passageSupportsClaim(
   if (options.documentKind !== "pdf" && isOutlineOrIndexPassage(passage)) {
     return false;
   }
-  const claimTokens = significantTokens(claim);
+  if (!passageContainsClaimPercentages(claim, passage)) return false;
+  const { claimTokens, overlap } = uniqueContentOverlap(claim, passage);
   if (claimTokens.length === 0) return false;
-  const passageTokens = new Set(significantTokens(passage));
-  const overlap = claimTokens.filter((token) => passageTokens.has(token));
   const required = Math.min(
     Math.max(3, Math.ceil(claimTokens.length * 0.35)),
     claimTokens.length,
   );
   if (overlap.length < required) return false;
 
-  const actionTokens = eventActionTokens(claim);
+  const passageTokens = new Set(significantTokens(passage));
+  const actionTokens = [...new Set(eventActionTokens(claim))];
   if (actionTokens.length >= 2) {
     const actionOverlap = actionTokens.filter((token) => passageTokens.has(token));
     if (actionOverlap.length < Math.min(2, actionTokens.length)) {

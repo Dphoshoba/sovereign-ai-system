@@ -1,6 +1,6 @@
 import type { EvidenceChunk } from "./evidence-chunker";
 import { evidenceChunker } from "./evidence-chunker";
-import { passageSupportsClaim, significantTokens } from "./article-claim-extractor";
+import { passageSupportsClaim, uniqueContentOverlap } from "./article-claim-extractor";
 import {
   claimAllowsEvidence,
   type AttributableSource,
@@ -27,10 +27,7 @@ export type PdfEvidenceScan = {
 };
 
 function pdfPassageOverlap(claim: string, passage: string): number {
-  const claimTokens = significantTokens(claim);
-  if (claimTokens.length === 0) return 0;
-  const passageTokens = new Set(significantTokens(passage));
-  return claimTokens.filter((token) => passageTokens.has(token)).length;
+  return uniqueContentOverlap(claim, passage).overlap.length;
 }
 
 export function pdfPassageSupportsClaim(claim: string, passage: string): boolean {
