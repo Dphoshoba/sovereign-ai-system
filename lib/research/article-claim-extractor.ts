@@ -38,6 +38,8 @@ export type ArticleClaim = {
 };
 
 export const FACTUAL_CLAIM_LIMIT = 12;
+export const CLAIM_BATCH_LIMIT = 3;
+export const FACTUAL_CLAIM_CEILING = FACTUAL_CLAIM_LIMIT * CLAIM_BATCH_LIMIT;
 
 export type NotScoredClaim = {
   text: string;
@@ -388,6 +390,34 @@ function selectFactualClaims(candidates: ArticleClaim[]): {
         section: sectionLabel(candidate),
       })),
   };
+}
+
+export type ClaimBatch<T> = {
+  index: number;
+  claims: T[];
+};
+
+export type ClaimBatchPlan<T> = {
+  batches: ClaimBatch<T>[];
+  eligibleClaims: T[];
+  overflowClaims: T[];
+};
+
+export function planClaimBatches<T>(claims: readonly T[]): ClaimBatchPlan<T> {
+  const eligibleClaims = claims.slice(0, FACTUAL_CLAIM_CEILING);
+  const overflowClaims = claims.slice(FACTUAL_CLAIM_CEILING);
+  const batches: ClaimBatch<T>[] = [];
+  for (
+    let offset = 0;
+    offset < eligibleClaims.length && batches.length < CLAIM_BATCH_LIMIT;
+    offset += FACTUAL_CLAIM_LIMIT
+  ) {
+    batches.push({
+      index: batches.length,
+      claims: eligibleClaims.slice(offset, offset + FACTUAL_CLAIM_LIMIT),
+    });
+  }
+  return { batches, eligibleClaims, overflowClaims };
 }
 
 export function extractArticleClaims(input: {

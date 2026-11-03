@@ -1,5 +1,6 @@
 import {
   passageSupportsClaim,
+  planClaimBatches,
   uniqueContentOverlap,
 } from "./article-claim-extractor";
 import {
@@ -291,5 +292,97 @@ export function selectClaimAwareEvidence(input: {
     mappings: resultMappings,
     uniquePassageCount: evidence.length,
     bounded,
+  };
+}
+
+export type BatchEvidenceRun = {
+  index: number;
+  claimCount: number;
+  uniquePassageCount: number;
+  bounded: boolean;
+};
+
+export type BatchClaimEvidenceSelection = {
+  evidence: EvidenceRecord[];
+  mappings: ClaimEvidenceMapping[];
+  unsupportedClaims: string[];
+  overflowClaims: string[];
+  uniquePassageCount: number;
+  batches: BatchEvidenceRun[];
+};
+
+export function selectClaimEvidenceInBatches(input: {
+  claims: readonly string[];
+  documents: SelectableDocument[];
+  listedSources: AttributableSource[];
+}): BatchClaimEvidenceSelection {
+  const plan = planClaimBatches(input.claims);
+  const runs = plan.batches.map((batch) => {
+    const selection = selectClaimAwareEvidence({
+      claims: batch.claims,
+      documents: input.documents,
+      listedSources: input.listedSources,
+    });
+    return { batch, selection };
+  });
+
+  const evidenceByKey = new Map<string, EvidenceRecord>();
+  const keyOrder: string[] = [];
+  const recordById = new Map<string, EvidenceRecord>();
+
+  for (const run of runs) {
+    for (const record of run.selection.evidence) {
+      recordById.set(record.id, record);
+      const key = passageKey(record.sourceUrl, record.extractedText);
+      const existing = evidenceByKey.get(key);
+      if (!existing) {
+        evidenceByKey.set(key, record);
+        keyOrder.push(key);
+        continue;
+      }
+      if (record.id < existing.id) {
+        evidenceByKey.set(key, { ...existing, id: record.id });
+      }
+    }
+  }
+
+  const mappings: ClaimEvidenceMapping[] = [];
+  for (const run of runs) {
+    for (const mapping of run.selection.mappings) {
+      const evidenceIds: string[] = [];
+      const seen = new Set<string>();
+      for (const id of mapping.evidenceIds) {
+        const record = recordById.get(id);
+        const canonical = record
+          ? evidenceByKey.get(passageKey(record.sourceUrl, record.extractedText))
+          : undefined;
+        if (!canonical || seen.has(canonical.id)) continue;
+        seen.add(canonical.id);
+        evidenceIds.push(canonical.id);
+      }
+      mappings.push({ claim: mapping.claim, evidenceIds });
+    }
+  }
+
+  const evidence: EvidenceRecord[] = [];
+  for (const key of keyOrder) {
+    const record = evidenceByKey.get(key);
+    if (record) evidence.push(record);
+  }
+
+  return {
+    evidence,
+    mappings,
+    unsupportedClaims: mappings
+      .filter((mapping) => mapping.evidenceIds.length === 0)
+      .map((mapping) => mapping.claim),
+    overflowClaims: [...plan.overflowClaims],
+    uniquePassageCount: keyOrder.length,
+    batches: runs.map((run) => ({
+      index: run.batch.index,
+      claimCount: run.batch.claims.length,
+      uniquePassageCount: run.selection.uniquePassageCount,
+      bounded: run.selection.bounded,
+    })),
   };
 }
