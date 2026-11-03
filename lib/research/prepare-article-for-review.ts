@@ -6,10 +6,8 @@ import {
   serializeArticleAuditAssociation,
 } from "./article-audit-association";
 import { computeArticleAuditFingerprint } from "./article-audit-fingerprint";
-import {
-  extractArticleClaims,
-  recommendationWithUnscoredClaims,
-} from "./article-claim-extractor";
+import { extractArticleClaims } from "./article-claim-extractor";
+import { recommendationWithEvidenceCompleteness } from "./evidence-completeness";
 import { extractArticleSourceLinks } from "./article-source-links";
 import { groundedFactVerification } from "./claim-evidence-matcher";
 import { consensusEngine } from "./consensus-engine";
@@ -421,8 +419,9 @@ export async function prepareArticleForReview(
     }
 
     const consensus = consensusEngine(verification.facts);
-    const publicationRecommendation = recommendationWithUnscoredClaims(
+    const publicationRecommendation = recommendationWithEvidenceCompleteness(
       consensus.publicationRecommendation,
+      verification.facts,
       claimExtraction.notScoredClaims,
     );
     publicationGate({

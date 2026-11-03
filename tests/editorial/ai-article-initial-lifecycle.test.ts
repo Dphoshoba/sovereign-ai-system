@@ -194,4 +194,72 @@ describe("POST /api/ai/generate-article initial lifecycle state", () => {
       }),
     });
   });
+
+  it("stores the completeness recommendation instead of a raw publish-ready score", async () => {
+    const { consensusEngine } = await import("../../lib/research/consensus-engine");
+    const { factVerificationEngine } = await import(
+      "../../lib/research/fact-verification-engine"
+    );
+    const { publicationGate } = await import("../../lib/research/publication-gate");
+    vi.mocked(consensusEngine).mockReturnValue({
+      totalFacts: 1,
+      verifiedFacts: 0,
+      partiallyVerifiedFacts: 0,
+      unverifiedFacts: 1,
+      consensusScore: 92,
+      sourceQualityScore: 100,
+      consensusGroups: [],
+      consensusGroupCount: 0,
+      publicationRecommendation: "publish-ready",
+      summary: "Scores pass while one claim is unverified.",
+    });
+    vi.mocked(factVerificationEngine).mockReturnValue({
+      verifiedFacts: [
+        {
+          claim: "An unsupported product claim.",
+          evidenceId: "",
+          sourceTitle: "",
+          sourceUrl: "",
+          sourceType: "",
+          evidenceText: "",
+          confidence: "low",
+          requiresHumanReview: true,
+          verificationCount: 0,
+          verificationStatus: "unverified",
+          verificationMethod: "single-source-supported",
+          supportingSources: [],
+          verificationScore: 0,
+        },
+      ],
+      verifiedCount: 0,
+      partiallyVerifiedCount: 0,
+      unverifiedCount: 1,
+      averageVerificationScore: 0,
+      publicationBlocked: true,
+    });
+
+    const { POST } = await import("../../app/api/ai/generate-article/route");
+    const response = await POST(
+      new Request("http://localhost/api/ai/generate-article", {
+        method: "POST",
+        body: JSON.stringify({ topic: "Governed generation", category: "ai-tools" }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(vi.mocked(publicationGate)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        consensusScore: 92,
+        sourceQualityScore: 100,
+        publicationRecommendation: "review-required",
+      }),
+    );
+    expect(auditCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        consensusScore: 92,
+        sourceQualityScore: 100,
+        publicationRecommendation: "review-required",
+      }),
+    });
+  });
 });

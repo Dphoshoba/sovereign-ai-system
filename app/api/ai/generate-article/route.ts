@@ -12,6 +12,7 @@ import { evidenceRegistry } from "../../../../lib/research/evidence-registry";
 import { factExtractor } from "../../../../lib/research/fact-extractor";
 import { factVerificationEngine } from "../../../../lib/research/fact-verification-engine";
 import { consensusEngine } from "../../../../lib/research/consensus-engine";
+import { recommendationWithEvidenceCompleteness } from "../../../../lib/research/evidence-completeness";
 import { publicationGate } from "../../../../lib/research/publication-gate";
 import { authorizeEditorOrCron } from "../../../../lib/publishing/require-editor-auth";
 
@@ -144,7 +145,15 @@ export async function POST(request: Request) {
     const factExtraction = factExtractor(topic, evidence.evidence, category);
     const factVerification = factVerificationEngine(factExtraction.facts);
     const consensus = consensusEngine(factVerification.verifiedFacts);
-    const publicationDecision = publicationGate(consensus);
+    const publicationRecommendation = recommendationWithEvidenceCompleteness(
+      consensus.publicationRecommendation,
+      factVerification.verifiedFacts,
+    );
+    const governedConsensus = {
+      ...consensus,
+      publicationRecommendation,
+    };
+    const publicationDecision = publicationGate(governedConsensus);
 
     if (publicationDecision.status === "blocked") {
       return NextResponse.json(
@@ -165,7 +174,7 @@ export async function POST(request: Request) {
             unverifiedCount: factVerification.unverifiedCount,
             consensusScore: consensus.consensusScore,
             sourceQualityScore: consensus.sourceQualityScore,
-            publicationRecommendation: consensus.publicationRecommendation,
+            publicationRecommendation,
           },
         },
         { status: 422 },
@@ -343,7 +352,7 @@ export async function POST(request: Request) {
       verifiedCount: factVerification.verifiedCount,
       partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
       unverifiedCount: factVerification.unverifiedCount,
-      publicationRecommendation: consensus.publicationRecommendation,
+      publicationRecommendation,
     });
 
     const qualityResult = articleQualityScorer({
@@ -404,7 +413,7 @@ export async function POST(request: Request) {
           averageVerificationScore: factVerification.averageVerificationScore,
           consensusScore: consensus.consensusScore,
           sourceQualityScore: consensus.sourceQualityScore,
-          publicationRecommendation: consensus.publicationRecommendation,
+          publicationRecommendation,
           sources: sourceCollection.collectedSources,
           evidence: Array.isArray(evidence.evidence) ? evidence.evidence : [],
           facts: factVerification.verifiedFacts,
@@ -485,7 +494,7 @@ export async function POST(request: Request) {
     }
 
     const editorialWarning =
-      consensus.publicationRecommendation === "blocked"
+      publicationRecommendation === "blocked"
         ? "Research pipeline marked this article as blocked for publication readiness because the available facts lack sufficient cross-source verification. The article was still saved as review-required for human editorial review."
         : null;
 
@@ -511,7 +520,7 @@ export async function POST(request: Request) {
         unverifiedCount: factVerification.unverifiedCount,
         consensusScore: consensus.consensusScore,
         sourceQualityScore: consensus.sourceQualityScore,
-        publicationRecommendation: consensus.publicationRecommendation,
+        publicationRecommendation,
         publicationDecision,
         editorialWarning,
         editorialQuality,

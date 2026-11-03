@@ -9,6 +9,7 @@ import { evidenceRegistry } from "../../../../lib/research/evidence-registry"
 import { factExtractor } from "../../../../lib/research/fact-extractor"
 import { factVerificationEngine } from "../../../../lib/research/fact-verification-engine"
 import { consensusEngine } from "../../../../lib/research/consensus-engine"
+import { recommendationWithEvidenceCompleteness } from "../../../../lib/research/evidence-completeness"
 import { publicationGate } from "../../../../lib/research/publication-gate"
 
 export async function POST(req: NextRequest) {
@@ -44,8 +45,16 @@ export async function POST(req: NextRequest) {
   const consensus = consensusEngine(
     factVerification.verifiedFacts
   )
+  const publicationRecommendation = recommendationWithEvidenceCompleteness(
+    consensus.publicationRecommendation,
+    factVerification.verifiedFacts,
+  )
+  const governedConsensus = {
+    ...consensus,
+    publicationRecommendation,
+  }
 
-  const result = publicationGate(consensus)
+  const result = publicationGate(governedConsensus)
 
   return NextResponse.json({
     ok: true,
@@ -53,7 +62,7 @@ export async function POST(req: NextRequest) {
     evidence,
     factExtraction,
     factVerification,
-    consensus,
+    consensus: governedConsensus,
     result,
   })
 }

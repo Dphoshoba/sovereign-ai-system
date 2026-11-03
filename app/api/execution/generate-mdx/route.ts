@@ -21,6 +21,7 @@ import { citationBuilder } from "../../../../lib/research/citation-builder"
 import { mdxCitationRenderer } from "../../../../lib/research/mdx-citation-renderer"
 import { factVerificationEngine } from "../../../../lib/research/fact-verification-engine"
 import { consensusEngine } from "../../../../lib/research/consensus-engine"
+import { recommendationWithEvidenceCompleteness } from "../../../../lib/research/evidence-completeness"
 import { publicationGate } from "../../../../lib/research/publication-gate"
 import { outlineBuilder } from "../../../../lib/research/outline-builder"
 import { phase1Rules } from "../../../../lib/research/pipeline-registry"
@@ -97,8 +98,16 @@ export async function POST(req: NextRequest) {
     const consensus = consensusEngine(
       factVerification.verifiedFacts
     )
+    const publicationRecommendation = recommendationWithEvidenceCompleteness(
+      consensus.publicationRecommendation,
+      factVerification.verifiedFacts,
+    )
+    const governedConsensus = {
+      ...consensus,
+      publicationRecommendation,
+    }
 
-    const publicationDecision = publicationGate(consensus)
+    const publicationDecision = publicationGate(governedConsensus)
 
     const citationBlock = mdxCitationRenderer(
       citations.citations
@@ -350,7 +359,7 @@ ${phase1Rules.map((rule) => `- ${rule}`).join("\n")}
       factVerification,
       citations,
       citationBlock,
-      consensus,
+      consensus: governedConsensus,
       publicationDecision,
       clusters,
       sections,
