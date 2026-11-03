@@ -2,6 +2,8 @@ import {
   passageSupportsClaim,
   planClaimBatches,
   uniqueContentOverlap,
+  type ClaimBatch,
+  type ClaimBatchPlan,
 } from "./article-claim-extractor";
 import {
   canonicalSourceUrl,
@@ -311,21 +313,15 @@ export type BatchClaimEvidenceSelection = {
   batches: BatchEvidenceRun[];
 };
 
-export function selectClaimEvidenceInBatches(input: {
-  claims: readonly string[];
-  documents: SelectableDocument[];
-  listedSources: AttributableSource[];
-}): BatchClaimEvidenceSelection {
-  const plan = planClaimBatches(input.claims);
-  const runs = plan.batches.map((batch) => {
-    const selection = selectClaimAwareEvidence({
-      claims: batch.claims,
-      documents: input.documents,
-      listedSources: input.listedSources,
-    });
-    return { batch, selection };
-  });
+export type BatchEvidenceSelectionRun = {
+  batch: ClaimBatch<string>;
+  selection: ClaimAwareSelection;
+};
 
+export function assembleBatchEvidenceSelections(
+  plan: ClaimBatchPlan<string>,
+  runs: readonly BatchEvidenceSelectionRun[],
+): BatchClaimEvidenceSelection {
   const evidenceByKey = new Map<string, EvidenceRecord>();
   const keyOrder: string[] = [];
   const recordById = new Map<string, EvidenceRecord>();
@@ -385,4 +381,24 @@ export function selectClaimEvidenceInBatches(input: {
       bounded: run.selection.bounded,
     })),
   };
+}
+
+export function selectClaimEvidenceInBatches(input: {
+  claims: readonly string[];
+  documents: SelectableDocument[];
+  listedSources: AttributableSource[];
+}): BatchClaimEvidenceSelection {
+  const plan = planClaimBatches(input.claims);
+  const runs: BatchEvidenceSelectionRun[] = [];
+  for (const batch of plan.batches) {
+    runs.push({
+      batch,
+      selection: selectClaimAwareEvidence({
+        claims: batch.claims,
+        documents: input.documents,
+        listedSources: input.listedSources,
+      }),
+    });
+  }
+  return assembleBatchEvidenceSelections(plan, runs);
 }

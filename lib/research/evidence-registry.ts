@@ -5,8 +5,13 @@ import { isChromePassage } from "./evidence-chrome"
 import {
   type AttributableSource,
 } from "./claim-source-attribution"
+import { planClaimBatches } from "./article-claim-extractor"
 import {
+  assembleBatchEvidenceSelections,
   selectClaimAwareEvidence,
+  type BatchEvidenceRun,
+  type ClaimAwareSelection,
+  type ClaimEvidenceMapping,
   type SelectableDocument,
 } from "./claim-evidence-selector"
 import { collectPdfPassages } from "./pdf-evidence"
@@ -295,6 +300,115 @@ export async function evidenceRegistry(
     topic,
     evidence: evidenceRecords,
     evidenceCount: evidenceRecords.length,
+    sourceDiagnostics:
+      sourceDiagnostics.length > 0
+        ? sourceDiagnostics
+        : sources.map((source) =>
+            emptyDiagnostic(
+              sourceIdFromTitle(source.title, source.url),
+              source.url,
+              "fetch_failed",
+              rejectionReasonFor("fetch_failed"),
+            ),
+          ),
+    listedSourceCount: sources.length,
+    acceptedSourceCount,
+    availableSourceCount,
+    unavailableSourceCount,
+    noRelevantPassageCount,
+    factualClaimCount,
+    mappedClaimCount,
+    claimEvidenceCoverage:
+      factualClaimCount <= 0
+        ? 0
+        : Math.round(Math.min(1, mappedClaimCount / factualClaimCount) * 100),
+    registryStatus:
+      evidenceRecords.length > 0
+        ? "Evidence registry created from filtered and ranked evidence chunks."
+        : "No useful evidence available after filtering.",
+  }
+}
+
+export type BatchEvidenceSelector = (input: {
+  claims: string[]
+  documents: SelectableDocument[]
+  listedSources: AttributableSource[]
+}) => ClaimAwareSelection
+
+export type BoundedBatchEvidenceOptions = EvidenceRegistryOptions & {
+  selectBatch?: BatchEvidenceSelector
+}
+
+export type BoundedBatchEvidenceResult = EvidenceRegistryResult & {
+  mappings: ClaimEvidenceMapping[]
+  unsupportedClaims: string[]
+  overflowClaims: string[]
+  batches: BatchEvidenceRun[]
+}
+
+export async function collectBoundedBatchEvidence(
+  topic: string,
+  sources: SourceRecord[],
+  options: BoundedBatchEvidenceOptions = {},
+): Promise<BoundedBatchEvidenceResult> {
+  const { selectBatch, ...registryOptions } = options
+  const listedSources =
+    registryOptions.listedSources ??
+    sources.map((source) => ({ url: source.url, title: source.title }))
+  const claimTexts = registryOptions.claimTexts ?? []
+  const plan = planClaimBatches(claimTexts)
+  const collected = await Promise.all(
+    sources.map((source) =>
+      collectFromSource(source, {
+        ...registryOptions,
+        claimTexts: [...plan.eligibleClaims],
+        listedSources,
+      }),
+    ),
+  )
+  const documents = collected
+    .map((item) => item.document)
+    .filter((document): document is SelectableDocument => Boolean(document))
+  const chooseBatch = selectBatch ?? selectClaimAwareEvidence
+  const runs = []
+  for (const batch of plan.batches) {
+    runs.push({
+      batch,
+      selection: chooseBatch({
+        claims: [...batch.claims],
+        documents,
+        listedSources,
+      }),
+    })
+  }
+  const selection = assembleBatchEvidenceSelections(plan, runs)
+  const evidenceRecords = selection.evidence
+  const sourceDiagnostics = applySelectedPassages(collected, evidenceRecords)
+  const acceptedSourceCount = sourceDiagnostics.filter(
+    (diagnostic) => diagnostic.category === "accepted",
+  ).length
+  const unavailableSourceCount = sourceDiagnostics.filter((diagnostic) =>
+    isUnavailableAcquisitionCategory(diagnostic.category),
+  ).length
+  const noRelevantPassageCount = sourceDiagnostics.filter(
+    (diagnostic) =>
+      diagnostic.category === "no_relevant_passage" ||
+      diagnostic.category === "chrome_only",
+  ).length
+  const availableSourceCount = Math.max(0, sources.length - unavailableSourceCount)
+  const mappedClaimCount = selection.mappings.filter(
+    (mapping) => mapping.evidenceIds.length > 0,
+  ).length
+  const factualClaimCount = plan.eligibleClaims.length
+
+  return {
+    topic,
+    evidence: evidenceRecords,
+    evidenceCount: evidenceRecords.length,
+    mappings: selection.mappings,
+    unsupportedClaims: selection.unsupportedClaims,
+    overflowClaims: selection.overflowClaims,
+    batches: selection.batches,
     sourceDiagnostics:
       sourceDiagnostics.length > 0
         ? sourceDiagnostics
