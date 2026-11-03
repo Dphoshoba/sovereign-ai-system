@@ -482,7 +482,7 @@ describe("article audit associations", () => {
     ).toEqual({ current: null, historical: [obsolete] });
   });
 
-  it("keeps an article-grounded-v7 note readable and historical once article-grounded-v8 is current", () => {
+  it("keeps an article-grounded-v7 note readable and historical once article-grounded-v9 is current", () => {
     const historical = {
       id: "audit-v7",
       articleId: article.id,
@@ -544,6 +544,6 @@ describe("article audit associations", () => {
         },
       ]),
     ).toEqual({ current: null, historical: [historical] });
-    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v8");
+    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v9");
   });
 });
