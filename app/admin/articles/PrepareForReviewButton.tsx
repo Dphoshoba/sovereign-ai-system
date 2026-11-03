@@ -3,7 +3,13 @@
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
-export function PrepareForReviewButton({ articleId }: { articleId: string }) {
+export function PrepareForReviewButton({
+  articleId,
+  onPrepared,
+}: {
+  articleId: string
+  onPrepared?: (result: { article?: { status?: unknown } | null }) => void
+}) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
 
@@ -21,11 +27,12 @@ export function PrepareForReviewButton({ articleId }: { articleId: string }) {
 
       const result = await response.json()
 
-      if (!response.ok) {
+      if (!response.ok || result.ok === false) {
         alert(result.error || "Prepare for review failed")
         return
       }
 
+      onPrepared?.(result)
       router.refresh()
     } finally {
       setLoading(false)

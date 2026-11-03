@@ -278,7 +278,55 @@ describe("featured-image prompt contract", () => {
   })
 })
 
+describe("generateAndPersistFeaturedImage draft gate", () => {
+  it("does not generate a featured image for a draft", async () => {
+    const { article, fingerprint } = withCurrentAudit(baseArticle())
+    article.status = "draft"
+    article.reviewNotes.push(
+      promptNote({
+        articleId: article.id,
+        fingerprint,
+        prompt: ARTICLE_2_FEATURED_IMAGE_PROMPT,
+      }),
+    )
+    const generateImage = vi.fn()
+    const store = createStore(article)
+
+    const result = await generateAndPersistFeaturedImage({
+      articleId: article.id,
+      prisma: store,
+      generateImage,
+    })
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: "invalid_status",
+      articleUnchanged: true,
+    })
+    expect(generateImage).not.toHaveBeenCalled()
+    expect(store.update).not.toHaveBeenCalled()
+  })
+})
+
 describe("approveFeaturedImagePrompt", () => {
+  it("rejects a draft before writing a featured-image prompt", async () => {
+    const { article } = withCurrentAudit(baseArticle())
+    article.status = "draft"
+    const store = createStore(article)
+
+    const result = await approveFeaturedImagePrompt(
+      { articleId: article.id, prompt: ARTICLE_2_FEATURED_IMAGE_PROMPT, actor },
+      { prisma: store },
+    )
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: "invalid_status",
+      articleUnchanged: true,
+    })
+    expect(store.tx.articleReviewNote.create).not.toHaveBeenCalled()
+  })
+
   it("rejects a non-approved article without writing a note", async () => {
     const { article } = withCurrentAudit(baseArticle())
     article.status = "review-required"

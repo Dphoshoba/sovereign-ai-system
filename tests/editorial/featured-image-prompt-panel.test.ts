@@ -114,4 +114,37 @@ describe("FeaturedImagePromptForm", () => {
     expect(html).toContain("This text is not used for generation.")
     expect(html).toContain("Generation stays blocked")
   })
+
+  it("explains that a draft cannot approve or generate a featured image", () => {
+    const html = renderToStaticMarkup(
+      createElement(FeaturedImagePromptForm, {
+        state: {
+          ...currentState,
+          articleStatus: "draft",
+          promptStatus: "missing",
+          current: null,
+          canApprove: false,
+          canGenerate: false,
+        },
+        draftPrompt: "A practical cover of a person checking a booking reply.",
+        onDraftPromptChange: vi.fn(),
+        replace: false,
+        onReplaceChange: vi.fn(),
+        saving: false,
+        generating: false,
+        message: "",
+        generationError: "",
+        onApprove: vi.fn(),
+        onGenerate: vi.fn(),
+      }),
+    )
+
+    expect(html).toContain("disabled=\"\"")
+    expect(html).toContain(
+      "Featured-image approval and generation stay blocked until this article is approved.",
+    )
+    expect(html).not.toContain(
+      "Generation stays blocked until a current approved prompt exists for this fingerprint.",
+    )
+  })
 })

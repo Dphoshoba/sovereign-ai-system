@@ -60,6 +60,7 @@ export function FeaturedImagePromptForm({
 }) {
   const canGenerate = Boolean(state?.canGenerate)
   const stalePrompt = state?.historicalStale[0]
+  const articleNotApproved = Boolean(state && state.articleStatus !== "approved")
 
   return (
     <section
@@ -139,7 +140,13 @@ export function FeaturedImagePromptForm({
         </button>
       </div>
 
-      {!canGenerate ? (
+      {articleNotApproved ? (
+        <p style={{ fontSize: "14px", margin: 0 }}>
+          Featured-image approval and generation stay blocked until this article is approved.
+        </p>
+      ) : null}
+
+      {!canGenerate && !articleNotApproved ? (
         <p style={{ fontSize: "14px", margin: 0 }}>
           Generation stays blocked until a current approved prompt exists for this fingerprint.
         </p>

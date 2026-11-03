@@ -16,6 +16,10 @@ import {
   canShowPrepareForReviewAction,
   publicationReadinessMessage,
 } from "../../../../../lib/publishing/article-action-visibility"
+import {
+  buildEditorialSavePayload,
+  statusAfterPrepareForReview,
+} from "../../../../../lib/publishing/editorial-editor-save"
 
 export type EditArticleFormArticle = {
   id: string
@@ -52,6 +56,7 @@ export function EditArticleForm({
 }) {
   const router = useRouter()
   const [article, setArticle] = useState<EditArticleFormArticle>(initialArticle)
+  const [statusChanged, setStatusChanged] = useState(false)
   const [hasCurrentAudit, setHasCurrentAudit] = useState(initialHasCurrentAudit)
   const [historicalAuditCount, setHistoricalAuditCount] = useState(
     initialHistoricalAuditCount,
@@ -92,26 +97,13 @@ export function EditArticleForm({
   async function handleSave(event: React.FormEvent) {
     event.preventDefault()
 
-    const editableStatus = ["draft", "review", "review-required"].includes(
-      article.status
-    )
-
     setSaveError("")
     const response = await fetch(`/api/articles/${article.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: article.title,
-        slug: article.slug,
-        category: article.category,
-        excerpt: article.excerpt,
-        content: article.content,
-        featuredImage: article.featuredImage,
-        seoTitle: article.seoTitle,
-        seoDescription: article.seoDescription,
-        seoKeywords: article.seoKeywords,
-        ...(editableStatus ? { status: article.status } : {}),
-      }),
+      body: JSON.stringify(
+        buildEditorialSavePayload(article, { statusChanged }),
+      ),
     })
 
     const result = await response.json()
@@ -421,9 +413,10 @@ export function EditArticleForm({
           Status
           <select
             value={article.status}
-            onChange={(e) =>
+            onChange={(e) => {
+              setStatusChanged(true)
               setArticle({ ...article, status: e.target.value })
-            }
+            }}
             disabled={!["draft", "review", "review-required"].includes(
               article.status
             )}
@@ -466,7 +459,17 @@ export function EditArticleForm({
             <p style={{ fontSize: "14px", margin: "0 0 8px" }}>
               A current research audit is required before approval.
             </p>
-            <PrepareForReviewButton articleId={article.id} />
+            <PrepareForReviewButton
+              articleId={article.id}
+              onPrepared={(result) => {
+                setArticle((current) => ({
+                  ...current,
+                  status: statusAfterPrepareForReview(current.status, result),
+                }))
+                setStatusChanged(false)
+                setHasCurrentAudit(true)
+              }}
+            />
           </div>
         ) : null}
 
