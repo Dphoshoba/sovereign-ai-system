@@ -5,6 +5,11 @@ export const ATTRIBUTED_PUBLISHERS = [
   "deloitte",
   "pwc",
   "cdo",
+  "microsoft",
+  "google",
+  "meta",
+  "intuit",
+  "xero",
 ] as const;
 
 export type AttributedPublisher = (typeof ATTRIBUTED_PUBLISHERS)[number];
@@ -72,6 +77,60 @@ const PUBLISHERS: PublisherPattern[] = [
     claimPatterns: [/\bcdo magazine\b/i, /\bcdo-style\b/i, /\bcdomagazine\b/i],
     hostPatterns: [/(^|\.)cdomagazine\.tech$/i],
     namePatterns: [/\bcdo magazine\b/i, /\bcdomagazine\b/i],
+  },
+  {
+    id: "microsoft",
+    claimPatterns: [/\bmicrosoft\b/i, /\boutlook\b/i, /\bcopilot\b/i],
+    hostPatterns: [/(^|\.)microsoft\.com$/i],
+    namePatterns: [/\bmicrosoft\b/i, /\boutlook\b/i, /\bcopilot\b/i],
+  },
+  {
+    id: "google",
+    claimPatterns: [
+      /\bgoogle\b/i,
+      /\bgmail\b/i,
+      /\bgemini\b/i,
+      /\bworkspace\b/i,
+    ],
+    hostPatterns: [/(^|\.)google\.com$/i],
+    namePatterns: [
+      /\bgoogle\b/i,
+      /\bgmail\b/i,
+      /\bgemini\b/i,
+      /\bworkspace\b/i,
+    ],
+  },
+  {
+    id: "meta",
+    claimPatterns: [
+      /\bmeta\b/i,
+      /\bfacebook\b/i,
+      /\binstagram\b/i,
+      /\bthreads\b/i,
+    ],
+    hostPatterns: [
+      /(^|\.)about\.fb\.com$/i,
+      /(^|\.)meta\.com$/i,
+      /(^|\.)facebook\.com$/i,
+    ],
+    namePatterns: [
+      /\bmeta\b/i,
+      /\bfacebook\b/i,
+      /\binstagram\b/i,
+      /\bthreads\b/i,
+    ],
+  },
+  {
+    id: "intuit",
+    claimPatterns: [/\bintuit\b/i, /\bquickbooks\b/i],
+    hostPatterns: [/(^|\.)intuit\.com$/i],
+    namePatterns: [/\bintuit\b/i, /\bquickbooks\b/i],
+  },
+  {
+    id: "xero",
+    claimPatterns: [/\bxero\b/i, /\bjax\b/i],
+    hostPatterns: [/(^|\.)xero\.com$/i],
+    namePatterns: [/\bxero\b/i, /\bjax\b/i],
   },
 ];
 
@@ -442,6 +501,14 @@ export function evidenceCorroborationKey(
   source: AttributableSource,
   listedSources: AttributableSource[] = [],
 ): string {
+  const named = publishersNamedInClaim(claim);
+  if (named.length > 0) {
+    const matched = publishersForSource(source).filter((id) => named.includes(id));
+    if (matched.length > 0) {
+      return `publisher:${matched[0]}`;
+    }
+  }
+
   const binding = resolveClaimSourceBinding(claim, listedSources);
   if (binding.isMultiSource) {
     return canonicalSourceUrl(source.url);

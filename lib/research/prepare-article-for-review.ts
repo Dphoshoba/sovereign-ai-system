@@ -6,7 +6,10 @@ import {
   serializeArticleAuditAssociation,
 } from "./article-audit-association";
 import { computeArticleAuditFingerprint } from "./article-audit-fingerprint";
-import { extractArticleClaims } from "./article-claim-extractor";
+import {
+  extractArticleClaims,
+  recommendationWithUnscoredClaims,
+} from "./article-claim-extractor";
 import { extractArticleSourceLinks } from "./article-source-links";
 import { groundedFactVerification } from "./claim-evidence-matcher";
 import { consensusEngine } from "./consensus-engine";
@@ -83,6 +86,7 @@ export type PrepareForReviewSuccess = {
     listedSourceAvailability: number;
     acceptedEvidenceCoverage: number;
     unavailableSourceCount: number;
+    notScoredClaims: { text: string; section: string }[];
   };
   sourceDiagnostics: SourceAcquisitionDiagnostic[];
   preservedFields: typeof CONTENT_FIELDS;
@@ -417,7 +421,14 @@ export async function prepareArticleForReview(
     }
 
     const consensus = consensusEngine(verification.facts);
-    publicationGate(consensus);
+    const publicationRecommendation = recommendationWithUnscoredClaims(
+      consensus.publicationRecommendation,
+      claimExtraction.notScoredClaims,
+    );
+    publicationGate({
+      ...consensus,
+      publicationRecommendation,
+    });
 
     const editorialQuality = calculateEditorialQualityScore({
       wordCount: wordCount(article.content),
@@ -430,7 +441,7 @@ export async function prepareArticleForReview(
       verifiedCount: verification.verifiedCount,
       partiallyVerifiedCount: verification.partiallyVerifiedCount,
       unverifiedCount: verification.unverifiedCount,
-      publicationRecommendation: consensus.publicationRecommendation,
+      publicationRecommendation,
     });
 
     const qualityResult = articleQualityScorer({
@@ -477,11 +488,14 @@ export async function prepareArticleForReview(
       averageVerificationScore: verification.averageVerificationScore,
       consensusScore: consensus.consensusScore,
       sourceQualityScore: consensus.sourceQualityScore,
-      publicationRecommendation: consensus.publicationRecommendation,
+      publicationRecommendation,
       sources,
       evidence: verification.acceptedEvidence,
       facts: verification.facts,
-      consensus: consensus.consensusGroups,
+      consensus: {
+        groups: consensus.consensusGroups,
+        notScoredClaims: claimExtraction.notScoredClaims,
+      },
     };
 
     const articleUpdate = {
@@ -601,11 +615,12 @@ export async function prepareArticleForReview(
         partiallyVerifiedCount: verification.partiallyVerifiedCount,
         unverifiedCount: verification.unverifiedCount,
         consensusScore: consensus.consensusScore,
-        publicationRecommendation: consensus.publicationRecommendation,
+        publicationRecommendation,
         sourceCoverage: sourceStats.sourceCoverage,
         listedSourceAvailability: sourceStats.listedSourceAvailability,
         acceptedEvidenceCoverage: sourceStats.acceptedEvidenceCoverage,
         unavailableSourceCount: sourceStats.unavailableSourceCount,
+        notScoredClaims: claimExtraction.notScoredClaims,
       },
       sourceDiagnostics,
       preservedFields: CONTENT_FIELDS,

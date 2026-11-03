@@ -34,10 +34,19 @@ export type ArticleClaim = {
   section: ArticleSection;
   blockType: ArticleBlockType;
   kind: ArticleClaimKind;
+  heading?: string | null;
+};
+
+export const FACTUAL_CLAIM_LIMIT = 12;
+
+export type NotScoredClaim = {
+  text: string;
+  section: string;
 };
 
 export type ArticleClaimExtractionResult = {
   claims: ArticleClaim[];
+  notScoredClaims: NotScoredClaim[];
   authorialAssertions: ArticleClaim[];
   claimCount: number;
   authorialCount: number;
@@ -49,6 +58,7 @@ export type ArticleBlock = {
   section: ArticleSection;
   blockType: ArticleBlockType;
   text: string;
+  heading: string | null;
 };
 
 const STOP_WORDS = new Set([
@@ -93,7 +103,6 @@ const AUTHORIAL_PATTERNS = [
   /^the shift begins\b/i,
   /\bthat can be useful\b/i,
   /^it is not\b/i,
-  /\bstart with\b/i,
   /^see\b/i,
   /^also see\b/i,
   /^founders may\b/i,
@@ -120,6 +129,19 @@ const AUTHORIAL_PATTERNS = [
   /\bnamed-source reading\b/i,
   /\bliterary reading\b/i,
 ];
+
+const ADVICE_PATTERNS = [
+  /\bstart with\b/i,
+  /\ba named person still checks\b/i,
+];
+
+const FICTION_LABEL = /\b(fictional|illustration)\b/i;
+
+const PUBLISHER_ATTRIBUTION_NAME =
+  /\b(microsoft|outlook|copilot|google|gmail|gemini|workspace|meta|facebook|instagram|threads|intuit|quickbooks|xero|jax|nist)\b/i;
+
+const PUBLISHER_ATTRIBUTION_VERB =
+  /\b(says|states|notes|warns|describes|lists|requires|shows|documents|reports|includes)\b/i;
 
 const FACTUAL_SIGNAL = new RegExp(
   [
@@ -185,11 +207,17 @@ export function splitMarkdownBlocks(
   const blocks: ArticleBlock[] = [];
   let currentType: ArticleBlockType = "paragraph";
   let current: string[] = [];
+  let currentHeading: string | null = null;
 
   const flush = () => {
     const text = current.join("\n").trim();
     if (text) {
-      blocks.push({ section, blockType: currentType, text });
+      blocks.push({
+        section,
+        blockType: currentType,
+        text,
+        heading: currentHeading,
+      });
     }
     current = [];
     currentType = "paragraph";
@@ -198,10 +226,13 @@ export function splitMarkdownBlocks(
   for (const line of lines) {
     if (/^#{1,6}\s+/.test(line)) {
       flush();
+      const text = line.replace(/^#{1,6}\s+/, "").trim();
+      currentHeading = text;
       blocks.push({
         section,
         blockType: "heading",
-        text: line.replace(/^#{1,6}\s+/, "").trim(),
+        text,
+        heading: text,
       });
       continue;
     }
@@ -264,15 +295,99 @@ function isCreatorTemplate(sentence: string, articleText: string): boolean {
   });
 }
 
+export function isFictionalLabel(value: string): boolean {
+  return FICTION_LABEL.test(value);
+}
+
+export function hasPublisherAttribution(sentence: string): boolean {
+  return (
+    PUBLISHER_ATTRIBUTION_NAME.test(sentence) &&
+    PUBLISHER_ATTRIBUTION_VERB.test(sentence)
+  );
+}
+
 export function isAuthorialFraming(sentence: string): boolean {
+  const normalized = sentence.replace(/\s+/g, " ").trim();
+  return (
+    AUTHORIAL_PATTERNS.some((pattern) => pattern.test(normalized)) ||
+    ADVICE_PATTERNS.some((pattern) => pattern.test(normalized))
+  );
+}
+
+function isHardAuthorialFraming(sentence: string): boolean {
   const normalized = sentence.replace(/\s+/g, " ").trim();
   return AUTHORIAL_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
+function isAdviceFraming(sentence: string): boolean {
+  const normalized = sentence.replace(/\s+/g, " ").trim();
+  return ADVICE_PATTERNS.some((pattern) => pattern.test(normalized));
+}
+
 export function isExternallyVerifiableClaim(sentence: string): boolean {
-  if (isAuthorialFraming(sentence)) return false;
   if (isChromePassage(sentence)) return false;
+  if (isHardAuthorialFraming(sentence)) return false;
+  if (hasPublisherAttribution(sentence)) return true;
+  if (isAdviceFraming(sentence)) return false;
   return FACTUAL_SIGNAL.test(sentence);
+}
+
+export function recommendationWithUnscoredClaims<T extends string>(
+  recommendation: T,
+  notScoredClaims: readonly NotScoredClaim[],
+): T {
+  if (notScoredClaims.length > 0 && recommendation === "publish-ready") {
+    return "review-required" as T;
+  }
+  return recommendation;
+}
+
+function sectionLabel(claim: ArticleClaim): string {
+  if (claim.section === "title") return "title";
+  if (claim.section === "excerpt") return "excerpt";
+  return claim.heading?.trim() || "introduction";
+}
+
+function selectFactualClaims(candidates: ArticleClaim[]): {
+  claims: ArticleClaim[];
+  notScoredClaims: NotScoredClaim[];
+} {
+  const selected: ArticleClaim[] = [];
+  const selectedIndexes = new Set<number>();
+  const headingOrder: string[] = [];
+  const firstByHeading = new Map<string, number>();
+
+  candidates.forEach((candidate, index) => {
+    if (candidate.section !== "body" || !candidate.heading) return;
+    if (firstByHeading.has(candidate.heading)) return;
+    firstByHeading.set(candidate.heading, index);
+    headingOrder.push(candidate.heading);
+  });
+
+  for (const heading of headingOrder) {
+    if (selected.length >= FACTUAL_CLAIM_LIMIT) break;
+    const index = firstByHeading.get(heading);
+    if (index === undefined) continue;
+    selected.push(candidates[index]);
+    selectedIndexes.add(index);
+  }
+
+  candidates.forEach((candidate, index) => {
+    if (selected.length >= FACTUAL_CLAIM_LIMIT) return;
+    if (selectedIndexes.has(index)) return;
+    selected.push(candidate);
+    selectedIndexes.add(index);
+  });
+
+  return {
+    claims: selected,
+    notScoredClaims: candidates
+      .filter((_, index) => !selectedIndexes.has(index))
+      .map((candidate) => ({
+        text: candidate.claim,
+        section: sectionLabel(candidate),
+      })),
+  };
 }
 
 export function extractArticleClaims(input: {
@@ -292,43 +407,54 @@ export function extractArticleClaims(input: {
     fields.map((field) => field.value).join("\n"),
   );
 
-  const claims: ArticleClaim[] = [];
+  const factualCandidates: ArticleClaim[] = [];
   const authorialAssertions: ArticleClaim[] = [];
   const seen = new Set<string>();
   let authorialCount = 0;
+  let fictionalRegion = false;
 
   for (const field of fields) {
     const fieldBlocks =
       field.section === "body"
         ? splitMarkdownBlocks(field.value, field.section)
-        : [{ section: field.section, blockType: "paragraph" as const, text: field.value }];
+        : [{
+            section: field.section,
+            blockType: "paragraph" as const,
+            text: field.value,
+            heading: null,
+          }];
 
     for (const block of fieldBlocks) {
       if (block.blockType === "heading") {
+        fictionalRegion = isFictionalLabel(block.text);
         authorialCount += 1;
         continue;
       }
+
+      const fictionalBlock = fictionalRegion || isFictionalLabel(block.text);
 
       for (const sentence of splitBlockSentences(block.text)) {
         if (sentence.length > 400) continue;
         if (sentence.length < 40 && !hasMeasurableNumericalResult(sentence)) continue;
         if (isChromePassage(sentence)) continue;
-        if (!hasClaimShape(sentence)) continue;
+        if (!hasClaimShape(sentence) && !hasPublisherAttribution(sentence)) continue;
         if (isCreatorTemplate(sentence, normalizedArticleText)) continue;
         if (!articleContainsExcerpt(normalizedArticleText, sentence)) continue;
         const key = sentence.toLowerCase();
         if (seen.has(key)) continue;
         seen.add(key);
 
-        const kind: ArticleClaimKind = isExternallyVerifiableClaim(sentence)
-          ? "factual"
-          : "authorial";
+        const kind: ArticleClaimKind =
+          fictionalBlock || !isExternallyVerifiableClaim(sentence)
+            ? "authorial"
+            : "factual";
         const extractedClaim: ArticleClaim = {
           claim: sentence,
           articleExcerpt: sentence,
           section: block.section,
           blockType: block.blockType,
           kind,
+          heading: block.heading,
         };
         if (kind === "authorial") {
           authorialCount += 1;
@@ -336,22 +462,22 @@ export function extractArticleClaims(input: {
           continue;
         }
 
-        claims.push(extractedClaim);
-        if (claims.length >= 12) break;
+        factualCandidates.push(extractedClaim);
       }
-      if (claims.length >= 12) break;
     }
-    if (claims.length >= 12) break;
   }
 
+  const selected = selectFactualClaims(factualCandidates);
+
   return {
-    claims,
+    claims: selected.claims,
+    notScoredClaims: selected.notScoredClaims,
     authorialAssertions,
-    claimCount: claims.length,
+    claimCount: selected.claims.length,
     authorialCount,
     normalizedArticleText,
     extractionStatus:
-      claims.length > 0
+      selected.claims.length > 0
         ? "Factual claims extracted from the current article."
         : "No auditable factual claims occur in the current article.",
   };

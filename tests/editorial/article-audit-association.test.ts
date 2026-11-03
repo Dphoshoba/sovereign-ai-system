@@ -482,7 +482,7 @@ describe("article audit associations", () => {
     ).toEqual({ current: null, historical: [obsolete] });
   });
 
-  it("keeps an article-grounded-v7 note readable and historical once article-grounded-v9 is current", () => {
+  it("keeps an article-grounded-v7 note readable and historical once article-grounded-v10 is current", () => {
     const historical = {
       id: "audit-v7",
       articleId: article.id,
@@ -544,6 +544,19 @@ describe("article audit associations", () => {
         },
       ]),
     ).toEqual({ current: null, historical: [historical] });
-    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v9");
+    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v10");
+    expect(
+      partitionAssociatedArticleAudits(article, sources, [historical], [
+        {
+          action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+          note: serializeArticleAuditAssociation({
+            auditId: historical.id,
+            contentFingerprint: fingerprint,
+            createdAt: historical.createdAt,
+            engineRevision: "article-grounded-v9",
+          }),
+        },
+      ]),
+    ).toEqual({ current: null, historical: [historical] });
   });
 });

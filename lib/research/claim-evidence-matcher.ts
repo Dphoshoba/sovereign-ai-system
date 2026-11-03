@@ -156,7 +156,10 @@ export function groundedFactVerification(
     }
 
     const supporting = Array.from(uniqueSources.values());
-    const mapped = mappedPassages.length > 0 ? mappedPassages : supporting;
+    const allowedUrls = new Set(supporting.map((evidence) => evidence.sourceUrl));
+    const listedPassages = mappedPassages.filter((evidence) =>
+      allowedUrls.has(evidence.sourceUrl),
+    );
     const verificationCount = supporting.length;
     const sourceAuthorityAverage =
       supporting.length === 0
@@ -212,7 +215,7 @@ export function groundedFactVerification(
       verificationStatus,
       verificationMethod:
         verificationCount > 1 ? "exact" : "single-source-supported",
-      supportingSources: mapped.map((evidence) => ({
+      supportingSources: (listedPassages.length > 0 ? listedPassages : supporting).map((evidence) => ({
         sourceTitle: evidence.sourceTitle,
         sourceUrl: evidence.sourceUrl,
         evidenceId: evidence.id,
