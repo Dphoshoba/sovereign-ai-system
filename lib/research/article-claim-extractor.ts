@@ -350,7 +350,10 @@ function sectionLabel(claim: ArticleClaim): string {
   return claim.heading?.trim() || "introduction";
 }
 
-function selectFactualClaims(candidates: ArticleClaim[]): {
+function selectFactualClaims(
+  candidates: ArticleClaim[],
+  limit = FACTUAL_CLAIM_LIMIT,
+): {
   claims: ArticleClaim[];
   notScoredClaims: NotScoredClaim[];
 } {
@@ -367,7 +370,7 @@ function selectFactualClaims(candidates: ArticleClaim[]): {
   });
 
   for (const heading of headingOrder) {
-    if (selected.length >= FACTUAL_CLAIM_LIMIT) break;
+    if (selected.length >= limit) break;
     const index = firstByHeading.get(heading);
     if (index === undefined) continue;
     selected.push(candidates[index]);
@@ -375,7 +378,7 @@ function selectFactualClaims(candidates: ArticleClaim[]): {
   }
 
   candidates.forEach((candidate, index) => {
-    if (selected.length >= FACTUAL_CLAIM_LIMIT) return;
+    if (selected.length >= limit) return;
     if (selectedIndexes.has(index)) return;
     selected.push(candidate);
     selectedIndexes.add(index);
@@ -424,6 +427,7 @@ export function extractArticleClaims(input: {
   title?: string | null;
   excerpt?: string | null;
   content?: string | null;
+  factualClaimLimit?: number;
 }): ArticleClaimExtractionResult {
   const fields: Array<{ section: ArticleSection; value: string }> = [
     input.title ? { section: "title" as const, value: input.title } : null,
@@ -497,7 +501,10 @@ export function extractArticleClaims(input: {
     }
   }
 
-  const selected = selectFactualClaims(factualCandidates);
+  const selected = selectFactualClaims(
+    factualCandidates,
+    input.factualClaimLimit ?? FACTUAL_CLAIM_LIMIT,
+  );
 
   return {
     claims: selected.claims,

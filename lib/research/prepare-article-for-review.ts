@@ -6,14 +6,17 @@ import {
   serializeArticleAuditAssociation,
 } from "./article-audit-association";
 import { computeArticleAuditFingerprint } from "./article-audit-fingerprint";
-import { extractArticleClaims } from "./article-claim-extractor";
+import {
+  extractArticleClaims,
+  FACTUAL_CLAIM_CEILING,
+} from "./article-claim-extractor";
 import { recommendationWithEvidenceCompleteness } from "./evidence-completeness";
 import { extractArticleSourceLinks } from "./article-source-links";
 import { groundedFactVerification } from "./claim-evidence-matcher";
 import { consensusEngine } from "./consensus-engine";
 import { resolveArticleAuditState } from "./current-article-audit";
 import {
-  evidenceRegistry,
+  collectBoundedBatchEvidence,
   type EvidenceRegistryOptions,
   type EvidenceRegistryResult,
 } from "./evidence-registry";
@@ -290,7 +293,7 @@ export async function prepareArticleForReview(
   deps: PrepareArticleForReviewDeps,
 ): Promise<PrepareForReviewResult> {
   const { prisma, reviewer = "admin" } = deps;
-  const collectEvidence = deps.collectEvidence ?? evidenceRegistry;
+  const collectEvidence = deps.collectEvidence ?? collectBoundedBatchEvidence;
 
   const article = await prisma.article.findUnique({
     where: { id: articleId },
@@ -358,6 +361,7 @@ export async function prepareArticleForReview(
     title: article.title,
     excerpt: article.excerpt,
     content: article.content,
+    factualClaimLimit: FACTUAL_CLAIM_CEILING,
   });
 
   if (claimExtraction.claimCount === 0) {

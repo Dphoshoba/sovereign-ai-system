@@ -222,8 +222,8 @@ describe("bounded batch evidence registry", () => {
     expect(live).not.toHaveProperty("overflowClaims");
 
     const prepare = readFileSync("lib/research/prepare-article-for-review.ts", "utf8");
-    expect(prepare).toContain("deps.collectEvidence ?? evidenceRegistry");
-    expect(prepare).not.toContain("collectBoundedBatchEvidence");
+    expect(prepare).toContain("deps.collectEvidence ?? collectBoundedBatchEvidence");
+    expect(prepare).not.toContain("deps.collectEvidence ?? evidenceRegistry");
     expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v11");
   });
 });

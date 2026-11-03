@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   extractArticleClaims,
+  FACTUAL_CLAIM_CEILING,
   FACTUAL_CLAIM_LIMIT,
   hasPublisherAttribution,
   isAuthorialFraming,
@@ -276,13 +277,16 @@ describe("unscored claims and audit revision", () => {
   });
 
   it("stores review-required when the cap leaves eligible claims unscored", async () => {
-    const content = overflowArticle();
-    const extracted = extractArticleClaims({ content });
+    const extra = Array.from({ length: 30 }, (_, index) => {
+      return `## Extra ${index}\n\nA controlled study found that content production time for extra section ${index} pass 3 fell by ${60 + index} percent in the audited report.`;
+    });
+    const content = [overflowArticle(), ...extra].join("\n\n");
+    const extracted = extractArticleClaims({
+      content,
+      factualClaimLimit: FACTUAL_CLAIM_CEILING,
+    });
     const urls = ["https://www.nist.gov/one", "https://www.nih.gov/two"];
-    const passage = [
-      ...extracted.claims.map((claim) => claim.claim),
-      ...extracted.notScoredClaims.map((claim) => claim.text),
-    ].join(" ");
+    const passage = extracted.claims.map((claim) => claim.claim).join(" ");
     const evidenceRecords = urls.map((url, index) => evidence(`gov-${index}`, url, passage));
     const article: PrepareForReviewArticle = {
       id: "article-coverage",
