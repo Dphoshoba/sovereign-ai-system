@@ -14,6 +14,10 @@ import {
 import type { EvidenceChunk } from "../../lib/research/evidence-chunker"
 import type { EvidenceRecord } from "../../lib/research/evidence-registry"
 import {
+  evidenceSatisfiesProductIdentity,
+  namedProductFeatures,
+} from "../../lib/research/product-identity"
+import {
   AI_INBOX_CLAIM,
   AI_INBOX_TITLE,
   AI_INBOX_URL,
@@ -66,19 +70,36 @@ function helpMeWriteChunks(): EvidenceChunk[] {
   }))
 }
 
+const SCHEDULE_CLAIM =
+  "Google’s Gmail page for “Help me schedule” requires an eligible Workspace or Google AI plan."
+const SCHEDULE_TITLE = "Help me schedule - Gmail Help"
+const SCHEDULE_URL = "https://support.google.com/mail/answer/16865189?hl=en"
+const SCHEDULE_PASSAGE =
+  "It requires an eligible Workspace or Google AI plan before a guest can book a time."
+const SCHEDULE_ABBREVIATION =
+  "The schedule tool requires an eligible Workspace or Google AI plan before a guest can book a time."
+const WRITE_ON_SCHEDULE_PAGE =
+  "“Help me write” requires an eligible Workspace or Google AI plan for the draft."
+
 function clauseSupport(clause: string) {
-  const assessments = HELP_ME_WRITE_PASSAGES.map((passage) => ({
-    id: passage.id,
-    assessment: assessPassageSupport(clause, passage.extractedText),
-  }))
+  const assessments = HELP_ME_WRITE_PASSAGES.map((passage) => {
+    const assessment = assessPassageSupport(clause, passage.extractedText)
+    const identified = evidenceSatisfiesProductIdentity(
+      AI_INBOX_CLAIM,
+      HELP_ME_WRITE_TITLE,
+      passage.extractedText,
+    )
+    return { id: passage.id, assessment, identified }
+  })
   return {
     supportedPassageIds: assessments
-      .filter((item) => item.assessment.supported)
+      .filter((item) => item.assessment.supported && item.identified)
       .map((item) => item.id),
     genericOverlapPassageIds: assessments
       .filter(
         (item) =>
           item.assessment.supported &&
+          item.identified &&
           item.assessment.actionTokenMatches.length > 0 &&
           item.assessment.actionTokenMatches.every((token) =>
             GENERIC_OVERLAP_TOKENS.has(token),
@@ -88,10 +109,34 @@ function clauseSupport(clause: string) {
   }
 }
 
+function record(
+  id: string,
+  url: string,
+  title: string,
+  text: string,
+): EvidenceRecord {
+  return {
+    id,
+    sourceTitle: title,
+    sourceUrl: url,
+    sourceType: "html",
+    extractedText: text,
+    confidence: 80,
+    requiresHumanReview: true,
+  }
+}
+
 describe("Gmail AI Inbox attribution", () => {
   it("rejects Help me write passages for the Gmail AI Inbox claim", () => {
     const clauses = verifiableClauses(AI_INBOX_CLAIM)
     expect(clauses).toHaveLength(2)
+    expect(namedProductFeatures(AI_INBOX_CLAIM)).toEqual(["Gmail AI Inbox"])
+    const genericOverlap = assessPassageSupport(
+      clauses[0] ?? "",
+      HELP_ME_WRITE_PASSAGES[3]?.extractedText ?? "",
+    )
+    expect(genericOverlap.supported).toBe(true)
+    expect(genericOverlap.actionTokenMatches).toEqual(["google", "gmail", "feature"])
 
     const verification = groundedFactVerification(
       [factualClaim(AI_INBOX_CLAIM)],
@@ -203,5 +248,95 @@ describe("Gmail AI Inbox attribution", () => {
     expect(verification.facts[0]?.matchDiagnostics?.[0]?.failureReason).toBe(
       "publisher-mismatch",
     )
+  })
+
+  it("does not let Help me schedule verify against Help me write", () => {
+    expect(namedProductFeatures(SCHEDULE_CLAIM)).toEqual(["Help me schedule"])
+    expect(
+      claimAllowsEvidence(
+        SCHEDULE_CLAIM,
+        { url: HELP_ME_WRITE_URL, title: HELP_ME_WRITE_TITLE },
+        LISTED_SOURCES,
+      ),
+    ).toBe(true)
+    expect(
+      passageSupportsClaim(SCHEDULE_CLAIM, HELP_ME_WRITE_PASSAGES[0].extractedText),
+    ).toBe(true)
+
+    const verification = groundedFactVerification(
+      [factualClaim(SCHEDULE_CLAIM)],
+      helpMeWriteEvidence(),
+      SCHEDULE_CLAIM,
+      LISTED_SOURCES,
+    )
+    expect(verification.facts[0]?.verificationStatus).toBe("unverified")
+    expect(verification.facts[0]?.supportingSources).toEqual([])
+    expect(
+      verification.facts[0]?.matchDiagnostics?.some(
+        (item) => item.failureReason === "product-identity",
+      ),
+    ).toBe(true)
+  })
+
+  it("lets the source title establish feature identity for a pronoun or abbreviation", () => {
+    for (const passage of [SCHEDULE_PASSAGE, SCHEDULE_ABBREVIATION]) {
+      expect(passageSupportsClaim(SCHEDULE_CLAIM, passage)).toBe(true)
+      expect(namedProductFeatures(passage)).toEqual([])
+      const verification = groundedFactVerification(
+        [factualClaim(SCHEDULE_CLAIM)],
+        [record("schedule-title", SCHEDULE_URL, SCHEDULE_TITLE, passage)],
+        SCHEDULE_CLAIM,
+        [{ url: SCHEDULE_URL, title: SCHEDULE_TITLE }],
+      )
+      expect(verification.facts[0]?.verificationStatus).toBe("partially verified")
+      expect(verification.facts[0]?.sourceUrl).toBe(SCHEDULE_URL)
+    }
+  })
+
+  it("does not let an unrelated title override a passage about a different feature", () => {
+    expect(passageSupportsClaim(SCHEDULE_CLAIM, WRITE_ON_SCHEDULE_PAGE)).toBe(true)
+    expect(namedProductFeatures(WRITE_ON_SCHEDULE_PAGE)).toEqual(["Help me write"])
+
+    const conflictingTitle = groundedFactVerification(
+      [factualClaim(SCHEDULE_CLAIM)],
+      [record("schedule-title-write-passage", SCHEDULE_URL, SCHEDULE_TITLE, WRITE_ON_SCHEDULE_PAGE)],
+      SCHEDULE_CLAIM,
+      [{ url: SCHEDULE_URL, title: SCHEDULE_TITLE }],
+    )
+    expect(conflictingTitle.facts[0]?.verificationStatus).toBe("unverified")
+    expect(conflictingTitle.facts[0]?.supportingSources).toEqual([])
+
+    const unrelatedTitle = groundedFactVerification(
+      [factualClaim(SCHEDULE_CLAIM)],
+      [record("gmail-help-write-passage", HELP_ME_WRITE_URL, "Gmail Help", WRITE_ON_SCHEDULE_PAGE)],
+      SCHEDULE_CLAIM,
+      [{ url: HELP_ME_WRITE_URL, title: "Gmail Help" }],
+    )
+    expect(unrelatedTitle.facts[0]?.verificationStatus).toBe("unverified")
+    expect(unrelatedTitle.facts[0]?.supportingSources).toEqual([])
+
+    const unrelatedPronoun = groundedFactVerification(
+      [factualClaim(SCHEDULE_CLAIM)],
+      [record("gmail-help-pronoun", HELP_ME_WRITE_URL, "Gmail Help", SCHEDULE_PASSAGE)],
+      SCHEDULE_CLAIM,
+      [{ url: HELP_ME_WRITE_URL, title: "Gmail Help" }],
+    )
+    expect(unrelatedPronoun.facts[0]?.verificationStatus).toBe("unverified")
+    expect(unrelatedPronoun.facts[0]?.supportingSources).toEqual([])
+  })
+
+  it("does not treat an ordinary publisher sentence as a named feature", () => {
+    expect(
+      namedProductFeatures(
+        "Google's Gmail help says suggested appointment times come from calendars the user can access.",
+      ),
+    ).toEqual([])
+    expect(
+      namedProductFeatures(
+        "NIST says this is a natural result of models that predict likely next words, and that people may act on false content because it sounds confident.",
+      ),
+    ).toEqual([])
+    expect(namedProductFeatures("Google says the feature is useful in Gmail.")).toEqual([])
+    expect(namedProductFeatures(HELP_ME_WRITE_CLAIM)).toEqual(["Help me write"])
   })
 })

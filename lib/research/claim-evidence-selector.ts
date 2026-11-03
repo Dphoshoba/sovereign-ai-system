@@ -15,6 +15,7 @@ import {
   type AttributableSource,
 } from "./claim-source-attribution";
 import type { EvidenceChunk } from "./evidence-chunker";
+import { evidenceSatisfiesProductIdentity } from "./product-identity";
 import type { EvidenceRecord } from "./evidence-registry";
 import {
   locateVerseWindows,
@@ -200,7 +201,12 @@ export function selectClaimAwareEvidence(input: {
       const documentKind = /\.pdf(?:$|[?#])/i.test(document.url) ? "pdf" : "html";
       for (const record of records) {
         if (
-          !passageSupportsClaim(claim, record.extractedText, { documentKind })
+          !passageSupportsClaim(claim, record.extractedText, { documentKind }) ||
+          !evidenceSatisfiesProductIdentity(
+            claim,
+            record.sourceTitle,
+            record.extractedText,
+          )
         ) {
           documentOrder += 1;
           continue;

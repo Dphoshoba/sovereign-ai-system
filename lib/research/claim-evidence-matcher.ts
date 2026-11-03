@@ -21,6 +21,7 @@ import {
   resolveClaimSourceBinding,
   type AttributableSource,
 } from "./claim-source-attribution";
+import { evidenceSatisfiesProductIdentity } from "./product-identity";
 import { RESEARCH_MAX_PASSAGES_PER_CLAIM } from "./source-fetch-guard";
 
 export type GroundedEvidenceMatch = {
@@ -92,9 +93,19 @@ function documentKindForUrl(url: string): "html" | "pdf" {
 function passageMatch(
   clause: string,
   evidence: EvidenceRecord,
+  claimText: string,
 ): GroundedEvidenceMatch | null {
   const documentKind = documentKindForUrl(evidence.sourceUrl);
   if (!passageSupportsClaim(clause, evidence.extractedText, { documentKind })) {
+    return null;
+  }
+  if (
+    !evidenceSatisfiesProductIdentity(
+      claimText,
+      evidence.sourceTitle,
+      evidence.extractedText,
+    )
+  ) {
     return null;
   }
   return {
@@ -104,6 +115,7 @@ function passageMatch(
 }
 
 function compoundMatchesForDocument(
+  claimText: string,
   clauses: string[],
   passages: EvidenceRecord[],
 ): GroundedEvidenceMatch[] {
@@ -111,7 +123,7 @@ function compoundMatchesForDocument(
   for (const clause of clauses) {
     const supporting = passages
       .flatMap((evidence) => {
-        const match = passageMatch(clause, evidence);
+        const match = passageMatch(clause, evidence, claimText);
         return match ? [match] : [];
       })
       .sort(
@@ -144,7 +156,7 @@ export function matchEvidenceToClaim(
   const matches =
     clauses.length === 1
       ? allowed.flatMap((evidence) => {
-          const match = passageMatch(clauses[0], evidence);
+          const match = passageMatch(clauses[0], evidence, claim.claim);
           return match ? [match] : [];
         })
       : Array.from(
@@ -155,7 +167,9 @@ export function matchEvidenceToClaim(
             groups.set(key, group);
             return groups;
           }, new Map<string, EvidenceRecord[]>()),
-        ).flatMap(([, passages]) => compoundMatchesForDocument(clauses, passages));
+        ).flatMap(([, passages]) =>
+          compoundMatchesForDocument(claim.claim, clauses, passages),
+        );
   return dropAmbiguousBibleProjectMatches(claim.claim, matches, listedSources);
 }
 
@@ -196,6 +210,27 @@ export function claimMatchDiagnostics(
       const assessment = assessPassageSupport(clause, evidence.extractedText, {
         documentKind,
       });
+      if (
+        assessment.supported &&
+        !evidenceSatisfiesProductIdentity(
+          claim.claim,
+          evidence.sourceTitle,
+          evidence.extractedText,
+        )
+      ) {
+        diagnostics.push({
+          clause,
+          sourceUrl: evidence.sourceUrl,
+          sourceTitle: evidence.sourceTitle,
+          evidenceId: evidence.id,
+          overlap: assessment.overlapCount,
+          requiredOverlap: assessment.requiredOverlap,
+          actionTokenMatches: assessment.actionTokenMatches,
+          missingActionTokens: assessment.missingActionTokens,
+          failureReason: "product-identity",
+        });
+        return;
+      }
       if (assessment.supported) {
         supportedClauses.add(index);
         return;
