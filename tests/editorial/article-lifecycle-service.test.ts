@@ -128,6 +128,21 @@ function approvedArticle(
   };
 }
 
+function v11Association() {
+  const fingerprint = computeArticleAuditFingerprint(baseArticle, [
+    "https://www.nist.gov/artificial-intelligence",
+  ]);
+  return {
+    action: "research-audit-fingerprint",
+    note: serializeArticleAuditAssociation({
+      auditId: "audit-current",
+      contentFingerprint: fingerprint,
+      createdAt: auditCreatedAt,
+      engineRevision: "article-grounded-v11",
+    }),
+  };
+}
+
 function v7Association() {
   const fingerprint = computeArticleAuditFingerprint(baseArticle, [
     "https://www.nist.gov/artificial-intelligence",
@@ -308,6 +323,76 @@ describe("transitionArticleLifecycle", () => {
       });
       expect(tx.article.update).not.toHaveBeenCalled();
     }
+  });
+
+  it("treats an article-grounded-v11 audit as stale for scheduling and publication", async () => {
+    const article = {
+      ...baseArticle,
+      status: "approved",
+      approvedAt: new Date("2026-09-15T01:00:00.000Z"),
+      approvedBy: "editor",
+      reviewNotes: [v11Association()],
+      researchAudits: [
+        {
+          ...baseArticle.researchAudits[0],
+          consensusScore: 90,
+          sourceQualityScore: 100,
+          publicationRecommendation: "publish-ready",
+        },
+      ],
+    };
+
+    for (const transition of ["schedule", "publish"] as const) {
+      const { store, tx } = createStore({ ...article, reviewNotes: [v11Association()] });
+      const result = await transitionArticleLifecycle(
+        {
+          articleId: article.id,
+          transition,
+          actor: "editor@example.com",
+          scheduledFor: new Date("2026-09-20T00:00:00.000Z"),
+          now: new Date("2026-09-16T00:00:00.000Z"),
+        },
+        { prisma: store },
+      );
+
+      expect(result).toMatchObject({
+        ok: false,
+        code: "stale_audit",
+        articleUnchanged: true,
+      });
+      expect(tx.article.update).not.toHaveBeenCalled();
+    }
+  });
+
+  it("approves a review-required article when the audit revision is current", async () => {
+    const current = {
+      ...baseArticle,
+      status: "review-required",
+      reviewNotes: [currentAssociation()],
+      researchAudits: [
+        {
+          ...baseArticle.researchAudits[0],
+          publicationRecommendation: "review-required",
+        },
+      ],
+    };
+    const { store } = createStore(current);
+    const result = await transitionArticleLifecycle(
+      {
+        articleId: current.id,
+        transition: "approve",
+        actor: "editor@example.com",
+        now: new Date("2026-09-16T00:00:00.000Z"),
+      },
+      { prisma: store },
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.article.status).toBe("approved");
+    expect(parseArticleAuditAssociation(current.reviewNotes[0])?.engineRevision).toBe(
+      "article-grounded-v12",
+    );
   });
 
   it("rejects approval, scheduling, and publication when the audit engine revision is article-grounded-v2", async () => {

@@ -809,19 +809,19 @@ describe("prepareArticleForReview", () => {
     expect(result.sourceDiagnostics).toBeDefined()
   })
 
-  it("keeps an unchanged article and article-grounded-v11 audit idempotent", async () => {
+  it("keeps an unchanged article and article-grounded-v12 audit idempotent", async () => {
     const article = baseArticle()
     article.researchAudits = [
-      { id: "audit-v11", articleId: article.id, createdAt: auditCreatedAt },
+      { id: "audit-v12", articleId: article.id, createdAt: auditCreatedAt },
     ]
     article.reviewNotes = [
       {
         action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
         note: serializeArticleAuditAssociation({
-          auditId: "audit-v11",
+          auditId: "audit-v12",
           contentFingerprint: fingerprintFor(article),
           createdAt: auditCreatedAt,
-          engineRevision: "article-grounded-v11",
+          engineRevision: "article-grounded-v12",
         }),
       },
     ]
@@ -841,10 +841,10 @@ describe("prepareArticleForReview", () => {
     expect(collectEvidence).not.toHaveBeenCalled()
     expect(createdAudits).toHaveLength(0)
     expect(articleUpdates).toHaveLength(0)
-    expect(article.researchAudits.map((audit) => audit.id)).toEqual(["audit-v11"])
+    expect(article.researchAudits.map((audit) => audit.id)).toEqual(["audit-v12"])
   })
 
-  it("allows one article-grounded-v11 audit after an unchanged article-grounded-v9 audit without touching another article", async () => {
+  it("allows one article-grounded-v12 audit after an unchanged article-grounded-v9 audit without touching another article", async () => {
     const article = baseArticle()
     const otherArticle = baseArticle({
       id: "article-other",
@@ -886,7 +886,7 @@ describe("prepareArticleForReview", () => {
 
     expect(first.ok).toBe(true)
     if (!first.ok) return
-    expect(first.audit.engineRevision).toBe("article-grounded-v11")
+    expect(first.audit.engineRevision).toBe("article-grounded-v12")
     expect(article.reviewNotes[0]?.note).toBe(historicalNote)
     expect(parseArticleAuditAssociation(article.reviewNotes[0])).toMatchObject({
       auditId: "audit-v9",

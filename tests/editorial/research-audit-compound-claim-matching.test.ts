@@ -227,13 +227,14 @@ describe("diagnostics and historical compatibility", () => {
     expect(diagnosed.publicationRecommendation).toBe(plain.publicationRecommendation);
   });
 
-  it("keeps v9 and v10 historical and v11 current without changing the claim cap", () => {
-    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v11");
+  it("keeps v9, v10 and v11 historical and v12 current without changing the claim cap", () => {
+    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v12");
     expect(isResearchAuditEngineRevision("article-grounded-v9")).toBe(true);
     expect(isResearchAuditEngineRevision("article-grounded-v10")).toBe(true);
     expect(isCurrentResearchAuditEngineRevision("article-grounded-v9")).toBe(false);
     expect(isCurrentResearchAuditEngineRevision("article-grounded-v10")).toBe(false);
-    expect(isCurrentResearchAuditEngineRevision("article-grounded-v11")).toBe(true);
+    expect(isCurrentResearchAuditEngineRevision("article-grounded-v11")).toBe(false);
+    expect(isCurrentResearchAuditEngineRevision("article-grounded-v12")).toBe(true);
     const fingerprint = "a".repeat(64);
     const parsed = parseArticleAuditAssociation({
       action: RESEARCH_AUDIT_FINGERPRINT_ACTION,

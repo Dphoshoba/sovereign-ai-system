@@ -252,7 +252,12 @@ describe("historical audit fingerprints", () => {
     createdAt,
   };
 
-  it.each(["article-grounded-v7", "article-grounded-v9", "article-grounded-v10"])(
+  it.each([
+    "article-grounded-v7",
+    "article-grounded-v9",
+    "article-grounded-v10",
+    "article-grounded-v11",
+  ])(
     "keeps %s readable and not current",
     (engineRevision) => {
       const note = serializeArticleAuditAssociation({
@@ -275,8 +280,8 @@ describe("historical audit fingerprints", () => {
     },
   );
 
-  it("makes article-grounded-v11 the only current revision", () => {
-    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v11");
+  it("makes article-grounded-v12 the only current revision", () => {
+    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v12");
     const note = serializeArticleAuditAssociation({
       auditId: stored.id,
       contentFingerprint: fingerprint,

@@ -353,15 +353,17 @@ describe("unscored claims and audit revision", () => {
     expect(result.audit.consensusScore).toBeGreaterThanOrEqual(PUBLISH_READY_CONSENSUS_SCORE);
     expect(result.audit.notScoredClaims.length).toBeGreaterThan(0);
     expect(result.audit.publicationRecommendation).toBe("review-required");
-    expect(result.audit.engineRevision).toBe("article-grounded-v11");
+    expect(result.audit.engineRevision).toBe("article-grounded-v12");
   });
 
-  it("keeps v9 and v10 readable and makes v11 the current revision", () => {
-    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v11");
+  it("keeps v9, v10 and v11 readable and makes v12 the current revision", () => {
+    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v12");
     expect(isResearchAuditEngineRevision("article-grounded-v9")).toBe(true);
     expect(isResearchAuditEngineRevision("article-grounded-v10")).toBe(true);
+    expect(isResearchAuditEngineRevision("article-grounded-v11")).toBe(true);
     expect(isCurrentResearchAuditEngineRevision("article-grounded-v9")).toBe(false);
     expect(isCurrentResearchAuditEngineRevision("article-grounded-v10")).toBe(false);
-    expect(isCurrentResearchAuditEngineRevision("article-grounded-v11")).toBe(true);
+    expect(isCurrentResearchAuditEngineRevision("article-grounded-v11")).toBe(false);
+    expect(isCurrentResearchAuditEngineRevision("article-grounded-v12")).toBe(true);
   });
 });

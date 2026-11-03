@@ -132,7 +132,8 @@ describe("source quality without empty groups", () => {
     expect(PUBLISH_READY_CONSENSUS_SCORE).toBe(80);
     expect(PUBLISH_READY_SOURCE_QUALITY_SCORE).toBe(70);
     expect(PUBLISH_READY_RECOMMENDATION).toBe("publish-ready");
-    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v11");
+    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v12");
+    expect(isCurrentResearchAuditEngineRevision("article-grounded-v11")).toBe(false);
     expect(isCurrentResearchAuditEngineRevision("article-grounded-v10")).toBe(false);
     expect(isCurrentResearchAuditEngineRevision("article-grounded-v9")).toBe(false);
     expect(isCurrentResearchAuditEngineRevision("article-grounded-v7")).toBe(false);
