@@ -27,6 +27,69 @@ export async function requireEditorAuth(): Promise<
   return { ok: true, actor: user.email || user.id };
 }
 
+const NON_PUBLISHING_ROLES = new Set(["viewer", "reviewer", "anon"]);
+
+function roleName(value: unknown): string | null {
+  return typeof value === "string" && value.trim()
+    ? value.trim().toLowerCase()
+    : null;
+}
+
+export function canPublishAsEditor(user: {
+  id?: string | null;
+  email?: string | null;
+  role?: string | null;
+  app_metadata?: unknown;
+}): boolean {
+  const metadata =
+    user.app_metadata && typeof user.app_metadata === "object"
+      ? (user.app_metadata as { role?: unknown })
+      : null;
+  const metadataRole = roleName(metadata?.role);
+  if (metadataRole && NON_PUBLISHING_ROLES.has(metadataRole)) return false;
+  const sessionRole = roleName(user.role);
+  if (
+    sessionRole &&
+    sessionRole !== "authenticated" &&
+    NON_PUBLISHING_ROLES.has(sessionRole)
+  ) {
+    return false;
+  }
+  return Boolean(user.id || user.email);
+}
+
+export const PUBLISHING_FORBIDDEN_BODY = {
+  ok: false as const,
+  code: "FORBIDDEN",
+  error: "Authenticated account is not authorised to publish.",
+  articleUnchanged: true as const,
+};
+
+export async function requirePublishingEditor(): Promise<
+  { ok: true; actor: string } | { ok: false; response: NextResponse }
+> {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      ok: false,
+      response: NextResponse.json(AUTHENTICATION_REQUIRED_BODY, { status: 401 }),
+    };
+  }
+
+  if (!canPublishAsEditor(user)) {
+    return {
+      ok: false,
+      response: NextResponse.json(PUBLISHING_FORBIDDEN_BODY, { status: 403 }),
+    };
+  }
+
+  return { ok: true, actor: user.email || user.id };
+}
+
 export function editorSessionHeaders(request: Request) {
   const headers = new Headers();
   const raw = request.headers.get("cookie");
