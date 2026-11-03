@@ -1,11 +1,16 @@
 import type { EvidenceRecord } from "./evidence-registry";
 import type { ExtractedFact } from "./fact-extractor";
-import type { VerifiedFact } from "./fact-verification-engine";
+import type {
+  ClaimMatchDiagnostic,
+  VerifiedFact,
+} from "./fact-verification-engine";
 import {
   type ArticleClaim,
   articleContainsExcerpt,
+  assessPassageSupport,
   passageSupportsClaim,
   uniqueContentOverlap,
+  verifiableClauses,
 } from "./article-claim-extractor";
 import {
   canonicalSourceUrl,
@@ -80,12 +85,90 @@ function dropAmbiguousBibleProjectMatches(
   return matches;
 }
 
+function documentKindForUrl(url: string): "html" | "pdf" {
+  return /\.pdf(?:$|[?#])/i.test(url) ? "pdf" : "html";
+}
+
+function passageMatch(
+  clause: string,
+  evidence: EvidenceRecord,
+): GroundedEvidenceMatch | null {
+  const documentKind = documentKindForUrl(evidence.sourceUrl);
+  if (!passageSupportsClaim(clause, evidence.extractedText, { documentKind })) {
+    return null;
+  }
+  return {
+    evidence,
+    overlap: uniqueContentOverlap(clause, evidence.extractedText).overlap.length,
+  };
+}
+
+function compoundMatchesForDocument(
+  clauses: string[],
+  passages: EvidenceRecord[],
+): GroundedEvidenceMatch[] {
+  const clauseMatches: GroundedEvidenceMatch[] = [];
+  for (const clause of clauses) {
+    const supporting = passages
+      .flatMap((evidence) => {
+        const match = passageMatch(clause, evidence);
+        return match ? [match] : [];
+      })
+      .sort(
+        (left, right) =>
+          right.overlap - left.overlap ||
+          left.evidence.id.localeCompare(right.evidence.id),
+      );
+    if (supporting.length === 0) return [];
+    clauseMatches.push(supporting[0]);
+  }
+  const unique = new Map<string, GroundedEvidenceMatch>();
+  for (const match of clauseMatches) {
+    const existing = unique.get(match.evidence.id);
+    if (!existing || match.overlap < existing.overlap) {
+      unique.set(match.evidence.id, match);
+    }
+  }
+  return Array.from(unique.values());
+}
+
 export function matchEvidenceToClaim(
   claim: ArticleClaim,
   evidenceRecords: EvidenceRecord[],
   listedSources: AttributableSource[] = [],
 ): GroundedEvidenceMatch[] {
-  const matches = evidenceRecords.flatMap((evidence) => {
+  const allowed = evidenceRecords.filter((evidence) =>
+    claimAllowsEvidence(claim.claim, sourceFromEvidence(evidence), listedSources),
+  );
+  const clauses = verifiableClauses(claim.claim);
+  const matches =
+    clauses.length === 1
+      ? allowed.flatMap((evidence) => {
+          const match = passageMatch(clauses[0], evidence);
+          return match ? [match] : [];
+        })
+      : Array.from(
+          allowed.reduce((groups, evidence) => {
+            const key = canonicalSourceUrl(evidence.sourceUrl);
+            const group = groups.get(key) ?? [];
+            group.push(evidence);
+            groups.set(key, group);
+            return groups;
+          }, new Map<string, EvidenceRecord[]>()),
+        ).flatMap(([, passages]) => compoundMatchesForDocument(clauses, passages));
+  return dropAmbiguousBibleProjectMatches(claim.claim, matches, listedSources);
+}
+
+export function claimMatchDiagnostics(
+  claim: ArticleClaim,
+  evidenceRecords: EvidenceRecord[],
+  listedSources: AttributableSource[] = [],
+): ClaimMatchDiagnostic[] {
+  const clauses = verifiableClauses(claim.claim);
+  const diagnostics: ClaimMatchDiagnostic[] = [];
+  const clauseSupport = new Map<string, Set<number>>();
+
+  for (const evidence of evidenceRecords) {
     if (
       !claimAllowsEvidence(
         claim.claim,
@@ -93,21 +176,74 @@ export function matchEvidenceToClaim(
         listedSources,
       )
     ) {
-      return [];
+      diagnostics.push({
+        clause: claim.claim,
+        sourceUrl: evidence.sourceUrl,
+        sourceTitle: evidence.sourceTitle,
+        evidenceId: evidence.id,
+        overlap: 0,
+        requiredOverlap: 0,
+        actionTokenMatches: [],
+        missingActionTokens: [],
+        failureReason: "publisher-mismatch",
+      });
+      continue;
     }
-    const documentKind = /\.pdf(?:$|[?#])/i.test(evidence.sourceUrl)
-      ? "pdf"
-      : "html";
-    if (!passageSupportsClaim(claim.claim, evidence.extractedText, { documentKind })) {
-      return [];
+
+    const documentKind = documentKindForUrl(evidence.sourceUrl);
+    const supportedClauses = new Set<number>();
+    clauses.forEach((clause, index) => {
+      const assessment = assessPassageSupport(clause, evidence.extractedText, {
+        documentKind,
+      });
+      if (assessment.supported) {
+        supportedClauses.add(index);
+        return;
+      }
+      diagnostics.push({
+        clause,
+        sourceUrl: evidence.sourceUrl,
+        sourceTitle: evidence.sourceTitle,
+        evidenceId: evidence.id,
+        overlap: assessment.overlapCount,
+        requiredOverlap: assessment.requiredOverlap,
+        actionTokenMatches: assessment.actionTokenMatches,
+        missingActionTokens: assessment.missingActionTokens,
+        failureReason: assessment.failureReason,
+      });
+    });
+    if (supportedClauses.size > 0) {
+      const key = canonicalSourceUrl(evidence.sourceUrl);
+      const existing = clauseSupport.get(key) ?? new Set<number>();
+      for (const index of supportedClauses) existing.add(index);
+      clauseSupport.set(key, existing);
     }
-    const overlap = uniqueContentOverlap(
-      claim.claim,
-      evidence.extractedText,
-    ).overlap.length;
-    return [{ evidence, overlap }];
-  });
-  return dropAmbiguousBibleProjectMatches(claim.claim, matches, listedSources);
+  }
+
+  const documentCoversClaim = Array.from(clauseSupport.values()).some(
+    (supported) => supported.size === clauses.length,
+  );
+  const partialDocuments = Array.from(clauseSupport.values()).filter(
+    (supported) => supported.size > 0 && supported.size < clauses.length,
+  );
+  if (clauses.length > 1 && !documentCoversClaim && partialDocuments.length > 1) {
+    const partial = evidenceRecords.find((evidence) =>
+      clauseSupport.has(canonicalSourceUrl(evidence.sourceUrl)),
+    );
+    diagnostics.push({
+      clause: claim.claim,
+      sourceUrl: partial?.sourceUrl || "",
+      sourceTitle: partial?.sourceTitle || "",
+      evidenceId: partial?.id || "",
+      overlap: 0,
+      requiredOverlap: 0,
+      actionTokenMatches: [],
+      missingActionTokens: [],
+      failureReason: "cross-document",
+    });
+  }
+
+  return diagnostics;
 }
 
 export function groundedFactVerification(
@@ -206,6 +342,7 @@ export function groundedFactVerification(
       requiresHumanReview: verificationStatus !== "verified",
     };
 
+    const matchDiagnostics = claimMatchDiagnostics(claim, evidenceRecords, sources);
     facts.push({
       ...base,
       articleExcerpt: claim.articleExcerpt,
@@ -222,6 +359,9 @@ export function groundedFactVerification(
       })),
       similarityMatches: [],
       verificationScore,
+      ...(verificationStatus === "unverified" && matchDiagnostics.length > 0
+        ? { matchDiagnostics }
+        : {}),
     });
   }
 

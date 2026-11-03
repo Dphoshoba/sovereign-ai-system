@@ -548,32 +548,132 @@ export function eventActionTokens(claim: string): string[] {
   return significantTokens(claim).filter((token) => !GENERIC_NAME_TOKENS.has(token));
 }
 
+export type PassageSupportFailureReason =
+  | "supported"
+  | "empty-passage"
+  | "chrome"
+  | "outline-or-index"
+  | "missing-percentage"
+  | "no-claim-tokens"
+  | "insufficient-overlap"
+  | "insufficient-action-tokens";
+
+export type PassageSupportAssessment = {
+  supported: boolean;
+  overlapCount: number;
+  requiredOverlap: number;
+  actionTokenMatches: string[];
+  missingActionTokens: string[];
+  failureReason: PassageSupportFailureReason;
+};
+
+function requiredOverlapCount(tokenCount: number): number {
+  return Math.min(Math.max(3, Math.ceil(tokenCount * 0.35)), tokenCount);
+}
+
+export function assessPassageSupport(
+  claim: string,
+  passage: string,
+  options: { documentKind?: "html" | "pdf" } = {},
+): PassageSupportAssessment {
+  const empty = (
+    failureReason: PassageSupportFailureReason,
+    details: Partial<PassageSupportAssessment> = {},
+  ): PassageSupportAssessment => ({
+    supported: false,
+    overlapCount: 0,
+    requiredOverlap: 0,
+    actionTokenMatches: [],
+    missingActionTokens: [],
+    failureReason,
+    ...details,
+  });
+
+  if (!passage) return empty("empty-passage");
+  if (options.documentKind !== "pdf" && isChromePassage(passage)) {
+    return empty("chrome");
+  }
+  if (options.documentKind !== "pdf" && isOutlineOrIndexPassage(passage)) {
+    return empty("outline-or-index");
+  }
+  if (!passageContainsClaimPercentages(claim, passage)) {
+    return empty("missing-percentage");
+  }
+
+  const { claimTokens, overlap } = uniqueContentOverlap(claim, passage);
+  if (claimTokens.length === 0) return empty("no-claim-tokens");
+  const requiredOverlap = requiredOverlapCount(claimTokens.length);
+  const passageTokens = new Set(significantTokens(passage));
+  const actionTokens = [...new Set(eventActionTokens(claim))];
+  const actionTokenMatches = actionTokens.filter((token) => passageTokens.has(token));
+  const missingActionTokens = actionTokens.filter((token) => !passageTokens.has(token));
+  const measured = {
+    overlapCount: overlap.length,
+    requiredOverlap,
+    actionTokenMatches,
+    missingActionTokens,
+  };
+
+  if (overlap.length < requiredOverlap) {
+    return empty("insufficient-overlap", measured);
+  }
+  if (
+    actionTokens.length >= 2 &&
+    actionTokenMatches.length < Math.min(2, actionTokens.length)
+  ) {
+    return empty("insufficient-action-tokens", measured);
+  }
+  return {
+    supported: true,
+    failureReason: "supported",
+    ...measured,
+  };
+}
+
 export function passageSupportsClaim(
   claim: string,
   passage: string,
   options: { documentKind?: "html" | "pdf" } = {},
 ): boolean {
-  if (!passage) return false;
-  if (options.documentKind !== "pdf" && isChromePassage(passage)) return false;
-  if (options.documentKind !== "pdf" && isOutlineOrIndexPassage(passage)) {
-    return false;
-  }
-  if (!passageContainsClaimPercentages(claim, passage)) return false;
-  const { claimTokens, overlap } = uniqueContentOverlap(claim, passage);
-  if (claimTokens.length === 0) return false;
-  const required = Math.min(
-    Math.max(3, Math.ceil(claimTokens.length * 0.35)),
-    claimTokens.length,
-  );
-  if (overlap.length < required) return false;
+  return assessPassageSupport(claim, passage, options).supported;
+}
 
-  const passageTokens = new Set(significantTokens(passage));
-  const actionTokens = [...new Set(eventActionTokens(claim))];
-  if (actionTokens.length >= 2) {
-    const actionOverlap = actionTokens.filter((token) => passageTokens.has(token));
-    if (actionOverlap.length < Math.min(2, actionTokens.length)) {
-      return false;
+function clauseRemainsVerifiable(parent: string, clause: string): boolean {
+  if (clause.length > 400) return false;
+  if (clause.length < 40 && !hasMeasurableNumericalResult(clause)) return false;
+  if (isChromePassage(clause)) return false;
+  if (isExternallyVerifiableClaim(clause)) return true;
+  if (!isExternallyVerifiableClaim(parent)) return false;
+  if (isAuthorialFraming(clause)) return false;
+  return hasClaimShape(clause);
+}
+
+function clausesAt(sentence: string, pattern: RegExp): string[] {
+  return sentence
+    .split(pattern)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+export function verifiableClauses(sentence: string): string[] {
+  if (sentence.includes(";")) {
+    const semicolonClauses = clausesAt(sentence, /\s*;\s*/);
+    if (
+      semicolonClauses.length >= 2 &&
+      semicolonClauses.every((part) => clauseRemainsVerifiable(sentence, part))
+    ) {
+      return semicolonClauses;
     }
   }
-  return true;
+
+  const andClauses = clausesAt(sentence, /\s*,\s+and\s+/i);
+  if (
+    andClauses.length >= 2 &&
+    andClauses.slice(1).every((part) => /^that\b/i.test(part)) &&
+    andClauses.every((part) => clauseRemainsVerifiable(sentence, part))
+  ) {
+    return andClauses;
+  }
+
+  return [sentence];
 }

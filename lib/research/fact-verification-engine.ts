@@ -7,6 +7,18 @@ import {
 const SIMILARITY_THRESHOLD = 55
 const STRONG_SIMILARITY_THRESHOLD = 75
 
+export type ClaimMatchDiagnostic = {
+  clause: string
+  sourceUrl: string
+  sourceTitle: string
+  evidenceId: string
+  overlap: number
+  requiredOverlap: number
+  actionTokenMatches: string[]
+  missingActionTokens: string[]
+  failureReason: string
+}
+
 export type VerifiedFact = ExtractedFact & {
   verificationCount: number
   verificationStatus:
@@ -24,6 +36,7 @@ export type VerifiedFact = ExtractedFact & {
     score: number
   }[]
   verificationScore: number
+  matchDiagnostics?: ClaimMatchDiagnostic[]
 }
 
 export type FactVerificationEngineResult = {
