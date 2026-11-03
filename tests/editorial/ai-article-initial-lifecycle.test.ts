@@ -209,6 +209,7 @@ describe("POST /api/ai/generate-article initial lifecycle state", () => {
       consensusScore: 92,
       sourceQualityScore: 100,
       consensusGroups: [],
+      zeroSourceGroups: [],
       consensusGroupCount: 0,
       publicationRecommendation: "publish-ready",
       summary: "Scores pass while one claim is unverified.",

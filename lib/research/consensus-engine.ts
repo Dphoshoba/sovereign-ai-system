@@ -20,6 +20,7 @@ export type ConsensusResult = {
   consensusScore: number
   sourceQualityScore: number
   consensusGroups: ConsensusGroup[]
+  zeroSourceGroups: ConsensusGroup[]
   consensusGroupCount: number
   publicationRecommendation:
     | "publish-ready"
@@ -245,14 +246,41 @@ const THEMES: { theme: string; keywords: string[]; body: string }[] = [
 
 const GENERAL_THEME = "General Findings"
 
-function classifyTheme(claim: string): string {
+// Prefixes kept as stems. Ordinary keywords use word boundaries.
+const EXPLICIT_THEME_STEMS = new Set([
+  "automat",
+  "integrat",
+  "produc",
+  "generat",
+  "distribut",
+  "syndicat",
+  "monetiz",
+  "monetis",
+  "analytic",
+  "ethic",
+  "responsib",
+  "accountab",
+])
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+function keywordMatches(text: string, keyword: string): boolean {
+  if (EXPLICIT_THEME_STEMS.has(keyword)) {
+    return text.includes(keyword)
+  }
+  return new RegExp(`\\b${escapeRegExp(keyword)}\\b`, "i").test(text)
+}
+
+export function classifyConsensusTheme(claim: string): string {
   const text = claim.toLowerCase()
   let bestTheme = GENERAL_THEME
   let bestScore = 0
 
   for (const { theme, keywords } of THEMES) {
     const score = keywords.reduce((total, keyword) => {
-      if (!text.includes(keyword)) {
+      if (!keywordMatches(text, keyword)) {
         return total
       }
 
@@ -266,6 +294,10 @@ function classifyTheme(claim: string): string {
   }
 
   return bestTheme
+}
+
+function classifyTheme(claim: string): string {
+  return classifyConsensusTheme(claim)
 }
 
 function themeBody(theme: string): string {
@@ -345,36 +377,26 @@ function authorityScoreForUrl(url: string): number {
 
   return 50
 }
-function countUniqueSources(facts: VerifiedFact[]): number {
+function acceptedSourceUrls(facts: VerifiedFact[]): string[] {
   const urls = new Set<string>()
 
   for (const fact of facts) {
-    if (fact.supportingSources.length > 0) {
-      for (const source of fact.supportingSources) {
-        if (source.sourceUrl) urls.add(source.sourceUrl)
+    for (const source of fact.supportingSources) {
+      if (typeof source.sourceUrl === "string" && source.sourceUrl.trim()) {
+        urls.add(source.sourceUrl)
       }
-    } else if (fact.sourceUrl) {
-      urls.add(fact.sourceUrl)
     }
   }
 
-  return urls.size
+  return Array.from(urls)
+}
+
+function countUniqueSources(facts: VerifiedFact[]): number {
+  return acceptedSourceUrls(facts).length
 }
 
 function calculateSourceQualityScore(facts: VerifiedFact[]): number {
-  const urls = new Set<string>()
-
-  for (const fact of facts) {
-    if (fact.supportingSources.length > 0) {
-      for (const source of fact.supportingSources) {
-        if (source.sourceUrl) urls.add(source.sourceUrl)
-      }
-    } else if (fact.sourceUrl) {
-      urls.add(fact.sourceUrl)
-    }
-  }
-
-  const scores = Array.from(urls).map(authorityScoreForUrl)
+  const scores = acceptedSourceUrls(facts).map(authorityScoreForUrl)
 
   if (scores.length === 0) return 0
 
@@ -405,7 +427,9 @@ function buildConsensusGroups(facts: VerifiedFact[]): ConsensusGroup[] {
         ? "Strong multi-source evidence indicates that"
         : sourceCount === 2
           ? "Multiple sources indicate that"
-          : "A source indicates that"
+          : sourceCount === 1
+            ? "A source indicates that"
+            : "No accepted source supports this group yet, which concerns"
 
     return {
       theme,
@@ -433,6 +457,8 @@ export function consensusEngine(facts: VerifiedFact[]): ConsensusResult {
   ).length
 
   const consensusGroups = buildConsensusGroups(facts)
+  const zeroSourceGroups = consensusGroups.filter((group) => group.sourceCount === 0)
+  const sourcedGroups = consensusGroups.filter((group) => group.sourceCount > 0)
   const consensusGroupCount = consensusGroups.length
 
   const stronglyCorroborated = consensusGroups.filter(
@@ -444,12 +470,12 @@ export function consensusEngine(facts: VerifiedFact[]): ConsensusResult {
   ).length
 
   const sourceQualityScore =
-    consensusGroups.length > 0
+    sourcedGroups.length > 0
       ? Math.round(
-          consensusGroups.reduce(
+          sourcedGroups.reduce(
             (sum, group) => sum + group.sourceQualityScore,
             0
-          ) / consensusGroups.length
+          ) / sourcedGroups.length
         )
       : 0
 
@@ -498,6 +524,7 @@ export function consensusEngine(facts: VerifiedFact[]): ConsensusResult {
     consensusScore,
     sourceQualityScore,
     consensusGroups,
+    zeroSourceGroups,
     consensusGroupCount,
     publicationRecommendation,
     summary:
