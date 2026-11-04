@@ -85,6 +85,11 @@ async function postNewsletter(body: unknown = { newsletterId: "news-1" }) {
   );
 }
 
+async function postNewsletters(body: unknown = { newsletterId: "news-1" }) {
+  const { POST } = await import("../../app/api/newsletters/send/route");
+  return POST(request("http://localhost/api/newsletters/send", body));
+}
+
 function expectNoDelivery() {
   expect(harness.send).not.toHaveBeenCalled();
   expect(harness.emailFindUnique).not.toHaveBeenCalled();
@@ -256,6 +261,128 @@ describe("newsletter and email send authorisation", () => {
       to: "reader@example.com",
       subject: "Approved letter",
     });
+    expect(harness.newsletterUpdate).toHaveBeenCalledOnce();
+  });
+});
+
+describe("POST /api/newsletters/send", () => {
+  beforeEach(() => {
+    vi.stubEnv("RESEND_API_KEY", "re_test_key");
+    harness.send.mockReset();
+    harness.mockGetUser.mockReset();
+    harness.emailFindUnique.mockReset();
+    harness.emailUpdate.mockReset();
+    harness.newsletterFindUnique.mockReset();
+    harness.newsletterUpdate.mockReset();
+    harness.subscriberFindMany.mockReset();
+    harness.operationalEventCreate.mockReset();
+    harness.externalOperationLogCreate.mockReset();
+    harness.send.mockResolvedValue({ data: { id: "provider-1" }, error: null });
+  });
+
+  it("rejects an anonymous caller before reading the identifier", async () => {
+    harness.mockGetUser.mockResolvedValue({ data: { user: null } });
+
+    const response = await postNewsletters({ newsletterId: "news-1" });
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toMatchObject({
+      ok: false,
+      code: "AUTHENTICATION_REQUIRED",
+    });
+    expectNoDelivery();
+  });
+
+  it.each(["viewer", "reviewer"] as const)(
+    "rejects an authenticated %s before reading the identifier",
+    async (role) => {
+      harness.mockGetUser.mockResolvedValue({
+        data: {
+          user: {
+            id: "user-1",
+            email: `${role}@example.com`,
+            role,
+            app_metadata: { role },
+          },
+        },
+      });
+
+      const response = await postNewsletters();
+
+      expect(response.status).toBe(403);
+      await expect(response.json()).resolves.toMatchObject({
+        ok: false,
+        code: "FORBIDDEN",
+      });
+      expectNoDelivery();
+    },
+  );
+
+  it("keeps an unapproved newsletter from being sent", async () => {
+    harness.mockGetUser.mockResolvedValue({ data: { user: editor() } });
+    harness.newsletterFindUnique.mockResolvedValue({
+      id: "news-1",
+      status: "review-required",
+      subject: "Draft",
+      previewText: "",
+      content: "<p>Draft</p>",
+    });
+
+    const response = await postNewsletters();
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: "Newsletter must be approved before sending.",
+    });
+    expect(harness.send).not.toHaveBeenCalled();
+    expect(harness.newsletterUpdate).not.toHaveBeenCalled();
+    expect(harness.subscriberFindMany).not.toHaveBeenCalled();
+  });
+
+  it("does not send a newsletter that was already sent", async () => {
+    harness.mockGetUser.mockResolvedValue({ data: { user: editor() } });
+    harness.newsletterFindUnique.mockResolvedValue({
+      id: "news-1",
+      status: "sent",
+      subject: "Sent letter",
+      previewText: "",
+      content: "<p>Sent</p>",
+    });
+
+    const response = await postNewsletters();
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: "This newsletter has already been sent.",
+    });
+    expect(harness.send).not.toHaveBeenCalled();
+    expect(harness.newsletterUpdate).not.toHaveBeenCalled();
+  });
+
+  it("sends an approved newsletter for an authorised editor", async () => {
+    harness.mockGetUser.mockResolvedValue({ data: { user: editor() } });
+    harness.newsletterFindUnique.mockResolvedValue({
+      id: "news-1",
+      status: "approved",
+      subject: "Approved letter",
+      previewText: "Preview",
+      content: "<p>Hello</p>",
+    });
+    harness.subscriberFindMany.mockResolvedValue([
+      { email: "reader@example.com", status: "active" },
+    ]);
+    harness.newsletterUpdate.mockResolvedValue({
+      id: "news-1",
+      status: "sent",
+    });
+
+    const response = await postNewsletters();
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ ok: true, sent: 1 });
+    expect(harness.send).toHaveBeenCalledOnce();
     expect(harness.newsletterUpdate).toHaveBeenCalledOnce();
   });
 });
