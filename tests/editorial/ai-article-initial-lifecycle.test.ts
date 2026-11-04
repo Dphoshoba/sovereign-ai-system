@@ -12,6 +12,7 @@ const sourceFindMany = vi.fn();
 const factCreate = vi.fn();
 const queryRaw = vi.fn();
 const openAIResponsesCreate = vi.fn();
+const prepareArticleForReview = vi.fn();
 
 vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: vi.fn(async () => ({
@@ -120,6 +121,9 @@ vi.mock("../../lib/ai/persist-featured-image", () => ({
     articleUnchanged: true,
   })),
 }));
+vi.mock("../../lib/research/prepare-article-for-review", () => ({
+  prepareArticleForReview: (...args: unknown[]) => prepareArticleForReview(...args),
+}));
 
 describe("POST /api/ai/generate-article initial lifecycle state", () => {
   beforeEach(() => {
@@ -167,6 +171,41 @@ describe("POST /api/ai/generate-article initial lifecycle state", () => {
     });
     reviewNoteCreate.mockResolvedValue({ id: "note-1" });
     queryRaw.mockResolvedValue([{ id: "article-1" }]);
+    prepareArticleForReview.mockResolvedValue({
+      ok: true,
+      articleUnchanged: false,
+      article: {
+        id: "article-1",
+        status: "review-required",
+        editorialScore: 70,
+        editorialGrade: "B",
+        qualityScore: 70,
+        qualityGrade: "B",
+        seoScore: 70,
+        seoGrade: "B",
+      },
+      audit: {
+        id: "grounded-1",
+        createdAt: "2026-09-16T00:00:00.000Z",
+        contentFingerprint: "a".repeat(64),
+        engineRevision: "article-grounded-v14",
+        sourceCount: 1,
+        evidenceCount: 1,
+        factCount: 1,
+        verifiedCount: 0,
+        partiallyVerifiedCount: 1,
+        unverifiedCount: 0,
+        consensusScore: 76,
+        publicationRecommendation: "review-required",
+        sourceCoverage: 1,
+        listedSourceAvailability: 1,
+        acceptedEvidenceCoverage: 1,
+        unavailableSourceCount: 0,
+        notScoredClaims: [],
+      },
+      sourceDiagnostics: [],
+      preservedFields: [],
+    });
   });
 
   it("creates only review-required content with null lifecycle metadata", async () => {
@@ -193,9 +232,15 @@ describe("POST /api/ai/generate-article initial lifecycle state", () => {
         publishedAt: null,
       }),
     });
+    expect(auditCreate).not.toHaveBeenCalled();
+    expect(reviewNoteCreate).not.toHaveBeenCalled();
+    expect(prepareArticleForReview).toHaveBeenCalledWith(
+      "article-1",
+      expect.objectContaining({ reviewer: "system" }),
+    );
   });
 
-  it("stores the completeness recommendation instead of a raw publish-ready score", async () => {
+  it("passes the completeness recommendation to the template gate without storing it as the publication audit", async () => {
     const { consensusEngine } = await import("../../lib/research/consensus-engine");
     const { factVerificationEngine } = await import(
       "../../lib/research/fact-verification-engine"
@@ -255,12 +300,144 @@ describe("POST /api/ai/generate-article initial lifecycle state", () => {
         publicationRecommendation: "review-required",
       }),
     );
-    expect(auditCreate).toHaveBeenCalledWith({
+    expect(auditCreate).not.toHaveBeenCalled();
+    expect(factCreate).not.toHaveBeenCalled();
+    expect(reviewNoteCreate).not.toHaveBeenCalled();
+    const body = await response.json();
+    expect(body.publicationCleared).toBe(false);
+    expect(body.sourceTemplate.publicationAuthorising).toBe(false);
+    expect(body.article.status).toBe("review-required");
+    expect(body.article.approvedAt).toBeNull();
+    expect(body.article.scheduledFor).toBeNull();
+    expect(body.article.publishedAt).toBeNull();
+  });
+
+  it("sends the saved article id to article-grounded review after the article is stored", async () => {
+    const { POST } = await import("../../app/api/ai/generate-article/route");
+    const { generateAndPersistFeaturedImage } = await import(
+      "../../lib/ai/persist-featured-image"
+    );
+
+    const response = await POST(
+      new Request("http://localhost/api/ai/generate-article", {
+        method: "POST",
+        body: JSON.stringify({ topic: "Governed generation", category: "ai-tools" }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(articleCreate).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        consensusScore: 92,
-        sourceQualityScore: 100,
-        publicationRecommendation: "review-required",
+        title: "Governed generated article",
+        excerpt: "Generated excerpt",
+        content: "Generated content",
+        status: "review-required",
       }),
     });
+    expect(prepareArticleForReview).toHaveBeenCalledTimes(1);
+    expect(prepareArticleForReview).toHaveBeenCalledWith(
+      "article-1",
+      expect.not.objectContaining({
+        title: expect.anything(),
+        excerpt: expect.anything(),
+        content: expect.anything(),
+      }),
+    );
+    expect(articleCreate.mock.invocationCallOrder[0]).toBeLessThan(
+      prepareArticleForReview.mock.invocationCallOrder[0],
+    );
+    expect(prepareArticleForReview.mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(generateAndPersistFeaturedImage).mock.invocationCallOrder[0],
+    );
+  });
+
+  it("leaves a failed review as review-required with no publication clearance", async () => {
+    prepareArticleForReview.mockResolvedValueOnce({
+      ok: false,
+      code: "insufficient_article_evidence",
+      error: "No auditable claims occur in the current article.",
+      articleUnchanged: true,
+    });
+    const { POST } = await import("../../app/api/ai/generate-article/route");
+
+    const response = await POST(
+      new Request("http://localhost/api/ai/generate-article", {
+        method: "POST",
+        body: JSON.stringify({ topic: "Governed generation", category: "ai-tools" }),
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.publicationCleared).toBe(false);
+    expect(body.articleReview).toMatchObject({
+      ok: false,
+      publicationCleared: false,
+      code: "insufficient_article_evidence",
+    });
+    expect(body.article.status).toBe("review-required");
+    expect(body.article.approvedAt).toBeNull();
+    expect(body.article.scheduledFor).toBeNull();
+    expect(body.article.publishedAt).toBeNull();
+    expect(auditCreate).not.toHaveBeenCalled();
+    expect(reviewNoteCreate).not.toHaveBeenCalled();
+  });
+
+  it("does not approve, schedule, publish, or distribute when the grounded review is publish-ready", async () => {
+    prepareArticleForReview.mockResolvedValueOnce({
+      ok: true,
+      articleUnchanged: false,
+      article: {
+        id: "article-1",
+        status: "review-required",
+        editorialScore: 90,
+        editorialGrade: "A",
+        qualityScore: 90,
+        qualityGrade: "A",
+        seoScore: 90,
+        seoGrade: "A",
+      },
+      audit: {
+        id: "grounded-ready",
+        createdAt: "2026-09-16T00:00:00.000Z",
+        contentFingerprint: "b".repeat(64),
+        engineRevision: "article-grounded-v14",
+        sourceCount: 2,
+        evidenceCount: 2,
+        factCount: 1,
+        verifiedCount: 1,
+        partiallyVerifiedCount: 0,
+        unverifiedCount: 0,
+        consensusScore: 92,
+        publicationRecommendation: "publish-ready",
+        sourceCoverage: 1,
+        listedSourceAvailability: 1,
+        acceptedEvidenceCoverage: 1,
+        unavailableSourceCount: 0,
+        notScoredClaims: [],
+      },
+      sourceDiagnostics: [],
+      preservedFields: [],
+    });
+    const { POST } = await import("../../app/api/ai/generate-article/route");
+
+    const response = await POST(
+      new Request("http://localhost/api/ai/generate-article", {
+        method: "POST",
+        body: JSON.stringify({ topic: "Governed generation", category: "ai-tools" }),
+      }),
+    );
+    const body = await response.json();
+
+    expect(body.publicationCleared).toBe(false);
+    expect(body.article.status).toBe("review-required");
+    expect(body.article.approvedAt).toBeNull();
+    expect(body.article.approvedBy).toBeNull();
+    expect(body.article.scheduledFor).toBeNull();
+    expect(body.article.publishedAt).toBeNull();
+    expect(body.articleReview.audit.publicationRecommendation).toBe("publish-ready");
+    expect(articleUpdate).not.toHaveBeenCalled();
+    expect(prepareArticleForReview).toHaveBeenCalledTimes(1);
   });
 });

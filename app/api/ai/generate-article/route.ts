@@ -23,11 +23,10 @@ import { generateAndPersistFeaturedImage } from "../../../../lib/ai/persist-feat
 import { articleQualityScorer } from "../../../../lib/editorial/article-quality-scorer";
 import { seoScorer } from "../../../../lib/editorial/seo-scorer";
 import { lockArticleForGovernance } from "../../../../lib/publishing/article-lifecycle";
-import { computeArticleAuditFingerprint } from "../../../../lib/research/article-audit-fingerprint";
 import {
-  RESEARCH_AUDIT_FINGERPRINT_ACTION,
-  serializeArticleAuditAssociation,
-} from "../../../../lib/research/article-audit-association";
+  prepareArticleForReview,
+  type PrepareForReviewStore,
+} from "../../../../lib/research/prepare-article-for-review";
 import { applyArticleSourceMutationInTransaction } from "../../../../lib/research/article-source-mutation";
 
 function slugify(value: string) {
@@ -154,32 +153,6 @@ export async function POST(request: Request) {
       publicationRecommendation,
     };
     const publicationDecision = publicationGate(governedConsensus);
-
-    if (publicationDecision.status === "blocked") {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "Publication blocked by research gate",
-          publicationDecision,
-          researchAudit: {
-            sourceCount: sourceCollection.sourceCount,
-            averageAuthorityScore: sourceCollection.averageAuthorityScore,
-            averageTrustScore: sourceCollection.averageTrustScore,
-            researchConfidence: sourceCollection.researchConfidence,
-            evidenceCount: evidence.evidenceCount,
-            factCount: factExtraction.factCount,
-            verifiedCount: factVerification.verifiedCount,
-            averageVerificationScore: factVerification.averageVerificationScore,
-            partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
-            unverifiedCount: factVerification.unverifiedCount,
-            consensusScore: consensus.consensusScore,
-            sourceQualityScore: consensus.sourceQualityScore,
-            publicationRecommendation,
-          },
-        },
-        { status: 422 },
-      );
-    }
 
     const consensusText = consensus.consensusGroups
       .map(
@@ -398,29 +371,6 @@ export async function POST(request: Request) {
 
       await lockArticleForGovernance(tx, createdArticle.id);
 
-      const audit = await tx.articleResearchAudit.create({
-        data: {
-          articleId: createdArticle.id,
-          sourceCount: sourceCollection.sourceCount,
-          averageAuthorityScore: sourceCollection.averageAuthorityScore,
-          averageTrustScore: sourceCollection.averageTrustScore,
-          researchConfidence: sourceCollection.researchConfidence,
-          evidenceCount: evidence.evidenceCount,
-          factCount: factExtraction.factCount,
-          verifiedCount: factVerification.verifiedCount,
-          partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
-          unverifiedCount: factVerification.unverifiedCount,
-          averageVerificationScore: factVerification.averageVerificationScore,
-          consensusScore: consensus.consensusScore,
-          sourceQualityScore: consensus.sourceQualityScore,
-          publicationRecommendation,
-          sources: sourceCollection.collectedSources,
-          evidence: Array.isArray(evidence.evidence) ? evidence.evidence : [],
-          facts: factVerification.verifiedFacts,
-          consensus: consensus.consensusGroups,
-        },
-      });
-
       const sourceMutation = await applyArticleSourceMutationInTransaction(
         tx as never,
         {
@@ -441,40 +391,30 @@ export async function POST(request: Request) {
         throw new Error(sourceMutation.error);
       }
 
-      for (const fact of factVerification.verifiedFacts || []) {
-        await tx.researchFact.create({
-          data: {
-            articleId: createdArticle.id,
-            claim: fact.claim || "",
-            verificationStatus: fact.verificationStatus || "unverified",
-            confidence: fact.confidence || null,
-            supportingSources: fact.supportingSources || [],
-            category,
-          },
-        });
-      }
-
-      const contentFingerprint = computeArticleAuditFingerprint(
-        createdArticle,
-        (sourceCollection.collectedSources || [])
-          .map((source) => source.url)
-          .filter((url): url is string => Boolean(url)),
-      );
-      await tx.articleReviewNote.create({
-        data: {
-          articleId: createdArticle.id,
-          reviewer: "system",
-          action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
-          note: serializeArticleAuditAssociation({
-            auditId: audit.id,
-            contentFingerprint,
-            createdAt: audit.createdAt,
-          }),
-        },
-      });
-
       return createdArticle;
     });
+
+    let reviewed;
+    try {
+      reviewed = await prepareArticleForReview(article.id, {
+        prisma: prisma as unknown as PrepareForReviewStore,
+        reviewer: "system",
+      });
+    } catch (reviewError) {
+      console.error(
+        "Article saved, but article-grounded review failed:",
+        reviewError,
+      );
+      reviewed = {
+        ok: false as const,
+        code: "audit_failure" as const,
+        error:
+          reviewError instanceof Error
+            ? reviewError.message
+            : "Article-grounded review failed.",
+        articleUnchanged: true as const,
+      };
+    }
 
     let updatedArticle = article;
 
@@ -493,38 +433,45 @@ export async function POST(request: Request) {
       );
     }
 
-    const editorialWarning =
-      publicationRecommendation === "blocked"
-        ? "Research pipeline marked this article as blocked for publication readiness because the available facts lack sufficient cross-source verification. The article was still saved as review-required for human editorial review."
-        : null;
+    const publicationCleared = false;
 
     return NextResponse.json({
       ok: true,
-      article: updatedArticle,
-      qualityScore: qualityResult.score,
-      qualityGrade: qualityResult.grade,
-      qualityChecks: qualityResult.checks,
-      seoScore: seoResult.score,
-      seoGrade: seoResult.grade,
-      seoChecks: seoResult.checks,
-      researchAudit: {
-        sourceCount: sourceCollection.sourceCount,
-        averageAuthorityScore: sourceCollection.averageAuthorityScore,
-        averageTrustScore: sourceCollection.averageTrustScore,
-        researchConfidence: sourceCollection.researchConfidence,
-        evidenceCount: evidence.evidenceCount,
-        factCount: factExtraction.factCount,
-        verifiedCount: factVerification.verifiedCount,
-        averageVerificationScore: factVerification.averageVerificationScore,
-        partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
-        unverifiedCount: factVerification.unverifiedCount,
+      publicationCleared,
+      article: {
+        ...updatedArticle,
+        ...(reviewed.ok ? reviewed.article : {}),
+        status: "review-required",
+        approvedAt: null,
+        approvedBy: null,
+        scheduledFor: null,
+        publishedAt: null,
+      },
+      articleReview: reviewed.ok
+        ? {
+            ok: true,
+            publicationCleared,
+            audit: reviewed.audit,
+          }
+        : {
+            ok: false,
+            publicationCleared,
+            code: reviewed.code,
+            error: reviewed.error,
+          },
+      sourceTemplate: {
+        publicationAuthorising: false,
+        publicationDecision,
+        publicationRecommendation,
         consensusScore: consensus.consensusScore,
         sourceQualityScore: consensus.sourceQualityScore,
-        publicationRecommendation,
-        publicationDecision,
-        editorialWarning,
-        editorialQuality,
       },
+      qualityScore: reviewed.ok ? reviewed.article.qualityScore : qualityResult.score,
+      qualityGrade: reviewed.ok ? reviewed.article.qualityGrade : qualityResult.grade,
+      qualityChecks: qualityResult.checks,
+      seoScore: reviewed.ok ? reviewed.article.seoScore : seoResult.score,
+      seoGrade: reviewed.ok ? reviewed.article.seoGrade : seoResult.grade,
+      seoChecks: seoResult.checks,
     });
   } catch (error) {
     console.error("AI article generation failed:", error);
