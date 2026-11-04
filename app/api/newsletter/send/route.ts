@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requirePublishingEditor } from "../../../../lib/publishing/require-editor-auth"
 import { Resend } from "resend"
 
 export async function POST(req: NextRequest) {
+  const auth = await requirePublishingEditor()
+  if (!auth.ok) return auth.response
+
   try {
     const { newsletterId } = await req.json()
 

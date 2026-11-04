@@ -2,6 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const emailFindUnique = vi.hoisted(() => vi.fn())
 const newsletterFindUnique = vi.hoisted(() => vi.fn())
+const mockGetUser = vi.hoisted(() => vi.fn())
+
+vi.mock("@/lib/supabase/server", () => ({
+  createSupabaseServerClient: vi.fn(async () => ({
+    auth: { getUser: mockGetUser },
+  })),
+}))
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -33,6 +40,16 @@ describe("credential SDK initialization", () => {
     vi.stubEnv("TWITTER_ACCESS_SECRET", "")
     emailFindUnique.mockReset()
     newsletterFindUnique.mockReset()
+    mockGetUser.mockReset()
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: {
+          id: "editor-1",
+          email: "editor@example.com",
+          role: "authenticated",
+        },
+      },
+    })
   })
 
   it("imports send routes and agent clients without credentials", async () => {
