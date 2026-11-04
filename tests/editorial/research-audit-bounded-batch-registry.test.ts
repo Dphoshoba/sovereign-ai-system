@@ -224,6 +224,6 @@ describe("bounded batch evidence registry", () => {
     const prepare = readFileSync("lib/research/prepare-article-for-review.ts", "utf8");
     expect(prepare).toContain("deps.collectEvidence ?? collectBoundedBatchEvidence");
     expect(prepare).not.toContain("deps.collectEvidence ?? evidenceRegistry");
-    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v12");
+    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v13");
   });
 });

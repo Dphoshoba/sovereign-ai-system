@@ -1,15 +1,28 @@
 import { describe, expect, it } from "vitest";
 import {
+  parseArticleAuditAssociation,
+  partitionAssociatedArticleAudits,
+  RESEARCH_AUDIT_FINGERPRINT_ACTION,
+  serializeArticleAuditAssociation,
+} from "../../lib/research/article-audit-association";
+import { computeArticleAuditFingerprint } from "../../lib/research/article-audit-fingerprint";
+import {
   extractArticleClaims,
   FACTUAL_CLAIM_CEILING,
   type ArticleClaim,
 } from "../../lib/research/article-claim-extractor";
 import { groundedFactVerification } from "../../lib/research/claim-evidence-matcher";
+import { selectClaimAwareEvidence } from "../../lib/research/claim-evidence-selector";
 import { claimAllowsEvidence } from "../../lib/research/claim-source-attribution";
 import { recommendationWithEvidenceCompleteness } from "../../lib/research/evidence-completeness";
+import type { EvidenceChunk } from "../../lib/research/evidence-chunker";
 import type { EvidenceRecord } from "../../lib/research/evidence-registry";
 import { namedProductFeatures } from "../../lib/research/product-identity";
-import { CURRENT_RESEARCH_AUDIT_ENGINE_REVISION } from "../../lib/research/research-audit-engine-revision";
+import {
+  CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
+  isCurrentResearchAuditEngineRevision,
+  isResearchAuditEngineRevision,
+} from "../../lib/research/research-audit-engine-revision";
 import {
   AI_INBOX_CLAIM,
   HELP_ME_WRITE_CLAIM,
@@ -112,6 +125,37 @@ describe("current continuation exclusions", () => {
     expect(factual).not.toContain(HYPOTHETICAL_EXAMPLE);
     expect(factual.some((claim) => claim.includes("amber slot"))).toBe(false);
   });
+
+  it("does not bind a continuation across a paragraph or heading", () => {
+    const nextParagraph = extracted(
+      section("Scheduling", [SCHEDULE_ANTECEDENT, GUEST_LIMIT]),
+    );
+    const nextHeading = extracted(
+      [
+        "## Scheduling",
+        "",
+        SCHEDULE_ANTECEDENT,
+        "",
+        "## Limits",
+        "",
+        GUEST_LIMIT,
+      ].join("\n"),
+    );
+    expect(nextParagraph.claims.map((claim) => claim.claim)).toEqual([
+      SCHEDULE_ANTECEDENT,
+    ]);
+    expect(nextHeading.claims.map((claim) => claim.claim)).toEqual([
+      SCHEDULE_ANTECEDENT,
+    ]);
+  });
+
+  it("does not infer a feature from an ambiguous antecedent", () => {
+    const ambiguous =
+      "Google’s page for “Help me schedule” and “Help me write” says both tools require an eligible plan.";
+    const result = extracted(section("Scheduling", [`${ambiguous} ${GUEST_LIMIT}`]));
+    expect(result.claims.map((claim) => claim.claim)).toEqual([ambiguous]);
+    expect(featuresFor(result.claims, "20 guests")).toEqual([]);
+  });
 });
 
 describe("intended continuation binding", () => {
@@ -194,8 +238,89 @@ describe("intended continuation binding", () => {
 });
 
 describe("continuation controls that already hold", () => {
-  it("keeps the engine at article-grounded-v12", () => {
-    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v12");
+  it("makes article-grounded-v12 stale and keeps the stored note readable", () => {
+    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v13");
+    expect(isResearchAuditEngineRevision("article-grounded-v12")).toBe(true);
+    expect(isCurrentResearchAuditEngineRevision("article-grounded-v12")).toBe(false);
+    const article = {
+      id: "continuation-article",
+      title: "Scheduling limits",
+      excerpt: "A governed note.",
+      content: `${SCHEDULE_ANTECEDENT} ${GUEST_LIMIT}`,
+      category: "ai-tools",
+      seoTitle: "Scheduling limits",
+      seoDescription: "Limits stay attributed.",
+      seoKeywords: "scheduling",
+    };
+    const sources = ["https://support.google.com/mail/answer/16865189"];
+    const createdAt = new Date("2026-11-03T22:59:28.627Z");
+    const stored = { id: "audit-v12", articleId: article.id, createdAt };
+    const fingerprint = computeArticleAuditFingerprint(article, sources);
+    const note = serializeArticleAuditAssociation({
+      auditId: stored.id,
+      contentFingerprint: fingerprint,
+      createdAt,
+      engineRevision: "article-grounded-v12",
+    });
+    expect(
+      parseArticleAuditAssociation({
+        action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+        note,
+      })?.engineRevision,
+    ).toBe("article-grounded-v12");
+    expect(
+      partitionAssociatedArticleAudits(article, sources, [stored], [
+        { action: RESEARCH_AUDIT_FINGERPRINT_ACTION, note },
+      ]),
+    ).toEqual({ current: null, historical: [stored] });
+  });
+
+  it("keeps the guest limit on Help me schedule through selection", () => {
+    const result = extracted(
+      section("Scheduling", [`${SCHEDULE_ANTECEDENT} ${GUEST_LIMIT}`]),
+    );
+    const continuation = result.claims.find((claim) => claim.claim.includes("20 guests"));
+    expect(continuation?.articleExcerpt).toBe(GUEST_LIMIT);
+    const scheduleUrl = "https://support.google.com/mail/answer/16865189?hl=en";
+    const scheduleTitle = "Help me schedule - Gmail Help";
+    const scheduleText = continuation?.claim ?? GUEST_LIMIT;
+    const chunks = (text: string, id: string): EvidenceChunk[] => [
+      {
+        id,
+        text,
+        wordCount: text.split(/\s+/).filter(Boolean).length,
+      },
+    ];
+    const selection = selectClaimAwareEvidence({
+      claims: [scheduleText],
+      documents: [
+        {
+          url: HELP_ME_WRITE_URL,
+          title: HELP_ME_WRITE_TITLE,
+          sourceType: "html",
+          extractedText: HELP_ME_WRITE_PASSAGES.map((passage) => passage.extractedText).join(
+            "\n\n",
+          ),
+          chunks: HELP_ME_WRITE_PASSAGES.map((passage) => ({
+            id: passage.id,
+            text: passage.extractedText,
+            wordCount: passage.extractedText.split(/\s+/).filter(Boolean).length,
+          })),
+        },
+        {
+          url: scheduleUrl,
+          title: scheduleTitle,
+          sourceType: "html",
+          extractedText: scheduleText,
+          chunks: chunks(scheduleText, "schedule-limit"),
+        },
+      ],
+      listedSources: [
+        { url: HELP_ME_WRITE_URL, title: HELP_ME_WRITE_TITLE },
+        { url: scheduleUrl, title: scheduleTitle },
+      ],
+    });
+    expect(selection.evidence.map((record) => record.sourceUrl)).toEqual([scheduleUrl]);
   });
 
   it("still verifies a NIST compound claim from one document", () => {

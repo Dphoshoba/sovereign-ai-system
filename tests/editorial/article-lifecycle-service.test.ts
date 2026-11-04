@@ -391,7 +391,7 @@ describe("transitionArticleLifecycle", () => {
     if (!result.ok) return;
     expect(result.article.status).toBe("approved");
     expect(parseArticleAuditAssociation(current.reviewNotes[0])?.engineRevision).toBe(
-      "article-grounded-v12",
+      "article-grounded-v13",
     );
   });
 

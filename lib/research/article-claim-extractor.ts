@@ -1,4 +1,5 @@
 import { isChromePassage, isOutlineOrIndexPassage } from "./evidence-chrome";
+import { namedProductFeatures } from "./product-identity";
 
 export const CREATOR_TEMPLATE_CLAIMS = [
   "AI-driven analytics can improve content performance insights.",
@@ -423,6 +424,58 @@ export function planClaimBatches<T>(claims: readonly T[]): ClaimBatchPlan<T> {
   return { batches, eligibleClaims, overflowClaims };
 }
 
+const CONCRETE_LIMIT =
+  /\b(must|cannot|can't|maximum|minimum|at least|at most|up to|no more than|does not|do not|not supported|not available|eligible|eligibility|retains?|retention|encrypted)\b/i;
+
+const HYPOTHETICAL_SCENARIO =
+  /^(suppose|imagine|hypothetically|what if)\b/i;
+
+const PRACTICAL_INSTRUCTION =
+  /^(draft|check|compare|click|open|send|use|start|choose|review|paste|select|keep|ask|write|add|remove|turn|enable|confirm|make|try|avoid)\b/i;
+
+const RECOMMENDATION = /\b(you should|we recommend|we suggest|i recommend)\b/i;
+
+function isDocumentationScope(sentence: string): boolean {
+  return /\b(?:is|are) not documented\b/i.test(sentence);
+}
+
+function isHypotheticalScenario(sentence: string): boolean {
+  return HYPOTHETICAL_SCENARIO.test(sentence.trim());
+}
+
+function isPracticalInstruction(sentence: string): boolean {
+  return PRACTICAL_INSTRUCTION.test(sentence.trim());
+}
+
+function isRecommendation(sentence: string): boolean {
+  return RECOMMENDATION.test(sentence);
+}
+
+function isConcreteProductFact(sentence: string): boolean {
+  return (
+    isDocumentationScope(sentence) ||
+    CONCRETE_LIMIT.test(sentence) ||
+    hasClaimShape(sentence)
+  );
+}
+
+function isUnambiguousAntecedent(sentence: string): boolean {
+  return (
+    namedProductFeatures(sentence).length <= 1 &&
+    hasPublisherAttribution(sentence) &&
+    isExternallyVerifiableClaim(sentence)
+  );
+}
+
+function isBoundContinuation(sentence: string): boolean {
+  if (sentence.length < 15 || sentence.length > 400) return false;
+  if (isChromePassage(sentence)) return false;
+  if (isHypotheticalScenario(sentence) || isPracticalInstruction(sentence)) return false;
+  if (isRecommendation(sentence)) return false;
+  if (isAuthorialFraming(sentence) && !isDocumentationScope(sentence)) return false;
+  return isConcreteProductFact(sentence);
+}
+
 export function extractArticleClaims(input: {
   title?: string | null;
   excerpt?: string | null;
@@ -466,14 +519,61 @@ export function extractArticleClaims(input: {
       }
 
       const fictionalBlock = fictionalRegion || isFictionalLabel(block.text);
+      const sentences = splitBlockSentences(block.text);
+      let antecedentIndex: number | null = null;
 
-      for (const sentence of splitBlockSentences(block.text)) {
+      for (let index = 0; index < sentences.length; index += 1) {
+        const sentence = sentences[index] ?? "";
         if (sentence.length > 400) continue;
-        if (sentence.length < 40 && !hasMeasurableNumericalResult(sentence)) continue;
         if (isChromePassage(sentence)) continue;
-        if (!hasClaimShape(sentence) && !hasPublisherAttribution(sentence)) continue;
         if (isCreatorTemplate(sentence, normalizedArticleText)) continue;
         if (!articleContainsExcerpt(normalizedArticleText, sentence)) continue;
+
+        const features = namedProductFeatures(sentence);
+        const establishes = !fictionalBlock && isUnambiguousAntecedent(sentence);
+        if (fictionalBlock || features.length > 1) {
+          antecedentIndex = null;
+        } else if (establishes) {
+          antecedentIndex = index;
+        }
+
+        const antecedentSentence =
+          antecedentIndex === null ? "" : (sentences[antecedentIndex] ?? "");
+        const antecedentFeatures = namedProductFeatures(antecedentSentence);
+        const namesAnotherFeature =
+          features.length === 1 &&
+          antecedentFeatures.length === 1 &&
+          features[0] !== antecedentFeatures[0];
+        const claimText =
+          antecedentIndex === null
+            ? sentence
+            : sentences.slice(antecedentIndex, index + 1).join(" ");
+
+        if (
+          !establishes &&
+          !fictionalBlock &&
+          !namesAnotherFeature &&
+          antecedentIndex !== null &&
+          block.blockType === "paragraph" &&
+          isBoundContinuation(sentence) &&
+          articleContainsExcerpt(normalizedArticleText, claimText)
+        ) {
+          const key = sentence.toLowerCase();
+          if (seen.has(key)) continue;
+          seen.add(key);
+          factualCandidates.push({
+            claim: claimText,
+            articleExcerpt: sentence,
+            section: block.section,
+            blockType: block.blockType,
+            kind: "factual",
+            heading: block.heading,
+          });
+          continue;
+        }
+
+        if (sentence.length < 40 && !hasMeasurableNumericalResult(sentence)) continue;
+        if (!hasClaimShape(sentence) && !hasPublisherAttribution(sentence)) continue;
         const key = sentence.toLowerCase();
         if (seen.has(key)) continue;
         seen.add(key);

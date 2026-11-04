@@ -78,7 +78,7 @@ describe("claim batch plan", () => {
     expect(FACTUAL_CLAIM_CEILING).toBe(36);
     expect(RESEARCH_MAX_PASSAGES_PER_CLAIM).toBe(2);
     expect(RESEARCH_MAX_UNIQUE_AUDIT_PASSAGES).toBe(24);
-    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v12");
+    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v13");
   });
 
   it.each([

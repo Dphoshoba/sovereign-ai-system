@@ -257,6 +257,7 @@ describe("historical audit fingerprints", () => {
     "article-grounded-v9",
     "article-grounded-v10",
     "article-grounded-v11",
+    "article-grounded-v12",
   ])(
     "keeps %s readable and not current",
     (engineRevision) => {
@@ -280,8 +281,9 @@ describe("historical audit fingerprints", () => {
     },
   );
 
-  it("makes article-grounded-v12 the only current revision", () => {
-    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v12");
+  it("makes article-grounded-v13 the only current revision", () => {
+    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v13");
+    expect(isCurrentResearchAuditEngineRevision("article-grounded-v12")).toBe(false);
     const note = serializeArticleAuditAssociation({
       auditId: stored.id,
       contentFingerprint: fingerprint,
