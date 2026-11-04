@@ -192,7 +192,7 @@ describe("bounded prepare-for-review audit", () => {
       expect(evidence.calls).toEqual({ [GOOGLE_URL]: 1 });
       expect(result.audit.factCount).toBe(count);
       expect(result.audit.notScoredClaims).toEqual([]);
-      expect(result.audit.engineRevision).toBe("article-grounded-v13");
+      expect(result.audit.engineRevision).toBe("article-grounded-v14");
       expect(storedFacts(createdAudits).map((fact) => fact.claim)).toEqual(
         Array.from({ length: count }, (_, index) => claimSentence(index)),
       );
@@ -344,6 +344,7 @@ describe("bounded prepare-for-review audit", () => {
     expect(isCurrentResearchAuditEngineRevision("article-grounded-v10")).toBe(false);
     expect(isCurrentResearchAuditEngineRevision("article-grounded-v11")).toBe(false);
     expect(isCurrentResearchAuditEngineRevision("article-grounded-v12")).toBe(false);
-    expect(isCurrentResearchAuditEngineRevision("article-grounded-v13")).toBe(true);
+    expect(isCurrentResearchAuditEngineRevision("article-grounded-v13")).toBe(false);
+    expect(isCurrentResearchAuditEngineRevision("article-grounded-v14")).toBe(true);
   });
 });

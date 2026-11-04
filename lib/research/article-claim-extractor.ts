@@ -775,6 +775,128 @@ export function passageSupportsClaim(
   return assessPassageSupport(claim, passage, options).supported;
 }
 
+const CONTINUATION_QUANTITY_WORDS = [
+  "zero",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+  "eleven",
+  "twelve",
+  "thirteen",
+  "fourteen",
+  "fifteen",
+  "sixteen",
+  "seventeen",
+  "eighteen",
+  "nineteen",
+  "twenty",
+  "thirty",
+  "forty",
+  "fifty",
+  "sixty",
+  "seventy",
+  "eighty",
+  "ninety",
+  "hundred",
+  "thousand",
+];
+
+const CONTINUATION_DETAIL_PATTERNS = [
+  /\bnot documented\b/gi,
+  /\bmust not\b/gi,
+  /\bdoes not\b/gi,
+  /\bdo not\b/gi,
+  /\bcannot\b/gi,
+  /\bcan't\b/gi,
+  /\bnot supported\b/gi,
+  /\bnot available\b/gi,
+  /\bno more than\b/gi,
+  /\bat least\b/gi,
+  /\bat most\b/gi,
+  /\bup to\b/gi,
+  /\bmust\b/gi,
+  /\bmaximum\b/gi,
+  /\bminimum\b/gi,
+  /\beligible\b/gi,
+  /\beligibility\b/gi,
+  /\bretention\b/gi,
+  /\bretains?\b/gi,
+  /\bencrypted\b/gi,
+  /\bindefinite\b/gi,
+];
+
+const CONTINUATION_NEGATION =
+  /\b(?:not|no|cannot|can't|mustn't|must not|do not|does not|isn't|aren't|won't)\b/i;
+
+function normalizeContinuationDetail(value: string): string {
+  return value.toLowerCase().replace(/[’']/g, "'");
+}
+
+export function boundContinuationExcerpt(
+  claim: string,
+  articleExcerpt?: string | null,
+): string | null {
+  const normalizedClaim = claim.replace(/\s+/g, " ").trim();
+  const excerpt = articleExcerpt?.replace(/\s+/g, " ").trim() ?? "";
+  if (excerpt) {
+    if (!excerpt || excerpt === normalizedClaim || !normalizedClaim.endsWith(excerpt)) {
+      return null;
+    }
+    return excerpt;
+  }
+  const sentences = splitBlockSentences(normalizedClaim);
+  if (sentences.length < 2) return null;
+  const last = sentences[sentences.length - 1] ?? "";
+  if (!last || last === normalizedClaim) return null;
+  return last;
+}
+
+export function continuationDetailsSupported(excerpt: string, passage: string): boolean {
+  const excerptText = normalizeContinuationDetail(excerpt);
+  const passageText = normalizeContinuationDetail(passage);
+  if (CONTINUATION_NEGATION.test(excerptText) !== CONTINUATION_NEGATION.test(passageText)) {
+    return false;
+  }
+
+  const digits = excerptText.match(/\b\d+(?:\.\d+)?\b/g) ?? [];
+  for (const digit of new Set(digits)) {
+    const literal = digit.replace(/\./g, "\\.");
+    if (!new RegExp(`\\b${literal}\\b`).test(passageText)) return false;
+  }
+
+  for (const word of CONTINUATION_QUANTITY_WORDS) {
+    const pattern = new RegExp(`\\b${word}\\b`, "i");
+    if (pattern.test(excerptText) && !pattern.test(passageText)) return false;
+  }
+
+  for (const pattern of CONTINUATION_DETAIL_PATTERNS) {
+    const matches = excerptText.match(new RegExp(pattern.source, "gi")) ?? [];
+    for (const match of matches) {
+      if (!passageText.includes(match.toLowerCase())) return false;
+    }
+  }
+
+  return true;
+}
+
+export function passageSupportsContinuationSentence(
+  excerpt: string,
+  passage: string,
+  options: { documentKind?: "html" | "pdf" } = {},
+): boolean {
+  return (
+    passageSupportsClaim(excerpt, passage, options) &&
+    continuationDetailsSupported(excerpt, passage)
+  );
+}
+
 function clauseRemainsVerifiable(parent: string, clause: string): boolean {
   if (clause.length > 400) return false;
   if (clause.length < 40 && !hasMeasurableNumericalResult(clause)) return false;

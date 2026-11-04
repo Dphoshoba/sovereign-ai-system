@@ -485,7 +485,7 @@ describe("article audit associations", () => {
     ).toEqual({ current: null, historical: [obsolete] });
   });
 
-  it("keeps an article-grounded-v7 note readable and historical once article-grounded-v13 is current", () => {
+  it("keeps an article-grounded-v7 note readable and historical once article-grounded-v14 is current", () => {
     const historical = {
       id: "audit-v7",
       articleId: article.id,
@@ -547,7 +547,8 @@ describe("article audit associations", () => {
         },
       ]),
     ).toEqual({ current: null, historical: [historical] });
-    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v13");
+    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v14");
+    expect(isCurrentResearchAuditEngineRevision("article-grounded-v13")).toBe(false);
     expect(isCurrentResearchAuditEngineRevision("article-grounded-v12")).toBe(false);
     expect(
       partitionAssociatedArticleAudits(article, sources, [historical], [

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  continuationDetailsSupported,
   extractArticleClaims,
   FACTUAL_CLAIM_CEILING,
   passageSupportsClaim,
@@ -12,7 +13,11 @@ import { recommendationWithEvidenceCompleteness } from "../../lib/research/evide
 import type { EvidenceChunk } from "../../lib/research/evidence-chunker";
 import type { EvidenceRecord } from "../../lib/research/evidence-registry";
 import { namedProductFeatures } from "../../lib/research/product-identity";
-import { CURRENT_RESEARCH_AUDIT_ENGINE_REVISION } from "../../lib/research/research-audit-engine-revision";
+import {
+  CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
+  isCurrentResearchAuditEngineRevision,
+  isResearchAuditEngineRevision,
+} from "../../lib/research/research-audit-engine-revision";
 import {
   AI_INBOX_CLAIM,
   AI_INBOX_TITLE,
@@ -24,6 +29,7 @@ import {
 } from "../fixtures/research-audit/article-2-gmail-ai-inbox";
 import {
   AI_INBOX_SCOPE,
+  ATTACHMENT_LIMIT,
   GUEST_LIMIT,
   SCHEDULE_ANTECEDENT,
   section,
@@ -551,11 +557,124 @@ describe("continuation evidence must support the continuation sentence", () => {
       retainedAntecedentText: false,
     });
   });
+
+  it("does not verify a 20-guest limit from a passage that states 10 guests", () => {
+    const wrongLimit =
+      "The page states a maximum of 10 guests and four proposed slots by default.";
+    const result = outcome({
+      content: section("Scheduling", [`${SCHEDULE_ANTECEDENT} ${GUEST_LIMIT}`]),
+      excerpt: GUEST_LIMIT,
+      url: SCHEDULE_URL,
+      title: SCHEDULE_TITLE,
+      passages: [{ id: "schedule-ten", text: wrongLimit }],
+    });
+
+    expect(passageSupportsClaim(GUEST_LIMIT, wrongLimit)).toBe(true);
+    expect(continuationDetailsSupported(GUEST_LIMIT, wrongLimit)).toBe(false);
+    expect({
+      excerpt: result.excerpt,
+      fullClaim: result.fullClaim,
+      publishers: result.publishers,
+      features: result.features,
+      status: result.status,
+      urls: result.urls,
+      verificationPassageIds: result.verificationPassageIds,
+      selectedPassageIds: result.selectedPassageIds,
+      completeness: result.completeness,
+    }).toEqual({
+      excerpt: GUEST_LIMIT,
+      fullClaim: `${SCHEDULE_ANTECEDENT} ${GUEST_LIMIT}`,
+      publishers: ["google"],
+      features: ["Help me schedule"],
+      status: "unverified",
+      urls: [],
+      verificationPassageIds: [],
+      selectedPassageIds: [],
+      completeness: "review-required",
+    });
+  });
+
+  it("does not verify a negated limit from an affirmative passage", () => {
+    const affirmative =
+      "“Help me write” does support attachments, delegated inboxes, or encrypted email.";
+    const result = outcome({
+      content: section("Drafting", [`${HELP_ME_WRITE_CLAIM} ${ATTACHMENT_LIMIT}`]),
+      excerpt: ATTACHMENT_LIMIT,
+      url: HELP_ME_WRITE_URL,
+      title: HELP_ME_WRITE_TITLE,
+      passages: [{ id: "attachments-yes", text: affirmative }],
+    });
+
+    expect(continuationDetailsSupported(ATTACHMENT_LIMIT, affirmative)).toBe(false);
+    expect({
+      excerpt: result.excerpt,
+      antecedent: result.antecedent,
+      publishers: result.publishers,
+      features: result.features,
+      status: result.status,
+      urls: result.urls,
+      verificationPassageIds: result.verificationPassageIds,
+      selectedPassageIds: result.selectedPassageIds,
+      completeness: result.completeness,
+    }).toEqual({
+      excerpt: ATTACHMENT_LIMIT,
+      antecedent: HELP_ME_WRITE_CLAIM,
+      publishers: ["google"],
+      features: ["Help me write"],
+      status: "unverified",
+      urls: [],
+      verificationPassageIds: [],
+      selectedPassageIds: [],
+      completeness: "review-required",
+    });
+  });
+
+  it("partially verifies a negated limit when the passage states that negation", () => {
+    const result = outcome({
+      content: section("Drafting", [`${HELP_ME_WRITE_CLAIM} ${ATTACHMENT_LIMIT}`]),
+      excerpt: ATTACHMENT_LIMIT,
+      url: HELP_ME_WRITE_URL,
+      title: HELP_ME_WRITE_TITLE,
+      passages: [
+        {
+          id: "attachments-no",
+          text: `${ATTACHMENT_LIMIT} “Help me write” states that exclusion.`,
+        },
+      ],
+    });
+
+    expect({
+      excerpt: result.excerpt,
+      antecedent: result.antecedent,
+      excerptIsFullClaim: result.excerptIsFullClaim,
+      publishers: result.publishers,
+      features: result.features,
+      supportsExcerpt: result.passageEvidence[0]?.supportsExcerpt,
+      status: result.status,
+      urls: result.urls,
+      verificationPassageIds: result.verificationPassageIds,
+      selectedPassageIds: result.selectedPassageIds,
+    }).toEqual({
+      excerpt: ATTACHMENT_LIMIT,
+      antecedent: HELP_ME_WRITE_CLAIM,
+      excerptIsFullClaim: false,
+      publishers: ["google"],
+      features: ["Help me write"],
+      supportsExcerpt: true,
+      status: "partially verified",
+      urls: [HELP_ME_WRITE_URL],
+      verificationPassageIds: ["attachments-no"],
+      selectedPassageIds: ["attachments-no"],
+    });
+  });
 });
 
 describe("continuation evidence controls that already hold", () => {
-  it("keeps the current engine at article-grounded-v13", () => {
-    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v13");
+  it("keeps the current engine at article-grounded-v14", () => {
+    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v14");
+    expect(isResearchAuditEngineRevision("article-grounded-v13")).toBe(true);
+    expect(isCurrentResearchAuditEngineRevision("article-grounded-v13")).toBe(false);
+    expect(isCurrentResearchAuditEngineRevision("article-grounded-v12")).toBe(false);
   });
 
   it("still accepts the official Help me write passage for its own claim", () => {

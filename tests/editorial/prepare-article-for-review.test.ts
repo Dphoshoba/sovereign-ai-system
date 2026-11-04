@@ -809,19 +809,19 @@ describe("prepareArticleForReview", () => {
     expect(result.sourceDiagnostics).toBeDefined()
   })
 
-  it("keeps an unchanged article and article-grounded-v13 audit idempotent", async () => {
+  it("keeps an unchanged article and article-grounded-v14 audit idempotent", async () => {
     const article = baseArticle()
     article.researchAudits = [
-      { id: "audit-v13", articleId: article.id, createdAt: auditCreatedAt },
+      { id: "audit-v14", articleId: article.id, createdAt: auditCreatedAt },
     ]
     article.reviewNotes = [
       {
         action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
         note: serializeArticleAuditAssociation({
-          auditId: "audit-v13",
+          auditId: "audit-v14",
           contentFingerprint: fingerprintFor(article),
           createdAt: auditCreatedAt,
-          engineRevision: "article-grounded-v13",
+          engineRevision: "article-grounded-v14",
         }),
       },
     ]
@@ -841,7 +841,7 @@ describe("prepareArticleForReview", () => {
     expect(collectEvidence).not.toHaveBeenCalled()
     expect(createdAudits).toHaveLength(0)
     expect(articleUpdates).toHaveLength(0)
-    expect(article.researchAudits.map((audit) => audit.id)).toEqual(["audit-v13"])
+    expect(article.researchAudits.map((audit) => audit.id)).toEqual(["audit-v14"])
   })
 
   it("allows one article-grounded-v12 audit after an unchanged article-grounded-v9 audit without touching another article", async () => {
@@ -886,7 +886,7 @@ describe("prepareArticleForReview", () => {
 
     expect(first.ok).toBe(true)
     if (!first.ok) return
-    expect(first.audit.engineRevision).toBe("article-grounded-v13")
+    expect(first.audit.engineRevision).toBe("article-grounded-v14")
     expect(article.reviewNotes[0]?.note).toBe(historicalNote)
     expect(parseArticleAuditAssociation(article.reviewNotes[0])).toMatchObject({
       auditId: "audit-v9",

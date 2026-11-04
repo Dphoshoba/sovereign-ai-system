@@ -91,6 +91,21 @@ function v2Association() {
   };
 }
 
+function v13Association() {
+  const fingerprint = computeArticleAuditFingerprint(baseArticle, [
+    "https://www.nist.gov/artificial-intelligence",
+  ]);
+  return {
+    action: "research-audit-fingerprint",
+    note: serializeArticleAuditAssociation({
+      auditId: "audit-current",
+      contentFingerprint: fingerprint,
+      createdAt: auditCreatedAt,
+      engineRevision: "article-grounded-v13",
+    }),
+  };
+}
+
 function staleFingerprintAssociation() {
   const fingerprint = computeArticleAuditFingerprint(
     { ...baseArticle, content: "A different content revision." },
@@ -391,7 +406,7 @@ describe("transitionArticleLifecycle", () => {
     if (!result.ok) return;
     expect(result.article.status).toBe("approved");
     expect(parseArticleAuditAssociation(current.reviewNotes[0])?.engineRevision).toBe(
-      "article-grounded-v13",
+      "article-grounded-v14",
     );
   });
 
@@ -399,6 +414,41 @@ describe("transitionArticleLifecycle", () => {
     const article = {
       ...baseArticle,
       reviewNotes: [v2Association()],
+    };
+
+    for (const transition of ["approve", "schedule", "publish"] as const) {
+      const current = {
+        ...article,
+        status: transition === "approve" ? "review-required" : "approved",
+        approvedAt:
+          transition === "approve" ? null : new Date("2026-09-15T01:00:00.000Z"),
+        approvedBy: transition === "approve" ? null : "editor",
+      };
+      const { store, tx } = createStore(current);
+      const result = await transitionArticleLifecycle(
+        {
+          articleId: current.id,
+          transition,
+          actor: "editor@example.com",
+          scheduledFor: new Date("2026-09-20T00:00:00.000Z"),
+          now: new Date("2026-09-16T00:00:00.000Z"),
+        },
+        { prisma: store },
+      );
+
+      expect(result).toMatchObject({
+        ok: false,
+        code: "stale_audit",
+        articleUnchanged: true,
+      });
+      expect(tx.article.update).not.toHaveBeenCalled();
+    }
+  });
+
+  it("rejects approval, scheduling, and publication of a historical article-grounded-v13 audit", async () => {
+    const article = {
+      ...baseArticle,
+      reviewNotes: [v13Association()],
     };
 
     for (const transition of ["approve", "schedule", "publish"] as const) {

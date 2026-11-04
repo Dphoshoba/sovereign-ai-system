@@ -239,8 +239,10 @@ describe("intended continuation binding", () => {
 
 describe("continuation controls that already hold", () => {
   it("makes article-grounded-v12 stale and keeps the stored note readable", () => {
-    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v13");
+    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v14");
+    expect(isResearchAuditEngineRevision("article-grounded-v13")).toBe(true);
     expect(isResearchAuditEngineRevision("article-grounded-v12")).toBe(true);
+    expect(isCurrentResearchAuditEngineRevision("article-grounded-v13")).toBe(false);
     expect(isCurrentResearchAuditEngineRevision("article-grounded-v12")).toBe(false);
     const article = {
       id: "continuation-article",

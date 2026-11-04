@@ -1,6 +1,9 @@
 import {
+  boundContinuationExcerpt,
   passageSupportsClaim,
+  passageSupportsContinuationSentence,
   planClaimBatches,
+  verifiableClauses,
   uniqueContentOverlap,
   type ClaimBatch,
   type ClaimBatchPlan,
@@ -199,14 +202,28 @@ export function selectClaimAwareEvidence(input: {
       windowsByUrl.set(canonicalSourceUrl(document.url), windows);
 
       const documentKind = /\.pdf(?:$|[?#])/i.test(document.url) ? "pdf" : "html";
+      const continuationExcerpt = boundContinuationExcerpt(claim);
+      const singleContinuation =
+        continuationExcerpt !== null && verifiableClauses(claim).length === 1;
       for (const record of records) {
+        const overlapSupported = passageSupportsClaim(
+          singleContinuation ? continuationExcerpt : claim,
+          record.extractedText,
+          { documentKind },
+        );
         if (
-          !passageSupportsClaim(claim, record.extractedText, { documentKind }) ||
+          !overlapSupported ||
           !evidenceSatisfiesProductIdentity(
             claim,
             record.sourceTitle,
             record.extractedText,
-          )
+          ) ||
+          (continuationExcerpt !== null &&
+            !passageSupportsContinuationSentence(
+              continuationExcerpt,
+              record.extractedText,
+              { documentKind },
+            ))
         ) {
           documentOrder += 1;
           continue;

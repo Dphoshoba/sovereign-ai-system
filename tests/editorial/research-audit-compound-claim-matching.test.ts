@@ -227,16 +227,18 @@ describe("diagnostics and historical compatibility", () => {
     expect(diagnosed.publicationRecommendation).toBe(plain.publicationRecommendation);
   });
 
-  it("keeps v9 through v12 historical and v13 current without changing the claim cap", () => {
-    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v13");
+  it("keeps v9 through v13 historical and v14 current without changing the claim cap", () => {
+    expect(CURRENT_RESEARCH_AUDIT_ENGINE_REVISION).toBe("article-grounded-v14");
     expect(isResearchAuditEngineRevision("article-grounded-v9")).toBe(true);
     expect(isResearchAuditEngineRevision("article-grounded-v10")).toBe(true);
     expect(isResearchAuditEngineRevision("article-grounded-v12")).toBe(true);
+    expect(isResearchAuditEngineRevision("article-grounded-v13")).toBe(true);
     expect(isCurrentResearchAuditEngineRevision("article-grounded-v9")).toBe(false);
     expect(isCurrentResearchAuditEngineRevision("article-grounded-v10")).toBe(false);
     expect(isCurrentResearchAuditEngineRevision("article-grounded-v11")).toBe(false);
     expect(isCurrentResearchAuditEngineRevision("article-grounded-v12")).toBe(false);
-    expect(isCurrentResearchAuditEngineRevision("article-grounded-v13")).toBe(true);
+    expect(isCurrentResearchAuditEngineRevision("article-grounded-v13")).toBe(false);
+    expect(isCurrentResearchAuditEngineRevision("article-grounded-v14")).toBe(true);
     const fingerprint = "a".repeat(64);
     const parsed = parseArticleAuditAssociation({
       action: RESEARCH_AUDIT_FINGERPRINT_ACTION,

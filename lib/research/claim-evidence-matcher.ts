@@ -8,7 +8,9 @@ import {
   type ArticleClaim,
   articleContainsExcerpt,
   assessPassageSupport,
+  boundContinuationExcerpt,
   passageSupportsClaim,
+  passageSupportsContinuationSentence,
   uniqueContentOverlap,
   verifiableClauses,
 } from "./article-claim-extractor";
@@ -94,9 +96,13 @@ function passageMatch(
   clause: string,
   evidence: EvidenceRecord,
   claimText: string,
+  continuationExcerpt: string | null,
+  clauseCount: number,
 ): GroundedEvidenceMatch | null {
   const documentKind = documentKindForUrl(evidence.sourceUrl);
-  if (!passageSupportsClaim(clause, evidence.extractedText, { documentKind })) {
+  const singleContinuation = continuationExcerpt !== null && clauseCount === 1;
+  const overlapTarget = singleContinuation ? continuationExcerpt : clause;
+  if (!passageSupportsClaim(overlapTarget, evidence.extractedText, { documentKind })) {
     return null;
   }
   if (
@@ -108,9 +114,19 @@ function passageMatch(
   ) {
     return null;
   }
+  if (
+    continuationExcerpt &&
+    !passageSupportsContinuationSentence(
+      continuationExcerpt,
+      evidence.extractedText,
+      { documentKind },
+    )
+  ) {
+    return null;
+  }
   return {
     evidence,
-    overlap: uniqueContentOverlap(clause, evidence.extractedText).overlap.length,
+    overlap: uniqueContentOverlap(overlapTarget, evidence.extractedText).overlap.length,
   };
 }
 
@@ -118,12 +134,19 @@ function compoundMatchesForDocument(
   claimText: string,
   clauses: string[],
   passages: EvidenceRecord[],
+  continuationExcerpt: string | null,
 ): GroundedEvidenceMatch[] {
   const clauseMatches: GroundedEvidenceMatch[] = [];
   for (const clause of clauses) {
     const supporting = passages
       .flatMap((evidence) => {
-        const match = passageMatch(clause, evidence, claimText);
+        const match = passageMatch(
+          clause,
+          evidence,
+          claimText,
+          continuationExcerpt,
+          clauses.length,
+        );
         return match ? [match] : [];
       })
       .sort(
@@ -153,10 +176,20 @@ export function matchEvidenceToClaim(
     claimAllowsEvidence(claim.claim, sourceFromEvidence(evidence), listedSources),
   );
   const clauses = verifiableClauses(claim.claim);
+  const continuationExcerpt = boundContinuationExcerpt(
+    claim.claim,
+    claim.articleExcerpt,
+  );
   const matches =
     clauses.length === 1
       ? allowed.flatMap((evidence) => {
-          const match = passageMatch(clauses[0], evidence, claim.claim);
+          const match = passageMatch(
+            clauses[0],
+            evidence,
+            claim.claim,
+            continuationExcerpt,
+            clauses.length,
+          );
           return match ? [match] : [];
         })
       : Array.from(
@@ -168,7 +201,12 @@ export function matchEvidenceToClaim(
             return groups;
           }, new Map<string, EvidenceRecord[]>()),
         ).flatMap(([, passages]) =>
-          compoundMatchesForDocument(claim.claim, clauses, passages),
+          compoundMatchesForDocument(
+            claim.claim,
+            clauses,
+            passages,
+            continuationExcerpt,
+          ),
         );
   return dropAmbiguousBibleProjectMatches(claim.claim, matches, listedSources);
 }
@@ -179,6 +217,10 @@ export function claimMatchDiagnostics(
   listedSources: AttributableSource[] = [],
 ): ClaimMatchDiagnostic[] {
   const clauses = verifiableClauses(claim.claim);
+  const continuationExcerpt = boundContinuationExcerpt(
+    claim.claim,
+    claim.articleExcerpt,
+  );
   const diagnostics: ClaimMatchDiagnostic[] = [];
   const clauseSupport = new Map<string, Set<number>>();
 
@@ -206,10 +248,13 @@ export function claimMatchDiagnostics(
 
     const documentKind = documentKindForUrl(evidence.sourceUrl);
     const supportedClauses = new Set<number>();
+    const singleContinuation = continuationExcerpt !== null && clauses.length === 1;
     clauses.forEach((clause, index) => {
-      const assessment = assessPassageSupport(clause, evidence.extractedText, {
-        documentKind,
-      });
+      const assessment = assessPassageSupport(
+        singleContinuation ? continuationExcerpt : clause,
+        evidence.extractedText,
+        { documentKind },
+      );
       if (
         assessment.supported &&
         !evidenceSatisfiesProductIdentity(
@@ -228,6 +273,28 @@ export function claimMatchDiagnostics(
           actionTokenMatches: assessment.actionTokenMatches,
           missingActionTokens: assessment.missingActionTokens,
           failureReason: "product-identity",
+        });
+        return;
+      }
+      if (
+        assessment.supported &&
+        continuationExcerpt &&
+        !passageSupportsContinuationSentence(
+          continuationExcerpt,
+          evidence.extractedText,
+          { documentKind },
+        )
+      ) {
+        diagnostics.push({
+          clause,
+          sourceUrl: evidence.sourceUrl,
+          sourceTitle: evidence.sourceTitle,
+          evidenceId: evidence.id,
+          overlap: assessment.overlapCount,
+          requiredOverlap: assessment.requiredOverlap,
+          actionTokenMatches: assessment.actionTokenMatches,
+          missingActionTokens: assessment.missingActionTokens,
+          failureReason: "continuation-unsupported",
         });
         return;
       }

@@ -1,6 +1,12 @@
 import type { EvidenceChunk } from "./evidence-chunker";
 import { evidenceChunker } from "./evidence-chunker";
-import { passageSupportsClaim, uniqueContentOverlap } from "./article-claim-extractor";
+import {
+  boundContinuationExcerpt,
+  passageSupportsClaim,
+  passageSupportsContinuationSentence,
+  uniqueContentOverlap,
+  verifiableClauses,
+} from "./article-claim-extractor";
 import {
   claimAllowsEvidence,
   type AttributableSource,
@@ -32,7 +38,14 @@ function pdfPassageOverlap(claim: string, passage: string): number {
 
 export function pdfPassageSupportsClaim(claim: string, passage: string): boolean {
   if (!passage || isPdfChromeOnly(passage)) return false;
-  return passageSupportsClaim(claim, passage, { documentKind: "pdf" });
+  const excerpt = boundContinuationExcerpt(claim);
+  const singleContinuation = excerpt !== null && verifiableClauses(claim).length === 1;
+  const overlapTarget = singleContinuation ? excerpt : claim;
+  if (!passageSupportsClaim(overlapTarget, passage, { documentKind: "pdf" })) return false;
+  if (!excerpt) return true;
+  return passageSupportsContinuationSentence(excerpt, passage, {
+    documentKind: "pdf",
+  });
 }
 
 export function collectPdfPassages(input: {
