@@ -1,24 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth";
 
 export async function POST(req: Request) {
   try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json(
-        {
-          ok: false,
-          code: "AUTHENTICATION_REQUIRED",
-          error: "Authentication required.",
-          articleUnchanged: true,
-        },
-        { status: 401 },
-      );
-    }
+    const auth = await requireEditorAuth();
+    if (!auth.ok) return auth.response;
 
     const { queueId, status, scheduledAt } = await req.json();
 

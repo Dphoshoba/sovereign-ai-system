@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { updateArticleUnderGovernanceLock } from "../../../../lib/publishing/article-lifecycle";
 import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth";
 
@@ -28,21 +27,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json(
-        {
-          ok: false,
-          code: "AUTHENTICATION_REQUIRED",
-          error: "Authentication required.",
-          articleUnchanged: true,
-        },
-        { status: 401 },
-      );
-    }
+    const auth = await requireEditorAuth();
+    if (!auth.ok) return auth.response;
 
     const { id } = await params;
     const body = await request.json();

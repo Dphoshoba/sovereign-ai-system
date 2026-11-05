@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getOpenAI } from "@/lib/ai/openai"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(req: Request) {
   try {
+    const auth = await requireEditorAuth()
+    if (!auth.ok) return auth.response
+
     const { articleId } = await req.json()
 
     if (!articleId) {

@@ -1,25 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 import { transitionArticleLifecycle } from "../../../../lib/publishing/article-lifecycle"
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) {
-      return NextResponse.json(
-        {
-          ok: false,
-          code: "AUTHENTICATION_REQUIRED",
-          error: "Authentication required.",
-          articleUnchanged: true,
-        },
-        { status: 401 },
-      )
-    }
+    const auth = await requireEditorAuth()
+    if (!auth.ok) return auth.response
 
     const { articleId } = await req.json()
 
@@ -34,7 +21,7 @@ export async function POST(req: NextRequest) {
       {
         articleId,
         transition: "archive",
-        actor: user.email || user.id,
+        actor: auth.actor,
       },
       { prisma },
     )

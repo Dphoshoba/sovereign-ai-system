@@ -60,6 +60,7 @@ const nextConfig: NextConfig = {
   ],
   outputFileTracingIncludes: {
     "/api/articles/prepare-for-review": ["./node_modules/unpdf/**"],
+    "/**": ["./certs/supabase-root-2021.crt"],
   },
   outputFileTracingExcludes,
   productionBrowserSourceMaps: false,

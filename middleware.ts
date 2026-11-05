@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createServerClient } from "@supabase/ssr"
+import { canPublishAsEditor } from "./lib/publishing/editor-access"
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -40,6 +41,10 @@ export async function middleware(request: NextRequest) {
   if (!user) {
     const loginUrl = new URL("/login", request.url)
     return NextResponse.redirect(loginUrl)
+  }
+
+  if (!canPublishAsEditor(user)) {
+    return NextResponse.redirect(new URL("/", request.url))
   }
 
   return response

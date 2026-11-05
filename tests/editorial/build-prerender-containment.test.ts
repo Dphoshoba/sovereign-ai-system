@@ -216,7 +216,7 @@ describe("build prerender containment", () => {
     "preserves editor seed writes for $name",
     async (entry) => {
       mockGetUser.mockResolvedValue({
-        data: { user: { id: "editor-1", email: "editor@example.com" } },
+        data: { user: { id: "editor-1", email: "editor@example.com", app_metadata: { role: "editor" } } },
         error: null,
       });
       const userland = await entry.load();

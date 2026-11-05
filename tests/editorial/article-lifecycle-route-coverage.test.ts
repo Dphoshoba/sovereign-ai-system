@@ -95,7 +95,7 @@ describe("governed article lifecycle routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetUser.mockResolvedValue({
-      data: { user: { id: "admin-1", email: "admin@example.com" } },
+      data: { user: { id: "admin-1", email: "admin@example.com", app_metadata: { role: "admin" } } },
       error: null,
     });
     transitionArticleLifecycle.mockResolvedValue(staleResult);
