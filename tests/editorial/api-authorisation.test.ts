@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AUTHENTICATION_REQUIRED_BODY } from "../../lib/publishing/require-editor-auth";
+import {
+  AUTHENTICATION_REQUIRED_BODY,
+  EDITOR_FORBIDDEN_BODY,
+} from "../../lib/publishing/require-editor-auth";
 
 const mockGetUser = vi.fn();
 const articleFindMany = vi.fn();
@@ -52,8 +55,26 @@ const published = {
   content: "Public body",
 };
 
-function session(user: { id: string; email: string } | null) {
-  mockGetUser.mockResolvedValue({ data: { user }, error: null });
+function session(
+  user: {
+    id: string;
+    email: string;
+    role?: string;
+    app_metadata?: { role?: string };
+  } | null,
+) {
+  mockGetUser.mockResolvedValue({
+    data: {
+      user: user
+        ? {
+            role: "authenticated",
+            ...user,
+            app_metadata: user.app_metadata ?? { role: "editor" },
+          }
+        : null,
+    },
+    error: null,
+  });
 }
 
 describe("private Prisma API authorisation", () => {
@@ -162,6 +183,27 @@ describe("private Prisma API authorisation", () => {
     expect(articleFindMany).toHaveBeenCalledWith({
       orderBy: { createdAt: "desc" },
     });
+  });
+
+  it("rejects a viewer subscriber export before reading emails", async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: {
+          id: "viewer-1",
+          email: "viewer@example.com",
+          role: "viewer",
+          app_metadata: { role: "viewer" },
+        },
+      },
+      error: null,
+    });
+    const { GET } = await import("../../app/api/subscribers/export/route");
+
+    const response = await GET();
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual(EDITOR_FORBIDDEN_BODY);
+    expect(subscriberFindMany).not.toHaveBeenCalled();
   });
 
   it("exports subscribers only for a verified session and ignores a client role", async () => {

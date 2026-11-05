@@ -72,8 +72,25 @@ const PRODUCTION_ORIGIN = "https://sovereign-ai-executive.vercel.app";
 const PREVIEW_ORIGIN = "https://preview.example";
 const TRUSTED_LOCAL_ORIGIN = "http://localhost:3000";
 
-function session(user: { id: string; email: string } | null) {
-  mockGetUser.mockResolvedValue({ data: { user }, error: null });
+function session(
+  user: {
+    id: string;
+    email: string;
+    app_metadata?: { role?: string };
+  } | null,
+) {
+  mockGetUser.mockResolvedValue({
+    data: {
+      user: user
+        ? {
+            role: "authenticated",
+            ...user,
+            app_metadata: user.app_metadata ?? { role: "editor" },
+          }
+        : null,
+    },
+    error: null,
+  });
 }
 
 function editorRequest(path: string, body?: unknown) {

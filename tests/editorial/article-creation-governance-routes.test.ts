@@ -44,7 +44,7 @@ describe("POST /api/articles creation governance", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetUser.mockResolvedValue({
-      data: { user: { id: "admin-1", email: "admin@example.com" } },
+      data: { user: { id: "admin-1", email: "admin@example.com", app_metadata: { role: "admin" } } },
       error: null,
     });
     articleCreate.mockImplementation(async ({ data }) => ({

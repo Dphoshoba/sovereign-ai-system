@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requirePublishingEditor } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST() {
+  const auth = await requirePublishingEditor()
+  if (!auth.ok) return auth.response
+
   try {
     const result = await prisma.subscriber.updateMany({
       where: {

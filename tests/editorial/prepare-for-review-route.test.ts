@@ -49,7 +49,7 @@ describe("POST /api/articles/prepare-for-review authorization", () => {
 
   it("allows an authenticated admin to prepare an article", async () => {
     mockGetUser.mockResolvedValue({
-      data: { user: { id: "user-1", email: "admin@example.com" } },
+      data: { user: { id: "user-1", email: "admin@example.com", app_metadata: { role: "admin" } } },
       error: null,
     })
     mockPrepare.mockResolvedValue({
@@ -80,7 +80,7 @@ describe("POST /api/articles/prepare-for-review authorization", () => {
 
   it("returns sanitized source diagnostics on failed preparation", async () => {
     mockGetUser.mockResolvedValue({
-      data: { user: { id: "user-1", email: "admin@example.com" } },
+      data: { user: { id: "user-1", email: "admin@example.com", app_metadata: { role: "admin" } } },
       error: null,
     })
     mockPrepare.mockResolvedValue({

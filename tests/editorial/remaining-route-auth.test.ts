@@ -203,7 +203,7 @@ describe("remaining automation route authentication", () => {
 
   it("writes a snapshot for an authorised editor", async () => {
     mockGetUser.mockResolvedValue({
-      data: { user: { id: "editor-1", email: "editor@example.com" } },
+      data: { user: { id: "editor-1", email: "editor@example.com", app_metadata: { role: "editor" } } },
       error: null,
     });
     articleFindMany.mockResolvedValue([]);
@@ -221,7 +221,7 @@ describe("remaining automation route authentication", () => {
   it("forwards only the editor session to the platform origin", async () => {
     process.env.VERCEL_URL = "deployment.example";
     mockGetUser.mockResolvedValue({
-      data: { user: { id: "editor-1", email: "editor@example.com" } },
+      data: { user: { id: "editor-1", email: "editor@example.com", app_metadata: { role: "editor" } } },
       error: null,
     });
     vi.mocked(fetch).mockImplementation(async () =>
@@ -257,7 +257,7 @@ describe("remaining automation route authentication", () => {
     process.env.NODE_ENV = "production";
     delete process.env.VERCEL_URL;
     mockGetUser.mockResolvedValue({
-      data: { user: { id: "editor-1", email: "editor@example.com" } },
+      data: { user: { id: "editor-1", email: "editor@example.com", app_metadata: { role: "editor" } } },
       error: null,
     });
     const { POST } = await import("../../app/api/discovery/scheduled-run/route");
