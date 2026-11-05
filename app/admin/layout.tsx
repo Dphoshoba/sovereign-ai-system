@@ -2,6 +2,7 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { canPublishAsEditor } from "../../lib/publishing/editor-access"
 import GlobalPulseBar from "@/components/admin/GlobalPulseBar"
 
 
@@ -28,6 +29,10 @@ export default async function AdminLayout({
 
   if (!user) {
     redirect("/login")
+  }
+
+  if (!canPublishAsEditor(user)) {
+    redirect("/")
   }
 
   return (

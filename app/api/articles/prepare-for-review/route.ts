@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 import {
   prepareArticleForReview,
   type PrepareForReviewStore,
@@ -20,17 +20,8 @@ const ERROR_STATUS: Record<string, number> = {
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json(
-        { ok: false, error: "Authentication required." },
-        { status: 401 }
-      )
-    }
+    const auth = await requireEditorAuth()
+    if (!auth.ok) return auth.response
 
     const { articleId } = await req.json()
 
@@ -43,7 +34,7 @@ export async function POST(req: NextRequest) {
 
     const result = await prepareArticleForReview(articleId, {
       prisma: prisma as unknown as PrepareForReviewStore,
-      reviewer: user.email || user.id,
+      reviewer: auth.actor,
     })
 
     if (!result.ok) {

@@ -17,7 +17,7 @@ vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: vi.fn(async () => ({
     auth: {
       getUser: vi.fn(async () => ({
-        data: { user: { id: "editor-1", email: "editor@example.com" } },
+        data: { user: { id: "editor-1", email: "editor@example.com", app_metadata: { role: "editor" } } },
         error: null,
       })),
     },

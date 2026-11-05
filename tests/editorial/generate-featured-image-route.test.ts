@@ -61,7 +61,7 @@ describe("POST /api/ai/generate-featured-image", () => {
 
   it("does not trust a client-provided generation prompt", async () => {
     mockGetUser.mockResolvedValue({
-      data: { user: { id: "user-1", email: "admin@example.com" } },
+      data: { user: { id: "user-1", email: "admin@example.com", app_metadata: { role: "admin" } } },
       error: null,
     })
     mockGenerate.mockResolvedValue({
@@ -95,7 +95,7 @@ describe("POST /api/ai/generate-featured-image", () => {
 
   it("persists a durable URL for an authenticated admin", async () => {
     mockGetUser.mockResolvedValue({
-      data: { user: { id: "user-1", email: "admin@example.com" } },
+      data: { user: { id: "user-1", email: "admin@example.com", app_metadata: { role: "admin" } } },
       error: null,
     })
     mockGenerate.mockResolvedValue({
@@ -132,7 +132,7 @@ describe("POST /api/ai/generate-featured-image", () => {
 
   it("does not expose the service-role credential when upload fails", async () => {
     mockGetUser.mockResolvedValue({
-      data: { user: { id: "user-1", email: "admin@example.com" } },
+      data: { user: { id: "user-1", email: "admin@example.com", app_metadata: { role: "admin" } } },
       error: null,
     })
     mockGenerate.mockResolvedValue({
@@ -192,7 +192,7 @@ describe("POST /api/articles/featured-image-prompt", () => {
 
   it("rejects unknown request keys", async () => {
     mockGetUser.mockResolvedValue({
-      data: { user: { id: "user-1", email: "admin@example.com" } },
+      data: { user: { id: "user-1", email: "admin@example.com", app_metadata: { role: "admin" } } },
       error: null,
     })
 
@@ -220,7 +220,7 @@ describe("POST /api/articles/featured-image-prompt", () => {
 
   it("approves a prompt as the authenticated administrator", async () => {
     mockGetUser.mockResolvedValue({
-      data: { user: { id: "user-1", email: "admin@example.com" } },
+      data: { user: { id: "user-1", email: "admin@example.com", app_metadata: { role: "admin" } } },
       error: null,
     })
     mockApprove.mockResolvedValue({

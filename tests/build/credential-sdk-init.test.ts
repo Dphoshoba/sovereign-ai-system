@@ -47,6 +47,7 @@ describe("credential SDK initialization", () => {
           id: "editor-1",
           email: "editor@example.com",
           role: "authenticated",
+          app_metadata: { role: "editor" },
         },
       },
     })

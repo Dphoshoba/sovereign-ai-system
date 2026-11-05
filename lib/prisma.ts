@@ -1,12 +1,13 @@
 import { PrismaClient } from "@prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
+import { databaseUrlForRuntime } from "../src/lib/preview-postgres"
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
 const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL!,
+  connectionString: databaseUrlForRuntime(process.env.DATABASE_URL)!,
 })
 
 export const prisma =
