@@ -72,114 +72,6 @@ function isUsefulClaim(claim: string): boolean {
   return !blockedPhrases.some((phrase) => normalized.includes(phrase))
 }
 
-function aiAutomationClaims(sentence: string): string[] {
-  const text = sentence.toLowerCase()
-  const claims = new Set<string>()
-
-  if (text.includes("repetitive") || text.includes("routine")) {
-    claims.add("AI automation can reduce repetitive creator tasks.")
-  }
-
-  if (text.includes("workflow") || text.includes("process") || text.includes("pipeline")) {
-    claims.add("AI automation can improve creator workflows.")
-  }
-
-  if (text.includes("draft") || text.includes("first draft")) {
-    claims.add("AI-assisted drafting can support content production.")
-  }
-
-  if (text.includes("editing") || text.includes("rewrite") || text.includes("clarity")) {
-    claims.add("AI tools can assist with content editing workflows.")
-  }
-
-  if (text.includes("format") || text.includes("reformat") || text.includes("repurpose")) {
-    claims.add("AI automation can reduce manual formatting and repurposing effort.")
-  }
-
-  if (
-    text.includes("content production") ||
-    text.includes("content creation") ||
-    text.includes("produce content") ||
-    text.includes("generate content") ||
-    text.includes("writing")
-  ) {
-    claims.add("AI can improve content production efficiency for creators.")
-  }
-
-  if (text.includes("outline") || text.includes("planning") || text.includes("structure")) {
-    claims.add("AI tools can support content planning and outlining.")
-  }
-
-  if (
-    text.includes("title") ||
-    text.includes("headline") ||
-    text.includes("caption") ||
-    text.includes("summary")
-  ) {
-    claims.add("AI tools can support creator packaging tasks such as titles, captions, and summaries.")
-  }
-
-  if (
-    text.includes("audience") ||
-    text.includes("engagement") ||
-    text.includes("followers") ||
-    text.includes("subscriber") ||
-    text.includes("community")
-  ) {
-    claims.add("AI-supported workflows can help creators plan audience engagement.")
-  }
-
-  if (
-    text.includes("revenue") ||
-    text.includes("monetization") ||
-    text.includes("monetisation") ||
-    text.includes("sales") ||
-    text.includes("income") ||
-    text.includes("pricing")
-  ) {
-    claims.add("AI can support creator monetization and revenue workflow planning.")
-  }
-
-  if (
-    text.includes("creative") ||
-    text.includes("ideation") ||
-    text.includes("brainstorm") ||
-    text.includes("idea")
-  ) {
-    claims.add("AI tools can support creator ideation and creative planning.")
-  }
-
-  if (
-    text.includes("analytics") ||
-    text.includes("performance") ||
-    text.includes("metrics") ||
-    text.includes("insight")
-  ) {
-    claims.add("AI-driven analytics can improve content performance insights.")
-  }
-
-  if (
-    text.includes("ethic") ||
-    text.includes("responsible") ||
-    text.includes("transparency") ||
-    text.includes("privacy") ||
-    text.includes("trust")
-  ) {
-    claims.add("Responsible and ethical AI use remains important for creators.")
-  }
-
-  if (
-    text.includes("human") ||
-    text.includes("review") ||
-    text.includes("oversight") ||
-    text.includes("accountability")
-  ) {
-    claims.add("Human review remains important before publishing AI-assisted content.")
-  }
-
-  return Array.from(claims).filter(isUsefulClaim)
-}
-
 function bibleClaims(sentence: string): string[] {
   const text = sentence.toLowerCase()
   const claims = new Set<string>()
@@ -270,46 +162,7 @@ function isUsefulSentence(sentence: string) {
     "sunflower",
   ]
 
-  if (junkPatterns.some((pattern) => text.includes(pattern))) {
-    return false
-  }
-
-  const usefulPatterns = [
-    /\bcreators?\b/,
-    /\bautomation\b/,
-    /\bartificial intelligence\b/,
-    /\bgenerative ai\b/,
-    /\bworkflow\b/,
-    /\btools?\b/,
-    /\baudience\b/,
-    /\bcontent\b/,
-    /\brevenue\b/,
-    /\bproductivity\b/,
-    /\bethic/,
-    /\btransparency\b/,
-    /\bhuman\b/,
-    /\bcreative\b/,
-    /\bideation\b/,
-    /\banalytics\b/,
-    /\bdraft\b/,
-    /\bediting\b/,
-    /\bformat\b/,
-    /\brepurpose\b/,
-    /\boutline\b/,
-    /\bresponsible\b/,
-    /\btrust\b/,
-    /\bdavid\b/,
-    /\bgoliath\b/,
-    /\bphilistines?\b/,
-    /\bisraelites?\b/,
-    /\blord\b/,
-    /\bgod\b/,
-    /\bfaith\b/,
-    /\bsling\b/,
-    /\bstone\b/,
-  ]
-
-  return usefulPatterns.some((pattern) => pattern.test(text))
+  return !junkPatterns.some((pattern) => text.includes(pattern))
 }
 
 function buildClaims(
@@ -326,18 +179,9 @@ function buildClaims(
 
     console.log("Bible evidence sentences:", sentences.slice(0, 10))
 
-    const isAiCategory =
-    category.includes("ai") || category.includes("automation")
-  
-  const isBibleCategory = category.includes("bible")
-  
+    const isBibleCategory = category.includes("bible")
+
   for (const sentence of sentences.slice(0, 20)) {
-    if (isAiCategory) {
-      for (const claim of aiAutomationClaims(sentence)) {
-        claims.add(claim)
-      }
-    }
-  
     if (isBibleCategory) {
       const bibleResult = bibleExtractor(sentence)
   

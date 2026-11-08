@@ -34,11 +34,9 @@ const THEMES: { theme: string; keywords: string[]; body: string }[] = [
     keywords: [
       "faith",
       "trust in god",
-      "trust",
       "courage",
       "fear",
       "bold",
-      "confidence",
       "lord",
       "god",
     ],
@@ -459,8 +457,20 @@ export function consensusEngine(facts: VerifiedFact[]): ConsensusResult {
       : (verifiedFacts * 100 + partiallyVerifiedFacts * 75) / totalFacts
 
   const corroborationStrength =
-    stronglyCorroborated * 100 +
-    moderatelyCorroborated * 75
+    consensusGroupCount === 0
+      ? 0
+      : Math.round(
+          (stronglyCorroborated * 100 + moderatelyCorroborated * 75) /
+            consensusGroupCount,
+        )
+
+  const averageVerificationScore =
+    totalFacts === 0
+      ? 0
+      : Math.round(
+          facts.reduce((sum, fact) => sum + fact.verificationScore, 0) /
+            totalFacts,
+        )
 
   const rawConsensusScore =
     totalFacts === 0
@@ -475,7 +485,9 @@ export function consensusEngine(facts: VerifiedFact[]): ConsensusResult {
 
   const publicationRecommendation =
     consensusScore >= PUBLISH_READY_CONSENSUS_SCORE &&
-    sourceQualityScore >= PUBLISH_READY_SOURCE_QUALITY_SCORE
+    sourceQualityScore >= PUBLISH_READY_SOURCE_QUALITY_SCORE &&
+    averageVerificationScore >= PUBLISH_READY_CONSENSUS_SCORE &&
+    unverifiedFacts === 0
       ? PUBLISH_READY_RECOMMENDATION
       : consensusScore >= 50 || totalFacts >= 2
         ? "review-required"

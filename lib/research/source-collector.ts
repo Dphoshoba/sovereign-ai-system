@@ -1,5 +1,4 @@
 import { searchAdapter } from "./search-adapter"
-import { fallbackSources } from "./fallback-source-provider"
 
 export type SourceRecord = {
   title: string
@@ -116,12 +115,9 @@ export async function sourceCollector(
 ): Promise<SourceCollectionResult> {
   const searchResults = await searchAdapter(topic)
 
-  const searchedSources =
-    searchResults.length > 0 ? searchResults : fallbackSources(topic, category)
-
   const collectedSources = normalizeSources([
     ...manualSources,
-    ...searchedSources,
+    ...searchResults,
   ]).slice(0, 8)
 
   const sourceCount = collectedSources.length
@@ -159,6 +155,6 @@ export async function sourceCollector(
     collectionStatus:
       sourceCount > 0
         ? "Sources collected successfully."
-        : "No sources collected. Search provider and fallback returned no results.",
+        : "Research blocked: no usable topic-relevant sources.",
   }
 }

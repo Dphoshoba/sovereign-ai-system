@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generateAndPersistFeaturedImage } from "../../lib/ai/persist-featured-image";
+import { evidenceRegistry } from "../../lib/research/evidence-registry";
 import { factVerificationEngine } from "../../lib/research/fact-verification-engine";
 import { sourceCollector } from "../../lib/research/source-collector";
 import { prisma } from "@/lib/prisma";
@@ -71,15 +72,38 @@ vi.mock("@/lib/ai/memory-context", () => ({
 }));
 vi.mock("../../lib/research/source-collector", () => ({
   sourceCollector: vi.fn(async () => ({
-    collectedSources: [],
-    sourceCount: 0,
-    averageAuthorityScore: 0,
-    averageTrustScore: 0,
-    researchConfidence: 0,
+    collectedSources: [
+      {
+        title: "Primary source",
+        url: "https://example.com/primary",
+        sourceType: "primary",
+        authorityScore: 90,
+        trustScore: 88,
+        relevanceScore: 80,
+      },
+    ],
+    sourceCount: 1,
+    averageAuthorityScore: 90,
+    averageTrustScore: 88,
+    researchConfidence: 80,
+    collectionStatus: "Sources collected successfully.",
   })),
 }));
 vi.mock("../../lib/research/evidence-registry", () => ({
-  evidenceRegistry: vi.fn(async () => ({ evidence: [], evidenceCount: 0 })),
+  evidenceRegistry: vi.fn(async () => ({
+    evidence: [
+      {
+        id: "evidence-1",
+        sourceTitle: "Primary source",
+        sourceUrl: "https://example.com/primary",
+        sourceType: "primary",
+        extractedText: "Evidence text that is long enough to retain for review.",
+        confidence: 80,
+        requiresHumanReview: true,
+      },
+    ],
+    evidenceCount: 1,
+  })),
 }));
 vi.mock("../../lib/research/fact-extractor", () => ({
   factExtractor: vi.fn(() => ({ facts: [], factCount: 0 })),
@@ -208,8 +232,16 @@ describe("POST /api/ai/generate-article initial lifecycle state", () => {
         publishedAt: null,
       }),
     });
-    expect(sourceCreateMany).not.toHaveBeenCalled();
+    expect(sourceCreateMany).toHaveBeenCalledTimes(1);
     expect(factCreateMany).not.toHaveBeenCalled();
+    expect(articleUpdate).not.toHaveBeenCalled();
+    expect(articleCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        editorialScore: 50,
+        qualityScore: 50,
+        seoScore: 50,
+      }),
+    });
     expect(sourceCreate).not.toHaveBeenCalled();
     expect(factCreate).not.toHaveBeenCalled();
     expect(prisma.$transaction).toHaveBeenCalledTimes(1);
@@ -373,10 +405,14 @@ describe("POST /api/ai/generate-article initial lifecycle state", () => {
       ],
     });
     expect(prisma.$transaction).toHaveBeenCalledTimes(1);
-    expect(auditCreate).toHaveBeenCalledTimes(1);
+    expect(auditCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({ factCount: 2 }),
+    });
     expect(reviewNoteCreate).toHaveBeenCalledTimes(1);
     const body = await response.json();
     expect(body.article.status).toBe("review-required");
+    expect(body.researchAudit.factCount).toBe(2);
+    expect(body.researchAudit.extractedFactCount).toBe(0);
     expect(body.article.approvedAt).toBeNull();
     expect(body.article.scheduledFor).toBeNull();
     expect(body.article.publishedAt).toBeNull();
@@ -424,5 +460,34 @@ describe("POST /api/ai/generate-article initial lifecycle state", () => {
     expect(factCreateMany).toHaveBeenCalledTimes(1);
     expect(generateAndPersistFeaturedImage).not.toHaveBeenCalled();
     expect(openAIResponsesCreate).toHaveBeenCalledTimes(1);
+  });
+
+  it("blocks generation before paid calls when research has no usable evidence", async () => {
+    vi.mocked(sourceCollector).mockResolvedValueOnce({
+      topic: "NIST AI RMF",
+      collectedSources: [],
+      sourceCount: 0,
+      averageAuthorityScore: 0,
+      averageTrustScore: 0,
+      researchConfidence: 0,
+      collectionStatus: "Research blocked: no usable topic-relevant sources.",
+    });
+    const { POST } = await import("../../app/api/ai/generate-article/route");
+
+    const response = await POST(
+      new Request("http://localhost/api/ai/generate-article", {
+        method: "POST",
+        body: JSON.stringify({
+          topic: "NIST AI RMF",
+          category: "ai-governance",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(422);
+    expect(openAIResponsesCreate).not.toHaveBeenCalled();
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(generateAndPersistFeaturedImage).not.toHaveBeenCalled();
+    expect(evidenceRegistry).not.toHaveBeenCalled();
   });
 });

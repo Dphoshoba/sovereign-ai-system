@@ -135,6 +135,7 @@ async function applySourceMutationArticleEffects(
   tx: SourceMutationTransaction,
   article: SourceMutationArticle,
   urlsChanged: boolean,
+  hadExistingSources: boolean,
 ): Promise<SourceMutationArticle> {
   const data: Record<string, unknown> = {};
   if (shouldInvalidateLifecycle(article.status)) {
@@ -146,7 +147,7 @@ async function applySourceMutationArticleEffects(
       publishedAt: null,
     });
   }
-  if (urlsChanged) {
+  if (urlsChanged && hadExistingSources) {
     Object.assign(data, INVALIDATED_ARTICLE_SCORES);
   }
   if (Object.keys(data).length === 0) return article;
@@ -233,6 +234,7 @@ export async function applyArticleSourceMutationInTransaction(
     tx,
     article,
     urlsChanged,
+    previousUrls.length > 0,
   );
 
   return {

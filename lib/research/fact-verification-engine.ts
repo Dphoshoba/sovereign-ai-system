@@ -135,32 +135,31 @@ export function factVerificationEngine(
   const verifiedFacts: VerifiedFact[] = []
 
   for (const groupFacts of grouped) {
-    const baseFact = groupFacts[0]
+    const distinctFacts: ExtractedFact[] = []
+    const seenEvidenceIds = new Set<string>()
+    const seenEvidenceText = new Set<string>()
 
-    const similarityMatches = groupFacts.slice(1).map((fact) => ({
+    for (const fact of groupFacts) {
+      const textKey = fact.evidenceText.trim().toLowerCase().replace(/\s+/g, " ")
+      if (seenEvidenceIds.has(fact.evidenceId) || seenEvidenceText.has(textKey)) {
+        continue
+      }
+      seenEvidenceIds.add(fact.evidenceId)
+      seenEvidenceText.add(textKey)
+      distinctFacts.push(fact)
+    }
+
+    const baseFact = distinctFacts[0]
+    const similarityMatches = distinctFacts.slice(1).map((fact) => ({
       claim: fact.claim,
       score: claimSimilarity(baseFact.claim, fact.claim),
     }))
-
-    const uniqueSources = new Map<
-      string,
-      {
-        sourceTitle: string
-        sourceUrl: string
-        evidenceId: string
-      }
-    >()
-
-    for (const fact of groupFacts) {
-      uniqueSources.set(fact.sourceUrl, {
-        sourceTitle: fact.sourceTitle,
-        sourceUrl: fact.sourceUrl,
-        evidenceId: fact.evidenceId,
-      })
-    }
-
-    const supportingSources = Array.from(uniqueSources.values())
-    const verificationCount = supportingSources.length
+    const supportingSources = distinctFacts.map((fact) => ({
+      sourceTitle: fact.sourceTitle,
+      sourceUrl: fact.sourceUrl,
+      evidenceId: fact.evidenceId,
+    }))
+    const verificationCount = distinctFacts.length
     const sourceAuthorityAverage =
       calculateSourceAuthorityAverage(supportingSources)
 
@@ -175,17 +174,16 @@ export function factVerificationEngine(
     )
 
     const verificationStatus =
-       verificationCount >= 3 ||
-       verificationScore >= 68 ||
-       (verificationCount >= 2 &&
-         sourceAuthorityAverage >= 75 &&
-         strongSemanticMatch)
-         ? "verified"
-         : verificationCount >= 2 ||
-             strongSemanticMatch ||
-             verificationScore >= 50
-           ? "partially verified"
-           : "unverified"
+      verificationCount >= 2 &&
+      (verificationCount >= 3 ||
+        verificationScore >= 68 ||
+        (sourceAuthorityAverage >= 75 && strongSemanticMatch))
+        ? "verified"
+        : verificationCount >= 2 ||
+            strongSemanticMatch ||
+            verificationScore >= 50
+          ? "partially verified"
+          : "unverified"
 
     const verificationMethod =
       similarityMatches.length > 0

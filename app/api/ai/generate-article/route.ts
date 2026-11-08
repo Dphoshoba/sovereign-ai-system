@@ -54,7 +54,7 @@ async function createUniqueSlug(baseSlug: string, category: string) {
   }
 }
 
-function finalTextCleanup(value: string): string {
+export function finalTextCleanup(value: string): string {
   const bad = String.fromCharCode(226);
 
   return value
@@ -66,11 +66,7 @@ function finalTextCleanup(value: string): string {
     .replace(new RegExp(`([A-Za-z])${bad}m\\b`, "g"), "$1'm")
     .replace(new RegExp(`([A-Za-z])${bad}d\\b`, "g"), "$1'd")
     .replace(new RegExp(`\\s*${bad}\\s*`, "g"), " - ")
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/([.!?])([A-Z])/g, "$1 $2")
-    .replace(/([a-z])(\*\*)/g, "$1 $2")
-    .replace(/(\*\*)([A-Za-z])/g, "$1 $2")
-    .replace(/([a-z])(-\s)/g, "$1 $2")
     .replace(/([a-z]{3,})(AI)/g, "$1 AI")
     .replace(/(AI)([a-z]{3,})/g, "$1 $2")
     .replace(/\bandresponsible\b/gi, "and responsible")
@@ -85,7 +81,7 @@ function finalTextCleanup(value: string): string {
     .replace(/\bUsea\b/g, "Use a")
     .replace(/\bhowto\b/gi, "how to")
     .replace(/\s+([,.!?;:])/g, "$1")
-    .replace(/[ \t]+/g, " ")
+    .replace(/[ \t]{2,}/g, " ")
     .replace(/\bWhatChanges\b/g, "What Changes")
     .replace(/\bThatis\b/gi, "That is")
     .replace(/\btwothings\b/gi, "two things")
@@ -99,15 +95,6 @@ function finalTextCleanup(value: string): string {
     .replace(/\sstreamlineworkflow\b/gi, "streamline workflow")
     .replace(/\bdoesnot\b/gi, "does not")
     .replace(/\bBe wise\.Do\b/g, "Be wise. Do")
-    .replace(/\*\*\s+/g, "**")
-    .replace(/\s+\*\*/g, "**")
-    .replace(/\*\s+/g, "*")
-    .replace(/\s+\*/g, "*")
-    .replace(/-\*\*/g, "- **")
-    .replace(/\*\*([A-Za-z])/g, "** $1")
-    .replace(/([a-z])\*\*/g, "$1 **")
-    .replace(/\*\*([a-z])/g, "** $1")
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
     .trim();
 }
 
@@ -136,10 +123,40 @@ export async function POST(request: Request) {
       manualSources,
       category,
     );
+    if (sourceCollection.sourceCount === 0) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: sourceCollection.collectionStatus,
+          articleUnchanged: true,
+          publicationDecision: {
+            approved: false,
+            status: "blocked",
+            reason: sourceCollection.collectionStatus,
+          },
+        },
+        { status: 422 },
+      );
+    }
     const evidence = await evidenceRegistry(
       topic,
       sourceCollection.collectedSources,
     );
+    if (evidence.evidenceCount === 0) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Research blocked: no usable evidence was retrieved.",
+          articleUnchanged: true,
+          publicationDecision: {
+            approved: false,
+            status: "blocked",
+            reason: "Research blocked: no usable evidence was retrieved.",
+          },
+        },
+        { status: 422 },
+      );
+    }
 
     const factExtraction = factExtractor(topic, evidence.evidence, category);
     const factVerification = factVerificationEngine(factExtraction.facts);
@@ -158,7 +175,8 @@ export async function POST(request: Request) {
             averageTrustScore: sourceCollection.averageTrustScore,
             researchConfidence: sourceCollection.researchConfidence,
             evidenceCount: evidence.evidenceCount,
-            factCount: factExtraction.factCount,
+            factCount: factVerification.verifiedFacts.length,
+            extractedFactCount: factExtraction.factCount,
             verifiedCount: factVerification.verifiedCount,
             averageVerificationScore: factVerification.averageVerificationScore,
             partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
@@ -399,7 +417,7 @@ export async function POST(request: Request) {
           averageTrustScore: sourceCollection.averageTrustScore,
           researchConfidence: sourceCollection.researchConfidence,
           evidenceCount: evidence.evidenceCount,
-          factCount: factExtraction.factCount,
+          factCount: factVerification.verifiedFacts.length,
           verifiedCount: factVerification.verifiedCount,
           partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
           unverifiedCount: factVerification.unverifiedCount,
@@ -507,7 +525,8 @@ export async function POST(request: Request) {
         averageTrustScore: sourceCollection.averageTrustScore,
         researchConfidence: sourceCollection.researchConfidence,
         evidenceCount: evidence.evidenceCount,
-        factCount: factExtraction.factCount,
+        factCount: factVerification.verifiedFacts.length,
+        extractedFactCount: factExtraction.factCount,
         verifiedCount: factVerification.verifiedCount,
         averageVerificationScore: factVerification.averageVerificationScore,
         partiallyVerifiedCount: factVerification.partiallyVerifiedCount,

@@ -111,6 +111,38 @@ describe("article source mutation service", () => {
     });
   });
 
+  it("keeps editorial and SEO scores when sources are first attached", async () => {
+    const article = {
+      id: "article-1",
+      status: "review-required",
+      approvedAt: null,
+      approvedBy: null,
+      scheduledFor: null,
+      publishedAt: null,
+      editorialScore: 82,
+      editorialGrade: "review",
+      seoScore: 74,
+      seoGrade: "review",
+      sources: [],
+    };
+    const { store, tx } = createStore(article);
+
+    const result = await mutateArticleSources(
+      {
+        articleId: article.id,
+        operation: "replace",
+        sources: [{ url: "https://www.nist.gov/itl/ai-risk-management-framework" }],
+      },
+      { prisma: store },
+    );
+
+    expect(result.ok).toBe(true);
+    expect(tx.researchSource.createMany).toHaveBeenCalledTimes(1);
+    expect(tx.article.update).not.toHaveBeenCalled();
+    expect(article.editorialScore).toBe(82);
+    expect(article.seoScore).toBe(74);
+  });
+
   it("invalidates scores when a canonical source URL changes", async () => {
     const article = {
       id: "article-1",
