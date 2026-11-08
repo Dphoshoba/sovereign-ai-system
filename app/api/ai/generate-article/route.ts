@@ -358,6 +358,8 @@ export async function POST(request: Request) {
       seoKeywords: parsed.seoKeywords || "",
     });
 
+    // The Preview pooler took about 210ms per statement and the audit
+    // insert about 1.3s, so the default 5s transaction expired at 5507ms.
     const article = await prisma.$transaction(async (tx) => {
       const createdArticle = await tx.article.create({
         data: {
@@ -432,16 +434,17 @@ export async function POST(request: Request) {
         throw new Error(sourceMutation.error);
       }
 
-      for (const fact of factVerification.verifiedFacts || []) {
-        await tx.researchFact.create({
-          data: {
+      const verifiedFacts = factVerification.verifiedFacts || [];
+      if (verifiedFacts.length > 0) {
+        await tx.researchFact.createMany({
+          data: verifiedFacts.map((fact) => ({
             articleId: createdArticle.id,
             claim: fact.claim || "",
             verificationStatus: fact.verificationStatus || "unverified",
             confidence: fact.confidence || null,
             supportingSources: fact.supportingSources || [],
             category,
-          },
+          })),
         });
       }
 
@@ -465,7 +468,7 @@ export async function POST(request: Request) {
       });
 
       return createdArticle;
-    });
+    }, { timeout: 10_000 });
 
     let updatedArticle = article;
 

@@ -40,6 +40,9 @@ type SourceMutationTransaction = {
   researchSource: {
     findMany: (args: { where: { articleId: string } }) => Promise<unknown[]>;
     create: (args: { data: Record<string, unknown> }) => Promise<unknown>;
+    createMany: (args: {
+      data: Record<string, unknown>[];
+    }) => Promise<unknown>;
     update: (args: {
       where: { id: string };
       data: Record<string, unknown>;
@@ -177,9 +180,11 @@ export async function applyArticleSourceMutationInTransaction(
 
   if (input.operation === "replace") {
     await tx.researchSource.deleteMany({ where: { articleId: article.id } });
-    for (const source of input.sources) {
-      await tx.researchSource.create({
-        data: sourceCreateData(article.id, source),
+    if (input.sources.length > 0) {
+      await tx.researchSource.createMany({
+        data: input.sources.map((source) =>
+          sourceCreateData(article.id, source),
+        ),
       });
     }
   } else if (input.operation === "create") {
