@@ -1,4 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
+import {
+  AUTHENTICATION_REQUIRED_BODY,
+  EDITOR_FORBIDDEN_BODY,
+} from "../../lib/publishing/require-editor-auth";
+
+const mockGetUser = vi.fn();
+
+vi.mock("@/lib/supabase/server", () => ({
+  createSupabaseServerClient: vi.fn(async () => ({
+    auth: { getUser: mockGetUser },
+  })),
+}));
 
 vi.mock("../../lib/research/source-collector", () => ({
   sourceCollector: vi.fn(async () => ({
@@ -22,12 +35,67 @@ vi.mock("../../lib/research/consensus-engine", () => ({
   consensusEngine: vi.fn(),
 }));
 
+function session(user: Record<string, unknown> | null) {
+  mockGetUser.mockResolvedValue({ data: { user }, error: null });
+}
+
+function editorialUser(role: "admin" | "editor") {
+  return {
+    id: `${role}-1`,
+    email: `${role}@example.com`,
+    role: "authenticated",
+    app_metadata: { role },
+  };
+}
+
+function request() {
+  return new NextRequest("http://localhost/api/research/publication-gate", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ topic: "Evidence completeness" }),
+  });
+}
+
 describe("POST /api/research/publication-gate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    session(null);
+  });
+
+  it("rejects an anonymous request before the publication gate runs", async () => {
+    const { consensusEngine } = await import("../../lib/research/consensus-engine");
+    const { factVerificationEngine } = await import(
+      "../../lib/research/fact-verification-engine"
+    );
+    const { POST } = await import("../../app/api/research/publication-gate/route");
+
+    const response = await POST(request());
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual(AUTHENTICATION_REQUIRED_BODY);
+    expect(consensusEngine).not.toHaveBeenCalled();
+    expect(factVerificationEngine).not.toHaveBeenCalled();
+  });
+
+  it("rejects an authenticated non-editor before the publication gate runs", async () => {
+    session({
+      id: "viewer-1",
+      email: "viewer@example.com",
+      role: "authenticated",
+      app_metadata: { role: "viewer" },
+    });
+    const { consensusEngine } = await import("../../lib/research/consensus-engine");
+    const { POST } = await import("../../app/api/research/publication-gate/route");
+
+    const response = await POST(request());
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual(EDITOR_FORBIDDEN_BODY);
+    expect(consensusEngine).not.toHaveBeenCalled();
   });
 
   it("passes the completeness recommendation to the publication gate", async () => {
+    session(editorialUser("editor"));
     const { consensusEngine } = await import("../../lib/research/consensus-engine");
     const { factVerificationEngine } = await import(
       "../../lib/research/fact-verification-engine"
@@ -71,12 +139,7 @@ describe("POST /api/research/publication-gate", () => {
     });
 
     const { POST } = await import("../../app/api/research/publication-gate/route");
-    const response = await POST(
-      new Request("http://localhost/api/research/publication-gate", {
-        method: "POST",
-        body: JSON.stringify({ topic: "Evidence completeness" }),
-      }),
-    );
+    const response = await POST(request());
     const body = await response.json();
 
     expect(response.status).toBe(200);
