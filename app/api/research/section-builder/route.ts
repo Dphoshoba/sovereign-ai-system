@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 import {
   sourceCollector,
   type SourceRecord,
@@ -11,6 +12,9 @@ import { factClusterer } from "../../../../lib/research/fact-clusterer"
 import { sectionBuilder } from "../../../../lib/research/section-builder"
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const body = await req.json()
 
   const topic =

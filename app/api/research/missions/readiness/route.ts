@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 
+import { requireEditorAuth } from "../../../../../lib/publishing/require-editor-auth"
 import {
   evaluateMissionReadiness,
   runAutonomousResearchMissionEngine,
@@ -7,6 +8,9 @@ import {
 } from "../../../../../lib/research/mission-engine"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const result = runAutonomousResearchMissionEngine({
     recentCategories: ["ai-tools"],
     duplicateTopics: ["AI automation for creator workflows"],
