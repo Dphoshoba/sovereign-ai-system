@@ -30,6 +30,28 @@ function confidenceLabel(confidence: number) {
   return "low"
 }
 
+export function removeAccidentalHeading(claim: string): string {
+  const cleaned = claim.replace(/\s+/g, " ").trim()
+  const listed = cleaned.match(
+    /^(?:(?:govern|map|measure|manage)\b[\s,|/:-]*){2,}(?:and\s+)?(.+)$/i,
+  )
+  if (listed?.[1] && listed[1].length >= 40) return listed[1].trim()
+
+  const single = cleaned.match(/^(?:govern|map|measure|manage)\s+(\S.*)$/i)
+  if (
+    single?.[1] &&
+    /^[A-Z]/.test(single[1]) &&
+    single[1].length >= 40 &&
+    /\b(is|are|was|were|helps|supports|requires|describes|provides|can)\b/.test(
+      single[1],
+    )
+  ) {
+    return single[1].trim()
+  }
+
+  return cleaned
+}
+
 function cleanSentence(sentence: string) {
   return sentence
     .replace(/\s+/g, " ")
@@ -203,7 +225,7 @@ function buildClaims(
     }
   
     for (const claim of genericSemanticClaims(sentence)) {
-      claims.add(claim)
+      claims.add(removeAccidentalHeading(claim))
     }
   }
   

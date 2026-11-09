@@ -1,3 +1,4 @@
+import { independentDocumentKey } from "./claim-source-attribution"
 import type { VerifiedFact } from "./fact-verification-engine"
 
 export type ConsensusGroup = {
@@ -242,8 +243,25 @@ const THEMES: { theme: string; keywords: string[]; body: string }[] = [
 ]
 
 const GENERAL_THEME = "General Findings"
+const NEUTRAL_CONSENSUS_STATEMENT =
+  "The available evidence does not support a conclusion beyond the supplied source text."
+
+function isNistGovernanceClaim(claim: string): boolean {
+  const text = claim.toLowerCase()
+  const mentionsFramework =
+    /\bnist\b/.test(text) ||
+    /\brmf\b/.test(text) ||
+    text.includes("risk management framework") ||
+    text.includes("ai risk")
+  const functionCount = ["govern", "map", "measure", "manage"].filter((name) =>
+    new RegExp(`\\b${name}\\b`).test(text),
+  ).length
+  return mentionsFramework && functionCount > 0
+}
 
 function classifyTheme(claim: string): string {
+  if (isNistGovernanceClaim(claim)) return "AI Risk Governance"
+
   const text = claim.toLowerCase()
   let bestTheme = GENERAL_THEME
   let bestScore = 0
@@ -264,14 +282,6 @@ function classifyTheme(claim: string): string {
   }
 
   return bestTheme
-}
-
-function themeBody(theme: string): string {
-  const match = THEMES.find((entry) => entry.theme === theme)
-
-  return match
-    ? match.body
-    : "the available evidence supports relevant findings on this topic"
 }
 
 function authorityScoreForUrl(url: string): number {
@@ -343,36 +353,51 @@ function authorityScoreForUrl(url: string): number {
 
   return 50
 }
-function countUniqueSources(facts: VerifiedFact[]): number {
+function sourceKeys(facts: VerifiedFact[]): Set<string> {
   const urls = new Set<string>()
 
   for (const fact of facts) {
     if (fact.supportingSources.length > 0) {
       for (const source of fact.supportingSources) {
-        if (source.sourceUrl) urls.add(source.sourceUrl)
+        if (source.sourceUrl) urls.add(independentDocumentKey(source.sourceUrl))
       }
     } else if (fact.sourceUrl) {
-      urls.add(fact.sourceUrl)
+      urls.add(independentDocumentKey(fact.sourceUrl))
     }
   }
 
-  return urls.size
+  return urls
+}
+
+function countUniqueSources(facts: VerifiedFact[]): number {
+  return sourceKeys(facts).size
+}
+
+function evidenceGroundedStatement(facts: VerifiedFact[]): string {
+  for (const fact of facts) {
+    const claim = fact.claim.trim()
+    if (claim.length < 40) continue
+    const evidence = fact.evidenceText.toLowerCase()
+    const excerpt = claim.toLowerCase().slice(0, Math.min(80, claim.length))
+    if (evidence.includes(excerpt)) {
+      return /[.!?]$/.test(claim) ? claim : `${claim}.`
+    }
+  }
+
+  return NEUTRAL_CONSENSUS_STATEMENT
+}
+
+function consensusStatement(sourceCount: number, facts: VerifiedFact[]): string {
+  const grounded = evidenceGroundedStatement(facts)
+  if (grounded === NEUTRAL_CONSENSUS_STATEMENT) return grounded
+  if (sourceCount >= 2) {
+    return `Independent sources support this statement: ${grounded}`
+  }
+  return `One source supports this statement: ${grounded}`
 }
 
 function calculateSourceQualityScore(facts: VerifiedFact[]): number {
-  const urls = new Set<string>()
-
-  for (const fact of facts) {
-    if (fact.supportingSources.length > 0) {
-      for (const source of fact.supportingSources) {
-        if (source.sourceUrl) urls.add(source.sourceUrl)
-      }
-    } else if (fact.sourceUrl) {
-      urls.add(fact.sourceUrl)
-    }
-  }
-
-  const scores = Array.from(urls).map(authorityScoreForUrl)
+  const scores = Array.from(sourceKeys(facts)).map(authorityScoreForUrl)
 
   if (scores.length === 0) return 0
 
@@ -398,19 +423,12 @@ function buildConsensusGroups(facts: VerifiedFact[]): ConsensusGroup[] {
     const sourceCount = countUniqueSources(themeFacts)
     const sourceQualityScore = calculateSourceQualityScore(themeFacts)
 
-    const prefix =
-      sourceCount >= 3
-        ? "Strong multi-source evidence indicates that"
-        : sourceCount === 2
-          ? "Multiple sources indicate that"
-          : "A source indicates that"
-
     return {
       theme,
       facts: themeFacts,
       sourceCount,
       sourceQualityScore,
-      consensusStatement: `${prefix} ${themeBody(theme)}.`,
+      consensusStatement: consensusStatement(sourceCount, themeFacts),
     }
   })
 }
@@ -483,11 +501,18 @@ export function consensusEngine(facts: VerifiedFact[]): ConsensusResult {
 
   const consensusScore = Math.max(0, Math.min(rawConsensusScore, 100))
 
+  const singleSourceFacts = facts.filter(
+    (fact) =>
+      fact.verificationCount < 2 ||
+      fact.verificationMethod === "single-source-supported",
+  ).length
+
   const publicationRecommendation =
     consensusScore >= PUBLISH_READY_CONSENSUS_SCORE &&
     sourceQualityScore >= PUBLISH_READY_SOURCE_QUALITY_SCORE &&
     averageVerificationScore >= PUBLISH_READY_CONSENSUS_SCORE &&
-    unverifiedFacts === 0
+    unverifiedFacts === 0 &&
+    singleSourceFacts === 0
       ? PUBLISH_READY_RECOMMENDATION
       : consensusScore >= 50 || totalFacts >= 2
         ? "review-required"

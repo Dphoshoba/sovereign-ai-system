@@ -1,4 +1,5 @@
 import type { ExtractedFact } from "./fact-extractor"
+import { independentDocumentKey } from "./claim-source-attribution"
 import {
   claimSimilarity,
   claimsAreSimilar,
@@ -28,6 +29,8 @@ export type VerifiedFact = ExtractedFact & {
 
 export type FactVerificationEngineResult = {
   verifiedFacts: VerifiedFact[]
+  extractedCount: number
+  deduplicatedCount: number
   verifiedCount: number
   partiallyVerifiedCount: number
   unverifiedCount: number
@@ -154,12 +157,17 @@ export function factVerificationEngine(
       claim: fact.claim,
       score: claimSimilarity(baseFact.claim, fact.claim),
     }))
-    const supportingSources = distinctFacts.map((fact) => ({
+    const documents = new Map<string, ExtractedFact>()
+    for (const fact of distinctFacts) {
+      const documentKey = independentDocumentKey(fact.sourceUrl)
+      if (!documents.has(documentKey)) documents.set(documentKey, fact)
+    }
+    const supportingSources = Array.from(documents.values()).map((fact) => ({
       sourceTitle: fact.sourceTitle,
       sourceUrl: fact.sourceUrl,
       evidenceId: fact.evidenceId,
     }))
-    const verificationCount = distinctFacts.length
+    const verificationCount = documents.size
     const sourceAuthorityAverage =
       calculateSourceAuthorityAverage(supportingSources)
 
@@ -180,13 +188,13 @@ export function factVerificationEngine(
         (sourceAuthorityAverage >= 75 && strongSemanticMatch))
         ? "verified"
         : verificationCount >= 2 ||
-            strongSemanticMatch ||
-            verificationScore >= 50
+            (verificationCount > 1 && strongSemanticMatch) ||
+            (verificationCount > 1 && verificationScore >= 50)
           ? "partially verified"
           : "unverified"
 
     const verificationMethod =
-      similarityMatches.length > 0
+      verificationCount > 1 && similarityMatches.length > 0
         ? "semantic"
         : verificationCount > 1
           ? "exact"
@@ -227,11 +235,13 @@ export function factVerificationEngine(
 
   return {
     verifiedFacts,
+    extractedCount: facts.length,
+    deduplicatedCount: verifiedFacts.length,
     verifiedCount,
     partiallyVerifiedCount,
     unverifiedCount,
     averageVerificationScore,
     publicationBlocked:
-      verifiedCount === 0 && partiallyVerifiedCount === 0,
+      verifiedFacts.length === 0 || unverifiedCount > 0,
   }
 }

@@ -109,6 +109,27 @@ export function canonicalSourceUrl(url: string): string {
   }
 }
 
+const TRACKING_QUERY_KEYS = new Set(["fbclid", "gclid", "mc_cid", "mc_eid"]);
+
+export function independentDocumentKey(url: string): string {
+  const canonical = canonicalSourceUrl(url);
+  try {
+    const parsed = new URL(canonical);
+    parsed.hostname = parsed.hostname.replace(/^www\./, "");
+    for (const key of [...parsed.searchParams.keys()]) {
+      if (
+        key.toLowerCase().startsWith("utm_") ||
+        TRACKING_QUERY_KEYS.has(key.toLowerCase())
+      ) {
+        parsed.searchParams.delete(key);
+      }
+    }
+    return parsed.toString();
+  } catch {
+    return canonical;
+  }
+}
+
 export function sameDocumentIdentity(
   left: string,
   right: string,
