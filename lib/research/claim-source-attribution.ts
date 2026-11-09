@@ -476,3 +476,23 @@ export function evidenceCorroborationKey(
 export function isMultiSourceSynthesisClaim(claim: string): boolean {
   return isExplicitMultiSourceClaim(claim);
 }
+
+export function qualifyingPublicationSourceIdentity(
+  claim: string,
+  sourceUrl: string,
+): string | null {
+  if (typeof sourceUrl !== "string" || sourceUrl.trim().length === 0) return null;
+  let parsed: URL;
+  try {
+    parsed = new URL(canonicalizeSourceUrl(sourceUrl));
+  } catch {
+    return null;
+  }
+  if (!parsed.hostname) return null;
+  if (isExplicitMultiSourceClaim(claim)) {
+    const documentKey = independentDocumentKey(sourceUrl);
+    return documentKey.includes("://") ? documentKey : null;
+  }
+  const hostname = parsed.hostname.toLowerCase().replace(/^www\./, "");
+  return hostname.length > 0 ? hostname : null;
+}

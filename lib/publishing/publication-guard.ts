@@ -3,6 +3,7 @@ import {
   PUBLISH_READY_RECOMMENDATION,
   PUBLISH_READY_SOURCE_QUALITY_SCORE,
 } from "../research/consensus-engine"
+import { qualifyingPublicationSourceIdentity } from "../research/claim-source-attribution"
 
 export type ArticlePublishStatus =
   | "draft"
@@ -28,6 +29,22 @@ export type ResearchPublishabilityAudit = {
 
 function isFiniteScore(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value)
+}
+
+function distinctSourceIdentityProblem(
+  claim: string,
+  sources: unknown[],
+): "missing" | "insufficient" | null {
+  const identities = new Set<string>()
+  for (const source of sources) {
+    if (!source || typeof source !== "object") return "missing"
+    const url = (source as Record<string, unknown>).sourceUrl
+    if (typeof url !== "string" || url.trim().length === 0) return "missing"
+    const identity = qualifyingPublicationSourceIdentity(claim, url)
+    if (!identity) return "missing"
+    identities.add(identity)
+  }
+  return identities.size >= 2 ? null : "insufficient"
 }
 
 function storedVerificationProblem(
@@ -59,16 +76,15 @@ function storedVerificationProblem(
       (method !== "exact" && method !== "semantic") ||
       typeof count !== "number" ||
       count < 2 ||
-      !Array.isArray(sources) ||
-      sources.length < 2 ||
-      sources.some((source) => {
-        if (!source || typeof source !== "object") return true
-        const url = (source as Record<string, unknown>).sourceUrl
-        return typeof url !== "string" || url.length === 0
-      })
+      !Array.isArray(sources)
     ) {
       return "missing"
     }
+    const identityProblem = distinctSourceIdentityProblem(
+      typeof record.claim === "string" ? record.claim : "",
+      sources,
+    )
+    if (identityProblem) return identityProblem
   }
 
   return audit.unverifiedCount === 0 ? null : "insufficient"
