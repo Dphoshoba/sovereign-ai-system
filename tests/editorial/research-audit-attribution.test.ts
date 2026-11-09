@@ -255,7 +255,9 @@ describe("article-grounded-v4 attribution, PDF evidence, and classification", ()
       [nistEvidence(), deloitteEvidence()],
       NIST_CLAIM,
     );
-    expect(nist.facts[0]?.verificationStatus).toBe("verified");
+    expect(nist.facts[0]?.verificationStatus).toBe("partially verified");
+    expect(nist.facts[0]?.verificationCount).toBe(1);
+    expect(nist.facts[0]?.requiresHumanReview).toBe(true);
     expect(nist.facts[0]?.sourceUrl).toBe(NIST_URL);
 
     const deloitte = groundedFactVerification(

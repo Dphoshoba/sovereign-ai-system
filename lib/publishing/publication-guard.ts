@@ -22,10 +22,26 @@ export type ResearchPublishabilityAudit = {
   consensusScore?: unknown
   sourceQualityScore?: unknown
   publicationRecommendation?: unknown
+  unverifiedCount?: unknown
+  facts?: unknown
 }
 
 function isFiniteScore(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value)
+}
+
+function storedVerificationFails(audit: ResearchPublishabilityAudit): boolean {
+  if (typeof audit.unverifiedCount === "number" && audit.unverifiedCount > 0) {
+    return true
+  }
+  if (!Array.isArray(audit.facts)) return false
+  return audit.facts.some((fact) => {
+    if (!fact || typeof fact !== "object") return false
+    const record = fact as Record<string, unknown>
+    if (record.verificationStatus === "unverified") return true
+    if (record.verificationMethod === "single-source-supported") return true
+    return typeof record.verificationCount === "number" && record.verificationCount < 2
+  })
 }
 
 export function researchPublicationBlockReason(
@@ -33,6 +49,10 @@ export function researchPublicationBlockReason(
 ): string | null {
   if (!audit) {
     return "A current publish-ready research audit is required before scheduling or publication."
+  }
+
+  if (storedVerificationFails(audit)) {
+    return "Unverified or single-source claims remain. Human review is required before publication."
   }
 
   const consensusReady =
