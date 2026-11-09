@@ -1,9 +1,13 @@
+import { cookies } from "next/headers"
+
 async function getClients() {
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+  const cookieStore = await cookies()
 
   const response = await fetch(`${baseUrl}/api/clients`, {
     cache: "no-store",
+    headers: { cookie: cookieStore.toString() },
   })
 
   if (!response.ok) {

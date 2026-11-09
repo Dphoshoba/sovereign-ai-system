@@ -30,11 +30,7 @@ export default function NewsletterForm() {
       }
 
       setEmail("")
-      setMessage(
-        result.alreadySubscribed
-          ? "You're already subscribed."
-          : "You are now subscribed to the Sovereign Intelligence Newsletter."
-      )
+      setMessage("You are subscribed to the Sovereign Intelligence Newsletter.")
     } catch {
       setMessage("Signup failed. Please try again.")
     } finally {

@@ -27,7 +27,6 @@ export function NewsletterSignup() {
     })
 
     const result = await response.json()
-    console.log("Newsletter subscribe response:", result)
 
     if (!response.ok) {
       setMessage(result.error || `Something went wrong. Status: ${response.status}`)
@@ -36,11 +35,7 @@ export function NewsletterSignup() {
     }
 
     setEmail("")
-    setMessage(
-      result.alreadySubscribed
-        ? "You're already subscribed."
-        : "You're subscribed. Welcome to Echoes & Visions."
-    )
+    setMessage("You're subscribed. Welcome to Echoes & Visions.")
 
     setLoading(false)
   }
