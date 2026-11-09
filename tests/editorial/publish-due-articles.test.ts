@@ -29,6 +29,8 @@ type DueFixture = {
     consensusScore?: number | null
     sourceQualityScore?: number | null
     publicationRecommendation?: string | null
+    unverifiedCount?: number
+    facts?: unknown
   }>
   reviewNotes: Array<{ action: string; note: string | null }>
 }
@@ -66,6 +68,18 @@ function dueArticle(overrides: Partial<DueFixture> = {}): DueFixture {
         consensusScore: 80,
         sourceQualityScore: 70,
         publicationRecommendation: "publish-ready",
+        unverifiedCount: 0,
+        facts: [
+          {
+            verificationStatus: "verified",
+            verificationMethod: "exact",
+            verificationCount: 2,
+            supportingSources: [
+              { sourceUrl: "https://www.nist.gov/itl/ai-risk-management-framework" },
+              { sourceUrl: "https://airc.nist.gov/airmf-resources/airmf/" },
+            ],
+          },
+        ],
       },
     ]
     article.reviewNotes = [
