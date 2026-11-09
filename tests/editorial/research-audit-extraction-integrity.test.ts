@@ -418,7 +418,7 @@ describe("research-audit extraction integrity", () => {
     const infrastructure = verification.facts.find((fact) =>
       fact.claim.includes("business infrastructure"),
     );
-    expect(risk?.verificationStatus).toBe("verified");
+    expect(risk?.verificationStatus).toBe("partially verified");
     expect(risk?.evidenceText).toContain("enterprise risk processes");
     expect(infrastructure?.verificationStatus).not.toBe("unverified");
     expect(infrastructure?.sourceUrl).toBe(PWC_URL);
@@ -483,7 +483,8 @@ describe("research-audit extraction integrity", () => {
     expect(result.audit.engineRevision).toBe(
       CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
     );
-    expect(result.audit.verifiedCount).toBeGreaterThan(0);
+    expect(result.audit.verifiedCount).toBe(0);
+    expect(result.audit.partiallyVerifiedCount).toBeGreaterThan(0);
     const stored = createdAudits[0] as { data: { facts: Array<{ claim: string; articleExcerpt?: string }>; evidence: Array<{ extractedText: string }> } };
     for (const fact of stored.data.facts) {
       expect(ARTICLE_2_TITLE + " " + ARTICLE_2_EXCERPT + " " + ARTICLE_2_BODY).toContain(

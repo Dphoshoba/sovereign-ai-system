@@ -137,10 +137,40 @@ export async function POST(request: Request) {
       manualSources,
       category,
     );
+    if (sourceCollection.sourceCount === 0) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: sourceCollection.collectionStatus,
+          articleUnchanged: true,
+          publicationDecision: {
+            approved: false,
+            status: "blocked",
+            reason: sourceCollection.collectionStatus,
+          },
+        },
+        { status: 422 },
+      );
+    }
     const evidence = await evidenceRegistry(
       topic,
       sourceCollection.collectedSources,
     );
+    if (evidence.evidenceCount === 0) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Research blocked: no usable evidence was retrieved.",
+          articleUnchanged: true,
+          publicationDecision: {
+            approved: false,
+            status: "blocked",
+            reason: "Research blocked: no usable evidence was retrieved.",
+          },
+        },
+        { status: 422 },
+      );
+    }
 
     const factExtraction = factExtractor(topic, evidence.evidence, category);
     const factVerification = factVerificationEngine(factExtraction.facts);
@@ -167,7 +197,8 @@ export async function POST(request: Request) {
             averageTrustScore: sourceCollection.averageTrustScore,
             researchConfidence: sourceCollection.researchConfidence,
             evidenceCount: evidence.evidenceCount,
-            factCount: factExtraction.factCount,
+            factCount: factVerification.verifiedFacts.length,
+            extractedFactCount: factExtraction.factCount,
             verifiedCount: factVerification.verifiedCount,
             averageVerificationScore: factVerification.averageVerificationScore,
             partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
@@ -406,7 +437,7 @@ export async function POST(request: Request) {
           averageTrustScore: sourceCollection.averageTrustScore,
           researchConfidence: sourceCollection.researchConfidence,
           evidenceCount: evidence.evidenceCount,
-          factCount: factExtraction.factCount,
+          factCount: factVerification.verifiedFacts.length,
           verifiedCount: factVerification.verifiedCount,
           partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
           unverifiedCount: factVerification.unverifiedCount,
@@ -441,16 +472,17 @@ export async function POST(request: Request) {
         throw new Error(sourceMutation.error);
       }
 
-      for (const fact of factVerification.verifiedFacts || []) {
-        await tx.researchFact.create({
-          data: {
+      const verifiedFacts = factVerification.verifiedFacts || [];
+      if (verifiedFacts.length > 0) {
+        await tx.researchFact.createMany({
+          data: verifiedFacts.map((fact) => ({
             articleId: createdArticle.id,
             claim: fact.claim || "",
             verificationStatus: fact.verificationStatus || "unverified",
             confidence: fact.confidence || null,
             supportingSources: fact.supportingSources || [],
             category,
-          },
+          })),
         });
       }
 
@@ -474,7 +506,7 @@ export async function POST(request: Request) {
       });
 
       return createdArticle;
-    });
+    }, { timeout: 10_000 });
 
     let updatedArticle = article;
 
@@ -513,7 +545,8 @@ export async function POST(request: Request) {
         averageTrustScore: sourceCollection.averageTrustScore,
         researchConfidence: sourceCollection.researchConfidence,
         evidenceCount: evidence.evidenceCount,
-        factCount: factExtraction.factCount,
+        factCount: factVerification.verifiedFacts.length,
+        extractedFactCount: factExtraction.factCount,
         verifiedCount: factVerification.verifiedCount,
         averageVerificationScore: factVerification.averageVerificationScore,
         partiallyVerifiedCount: factVerification.partiallyVerifiedCount,

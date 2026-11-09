@@ -108,7 +108,10 @@ describe("evidence completeness recommendation", () => {
 
     expect(consensus.consensusScore).toBeGreaterThanOrEqual(80);
     expect(consensus.sourceQualityScore).toBeGreaterThanOrEqual(70);
-    expect(consensus.publicationRecommendation).toBe("publish-ready");
+    expect(consensus.publicationRecommendation).toBe("review-required");
+    expect(
+      recommendationWithEvidenceCompleteness("publish-ready", facts),
+    ).toBe("review-required");
     expect(recommendation).toBe("review-required");
     expect(consensus.consensusScore).toBe(consensusEngine(facts).consensusScore);
     expect(consensus.sourceQualityScore).toBe(
@@ -331,6 +334,18 @@ describe("publication lifecycle with the completeness recommendation", () => {
         consensusScore: 92,
         sourceQualityScore: 100,
         publicationRecommendation: "review-required",
+        unverifiedCount: 0,
+        facts: [
+          {
+            verificationStatus: "verified",
+            verificationMethod: "exact",
+            verificationCount: 2,
+            supportingSources: [
+              { sourceUrl: "https://www.nist.gov/itl/ai-risk-management-framework" },
+              { sourceUrl: "https://airc.nist.gov/airmf-resources/airmf/" },
+            ],
+          },
+        ],
       },
     ],
     reviewNotes: [] as Array<{ action: string; note: string | null }>,

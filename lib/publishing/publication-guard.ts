@@ -3,6 +3,7 @@ import {
   PUBLISH_READY_RECOMMENDATION,
   PUBLISH_READY_SOURCE_QUALITY_SCORE,
 } from "../research/consensus-engine"
+import { qualifyingPublicationSourceIdentity } from "../research/claim-source-attribution"
 
 export type ArticlePublishStatus =
   | "draft"
@@ -22,10 +23,71 @@ export type ResearchPublishabilityAudit = {
   consensusScore?: unknown
   sourceQualityScore?: unknown
   publicationRecommendation?: unknown
+  unverifiedCount?: unknown
+  facts?: unknown
 }
 
 function isFiniteScore(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value)
+}
+
+function distinctSourceIdentityProblem(
+  claim: string,
+  sources: unknown[],
+): "missing" | "insufficient" | null {
+  const identities = new Set<string>()
+  for (const source of sources) {
+    if (!source || typeof source !== "object") return "missing"
+    const url = (source as Record<string, unknown>).sourceUrl
+    if (typeof url !== "string" || url.trim().length === 0) return "missing"
+    const identity = qualifyingPublicationSourceIdentity(claim, url)
+    if (!identity) return "missing"
+    identities.add(identity)
+  }
+  return identities.size >= 2 ? null : "insufficient"
+}
+
+function storedVerificationProblem(
+  audit: ResearchPublishabilityAudit,
+): "missing" | "insufficient" | null {
+  if (typeof audit.unverifiedCount !== "number" || !Array.isArray(audit.facts)) {
+    return "missing"
+  }
+  if (audit.unverifiedCount > 0 || audit.facts.length === 0) {
+    return audit.facts.length === 0 ? "missing" : "insufficient"
+  }
+
+  for (const fact of audit.facts) {
+    if (!fact || typeof fact !== "object") return "missing"
+    const record = fact as Record<string, unknown>
+    const status = record.verificationStatus
+    const method = record.verificationMethod
+    const count = record.verificationCount
+    const sources = record.supportingSources
+    if (status === "unverified" || method === "single-source-supported") {
+      return "insufficient"
+    }
+    if (typeof count === "number" && count < 2) return "insufficient"
+    if (status == null || method == null || count == null || sources == null) {
+      return "missing"
+    }
+    if (
+      (status !== "verified" && status !== "partially verified") ||
+      (method !== "exact" && method !== "semantic") ||
+      typeof count !== "number" ||
+      count < 2 ||
+      !Array.isArray(sources)
+    ) {
+      return "missing"
+    }
+    const identityProblem = distinctSourceIdentityProblem(
+      typeof record.claim === "string" ? record.claim : "",
+      sources,
+    )
+    if (identityProblem) return identityProblem
+  }
+
+  return audit.unverifiedCount === 0 ? null : "insufficient"
 }
 
 export function researchPublicationBlockReason(
@@ -44,9 +106,19 @@ export function researchPublicationBlockReason(
   const recommendationReady =
     audit.publicationRecommendation === PUBLISH_READY_RECOMMENDATION
 
-  if (consensusReady && qualityReady && recommendationReady) return null
+  if (!(consensusReady && qualityReady && recommendationReady)) {
+    return "Current research audit is not publish-ready."
+  }
 
-  return "Current research audit is not publish-ready."
+  const verificationProblem = storedVerificationProblem(audit)
+  if (verificationProblem === "insufficient") {
+    return "Unverified or single-source claims remain. Human review is required before publication."
+  }
+  if (verificationProblem === "missing") {
+    return "Independent verification metadata is missing. Renew the research audit or return the article to review before scheduling or publication."
+  }
+
+  return null
 }
 
 export function publicationGuard(

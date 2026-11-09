@@ -239,6 +239,18 @@ async function attachCurrentAudit(
       publicationRecommendation: scores
         ? scores.publicationRecommendation
         : "publish-ready",
+      unverifiedCount: 0,
+      facts: [
+        {
+          verificationStatus: "verified",
+          verificationMethod: "exact",
+          verificationCount: 2,
+          supportingSources: [
+            { sourceUrl: "https://www.nist.gov/itl/ai-risk-management-framework" },
+            { sourceUrl: "https://airc.nist.gov/airmf-resources/airmf/" },
+          ],
+        },
+      ],
     },
   });
   await prisma.articleReviewNote.create({

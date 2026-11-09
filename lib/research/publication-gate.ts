@@ -12,6 +12,15 @@ export type PublicationDecision = {
 export function publicationGate(
   consensus: ConsensusResult
 ): PublicationDecision {
+  if (consensus.unverifiedFacts > 0) {
+    return {
+      approved: false,
+      status: "review-required",
+      reason:
+        "Unverified claims remain. Human review is required before publication.",
+    }
+  }
+
   if (
     consensus.publicationRecommendation ===
     "publish-ready"

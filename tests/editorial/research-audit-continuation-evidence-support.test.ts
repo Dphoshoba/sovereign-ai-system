@@ -727,7 +727,7 @@ describe("continuation evidence controls that already hold", () => {
       ],
       NIST_COMPOUND,
     );
-    expect(verification.facts[0]?.verificationStatus).toBe("verified");
+    expect(verification.facts[0]?.verificationStatus).toBe("partially verified");
     expect(verification.facts[0]?.verificationCount).toBe(1);
     expect(
       new Set(verification.facts[0]?.supportingSources.map((source) => source.sourceUrl)),

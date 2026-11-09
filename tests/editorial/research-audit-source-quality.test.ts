@@ -76,9 +76,9 @@ describe("source quality without empty groups", () => {
     expect(result.zeroSourceGroups[0]?.theme).not.toBe(
       result.consensusGroups.find((group) => group.sourceCount > 0)?.theme,
     );
-    expect(result.publicationRecommendation).toBe("publish-ready");
+    expect(result.publicationRecommendation).toBe("review-required");
     expect(
-      recommendationWithEvidenceCompleteness(result.publicationRecommendation, [
+      recommendationWithEvidenceCompleteness("publish-ready", [
         ...sourced,
         unsupported,
       ]),

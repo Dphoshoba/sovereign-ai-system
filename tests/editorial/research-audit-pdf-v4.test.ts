@@ -295,11 +295,11 @@ describe("article-grounded-v4 PDF evidence and coverage", () => {
     expect(
       verification.facts.find((fact) => fact.claim === NIST_INTEGRATION_CLAIM)
         ?.verificationStatus,
-    ).toBe("verified");
+    ).toBe("partially verified");
     expect(
       verification.facts.find((fact) => fact.claim === NIST_MONITORING_CLAIM)
         ?.verificationStatus,
-    ).toBe("verified");
+    ).toBe("partially verified");
     expect(
       verification.facts.find((fact) => fact.claim === DELOITTE_SURVEY_PASSAGE)
         ?.verificationStatus,

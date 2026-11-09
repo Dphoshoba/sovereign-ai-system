@@ -10,6 +10,8 @@ const sourceCreate = vi.fn();
 const sourceDeleteMany = vi.fn();
 const sourceFindMany = vi.fn();
 const factCreate = vi.fn();
+const factCreateMany = vi.fn();
+const sourceCreateMany = vi.fn();
 const queryRaw = vi.fn();
 const openAIResponsesCreate = vi.fn();
 
@@ -35,10 +37,14 @@ const tx = {
   articleReviewNote: { create: (...args: unknown[]) => reviewNoteCreate(...args) },
   researchSource: {
     create: (...args: unknown[]) => sourceCreate(...args),
+    createMany: (...args: unknown[]) => sourceCreateMany(...args),
     deleteMany: (...args: unknown[]) => sourceDeleteMany(...args),
     findMany: (...args: unknown[]) => sourceFindMany(...args),
   },
-  researchFact: { create: (...args: unknown[]) => factCreate(...args) },
+  researchFact: {
+    create: (...args: unknown[]) => factCreate(...args),
+    createMany: (...args: unknown[]) => factCreateMany(...args),
+  },
   $queryRaw: (...args: unknown[]) => queryRaw(...args),
 };
 
@@ -61,15 +67,24 @@ vi.mock("@/lib/ai/memory-context", () => ({
 }));
 vi.mock("../../lib/research/source-collector", () => ({
   sourceCollector: vi.fn(async () => ({
-    collectedSources: [],
-    sourceCount: 0,
-    averageAuthorityScore: 0,
-    averageTrustScore: 0,
-    researchConfidence: 0,
+    collectedSources: [
+      {
+        title: "NIST",
+        url: "https://www.nist.gov/itl/ai-risk-management-framework",
+        sourceType: "government",
+        authorityScore: 100,
+        trustScore: 100,
+      },
+    ],
+    sourceCount: 1,
+    averageAuthorityScore: 100,
+    averageTrustScore: 100,
+    researchConfidence: 100,
+    collectionStatus: "Sources collected successfully.",
   })),
 }));
 vi.mock("../../lib/research/evidence-registry", () => ({
-  evidenceRegistry: vi.fn(async () => ({ evidence: [], evidenceCount: 0 })),
+  evidenceRegistry: vi.fn(async () => ({ evidence: [], evidenceCount: 1 })),
 }));
 vi.mock("../../lib/research/fact-extractor", () => ({
   factExtractor: vi.fn(() => ({ facts: [], factCount: 0 })),
@@ -262,5 +277,34 @@ describe("POST /api/ai/generate-article initial lifecycle state", () => {
         publicationRecommendation: "review-required",
       }),
     });
+    const { prisma } = await import("@/lib/prisma");
+    expect(prisma.$transaction).toHaveBeenCalledWith(expect.any(Function), {
+      timeout: 10_000,
+    });
+    expect(factCreateMany).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not create an article when research has no usable sources", async () => {
+    const { sourceCollector } = await import("../../lib/research/source-collector");
+    vi.mocked(sourceCollector).mockResolvedValueOnce({
+      collectedSources: [],
+      sourceCount: 0,
+      averageAuthorityScore: 0,
+      averageTrustScore: 0,
+      researchConfidence: 0,
+      collectionStatus: "Research blocked: no usable topic-relevant sources.",
+    });
+    const { POST } = await import("../../app/api/ai/generate-article/route");
+
+    const response = await POST(
+      new Request("http://localhost/api/ai/generate-article", {
+        method: "POST",
+        body: JSON.stringify({ topic: "Ungrounded topic", category: "ai-tools" }),
+      }),
+    );
+
+    expect(response.status).toBe(422);
+    expect(articleCreate).not.toHaveBeenCalled();
+    expect(openAIResponsesCreate).not.toHaveBeenCalled();
   });
 });

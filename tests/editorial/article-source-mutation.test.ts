@@ -27,6 +27,12 @@ function createStore(article: {
         sources.push(created);
         return created;
       }),
+      createMany: vi.fn(async ({ data }: { data: Array<{ url: string | null }> }) => {
+        for (const item of data) {
+          sources.push({ id: `source-${sources.length + 1}`, ...item });
+        }
+        return { count: data.length };
+      }),
       update: vi.fn(async ({
         where,
         data,
@@ -84,7 +90,7 @@ describe("article source mutation service", () => {
 
     expect(result.ok).toBe(true);
     expect(tx.researchSource.deleteMany).toHaveBeenCalledTimes(1);
-    expect(tx.researchSource.create).toHaveBeenCalledTimes(1);
+    expect(tx.researchSource.createMany).toHaveBeenCalledTimes(1);
     expect(tx.article.update).toHaveBeenCalledWith({
       where: { id: article.id },
       data: expect.objectContaining({
@@ -251,7 +257,7 @@ describe("article source mutation service", () => {
         throw error;
       }
     };
-    tx.researchSource.create.mockRejectedValueOnce(new Error("write failed"));
+    tx.researchSource.createMany.mockRejectedValueOnce(new Error("write failed"));
 
     await expect(
       mutateArticleSources(

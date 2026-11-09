@@ -18,6 +18,7 @@ import {
   canonicalSourceUrl,
   claimAllowsEvidence,
   evidenceCorroborationKey,
+  independentDocumentKey,
   isBibleProjectClaim,
   isBibleProjectSource,
   resolveClaimSourceBinding,
@@ -37,6 +38,13 @@ function authorityScoreForUrl(url: string): number {
   if (lower.includes(".edu")) return 95;
   if (lower.includes("pwc.com") || lower.includes("deloitte.com")) return 80;
   return 50;
+}
+
+function auditDocumentCountKey(corroborationKey: string): string {
+  if (corroborationKey.includes("://")) {
+    return independentDocumentKey(corroborationKey);
+  }
+  return corroborationKey.toLowerCase().replace(/^www\./, "");
 }
 
 function listedSourcesFromEvidence(
@@ -379,10 +387,12 @@ export function groundedFactVerification(
     const uniqueSources = new Map<string, EvidenceRecord>();
     const mappedPassages: EvidenceRecord[] = [];
     for (const match of matches) {
-      const key = evidenceCorroborationKey(
-        claim.claim,
-        sourceFromEvidence(match.evidence),
-        sources,
+      const key = auditDocumentCountKey(
+        evidenceCorroborationKey(
+          claim.claim,
+          sourceFromEvidence(match.evidence),
+          sources,
+        ),
       );
       if (!uniqueSources.has(key)) {
         uniqueSources.set(key, match.evidence);
@@ -410,12 +420,9 @@ export function groundedFactVerification(
           );
     const strongest = matches[0];
     const primary = strongest?.evidence;
-    const hasGovernmentSource = supporting.some((evidence) =>
-      /\.gov|nist\.gov/i.test(evidence.sourceUrl),
-    );
 
     const verificationStatus =
-      verificationCount >= 2 || (verificationCount >= 1 && hasGovernmentSource)
+      verificationCount >= 2
         ? "verified"
         : verificationCount === 1
           ? "partially verified"

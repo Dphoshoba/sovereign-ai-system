@@ -40,6 +40,9 @@ type SourceMutationTransaction = {
   researchSource: {
     findMany: (args: { where: { articleId: string } }) => Promise<unknown[]>;
     create: (args: { data: Record<string, unknown> }) => Promise<unknown>;
+    createMany: (args: {
+      data: Record<string, unknown>[];
+    }) => Promise<unknown>;
     update: (args: {
       where: { id: string };
       data: Record<string, unknown>;
@@ -132,6 +135,7 @@ async function applySourceMutationArticleEffects(
   tx: SourceMutationTransaction,
   article: SourceMutationArticle,
   urlsChanged: boolean,
+  hadExistingSources: boolean,
 ): Promise<SourceMutationArticle> {
   const data: Record<string, unknown> = {};
   if (shouldInvalidateLifecycle(article.status)) {
@@ -143,7 +147,7 @@ async function applySourceMutationArticleEffects(
       publishedAt: null,
     });
   }
-  if (urlsChanged) {
+  if (urlsChanged && hadExistingSources) {
     Object.assign(data, INVALIDATED_ARTICLE_SCORES);
   }
   if (Object.keys(data).length === 0) return article;
@@ -177,9 +181,11 @@ export async function applyArticleSourceMutationInTransaction(
 
   if (input.operation === "replace") {
     await tx.researchSource.deleteMany({ where: { articleId: article.id } });
-    for (const source of input.sources) {
-      await tx.researchSource.create({
-        data: sourceCreateData(article.id, source),
+    if (input.sources.length > 0) {
+      await tx.researchSource.createMany({
+        data: input.sources.map((source) =>
+          sourceCreateData(article.id, source),
+        ),
       });
     }
   } else if (input.operation === "create") {
@@ -228,6 +234,7 @@ export async function applyArticleSourceMutationInTransaction(
     tx,
     article,
     urlsChanged,
+    previousUrls.length > 0,
   );
 
   return {
