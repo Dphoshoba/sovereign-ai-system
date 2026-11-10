@@ -11,6 +11,10 @@ export const SUPABASE_ROOT_CA_RELATIVE_PATH = path.join(
 )
 
 const PRODUCTION_SUPABASE_PROJECT_REF = "kqptdgbttfuqkzxzbazw"
+const APPROVED_PREVIEW_HOST = "aws-0-ap-southeast-2.pooler.supabase.com"
+const APPROVED_PREVIEW_PORT = "5432"
+const APPROVED_PREVIEW_DATABASE = "postgres"
+const APPROVED_PREVIEW_USERNAME = "postgres.emmzoeeaznhpwevqprkn"
 
 export function supabaseRootCaPath(cwd = process.cwd()) {
   return path.resolve(cwd, SUPABASE_ROOT_CA_RELATIVE_PATH)
@@ -35,6 +39,52 @@ export function previewDatabaseUrl(databaseUrl: string, cwd = process.cwd()) {
     )
   }
 
+  let url: URL
+  try {
+    url = new URL(databaseUrl)
+  } catch {
+    throw new Error("Preview DATABASE_URL is invalid")
+  }
+
+  if (url.protocol !== "postgresql:" && url.protocol !== "postgres:") {
+    throw new Error("Preview DATABASE_URL is invalid")
+  }
+
+  if (url.hostname !== APPROVED_PREVIEW_HOST) {
+    throw new Error("Preview DATABASE_URL host is not approved")
+  }
+
+  if (url.port !== APPROVED_PREVIEW_PORT) {
+    throw new Error("Preview DATABASE_URL port is not approved")
+  }
+
+  let username: string
+  try {
+    username = decodeURIComponent(url.username)
+  } catch {
+    throw new Error("Preview DATABASE_URL is invalid")
+  }
+
+  if (username !== APPROVED_PREVIEW_USERNAME) {
+    throw new Error("Preview DATABASE_URL username is not approved")
+  }
+
+  let databasePath: string
+  try {
+    databasePath = decodeURIComponent(url.pathname)
+  } catch {
+    throw new Error("Preview DATABASE_URL is invalid")
+  }
+
+  if (databasePath !== `/${APPROVED_PREVIEW_DATABASE}`) {
+    throw new Error("Preview DATABASE_URL database is not approved")
+  }
+
+  const sslmode = url.searchParams.get("sslmode")
+  if (sslmode === "disable" || sslmode === "no-verify") {
+    throw new Error("Preview DATABASE_URL disables certificate verification")
+  }
+
   const caPath = supabaseRootCaPath(cwd)
   if (!existsSync(caPath)) {
     throw new Error("Preview PostgreSQL CA certificate is unavailable")
@@ -52,18 +102,6 @@ export function previewDatabaseUrl(databaseUrl: string, cwd = process.cwd()) {
     throw new Error(
       "Preview PostgreSQL CA certificate fingerprint does not match",
     )
-  }
-
-  let url: URL
-  try {
-    url = new URL(databaseUrl)
-  } catch {
-    throw new Error("Preview DATABASE_URL is invalid")
-  }
-
-  const sslmode = url.searchParams.get("sslmode")
-  if (sslmode === "disable" || sslmode === "no-verify") {
-    throw new Error("Preview DATABASE_URL disables certificate verification")
   }
 
   url.searchParams.set("sslmode", "verify-full")
