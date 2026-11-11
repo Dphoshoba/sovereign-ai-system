@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import {
+  payloadWithinLimit,
+  publicCaptureAllowed,
+} from "../../../../lib/security/public-capture"
 
 const SUBSCRIBED_BODY = {
   ok: true,
@@ -13,6 +17,10 @@ function subscriptionSource(value: unknown) {
 }
 
 export async function POST(req: NextRequest) {
+  if (!payloadWithinLimit(req) || !(await publicCaptureAllowed("newsletter-subscribe", req))) {
+    return NextResponse.json({ ok: false, error: "Too many requests" }, { status: 429 })
+  }
+
   try {
     const body = await req.json()
     const email = typeof body?.email === "string" ? body.email.toLowerCase().trim() : ""

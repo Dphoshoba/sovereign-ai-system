@@ -1,6 +1,23 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { GET } from "../../app/api/gamma/stage-5/operator-handoff/route";
 import { buildGammaStage5OperatorHandoff } from "../../src/lib/gamma-2/stage-5-operator-handoff";
+vi.mock("@/lib/supabase/server", () => ({
+  createSupabaseServerClient: async () => ({
+    auth: {
+      getUser: async () => ({
+        data: {
+          user: {
+            id: "editor-1",
+            email: "editor@example.com",
+            app_metadata: { role: "editor" },
+          },
+        },
+        error: null,
+      }),
+    },
+  }),
+}))
+
 
 describe("Gamma 2 Stage 5 operator handoff", () => {
   it("builds one operator handoff packet from brief, attestation, and rollback state", () => {

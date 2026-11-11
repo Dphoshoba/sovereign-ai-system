@@ -70,7 +70,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
-        error: error instanceof Error ? error.message : "Invitation failed",
+        error: "Invitation failed",
       },
       { status: 500 }
     )

@@ -1,7 +1,24 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { GET } from "../../app/api/gamma/stage-5/release-gate/route";
 import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
 import { buildGammaStage5ReleaseGate } from "../../src/lib/gamma-2/stage-5-release-gate";
+vi.mock("@/lib/supabase/server", () => ({
+  createSupabaseServerClient: async () => ({
+    auth: {
+      getUser: async () => ({
+        data: {
+          user: {
+            id: "editor-1",
+            email: "editor@example.com",
+            app_metadata: { role: "editor" },
+          },
+        },
+        error: null,
+      }),
+    },
+  }),
+}))
+
 
 describe("Gamma 2 Stage 5 release gate", () => {
   it("builds an operator promotion gate for the canonical production URL", () => {

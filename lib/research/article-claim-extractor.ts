@@ -351,6 +351,14 @@ function sectionLabel(claim: ArticleClaim): string {
   return claim.heading?.trim() || "introduction";
 }
 
+function isPriorityConstraint(claim: ArticleClaim): boolean {
+  const sentence = claim.articleExcerpt;
+  return (
+    CONCRETE_LIMIT.test(sentence) ||
+    /\bapproved\b/i.test(sentence)
+  );
+}
+
 function selectFactualClaims(
   candidates: ArticleClaim[],
   limit = FACTUAL_CLAIM_LIMIT,
@@ -360,9 +368,18 @@ function selectFactualClaims(
 } {
   const selected: ArticleClaim[] = [];
   const selectedIndexes = new Set<number>();
+  const take = (index: number) => {
+    if (selected.length >= limit || selectedIndexes.has(index)) return;
+    selected.push(candidates[index]);
+    selectedIndexes.add(index);
+  };
+
+  candidates.forEach((candidate, index) => {
+    if (isPriorityConstraint(candidate)) take(index);
+  });
+
   const headingOrder: string[] = [];
   const firstByHeading = new Map<string, number>();
-
   candidates.forEach((candidate, index) => {
     if (candidate.section !== "body" || !candidate.heading) return;
     if (firstByHeading.has(candidate.heading)) return;
@@ -371,18 +388,12 @@ function selectFactualClaims(
   });
 
   for (const heading of headingOrder) {
-    if (selected.length >= limit) break;
     const index = firstByHeading.get(heading);
-    if (index === undefined) continue;
-    selected.push(candidates[index]);
-    selectedIndexes.add(index);
+    if (index !== undefined) take(index);
   }
 
-  candidates.forEach((candidate, index) => {
-    if (selected.length >= limit) return;
-    if (selectedIndexes.has(index)) return;
-    selected.push(candidate);
-    selectedIndexes.add(index);
+  candidates.forEach((_candidate, index) => {
+    take(index);
   });
 
   return {
@@ -558,7 +569,7 @@ export function extractArticleClaims(input: {
           isBoundContinuation(sentence) &&
           articleContainsExcerpt(normalizedArticleText, claimText)
         ) {
-          const key = sentence.toLowerCase();
+          const key = `${antecedentSentence.toLowerCase()}\n${sentence.toLowerCase()}`;
           if (seen.has(key)) continue;
           seen.add(key);
           factualCandidates.push({

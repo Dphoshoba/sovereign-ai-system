@@ -44,12 +44,14 @@ const invitationFindUnique = vi.fn()
 const invitationFindMany = vi.fn()
 const invitationCreate = vi.fn()
 const invitationUpdate = vi.fn()
+const invitationUpdateMany = vi.fn()
 const sessionFindMany = vi.fn()
 const sessionCreate = vi.fn()
 const workspaceFindFirst = vi.fn()
 const accessLogFindMany = vi.fn()
 const accessLogCreate = vi.fn()
 const intelligenceCreate = vi.fn()
+let acceptanceTransactionAborted = false
 
 const privilegedWork = [
   governanceRoleFindMany,
@@ -87,6 +89,7 @@ const privilegedWork = [
   invitationFindMany,
   invitationCreate,
   invitationUpdate,
+  invitationUpdateMany,
   sessionFindMany,
   sessionCreate,
   workspaceFindFirst,
@@ -101,8 +104,8 @@ vi.mock("@/lib/supabase/server", () => ({
   })),
 }))
 
-vi.mock("@/lib/prisma", () => ({
-  prisma: {
+vi.mock("@/lib/prisma", () => {
+  const prisma = {
     governanceRole: {
       findMany: (...args: unknown[]) => governanceRoleFindMany(...args),
       findFirst: (...args: unknown[]) => governanceRoleFindFirst(...args),
@@ -161,6 +164,7 @@ vi.mock("@/lib/prisma", () => ({
       findMany: (...args: unknown[]) => invitationFindMany(...args),
       create: (...args: unknown[]) => invitationCreate(...args),
       update: (...args: unknown[]) => invitationUpdate(...args),
+      updateMany: (...args: unknown[]) => invitationUpdateMany(...args),
     },
     identitySession: {
       findMany: (...args: unknown[]) => sessionFindMany(...args),
@@ -176,8 +180,17 @@ vi.mock("@/lib/prisma", () => ({
     tenantIntelligenceRecord: {
       create: (...args: unknown[]) => intelligenceCreate(...args),
     },
-  },
-}))
+  }
+  prisma.$transaction = async (fn: (tx: typeof prisma) => Promise<unknown>) => {
+    try {
+      return await fn(prisma)
+    } catch (error) {
+      acceptanceTransactionAborted = true
+      throw error
+    }
+  }
+  return { prisma }
+})
 
 function session(user: unknown) {
   mockGetUser.mockResolvedValue({ data: { user }, error: null })
@@ -230,6 +243,7 @@ function storedDecision(status = "proposed") {
 describe("B1 governance and identity authorisation", () => {
   beforeEach(() => {
     mockGetUser.mockReset()
+    acceptanceTransactionAborted = false
     for (const spy of privilegedWork) spy.mockReset()
   })
 
@@ -544,26 +558,27 @@ describe("B1 governance and identity authorisation", () => {
     expect(JSON.stringify(executiveUpdate.mock.calls)).not.toContain(SPOOF)
   })
 
-  it("rejects an anonymous invitation acceptance before the token lookup", async () => {
-    session(null)
+  it("rejects an invitation token that is not a single-use secret", async () => {
     const { POST } = await import("../../app/api/identity-runtime/accept/route")
     const response = await POST(post({ token: "token-1", email: SPOOF }))
-    expect(response.status).toBe(401)
-    expect(await response.json()).toEqual(AUTHENTICATION_REQUIRED_BODY)
+    expect(response.status).toBe(400)
+    expect(await response.json()).toEqual({
+      ok: false,
+      error: "A valid invitation token is required",
+    })
     expectNoPrivilegedWork()
   })
 
-  it("rejects an authenticated non-editor invitation acceptance", async () => {
-    session(user("viewer"))
+  it("does not create a membership for an unknown invitation token", async () => {
+    invitationFindUnique.mockResolvedValue(null)
     const { POST } = await import("../../app/api/identity-runtime/accept/route")
-    const response = await POST(post({ token: "token-1", email: SPOOF }))
-    expect(response.status).toBe(403)
-    expect(await response.json()).toEqual(EDITOR_FORBIDDEN_BODY)
-    expectNoPrivilegedWork()
+    const response = await POST(post({ token: "ab".repeat(24), email: SPOOF }))
+    expect(response.status).toBe(404)
+    expect(identityUserCreate).not.toHaveBeenCalled()
+    expect(memberUpdate).not.toHaveBeenCalled()
   })
 
   it("accepts an invitation for the invited address, not a body email", async () => {
-    session(user("editor"))
     const invitation = {
       id: "inv-1",
       email: INVITEE,
@@ -571,7 +586,7 @@ describe("B1 governance and identity authorisation", () => {
       expiresAt: new Date(Date.now() + 60_000),
       organizationId: "org-1",
       role: "member",
-      token: "token-1",
+      token: "ab".repeat(24),
     }
     invitationFindUnique.mockResolvedValue(invitation)
     identityUserFindUnique.mockResolvedValue({
@@ -581,11 +596,11 @@ describe("B1 governance and identity authorisation", () => {
     })
     memberFindFirst.mockResolvedValue({ id: "member-1" })
     memberUpdate.mockResolvedValue({ id: "member-1", role: "member", status: "active" })
-    invitationUpdate.mockResolvedValue({ ...invitation, status: "accepted" })
+    invitationUpdateMany.mockResolvedValue({ count: 1 })
     accessLogCreate.mockResolvedValue({ id: "log-1" })
 
     const { POST } = await import("../../app/api/identity-runtime/accept/route")
-    const response = await POST(post({ token: "token-1", email: SPOOF, name: "Spoof" }))
+    const response = await POST(post({ token: "ab".repeat(24), email: SPOOF, name: "Spoof" }))
     const body = await response.json()
 
     expect(response.status).toBe(200)
@@ -598,6 +613,114 @@ describe("B1 governance and identity authorisation", () => {
       })
     )
     expect(JSON.stringify(accessLogCreate.mock.calls)).not.toContain(SPOOF)
+    expect(memberUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ role: "member", status: "active" }),
+      })
+    )
+    expect(JSON.stringify(memberUpdate.mock.calls)).not.toContain("org-spoof")
+  })
+
+  it("expires an invitation that is past its deadline without creating a membership", async () => {
+    invitationFindUnique.mockResolvedValue({
+      id: "inv-1",
+      email: INVITEE,
+      status: "pending",
+      expiresAt: new Date(Date.now() - 60_000),
+      organizationId: "org-1",
+      role: "member",
+      token: "ab".repeat(24),
+    })
+    invitationUpdate.mockResolvedValue({ id: "inv-1", status: "expired" })
+
+    const { POST } = await import("../../app/api/identity-runtime/accept/route")
+    const response = await POST(post({ token: "ab".repeat(24), organizationId: "org-spoof", email: SPOOF }))
+
+    expect(response.status).toBe(410)
+    expect(invitationUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: "expired" } })
+    )
+    expect(invitationUpdateMany).not.toHaveBeenCalled()
+    expect(memberCreate).not.toHaveBeenCalled()
+    expect(memberUpdate).not.toHaveBeenCalled()
+  })
+
+  it("does not accept an invitation that has no expiry", async () => {
+    invitationFindUnique.mockResolvedValue({
+      id: "inv-1",
+      email: INVITEE,
+      status: "pending",
+      expiresAt: null,
+      organizationId: "org-1",
+      role: "member",
+      token: "ab".repeat(24),
+    })
+
+    const { POST } = await import("../../app/api/identity-runtime/accept/route")
+    const response = await POST(post({ token: "ab".repeat(24) }))
+
+    expect(response.status).toBe(410)
+    expect(memberCreate).not.toHaveBeenCalled()
+  })
+
+  it("lets only the first concurrent claim create a membership", async () => {
+    const invitation = {
+      id: "inv-1",
+      email: INVITEE,
+      status: "pending",
+      expiresAt: new Date(Date.now() + 60_000),
+      organizationId: "org-1",
+      role: "member",
+      token: "ab".repeat(24),
+    }
+    invitationFindUnique.mockResolvedValue(invitation)
+    invitationUpdateMany.mockResolvedValueOnce({ count: 1 }).mockResolvedValueOnce({ count: 0 })
+    identityUserFindUnique.mockResolvedValue({ id: "user-1", email: INVITEE, name: "Invitee" })
+    memberFindFirst.mockResolvedValue(null)
+    memberCreate.mockResolvedValue({ id: "member-1" })
+    accessLogCreate.mockResolvedValue({ id: "log-1" })
+
+    const { POST } = await import("../../app/api/identity-runtime/accept/route")
+    const first = await POST(post({ token: "ab".repeat(24), organizationId: "org-spoof", email: SPOOF }))
+    const second = await POST(post({ token: "ab".repeat(24), organizationId: "org-spoof", email: SPOOF }))
+
+    expect(first.status).toBe(200)
+    expect(second.status).toBe(404)
+    expect(memberCreate).toHaveBeenCalledTimes(1)
+    expect(memberCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ organizationId: "org-1", email: INVITEE }),
+      })
+    )
+    expect(JSON.stringify(memberCreate.mock.calls)).not.toContain(SPOOF)
+    expect(JSON.stringify(memberCreate.mock.calls)).not.toContain("org-spoof")
+  })
+
+  it("rolls the invitation claim back when membership creation fails", async () => {
+    invitationFindUnique.mockResolvedValue({
+      id: "inv-1",
+      email: INVITEE,
+      status: "pending",
+      expiresAt: new Date(Date.now() + 60_000),
+      organizationId: "org-1",
+      role: "member",
+      token: "ab".repeat(24),
+    })
+    invitationUpdateMany.mockResolvedValue({ count: 1 })
+    identityUserFindUnique.mockResolvedValue({ id: "user-1", email: INVITEE, name: "Invitee" })
+    memberFindFirst.mockResolvedValue(null)
+    memberCreate.mockRejectedValue(new Error(`write failed for ${INVITEE}`))
+
+    const { POST } = await import("../../app/api/identity-runtime/accept/route")
+    const response = await POST(post({ token: "ab".repeat(24), email: SPOOF }))
+    const body = await response.json()
+
+    expect(response.status).toBe(500)
+    expect(body).toEqual({ ok: false, error: "Invitation accept failed" })
+    expect(JSON.stringify(body)).not.toContain(INVITEE)
+    expect(invitationUpdateMany).toHaveBeenCalledTimes(1)
+    expect(acceptanceTransactionAborted).toBe(true)
+    expect(accessLogCreate).not.toHaveBeenCalled()
   })
 
   it("rejects an anonymous access check", async () => {

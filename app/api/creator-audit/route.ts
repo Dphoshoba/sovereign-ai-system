@@ -3,6 +3,12 @@ import { prisma } from "@/lib/prisma"
 import { getOpenAI } from "@/lib/ai/openai"
 import { DAVID_WRITING_DNA } from "@/lib/ai/writing-dna"
 import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
+import {
+  captureEmail,
+  captureText,
+  payloadWithinLimit,
+  publicCaptureAllowed,
+} from "../../../lib/security/public-capture"
 
 export async function GET() {
   const auth = await requireEditorAuth()
@@ -25,28 +31,31 @@ export async function GET() {
   }
 }
 
-function captureText(value: unknown, max: number) {
-  if (typeof value !== "string") return null
-  const trimmed = value.trim()
-  if (!trimmed) return null
-  return trimmed.slice(0, max)
-}
-
-function captureEmail(value: unknown) {
-  const email = captureText(value, 200)?.toLowerCase()
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null
-  return email
-}
-
 export async function POST(request: Request) {
+  if (!payloadWithinLimit(request) || !(await publicCaptureAllowed("creator-audit", request))) {
+    return NextResponse.json({ ok: false, error: "Too many requests" }, { status: 429 })
+  }
+
   const auth = await requireEditorAuth()
 
   try {
     const body = await request.json()
     const name = captureText(body?.name, 120)
     const email = captureEmail(body?.email)
+    const intake = {
+      name,
+      email,
+      creatorType: captureText(body?.creatorType, 160),
+      niche: captureText(body?.niche, 160),
+      audienceSize: captureText(body?.audienceSize, 80),
+      publishingFrequency: captureText(body?.publishingFrequency, 80),
+      monetizationMethod: captureText(body?.monetizationMethod, 160),
+      currentTools: captureText(body?.currentTools, 240),
+      biggestBottleneck: captureText(body?.biggestBottleneck, 500),
+      automationGoals: captureText(body?.automationGoals, 500),
+    }
 
-    if (!name || !email) {
+    if (!intake.name || !intake.email) {
       return NextResponse.json(
         { ok: false, error: "Name and email are required" },
         { status: 400 }
@@ -54,18 +63,16 @@ export async function POST(request: Request) {
     }
 
     if (!auth.ok) {
+      const existing = await prisma.creatorAuditRequest.findFirst({
+        where: { email: intake.email, status: "audit-requested" },
+      })
+      if (existing) return NextResponse.json({ ok: true })
+
       await prisma.creatorAuditRequest.create({
         data: {
-          name,
-          email,
-          creatorType: captureText(body?.creatorType, 160),
-          niche: captureText(body?.niche, 160),
-          audienceSize: captureText(body?.audienceSize, 80),
-          publishingFrequency: captureText(body?.publishingFrequency, 80),
-          monetizationMethod: captureText(body?.monetizationMethod, 160),
-          currentTools: captureText(body?.currentTools, 240),
-          biggestBottleneck: captureText(body?.biggestBottleneck, 500),
-          automationGoals: captureText(body?.automationGoals, 500),
+          ...intake,
+          name: intake.name,
+          email: intake.email,
           status: "audit-requested",
         },
       })
@@ -81,7 +88,7 @@ export async function POST(request: Request) {
         " Diagnose creator bottlenecks and recommend practical AI automation systems. Return only valid JSON.",
       input:
         "Analyze this creator audit request:\n\n" +
-        JSON.stringify(body) +
+        JSON.stringify(intake) +
         "\n\nReturn JSON only in this exact format:\n" +
         `{
           "opportunityScore": 75,
@@ -96,16 +103,9 @@ export async function POST(request: Request) {
 
     const audit = await prisma.creatorAuditRequest.create({
       data: {
-        name,
-        email,
-        creatorType: body.creatorType || null,
-        niche: body.niche || null,
-        audienceSize: body.audienceSize || null,
-        publishingFrequency: body.publishingFrequency || null,
-        monetizationMethod: body.monetizationMethod || null,
-        currentTools: body.currentTools || null,
-        biggestBottleneck: body.biggestBottleneck || null,
-        automationGoals: body.automationGoals || null,
+        ...intake,
+        name: intake.name,
+        email: intake.email,
         status: "audit-requested",
         opportunityScore:
           typeof parsed.opportunityScore === "number"
@@ -125,10 +125,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to create creator audit",
+        error: "Failed to create creator audit",
       },
       { status: 500 }
     )

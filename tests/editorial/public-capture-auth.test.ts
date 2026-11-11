@@ -5,6 +5,7 @@ const mockGetUser = vi.fn()
 const leadFindUnique = vi.fn()
 const leadCreate = vi.fn()
 const leadFindMany = vi.fn()
+const auditFindFirst = vi.fn()
 const auditCreate = vi.fn()
 const auditFindMany = vi.fn()
 const modelCreate = vi.fn()
@@ -25,6 +26,7 @@ vi.mock("@/lib/prisma", () => ({
     creatorAuditRequest: {
       create: auditCreate,
       findMany: auditFindMany,
+      findFirst: auditFindFirst,
     },
   },
 }))
@@ -64,6 +66,7 @@ describe("public capture separated from privileged reads and model calls", () =>
     vi.clearAllMocks()
     leadFindUnique.mockResolvedValue(null)
     leadCreate.mockResolvedValue({ id: "lead-1" })
+    auditFindFirst.mockResolvedValue(null)
     auditCreate.mockResolvedValue({ id: "audit-1" })
     modelCreate.mockResolvedValue({
       output_text: JSON.stringify({
@@ -125,7 +128,7 @@ describe("public capture separated from privileged reads and model calls", () =>
       post("/api/creator-leads", { name: "Ada", email: "ada@example.com" })
     )
 
-    expect(await response.json()).toEqual({ ok: true, alreadyExists: true })
+    expect(await response.json()).toEqual({ ok: true })
     expect(leadCreate).not.toHaveBeenCalled()
   })
 
@@ -168,7 +171,11 @@ describe("public capture separated from privileged reads and model calls", () =>
     session("editor")
     const { POST } = await import("../../app/api/creator-audit/route")
     const response = await POST(
-      post("/api/creator-audit", { name: "Ada", email: "ada@example.com" })
+      post("/api/creator-audit", {
+        name: "Ada",
+        email: "ada@example.com",
+        secretNote: "secret-note",
+      })
     )
     const body = await response.json()
 
@@ -176,6 +183,40 @@ describe("public capture separated from privileged reads and model calls", () =>
     expect(body.ok).toBe(true)
     expect(body.audit).toBeTruthy()
     expect(modelCreate).toHaveBeenCalledOnce()
+    expect(String(modelCreate.mock.calls[0][0].input)).not.toContain("secret-note")
+  })
+
+  it("does not store a second public audit for the same address", async () => {
+    auditFindFirst.mockResolvedValue({ id: "audit-1" })
+    const { POST } = await import("../../app/api/creator-audit/route")
+    const response = await POST(
+      post("/api/creator-audit", { name: "Ada", email: "ada@example.com" })
+    )
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ ok: true })
+    expect(auditCreate).not.toHaveBeenCalled()
+    expect(modelCreate).not.toHaveBeenCalled()
+  })
+
+  it("stops a burst of public lead submissions before another write", async () => {
+    const { POST } = await import("../../app/api/creator-leads/route")
+    const burst = (n: number) =>
+      new Request("http://localhost/api/creator-leads", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-forwarded-for": "203.0.113.50",
+        },
+        body: JSON.stringify({ name: "Ada", email: `ada${n}@example.com` }),
+      })
+
+    for (let n = 0; n < 8; n += 1) {
+      expect((await POST(burst(n))).status).toBe(200)
+    }
+    const blocked = await POST(burst(8))
+    expect(blocked.status).toBe(429)
+    expect(leadCreate).toHaveBeenCalledTimes(8)
   })
 
   it("does not let a non-editor trigger the audit model", async () => {

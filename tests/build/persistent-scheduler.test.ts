@@ -1,4 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
+vi.mock("@/lib/supabase/server", () => ({
+  createSupabaseServerClient: async () => ({
+    auth: {
+      getUser: async () => ({
+        data: {
+          user: {
+            id: "editor-1",
+            email: "editor@example.com",
+            app_metadata: { role: "editor" },
+          },
+        },
+        error: null,
+      }),
+    },
+  }),
+}))
+
 
 const schedule = vi.hoisted(() => vi.fn())
 const findMany = vi.hoisted(() => vi.fn())

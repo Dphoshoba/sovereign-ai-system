@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
+import {
+  captureEmail,
+  captureText,
+  payloadWithinLimit,
+  publicCaptureAllowed,
+} from "../../../lib/security/public-capture"
 
 export async function GET() {
   const auth = await requireEditorAuth()
@@ -23,20 +29,11 @@ export async function GET() {
   }
 }
 
-function captureText(value: unknown, max: number) {
-  if (typeof value !== "string") return null
-  const trimmed = value.trim()
-  if (!trimmed) return null
-  return trimmed.slice(0, max)
-}
-
-function captureEmail(value: unknown) {
-  const email = captureText(value, 200)?.toLowerCase()
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null
-  return email
-}
-
 export async function POST(request: Request) {
+  if (!payloadWithinLimit(request) || !(await publicCaptureAllowed("creator-leads", request))) {
+    return NextResponse.json({ ok: false, error: "Too many requests" }, { status: 429 })
+  }
+
   try {
     const body = await request.json()
     const name = captureText(body?.name, 120)
@@ -55,7 +52,7 @@ export async function POST(request: Request) {
     })
 
     if (existingLead) {
-      return NextResponse.json({ ok: true, alreadyExists: true })
+      return NextResponse.json({ ok: true })
     }
 
     await prisma.creatorLead.create({
@@ -64,6 +61,7 @@ export async function POST(request: Request) {
         email,
         creatorType,
         niche: creatorType,
+        notes: captureText(body?.notes, 1000),
         status: "new",
         readiness: "starter-pack",
         leadScore: 50,

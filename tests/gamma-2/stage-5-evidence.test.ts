@@ -1,6 +1,23 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { GET } from "../../app/api/gamma/stage-5/evidence/route";
 import { buildGammaStage5EvidenceBundle } from "../../src/lib/gamma-2/stage-5-evidence";
+vi.mock("@/lib/supabase/server", () => ({
+  createSupabaseServerClient: async () => ({
+    auth: {
+      getUser: async () => ({
+        data: {
+          user: {
+            id: "editor-1",
+            email: "editor@example.com",
+            app_metadata: { role: "editor" },
+          },
+        },
+        error: null,
+      }),
+    },
+  }),
+}))
+
 
 describe("Gamma 2 Stage 5 evidence bundle", () => {
   it("builds an audit-ready evidence manifest for every completed phase", () => {
