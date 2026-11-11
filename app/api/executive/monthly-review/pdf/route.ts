@@ -6,6 +6,7 @@ import {
   getMonthlyReviewDateCutoff,
 } from "@/lib/executive/monthly-review"
 import type { ExecutiveMonthlyReview } from "@/lib/executive/monthly-review"
+import { requireEditorAuth } from "../../../../../lib/publishing/require-editor-auth"
 
 export const runtime = "nodejs"
 
@@ -97,6 +98,9 @@ function buildMonthlyReviewPdf(review: ExecutiveMonthlyReview) {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const cutoff = getMonthlyReviewDateCutoff()
 

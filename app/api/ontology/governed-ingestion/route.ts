@@ -7,6 +7,7 @@ import {
   type GovernedIngestionRequest,
 } from "../../../../lib/ontology/governed-ingestion"
 import type { OntologyExtractionResult } from "../../../../lib/ontology"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 const allowExample: OntologyExtractionResult = {
   category: "ai-tools",
@@ -118,6 +119,9 @@ const blockExample: OntologyExtractionResult = {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const examples = {
     allow: buildExampleRequest("allow-example", allowExample),
     requiresReview: buildExampleRequest("review-example", reviewExample),

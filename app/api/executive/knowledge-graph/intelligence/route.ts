@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server"
 import { buildKnowledgeGraphIntelligence } from "@/lib/executive/knowledge-graph-intelligence"
+import { requireEditorAuth } from "../../../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const intelligence = await buildKnowledgeGraphIntelligence()
 

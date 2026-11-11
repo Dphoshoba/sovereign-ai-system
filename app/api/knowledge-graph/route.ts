@@ -3,6 +3,7 @@ import crypto from "crypto"
 import { prisma } from "@/lib/prisma"
 import { getOpenAI } from "@/lib/ai/openai"
 import { DAVID_WRITING_DNA } from "@/lib/ai/writing-dna"
+import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
 
 function hashText(value: string) {
   return crypto.createHash("sha256").update(value).digest("hex")
@@ -24,6 +25,9 @@ async function getDefaultTenant() {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const [records, indexes, nodes, edges, queries, runs] = await Promise.all([
       prisma.semanticKnowledgeRecord.findMany({
@@ -72,6 +76,9 @@ export async function GET() {
 }
 
 export async function POST() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const { org, workspace } = await getDefaultTenant()
 

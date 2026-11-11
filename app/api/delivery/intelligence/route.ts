@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
 
@@ -59,6 +60,9 @@ function isAtRiskProject(project: {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const [clients, projects, tasks, invoices] = await Promise.all([
       prisma.clientProfile.findMany({

@@ -10,6 +10,7 @@ import {
   EXECUTIVE_LIST_LIMITS,
   summarizeStatusCounts,
 } from "@/lib/executive/list-limits"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 const SCENARIO_STATUSES = [
   "generated",
@@ -53,6 +54,9 @@ function serializeScenario(record: {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const [records, statusGroups] = await Promise.all([
       prisma.strategicScenario.findMany({
@@ -88,6 +92,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
     const scenario =
@@ -142,6 +149,9 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
     const id = typeof body?.id === "string" ? body.id.trim() : ""

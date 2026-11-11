@@ -7,8 +7,12 @@ import {
   serializeDecision,
 } from "@/lib/executive/decision-memory"
 import { EXECUTIVE_LIST_LIMITS } from "@/lib/executive/list-limits"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const decisions = await prisma.executiveDecision.findMany({
       orderBy: [{ createdAt: "desc" }],
@@ -36,6 +40,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
     const title = typeof body?.title === "string" ? body.title.trim() : ""
@@ -80,6 +87,9 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
     const id = typeof body?.id === "string" ? body.id.trim() : ""

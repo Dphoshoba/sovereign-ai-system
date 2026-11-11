@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server"
 import { searchExecutiveKnowledgeGraph } from "@/lib/executive/knowledge-graph"
+import { requireEditorAuth } from "../../../../../lib/publishing/require-editor-auth"
 
 export async function GET(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const { searchParams } = new URL(request.url)
     const query = searchParams.get("q")?.trim() ?? ""

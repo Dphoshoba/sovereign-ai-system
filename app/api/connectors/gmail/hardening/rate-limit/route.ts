@@ -8,8 +8,12 @@
 import { NextResponse } from 'next/server';
 import { MOCK_AGGREGATE_HEALTH_READY } from '../../../../../../src/lib/gmail-hardening/mock-data';
 import { RateLimitGuard } from '../../../../../../lib/connectors/gmail/rate-limit-guard';
+import { requireEditorAuth } from "../../../../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const health = MOCK_AGGREGATE_HEALTH_READY;
     const guard = new RateLimitGuard();

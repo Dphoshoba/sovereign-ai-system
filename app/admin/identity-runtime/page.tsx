@@ -12,7 +12,6 @@ import {
 export default function IdentityRuntimePage() {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(false)
-  const [loginEmail, setLoginEmail] = useState("davidoshoba@gmail.com")
   const [inviteEmail, setInviteEmail] = useState("")
   const [inviteRole, setInviteRole] = useState("member")
   const [accessResult, setAccessResult] = useState<any>(null)
@@ -32,10 +31,7 @@ export default function IdentityRuntimePage() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        email: loginEmail,
-        name: loginEmail.split("@")[0],
-      }),
+      body: JSON.stringify({}),
     })
 
     const result = await res.json()
@@ -65,7 +61,6 @@ export default function IdentityRuntimePage() {
         organizationId: org.id,
         email: inviteEmail,
         role: inviteRole,
-        invitedBy: "davidoshoba@gmail.com",
       }),
     })
 
@@ -96,7 +91,6 @@ export default function IdentityRuntimePage() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: loginEmail,
         organizationId: org.id,
         resource: "admin",
         action: "access",
@@ -145,14 +139,7 @@ export default function IdentityRuntimePage() {
 
       <div style={{ marginTop: 24 }}>
         <ExecutiveGrid min={360}>
-          <ExecutiveCard title="Simulate Login" eyebrow="Session runtime">
-            <input
-              value={loginEmail}
-              onChange={(e) => setLoginEmail(e.target.value)}
-              placeholder="Email"
-              style={inputStyle}
-            />
-
+          <ExecutiveCard title="Editor Session" eyebrow="Session runtime">
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <button disabled={loading} onClick={simulateLogin} style={buttonStyle}>
                 Create Session

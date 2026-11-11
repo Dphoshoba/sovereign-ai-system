@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 async function executeStep(step: any) {
   const payload = step.payload || {}
@@ -143,6 +144,9 @@ async function executeStep(step: any) {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
 

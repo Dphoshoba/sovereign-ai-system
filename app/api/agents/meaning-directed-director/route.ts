@@ -12,10 +12,14 @@ import { culturalTrajectoryAgent } from "../../../../lib/agents/cultural-traject
 import { humanMeaningAgent } from "../../../../lib/agents/human-meaning-agent"
 
 import { meaningDirectedDirectorAgent } from "../../../../lib/agents/meaning-directed-director-agent"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(
   req: NextRequest
 ) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await req.json()
 

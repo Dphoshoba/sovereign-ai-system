@@ -8,6 +8,7 @@ import {
   serializeExecutiveLesson,
 } from "@/lib/executive/learning-system"
 import { EXECUTIVE_LIST_LIMITS } from "@/lib/executive/list-limits"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -16,6 +17,9 @@ export const runtime = "nodejs"
 // persistence, no legacy aggregation, and never a 500 — failures degrade to a
 // 200 fallback payload so the dashboard always renders.
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   console.time("executive-learning-get")
 
   try {
@@ -75,6 +79,9 @@ export async function GET() {
 }
 
 export async function POST() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const [decisions, existingLessons] = await Promise.all([
       prisma.executiveDecision.findMany({

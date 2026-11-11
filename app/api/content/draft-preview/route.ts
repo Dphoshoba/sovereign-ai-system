@@ -4,8 +4,12 @@ import {
   buildGovernedDraftPreview,
   summarizeGovernedDraftPreview,
 } from "../../../../lib/content/draft-preview-engine"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const preview = buildGovernedDraftPreview()
 
   return NextResponse.json({

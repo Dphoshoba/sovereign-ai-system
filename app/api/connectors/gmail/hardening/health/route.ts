@@ -8,8 +8,12 @@
 import { NextResponse } from 'next/server';
 import { HealthChecker } from '../../../../../../lib/connectors/gmail/health-checker';
 import { MOCK_AGGREGATE_HEALTH_READY } from '../../../../../../src/lib/gmail-hardening/mock-data';
+import { requireEditorAuth } from "../../../../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const checker = new HealthChecker();
 

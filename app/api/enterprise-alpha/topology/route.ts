@@ -28,8 +28,12 @@ import {
   buildWorkspaceIsolationRules,
   evaluateTenantIsolationReadiness,
 } from "../../../../lib/enterprise/workspace-isolation"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const organization = buildEnterpriseOrganizationHierarchy()
   const departments = buildEnterpriseDepartments()
   const teams = buildEnterpriseTeams()

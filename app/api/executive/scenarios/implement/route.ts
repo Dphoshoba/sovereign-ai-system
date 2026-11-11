@@ -10,6 +10,7 @@ import {
 } from "@/lib/executive/quarterly-goals"
 import type { SimulationStrategy } from "@/lib/executive/simulation-strategy"
 import type { StrategicSimulationResult } from "@/lib/executive/strategic-simulation"
+import { requireEditorAuth } from "../../../../../lib/publishing/require-editor-auth"
 
 type StoredScenarioPayload = {
   simulation: StrategicSimulationResult
@@ -17,6 +18,9 @@ type StoredScenarioPayload = {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
     const scenarioId =

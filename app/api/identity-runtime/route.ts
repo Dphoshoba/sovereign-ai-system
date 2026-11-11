@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import crypto from "crypto"
 import { prisma } from "@/lib/prisma"
+import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
 
 async function seedIdentity() {
   let user = await prisma.identityUser.findUnique({
@@ -91,6 +92,9 @@ async function seedIdentity() {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     await seedIdentity()
 
@@ -137,17 +141,12 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
-
-    if (!body.email) {
-      return NextResponse.json(
-        { ok: false, error: "email is required" },
-        { status: 400 }
-      )
-    }
-
-    const email = body.email.toLowerCase().trim()
+    const email = auth.actor.toLowerCase().trim()
 
     let user = await prisma.identityUser.findUnique({
       where: { email },

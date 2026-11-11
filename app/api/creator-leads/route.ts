@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const leads = await prisma.creatorLead.findMany({
       orderBy: { createdAt: "desc" },
@@ -19,13 +23,25 @@ export async function GET() {
   }
 }
 
+function captureText(value: unknown, max: number) {
+  if (typeof value !== "string") return null
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  return trimmed.slice(0, max)
+}
+
+function captureEmail(value: unknown) {
+  const email = captureText(value, 200)?.toLowerCase()
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null
+  return email
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-
-    const name = body.name?.trim()
-    const email = body.email?.trim().toLowerCase()
-    const creatorType = body.creatorType?.trim()
+    const name = captureText(body?.name, 120)
+    const email = captureEmail(body?.email)
+    const creatorType = captureText(body?.creatorType, 120)
 
     if (!name || !email) {
       return NextResponse.json(
@@ -39,35 +55,27 @@ export async function POST(request: Request) {
     })
 
     if (existingLead) {
-      return NextResponse.json({
-        ok: true,
-        alreadyExists: true,
-        lead: existingLead,
-      })
+      return NextResponse.json({ ok: true, alreadyExists: true })
     }
 
-    const lead = await prisma.creatorLead.create({
+    await prisma.creatorLead.create({
       data: {
         name,
         email,
         creatorType,
-        niche: creatorType || null,
+        niche: creatorType,
         status: "new",
         readiness: "starter-pack",
         leadScore: 50,
       },
     })
 
-    return NextResponse.json({ ok: true, lead })
+    return NextResponse.json({ ok: true })
   } catch (error) {
     console.error("Creator lead capture failed:", error)
 
     return NextResponse.json(
-      {
-        ok: false,
-        error:
-          error instanceof Error ? error.message : "Failed to save creator lead",
-      },
+      { ok: false, error: "Failed to save creator lead" },
       { status: 500 }
     )
   }

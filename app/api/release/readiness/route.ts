@@ -5,8 +5,12 @@ import { buildExecutionBarrierAudit } from "../../../../lib/release/execution-ba
 import { buildGuardrailTestSummary } from "../../../../lib/release/guardrail-tests"
 import { buildNegativeTestSuite } from "../../../../lib/release/negative-test-suite"
 import { buildStartupGate } from "../../../../lib/release/startup-gate"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const execution = buildExecutionBarrierAudit()
   const approvals = buildApprovalBoundaryAudit()
   const guardrails = buildGuardrailTestSummary()

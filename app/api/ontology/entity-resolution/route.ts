@@ -7,6 +7,7 @@ import {
   type ExistingEntityCandidate,
 } from "../../../../lib/ontology/entity-resolution"
 import type { OntologyExtractionResult } from "../../../../lib/ontology"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 const ontologyExample: OntologyExtractionResult = {
   category: "ai-tools",
@@ -113,6 +114,9 @@ const mockExistingCandidates: ExistingEntityCandidate[] = [
 ]
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const payload = buildSemanticGraphPayload(ontologyExample)
   const plan = buildEntityResolutionPlan(payload, mockExistingCandidates)
 

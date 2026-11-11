@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json().catch(() => ({}))
 

@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { calculateInitiativePerformance } from "@/lib/executive/initiative-performance"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const [initiatives, goals] = await Promise.all([
       prisma.strategicInitiative.findMany({

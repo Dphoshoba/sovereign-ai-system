@@ -7,8 +7,12 @@
 import { validateWorkflow } from '../../../../lib/flow/workflow-validator';
 import { previewWorkflowWithInputs } from '../../../../lib/flow/workflow-preview-engine';
 import type { WorkflowDefinition } from '../../../../src/lib/gamma-flow/types';
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json();
     const { definition, inputs, executionId } = body;

@@ -34,6 +34,7 @@ import { buildPerformanceReport } from "@/lib/executive/enterprise-performance"
 import { buildCertificationReport } from "@/lib/executive/enterprise-certification"
 import { recordDecisionOutcome, analyzeDecisionMemory } from "@/lib/executive/decision-memory"
 import { execSync } from "child_process"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export const dynamic = "force-dynamic"
 
@@ -80,6 +81,9 @@ function buildNextActions(
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const [recommendations, opportunities, risks] = await Promise.all([
       generateExecutiveRecommendations(),

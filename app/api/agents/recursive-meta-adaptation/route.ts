@@ -23,8 +23,12 @@ import { recursiveExistentialRiskAgent } from "../../../../lib/agents/recursive-
 import { recursiveSafeguardAgent } from "../../../../lib/agents/recursive-safeguard-agent"
 import { recursiveSelfHealingAgent } from "../../../../lib/agents/recursive-self-healing-agent"
 import { recursiveMetaAdaptationAgent } from "../../../../lib/agents/recursive-meta-adaptation-agent"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await req.json()
     const niche = body.niche || "AI + Faith"

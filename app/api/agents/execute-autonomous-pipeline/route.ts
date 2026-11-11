@@ -7,8 +7,12 @@ import { directorAgent } from "../../../../lib/agents/director-agent"
 import { autonomousPipelineAgent } from "../../../../lib/agents/autonomous-pipeline-agent"
 
 import { executionTriggerAgent } from "../../../../lib/agents/execution-trigger-agent"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await req.json()
 

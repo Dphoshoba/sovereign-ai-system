@@ -2,8 +2,12 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getOpenAI } from "@/lib/ai/openai"
 import { DAVID_WRITING_DNA } from "@/lib/ai/writing-dna"
+import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const audits = await prisma.creatorAuditRequest.findMany({
       orderBy: { createdAt: "desc" },
@@ -21,18 +25,52 @@ export async function GET() {
   }
 }
 
+function captureText(value: unknown, max: number) {
+  if (typeof value !== "string") return null
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  return trimmed.slice(0, max)
+}
+
+function captureEmail(value: unknown) {
+  const email = captureText(value, 200)?.toLowerCase()
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null
+  return email
+}
+
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+
   try {
     const body = await request.json()
-
-    const name = body.name?.trim()
-    const email = body.email?.trim().toLowerCase()
+    const name = captureText(body?.name, 120)
+    const email = captureEmail(body?.email)
 
     if (!name || !email) {
       return NextResponse.json(
         { ok: false, error: "Name and email are required" },
         { status: 400 }
       )
+    }
+
+    if (!auth.ok) {
+      await prisma.creatorAuditRequest.create({
+        data: {
+          name,
+          email,
+          creatorType: captureText(body?.creatorType, 160),
+          niche: captureText(body?.niche, 160),
+          audienceSize: captureText(body?.audienceSize, 80),
+          publishingFrequency: captureText(body?.publishingFrequency, 80),
+          monetizationMethod: captureText(body?.monetizationMethod, 160),
+          currentTools: captureText(body?.currentTools, 240),
+          biggestBottleneck: captureText(body?.biggestBottleneck, 500),
+          automationGoals: captureText(body?.automationGoals, 500),
+          status: "audit-requested",
+        },
+      })
+
+      return NextResponse.json({ ok: true })
     }
 
     const response = await getOpenAI().responses.create({

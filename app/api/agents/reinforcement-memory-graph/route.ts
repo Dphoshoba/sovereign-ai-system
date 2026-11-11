@@ -11,8 +11,12 @@ import { experimentalBranchingAgent } from "../../../../lib/agents/experimental-
 import { branchCompetitionAgent } from "../../../../lib/agents/branch-competition-agent"
 
 import { reinforcementMemoryGraphAgent } from "../../../../lib/agents/reinforcement-memory-graph-agent"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const memories =
       await prisma.videoPerformanceMemory.findMany({

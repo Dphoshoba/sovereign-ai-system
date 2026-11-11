@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
+import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   return NextResponse.json({
     ok: true,
     message:
@@ -14,6 +18,9 @@ export async function GET() {
 }
 
 export async function POST(_request: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   return NextResponse.json({
     ok: true,
     message:

@@ -7,6 +7,7 @@ import {
   validateIngestionPlan,
 } from "../../../../lib/ontology/semantic-graph-ingestion"
 import type { OntologyExtractionResult } from "../../../../lib/ontology"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 const example: OntologyExtractionResult = {
   category: "ai-tools",
@@ -63,6 +64,9 @@ const example: OntologyExtractionResult = {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const payload = buildSemanticGraphPayload(example)
   const plan = createSemanticGraphIngestionPlan(payload)
 

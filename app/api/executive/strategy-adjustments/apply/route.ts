@@ -9,8 +9,12 @@ import {
   normalizeGoalTitle,
 } from "@/lib/executive/quarterly-goals"
 import type { StrategyAdjustmentProposal } from "@/lib/executive/strategy-adjustments"
+import { requireEditorAuth } from "../../../../../lib/publishing/require-editor-auth"
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
     const adjustmentId =

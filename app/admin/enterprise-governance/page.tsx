@@ -34,7 +34,6 @@ export default function EnterpriseGovernancePage() {
         title: "Approve high-risk sovereign runtime execution",
         targetType: "SovereignRuntimeAction",
         targetId: null,
-        requestedBy: "sovereign-runtime",
         requestedRole: "system",
         actionType: "execute-high-risk-action",
         targetLayer: "governance",
@@ -69,7 +68,6 @@ export default function EnterpriseGovernancePage() {
       body: JSON.stringify({
         requestId,
         action,
-        actorEmail: "davidoshoba@gmail.com",
         notes: `Decision: ${action}`,
       }),
     })

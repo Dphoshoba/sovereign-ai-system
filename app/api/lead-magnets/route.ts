@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
 
 function createSlug(title: string) {
   return title
@@ -9,6 +10,9 @@ function createSlug(title: string) {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const leadMagnets = await prisma.leadMagnet.findMany({
       orderBy: {
@@ -35,6 +39,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const { title, description, fileUrl } = await req.json()
 

@@ -108,5 +108,8 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   return POST(request)
 }

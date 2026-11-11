@@ -6,6 +6,7 @@ import {
   type SemanticGraphPayload,
 } from "../../../../lib/ontology/semantic-graph-adapter"
 import type { OntologyExtractionResult } from "../../../../lib/ontology"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 const example: OntologyExtractionResult = {
   category: "bible-stories",
@@ -62,6 +63,9 @@ const example: OntologyExtractionResult = {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const payload: SemanticGraphPayload = buildSemanticGraphPayload(example)
 
   return NextResponse.json({

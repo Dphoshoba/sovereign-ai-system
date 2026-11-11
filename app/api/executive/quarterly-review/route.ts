@@ -6,6 +6,7 @@ import {
   type ExecutiveQuarterlyReview,
 } from "@/lib/executive/quarterly-review"
 import { EXECUTIVE_LIST_LIMITS } from "@/lib/executive/list-limits"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 function serializeReview(record: {
   id: string
@@ -30,6 +31,9 @@ function serializeReview(record: {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const records = await prisma.executiveQuarterlyReview.findMany({
       orderBy: [{ year: "desc" }, { quarter: "desc" }],
@@ -55,6 +59,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     let quarter = getCurrentQuarter().quarter
     let year = getCurrentQuarter().year

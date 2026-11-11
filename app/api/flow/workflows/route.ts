@@ -1,3 +1,4 @@
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 /**
  * GET /api/flow/workflows
  * 
@@ -16,6 +17,9 @@ const WORKFLOW_STORE = new Map<string, {
 }>();
 
 export async function GET(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const url = new URL(request.url);
     const search = url.searchParams.get('search');

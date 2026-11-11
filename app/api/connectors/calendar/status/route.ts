@@ -3,8 +3,12 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { CalendarReader } from '@/../lib/gamma/calendar-reader';
+import { requireEditorAuth } from "../../../../../lib/publishing/require-editor-auth"
 
 export async function GET(request: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const reader = new CalendarReader();
     const summary = reader.getSummary(new Date());

@@ -6,8 +6,12 @@ import {
   previewOperatorIntent,
   type OperatorIntentRequest,
 } from "../../../../lib/ev-kos/operator-intent"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const preview = previewOperatorIntent({
     explicitCreateIntent: true,
     actorId: "operator-preview",
@@ -39,6 +43,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = (await request.json()) as OperatorIntentRequest
     const result = await createOperatorIntent(body)

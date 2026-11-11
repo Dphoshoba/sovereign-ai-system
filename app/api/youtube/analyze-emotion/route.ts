@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 const HIGH_ENERGY = [
   "discover",
@@ -35,6 +36,9 @@ function detectEmotion(text: string) {
 }
 
 export async function POST(req: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const { youtubePostId } = await req.json()
 

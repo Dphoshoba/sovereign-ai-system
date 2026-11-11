@@ -16,10 +16,14 @@ import { meaningDirectedDirectorAgent } from "../../../../lib/agents/meaning-dir
 import { humanFlourishingAgent } from "../../../../lib/agents/human-flourishing-agent"
 
 import { civilizationResilienceAgent } from "../../../../lib/agents/civilization-resilience-agent"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(
   req: NextRequest
 ) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await req.json()
 

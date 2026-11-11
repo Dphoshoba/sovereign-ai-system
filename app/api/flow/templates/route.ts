@@ -5,12 +5,16 @@
  */
 
 import { FlowRegistryReader, initializeFlowRegistry } from '../../../../lib/gamma/flow-registry-reader';
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 // Initialize registry once
 initializeFlowRegistry();
 const registry = new FlowRegistryReader();
 
 export async function GET(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const url = new URL(request.url);
     const search = url.searchParams.get('search');

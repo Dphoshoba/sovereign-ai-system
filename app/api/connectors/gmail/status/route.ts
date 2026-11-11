@@ -5,8 +5,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { gmailManifest, validateGmailManifest } from '../../../../../lib/connectors/gmail/manifest';
+import { requireEditorAuth } from "../../../../../lib/publishing/require-editor-auth"
 
 export async function GET(request: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     // Validate configuration
     const validation = validateGmailManifest();

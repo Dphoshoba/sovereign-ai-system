@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getOpenAI } from "@/lib/ai/openai"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 function toText(value: unknown) {
   if (value === null || value === undefined) return null
@@ -11,6 +12,9 @@ function toText(value: unknown) {
 }
 
 export async function POST(req: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const { youtubePostId } = await req.json()
 

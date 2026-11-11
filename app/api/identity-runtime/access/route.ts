@@ -1,21 +1,25 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
 
-    if (!body.email || !body.organizationId || !body.resource || !body.action) {
+    if (!body.organizationId || !body.resource || !body.action) {
       return NextResponse.json(
         {
           ok: false,
-          error: "email, organizationId, resource and action are required",
+          error: "organizationId, resource and action are required",
         },
         { status: 400 }
       )
     }
 
-    const email = body.email.toLowerCase().trim()
+    const email = auth.actor.toLowerCase().trim()
 
     const user = await prisma.identityUser.findUnique({
       where: { email },

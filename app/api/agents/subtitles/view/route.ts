@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import fs from "fs"
 import path from "path"
+import { requireEditorAuth } from "../../../../../lib/publishing/require-editor-auth"
 
 export async function GET(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const { searchParams } = new URL(req.url)
   const file = searchParams.get("file")
 

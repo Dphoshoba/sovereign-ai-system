@@ -6,6 +6,7 @@ import {
   ontologyTypesForDomain,
   type OntologyExtractionResult,
 } from "../../../../lib/ontology"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 const bibleStoriesExample: OntologyExtractionResult = {
   category: "bible-stories",
@@ -161,6 +162,9 @@ const aiToolsExample: OntologyExtractionResult = {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   return NextResponse.json({
     ok: true,
     contract: {

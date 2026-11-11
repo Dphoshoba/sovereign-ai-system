@@ -31,8 +31,12 @@ import { dynamicSelfHealingEvolutionAgent } from "../../../../lib/agents/dynamic
 import { recursiveStabilityOptimizationAgent } from "../../../../lib/agents/recursive-stability-optimization-agent"
 import { recursiveMutationSimulationAgent } from "../../../../lib/agents/recursive-mutation-simulation-agent"
 import { autonomousStabilityRefinementAgent } from "../../../../lib/agents/autonomous-stability-refinement-agent"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await req.json()
     const niche = body.niche || "AI + Faith"

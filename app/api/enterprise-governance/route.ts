@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
 
 const starterRoles = [
   {
@@ -114,6 +115,9 @@ async function seedGovernance() {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     await seedGovernance()
 
@@ -158,6 +162,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     await seedGovernance()
 
@@ -194,7 +201,7 @@ export async function POST(request: Request) {
         title: body.title,
         targetType: body.targetType,
         targetId: body.targetId || null,
-        requestedBy: body.requestedBy || "system",
+        requestedBy: auth.actor,
         requestedRole: body.requestedRole || null,
         actionType: body.actionType,
         targetLayer: body.targetLayer || null,
@@ -214,8 +221,8 @@ export async function POST(request: Request) {
     await prisma.governanceAuditTrail.create({
       data: {
         eventType: "authorization-request-created",
-        actor: body.requestedBy || "system",
-        actorRole: body.requestedRole || "system",
+        actor: auth.actor,
+        actorRole: "editor",
         targetType: body.targetType,
         targetId: body.targetId || null,
         action: body.actionType,

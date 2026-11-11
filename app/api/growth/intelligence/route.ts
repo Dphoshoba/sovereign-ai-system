@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getOpenAI } from "@/lib/ai/openai"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 type GrowthMetrics = {
   totalSubscribers: number
@@ -86,6 +87,9 @@ function computeMetrics(subscribers: { status: string; createdAt: Date }[]) {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const subscribers = await prisma.subscriber.findMany({
     orderBy: { createdAt: "asc" },
   })

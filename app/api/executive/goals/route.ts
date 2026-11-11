@@ -6,6 +6,7 @@ import {
   isGoalStatus,
 } from "@/lib/executive/quarterly-goals"
 import { calculateInitiativePerformance } from "@/lib/executive/initiative-performance"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 function serializeGoal(goal: {
   id: string
@@ -40,6 +41,9 @@ function serializeGoal(goal: {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const [goals, initiatives] = await Promise.all([
       prisma.quarterlyGoal.findMany({
@@ -84,6 +88,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
     const title = body.title?.trim()
@@ -154,6 +161,9 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
     const id = body.id?.trim()

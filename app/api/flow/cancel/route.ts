@@ -1,3 +1,4 @@
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 /**
  * POST /api/flow/cancel
  * 
@@ -9,6 +10,9 @@
 const ACTIVE_EXECUTIONS = new Map<string, { state: string; cancelledAt?: Date }>();
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json();
     const { executionId } = body;
@@ -53,6 +57,9 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const url = new URL(request.url);
     const executionId = url.searchParams.get('executionId');

@@ -9,6 +9,7 @@ import {
   type IngestionReviewPackageRequest,
 } from "../../../../../lib/ontology/ingestion-review-package"
 import type { IngestionReviewQueueItem } from "../../../../../lib/ontology/ingestion-review-queue"
+import { requireEditorAuth } from "../../../../../lib/publishing/require-editor-auth"
 
 const exampleReviewItem: IngestionReviewQueueItem = {
   id: "review:entity:application:ai-research-assistant:possible_duplicate",
@@ -48,6 +49,9 @@ const exampleReviewItem: IngestionReviewQueueItem = {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const previewRequest: IngestionReviewPackageRequest = {
     explicitCreatePackage: false,
     actorId: "preview-only",
@@ -83,6 +87,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = (await request.json()) as IngestionReviewPackageRequest
     const result = await createIngestionReviewPackage(body)

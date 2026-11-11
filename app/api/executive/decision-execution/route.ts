@@ -3,10 +3,14 @@ import {
   generateExecutionTracker,
   summarizeExecutionTracker,
 } from "@/lib/executive/decision-execution"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export const dynamic = "force-dynamic"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const decisions = await generateExecutionTracker()
 

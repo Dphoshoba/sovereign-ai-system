@@ -6,6 +6,7 @@ import {
   isExecutionPriority,
   isExecutionStatus,
 } from "@/lib/executive/execution-impact"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 function serializeInitiative(initiative: {
   id: string
@@ -40,6 +41,9 @@ function serializeInitiative(initiative: {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const [initiatives, projects, tasks] = await Promise.all([
       prisma.strategicInitiative.findMany({
@@ -91,6 +95,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
     const title = body.title?.trim()
@@ -148,6 +155,9 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
     const id = body.id?.trim()

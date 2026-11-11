@@ -3,8 +3,12 @@ import {
   buildExecutiveKnowledgeGraph,
   getExecutiveKnowledgeGraphSummary,
 } from "@/lib/executive/knowledge-graph"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const summary = await getExecutiveKnowledgeGraphSummary()
 
@@ -27,6 +31,9 @@ export async function GET() {
 }
 
 export async function POST() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const result = await buildExecutiveKnowledgeGraph()
     const summary = await getExecutiveKnowledgeGraphSummary()

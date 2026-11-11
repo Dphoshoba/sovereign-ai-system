@@ -8,8 +8,12 @@ import { seoAgent } from "../../../../lib/agents/seo-agent"
 import { mdxGeneratorAgent } from "../../../../lib/agents/mdx-generator-agent"
 import { publisherAgent } from "../../../../lib/agents/publisher-agent"
 import { analyticsAgent } from "../../../../lib/agents/analytics-agent"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await req.json()
 

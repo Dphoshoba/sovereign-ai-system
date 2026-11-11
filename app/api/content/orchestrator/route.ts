@@ -4,8 +4,12 @@ import {
   exampleApprovedResearchMission,
   orchestrateContentCampaign,
 } from "../../../../lib/content/content-orchestrator"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const result = orchestrateContentCampaign(exampleApprovedResearchMission)
 
   return NextResponse.json({
@@ -15,6 +19,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
 

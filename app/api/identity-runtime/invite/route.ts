@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server"
 import crypto from "crypto"
 import { prisma } from "@/lib/prisma"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
 
@@ -31,7 +35,7 @@ export async function POST(request: Request) {
         organizationId: org.id,
         email: body.email.toLowerCase().trim(),
         role: body.role || "member",
-        invitedBy: body.invitedBy || "davidoshoba@gmail.com",
+        invitedBy: auth.actor,
         token,
         status: "pending",
         expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),

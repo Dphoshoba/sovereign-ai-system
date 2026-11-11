@@ -25,12 +25,16 @@ import { recommendationWithEvidenceCompleteness } from "../../../../lib/research
 import { publicationGate } from "../../../../lib/research/publication-gate"
 import { outlineBuilder } from "../../../../lib/research/outline-builder"
 import { phase1Rules } from "../../../../lib/research/pipeline-registry"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 function escapeYaml(value: string) {
   return `"${value.replace(/"/g, '\\"')}"`
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await req.json()
 

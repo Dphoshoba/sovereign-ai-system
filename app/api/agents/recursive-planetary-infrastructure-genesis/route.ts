@@ -59,8 +59,12 @@ import { recursiveCivilizationAPIAgent } from "../../../../lib/agents/recursive-
 import { recursiveInstitutionalAgent } from "../../../../lib/agents/recursive-institutional-agent"
 import { recursiveTrustInfrastructureAgent } from "../../../../lib/agents/recursive-trust-infrastructure-agent"
 import { recursivePlanetaryInfrastructureGenesisAgent } from "../../../../lib/agents/recursive-planetary-infrastructure-genesis-agent"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await req.json()
     const niche = body.niche || "AI + Faith"
