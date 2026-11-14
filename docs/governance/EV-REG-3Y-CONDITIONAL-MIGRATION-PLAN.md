@@ -14,7 +14,7 @@ The Preview identity and metadata checks are complete, and the approved SQL has 
 
 ## Intended change
 
-The inspection confirmed that `ArticleResearchAudit` exists and both columns are absent. Add only:
+The inspection confirmed that `ArticleResearchAudit` existed and both columns were absent. The executed change added only:
 
 - `specificationVersion` `TEXT NULL`
 - `disputes` `JSONB NULL`
