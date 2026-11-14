@@ -13,7 +13,7 @@ Impact over automation, then scalability. Inspect the repository before changing
 
 ## B. Repository discovery
 
-Confirm the worktree, branch, full HEAD, and whether the tree is clean. Confirm the specification SHA-256 is `9D3C34F1689BBC0DB673A5E0A3B79A11B343C2792D4F9179BFA8E29E5ECC2419`. Read the implementation that already exists before proposing a new one. Milestones 3N through 4D are recorded locally. Milestone 4C is commit `675bb830794e9758ab9fb5d35fd4785081f8e851`. The Preview package is `docs/governance/EV-REG-4D-PREVIEW-VALIDATION.md`. It has not been deployed. Milestone 3Y's database migration is still blocked. `VERSIONED_EDITORIAL_VERIFIER_ENABLED` stays false. Do not restart them.
+Confirm the worktree, branch, full HEAD, and whether the tree is clean. Confirm the specification SHA-256 is `9D3C34F1689BBC0DB673A5E0A3B79A11B343C2792D4F9179BFA8E29E5ECC2419`. Read the implementation that already exists before proposing a new one. Milestones 3N through 4D are recorded locally. Release readiness is `docs/governance/EV-REG-RELEASE-READINESS.md`. Preview activation is blocked until a verified non-Production database is supplied. `VERSIONED_EDITORIAL_VERIFIER_ENABLED` stays false. Do not restart them.
 
 ## C. Research governance
 
@@ -40,14 +40,16 @@ Plan the whole authorised milestone. Implement, test, and correct failures cause
 - Missing `DATABASE_URL` in this worktree is a blocker, not an invitation to copy credentials from another checkout.
 - Baseline `publishersForSource` still accepts a publisher name in a title. The versioned identity uses the hostname registry only.
 - Baseline unattributed claims can still count two hostnames of one organisation as two identities. `evaluateVersionedClaim` collapses those hosts.
-- Overlapping contradictory text can still score as support. A matcher average can omit zero scores. The consensus average is computed and is not returned on the result.
-- `POST /api/research/publication-gate` JSON includes `articlePublicationAuthorised: false`. It is not an article audit and cannot authorise publication.
+- Overlapping contradictory text can still score as support on the baseline matcher. A matcher average can omit zero scores. The consensus average is computed and is not returned on the result. Legacy publication JSON sets `articlePublicationAuthorised` to false and cannot authorise an article.
+- The editor-boundary suite test can exceed its existing 300-second limit under a full editorial run. Rerun that file alone before treating it as a product failure. Do not raise the timeout.
+- A local `npm run build` stops during static generation when the public Supabase URL and key are unset. Do not copy Production credentials in to make that prerender pass.
+- The build rewrites tracked `gamma/research/index.json`. Restore that generated timestamp unless the index itself is the change.
 
 ## H. Agent handoff
 
 Read, in order: this skill, the adopted specification, the latest milestone evidence, current Git state, and the relevant implementation and tests. Continue from the last verified checkpoint. Do not restart the programme.
 
-Verified checkpoint after Milestone 4D: the Preview validation package is local and has not been deployed. Prepare for Review writes `article-grounded-v14`, and that revision function does not switch when the disabled flag is read. Versioned publication checks apply only when an audit carries the adopted specification version. Legacy publication JSON cannot authorise an article. No live database was inspected and no migration was executed. The next human boundary is Preview deployment approval.
+Verified checkpoint: release readiness is local and Preview activation is blocked. Prepare for Review writes `article-grounded-v14`. No database was inspected, no migration was generated, and the local production build did not finish prerender because the public Supabase settings are unset. The next human boundary is a verified non-Production database identity, then a separate migration approval.
 
 ## I. Skill maintenance
 
