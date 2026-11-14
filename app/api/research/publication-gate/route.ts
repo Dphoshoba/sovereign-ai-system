@@ -12,6 +12,7 @@ import { factVerificationEngine } from "../../../../lib/research/fact-verificati
 import { consensusEngine } from "../../../../lib/research/consensus-engine"
 import { recommendationWithEvidenceCompleteness } from "../../../../lib/research/evidence-completeness"
 import { publicationGate } from "../../../../lib/research/publication-gate"
+import { legacyResearchPublicationEnvelope } from "../../../../lib/research/legacy-publication-isolation"
 
 export async function POST(req: NextRequest) {
   const auth = await requireEditorAuth()
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
 
   const result = publicationGate(governedConsensus)
 
-  return NextResponse.json({
+  return NextResponse.json(legacyResearchPublicationEnvelope({
     ok: true,
     sourceCollection,
     evidence,
@@ -68,5 +69,5 @@ export async function POST(req: NextRequest) {
     factVerification,
     consensus: governedConsensus,
     result,
-  })
+  }))
 }

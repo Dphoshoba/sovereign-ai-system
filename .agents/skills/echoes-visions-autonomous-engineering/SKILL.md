@@ -13,7 +13,7 @@ Impact over automation, then scalability. Inspect the repository before changing
 
 ## B. Repository discovery
 
-Confirm the worktree, branch, full HEAD, and whether the tree is clean. Confirm the specification SHA-256 is `9D3C34F1689BBC0DB673A5E0A3B79A11B343C2792D4F9179BFA8E29E5ECC2419`. Read the implementation that already exists before proposing a new one. Milestones 3N through 4B are complete in code. Milestone 3Z is commit `72617c6b83f50ffaf2a78095c518c2d49b2029a1`. Milestone 4A is commit `080a9cfe4e65c0a7009395831e9eed1c0c35de77`. Milestone 3Y's database migration is still blocked. `VERSIONED_EDITORIAL_VERIFIER_ENABLED` stays false, so Prepare for Review still writes `article-grounded-v14`. Do not restart them.
+Confirm the worktree, branch, full HEAD, and whether the tree is clean. Confirm the specification SHA-256 is `9D3C34F1689BBC0DB673A5E0A3B79A11B343C2792D4F9179BFA8E29E5ECC2419`. Read the implementation that already exists before proposing a new one. Milestones 3N through 4C are complete in code. Milestone 3Z is commit `72617c6b83f50ffaf2a78095c518c2d49b2029a1`. Milestone 4A is commit `080a9cfe4e65c0a7009395831e9eed1c0c35de77`. Milestone 4B is commit `373ef4056566334cb70034ce92424f28a324f63e`. Milestone 3Y's database migration is still blocked. `VERSIONED_EDITORIAL_VERIFIER_ENABLED` stays false, so Prepare for Review still writes `article-grounded-v14`. Do not restart them.
 
 ## C. Research governance
 
@@ -41,13 +41,13 @@ Plan the whole authorised milestone. Implement, test, and correct failures cause
 - Baseline `publishersForSource` still accepts a publisher name in a title. The versioned identity uses the hostname registry only.
 - Baseline unattributed claims can still count two hostnames of one organisation as two identities. `evaluateVersionedClaim` collapses those hosts.
 - Overlapping contradictory text can still score as support. A matcher average can omit zero scores. The consensus average is computed and is not returned on the result.
-- `POST /api/research/publication-gate` JSON is not an article audit and cannot authorise publication.
+- `POST /api/research/publication-gate` JSON includes `articlePublicationAuthorised: false`. It is not an article audit and cannot authorise publication.
 
 ## H. Agent handoff
 
 Read, in order: this skill, the adopted specification, the latest milestone evidence, current Git state, and the relevant implementation and tests. Continue from the last verified checkpoint. Do not restart the programme.
 
-Verified checkpoint after Milestone 4B: a versioned audit fails closed when its disputes array, engine revision, or average verification score is missing or unresolved. The stored average includes zero scores. A baseline audit without `specificationVersion` stays on the baseline gate. Prepare for Review still writes `article-grounded-v14` because `VERSIONED_EDITORIAL_VERIFIER_ENABLED` is false. No live database was inspected and no migration was executed.
+Verified checkpoint after Milestone 4C: the legacy publication-gate response keeps its existing research keys and adds `articlePublicationAuthorised: false`. The article publication guard rejects that decision. Generation routes are unchanged. No live database was inspected and no migration was executed.
 
 ## I. Skill maintenance
 

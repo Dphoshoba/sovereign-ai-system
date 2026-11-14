@@ -225,7 +225,7 @@ const routes: ResearchRoute[] = [
     modulePath: "../../app/api/research/publication-gate/route",
     method: "POST",
     path: "/api/research/publication-gate",
-    keys: ["ok", "sourceCollection", "evidence", "factExtraction", "factVerification", "consensus", "result"],
+    keys: ["ok", "sourceCollection", "evidence", "factExtraction", "factVerification", "consensus", "result", "articlePublicationAuthorised"],
   },
   {
     name: "article composer",
