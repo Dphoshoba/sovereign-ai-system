@@ -8,7 +8,7 @@ import {
 export const VERSIONED_EDITORIAL_VERIFIER_ENABLED = false;
 
 export const VERSIONED_VERIFIER_ACTIVATION_BLOCKER =
-  "The versioned editorial verifier stays disabled until a verified non-Production audit schema is inspected.";
+  "The versioned editorial verifier stays disabled until Preview activation is explicitly approved after the verified non-Production schema is ready.";
 
 export function revisionWrittenByEditorialPrepare(): typeof CURRENT_RESEARCH_AUDIT_ENGINE_REVISION {
   return CURRENT_RESEARCH_AUDIT_ENGINE_REVISION;

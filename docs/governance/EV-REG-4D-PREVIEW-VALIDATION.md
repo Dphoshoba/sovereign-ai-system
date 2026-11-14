@@ -1,38 +1,64 @@
 # Milestone 4D Preview validation package
 
-Status: **prepared, not deployed**. This package does not authorise a Preview or Production deployment.
+Status: **ready for Preview activation approval**. This package does not authorise Preview deployment, Production access, or versioned scoring.
 
 ## Verified local state
 
-Repository: `C:\Users\David\echoes-visions-preview-security`
-
-Branch: `integrate/production-research-integrity`
+Repository: `C:\Users\David\echoes-visions-preview-security`  
+Branch: `integrate/production-research-integrity`  
+HEAD: `1cc816a83b8e03e166be2400bbfe0aff2802564d`
 
 | Milestone | Commit | Result |
 |---|---|---|
-| 3Y | `83bd39b4a8dc03237898faefb9e3bc6fe9850219` | Code compatibility committed. Migration pending. |
-| 3Z | `72617c6b83f50ffaf2a78095c518c2d49b2029a1` | Versioned identity and five evidence states. |
-| 4A | `080a9cfe4e65c0a7009395831e9eed1c0c35de77` | Dispute identity, checksums, and expiry. |
-| 4B | `373ef4056566334cb70034ce92424f28a324f63e` | Versioned publication checks fail closed. Verifier activation remains off. |
-| 4C | `675bb830794e9758ab9fb5d35fd4785081f8e851` | Legacy publication JSON cannot authorise an article. |
+| 3Y compatibility | `83bd39b4` | Versioned audits stay compatible with v14. |
+| 3Z | `72617c6b` | Versioned identity and five evidence states. |
+| 4A | `080a9cfe` | Dispute identity, checksums, and expiry. |
+| 4B | `373ef405` | Versioned publication checks fail closed. |
+| 4C | `675bb830` | Legacy publication JSON cannot authorise an article. |
+| Preview build | `221a09f9` | Public Preview Supabase settings verified; local build finished. |
+| Schema inspection | `758addfe` | Preview tables match Prisma; versioned columns were absent. |
+| 3Y Preview migration | `5af9f287` / `1cc816a8` | Nullable `specificationVersion` and `disputes` added on Preview only. |
 
 Adopted specification SHA-256 remains `9D3C34F1689BBC0DB673A5E0A3B79A11B343C2792D4F9179BFA8E29E5ECC2419`.
 
-`npx tsc --noEmit --pretty false --incremental false` exited 0 after Milestone 4B. The editorial suite on the 4B and 4C implementation passed 1,121 tests. Two publication-gate key assertions failed because the response gained `articlePublicationAuthorised`. That contract test was updated and `tests/editorial/research-route-auth.test.ts` then passed 76 tests. No timeout was raised.
+Local verification already recorded for this HEAD:
+
+- `tsc --noEmit` exited 0
+- editorial suite: 99 files / 1,123 tests passed
+- `npm run build` finished TypeScript and 656 static pages
+- live Preview metadata rechecked after migration: both columns nullable, no defaults, RLS still enabled
 
 ## What stays inactive
 
-`VERSIONED_EDITORIAL_VERIFIER_ENABLED` is false. `revisionWrittenByEditorialPrepare` always writes `article-grounded-v14`. Turning the flag on does not by itself switch scoring or the stored revision. Prepare for Review does not persist `specificationVersion` or `disputes`. The conditional migration in `docs/governance/EV-REG-3Y-CONDITIONAL-MIGRATION-PLAN.md` has not been generated or executed. No database connection was opened.
+`VERSIONED_EDITORIAL_VERIFIER_ENABLED` is false. `revisionWrittenByEditorialPrepare` always writes `article-grounded-v14`. Turning the flag on does not by itself switch scoring or the stored revision. Prepare for Review does not call `evaluateVersionedClaim` and does not persist `specificationVersion` or `disputes`.
 
-## Deployment instructions, after explicit approval
+## Preview database
 
-1. Confirm the deployed commit is the 4D commit on this branch.
-2. Confirm the specification hash above.
-3. Do not set a database URL that identifies Supabase project `kqptdgbttfuqkzxzbazw`.
-4. Do not run `prisma db push`, `prisma migrate deploy`, or schema SQL.
-5. Leave the versioned verifier flag false until a verified non-Production schema inspection is complete.
-6. Do not run Prepare for Review, and do not approve, schedule, or publish article `cmw0ln6wb000078ungn5f9lqk`.
+Identity matches `src/lib/preview-postgres.ts` and project `emmzoeeaznhpwevqprkn`. Production project `kqptdgbttfuqkzxzbazw` is rejected. Evidence:
+
+- `docs/governance/EV-REG-3Y-SCHEMA-INSPECTION.md`
+- `docs/governance/EV-REG-3Y-MIGRATION-EXECUTION.md`
+
+Tracked migrations still do not create `ArticleResearchAudit` or `ArticleReviewNote`. Do not run `prisma db push` or `prisma migrate deploy`.
+
+## Activation sequence, after explicit approval
+
+1. Deploy this branch to Preview only. Confirm the database URL remains the approved Preview target.
+2. Keep existing audit rows untouched. A null `specificationVersion` remains a baseline audit.
+3. In a separately approved change, switch Prepare for Review to `evaluateVersionedClaim` and write `EV-REG-SPEC-1.0.0`, an explicit `disputes` array, the zero-inclusive average, and `article-grounded-ev-reg-1`.
+4. Leave baseline audits on the baseline gate. Fail closed when versioned metadata is incomplete.
+5. Keep dispute resolution bound to its own id, checksums, and source-set fingerprint.
+6. Keep `articlePublicationAuthorised` false on the legacy research response.
+7. Keep approval, scheduling, and publication as separate human actions.
+8. Do not re-audit, approve, schedule, or publish article `cmw0ln6wb000078ungn5f9lqk`.
 
 ## Rollback
 
-Redeploy the previous application revision. No database rollback is required because this programme executed no migration. The nullable columns in the conditional plan must not be dropped as a first rollback if they are later added. Code rollback is sufficient while those columns are absent.
+Redeploy the previous application revision first. Leave the nullable Preview columns in place. Do not drop them as the first rollback.
+
+## Human approvals still required
+
+- Authorise Preview deployment of this HEAD.
+- Authorise the later change that turns on versioned scoring inside Prepare for Review.
+- Any article audit, approval, scheduling, or publication remains a separate decision.
+- Production remains out of scope.

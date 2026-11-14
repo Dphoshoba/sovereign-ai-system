@@ -53,7 +53,7 @@ Plan the whole authorised milestone. Implement, test, and correct failures cause
 
 Read, in order: this skill, the adopted specification, the latest milestone evidence, current Git state, and the relevant implementation and tests. Continue from the last verified checkpoint. Do not restart the programme.
 
-Verified checkpoint: Preview `ArticleResearchAudit` now has nullable `specificationVersion` text and `disputes` jsonb, with no defaults. Evidence is `docs/governance/EV-REG-3Y-MIGRATION-EXECUTION.md`. Prepare for Review writes `article-grounded-v14`. The next human boundary is approval to activate the versioned verifier on Preview. That approval does not authorise Production or publication.
+Verified checkpoint: Preview schema migration is complete and recorded. The 4D package and release readiness now ask for Preview activation approval. Prepare for Review still writes `article-grounded-v14`. `VERSIONED_EDITORIAL_VERIFIER_ENABLED` stays false. The next human boundary is explicit approval to deploy Preview and, separately, to turn on versioned scoring inside Prepare for Review. That does not authorise Production or publication.
 
 ## I. Skill maintenance
 
