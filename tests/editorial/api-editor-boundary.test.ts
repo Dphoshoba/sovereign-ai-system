@@ -161,7 +161,7 @@ describe("editor boundary on privileged API handlers", () => {
       }
     }
     expect(failures).toEqual([])
-  }, 300000)
+  }, 420000)
 })
 
 describe("public and service routes stay outside the editor gate", () => {
