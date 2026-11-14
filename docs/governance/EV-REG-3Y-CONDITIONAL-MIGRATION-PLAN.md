@@ -4,22 +4,17 @@ Status: **not executed**. This file is not a Prisma migration and must not be co
 
 ## Why it is pending
 
-The release worktree has no `DATABASE_URL` or `DIRECT_URL`. The live `ArticleResearchAudit` table has not been inspected. Tracked migrations do not create `ArticleResearchAudit` or `ArticleReviewNote`. A migration that assumed those tables already exist, or that created them from the Prisma model, would be unsafe.
+A read-only inspection of the approved Preview database is recorded in `docs/governance/EV-REG-3Y-SCHEMA-INSPECTION.md`. `ArticleResearchAudit` and `ArticleReviewNote` exist and match the Prisma models. `specificationVersion` and `disputes` are absent. Tracked migrations still do not create either table. The additive change is confirmed as the proposal and remains unexecuted.
 
 No `prisma db push`, `prisma migrate deploy`, or schema-changing SQL has been run for this milestone.
 
 ## Prerequisite
 
-Before any migration artifact is written:
+The Preview identity and metadata checks are complete. Before any migration artifact is written, a separate human approval is still required. Do not create the tables from this plan, and do not generate the change from the incomplete migration history.
 
-1. Independently verify a non-Production database. A variable name is not proof.
-2. Reject any URL whose identity includes the Production Supabase project `kqptdgbttfuqkzxzbazw`.
-3. Inspect metadata only: whether `ArticleResearchAudit` exists and which columns it already has.
-4. Stop if the table is absent. Do not create it from this plan.
+## Intended change
 
-## Intended change, after that inspection
-
-If the table exists and both columns are absent, add only:
+The inspection confirmed that `ArticleResearchAudit` exists and both columns are absent. Add only:
 
 - `specificationVersion` `TEXT NULL`
 - `disputes` `JSONB NULL`
