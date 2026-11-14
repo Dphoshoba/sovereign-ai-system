@@ -43,13 +43,15 @@ Plan the whole authorised milestone. Implement, test, and correct failures cause
 - Overlapping contradictory text can still score as support on the baseline matcher. A matcher average can omit zero scores. The consensus average is computed and is not returned on the result. Legacy publication JSON sets `articlePublicationAuthorised` to false and cannot authorise an article.
 - The editor-boundary test walks every privileged handler after the gate. Under full-suite load it measured 301 seconds against a 300-second cap. That one cap is now 420 seconds. Isolated runs already finished. Do not raise it again without a new measurement.
 - A local `npm run build` stops during static generation when the public Supabase URL and key are unset. Do not copy Production credentials in to make that prerender pass.
+- `.gitignore` already ignores `.env*`, including `.env.local`. Confirm the URL host is `emmzoeeaznhpwevqprkn.supabase.co` and decode only the anon JWT payload: `ref` must be that project and `role` must be `anon`. Do not print the token. A successful build with those public settings is not a database connection.
 - The build rewrites tracked `gamma/research/index.json`. Restore that generated timestamp unless the index itself is the change.
+- Turbopack can warn that a parent `pnpm-lock.yaml` is the workspace root, and Next can warn that `middleware` is deprecated. Neither warning failed the verified Preview build. Do not change them while checking credentials.
 
 ## H. Agent handoff
 
 Read, in order: this skill, the adopted specification, the latest milestone evidence, current Git state, and the relevant implementation and tests. Continue from the last verified checkpoint. Do not restart the programme.
 
-Verified checkpoint: Preview project ref `emmzoeeaznhpwevqprkn` answers on its public API host and is not `kqptdgbttfuqkzxzbazw`. No database URL is configured, so the audit tables remain uninspected. The metadata procedure is `docs/governance/EV-REG-METADATA-INSPECTION.md`. Prepare for Review writes `article-grounded-v14`. The next human boundary is the Preview publishable Supabase URL and anon key, plus a database URL that matches the approved Preview target.
+Verified checkpoint: ignored `.env.local` holds the Preview public URL and anon key for `emmzoeeaznhpwevqprkn` (`role` anon), not Production. `npm run build` completed, including Next's typecheck and 656 static pages. Separate `tsc --noEmit` exited 0. The editorial suite passed 1,123 tests. No database URL is configured, so the audit tables remain uninspected under `docs/governance/EV-REG-METADATA-INSPECTION.md`. Prepare for Review writes `article-grounded-v14`. The next human boundary is a database URL that matches the approved Preview target, then a separate metadata-inspection approval.
 
 ## I. Skill maintenance
 
@@ -59,7 +61,7 @@ After each completed milestone, add only new reusable lessons, decisions, and bl
 
 Discover the environment before connecting. The approved Preview database target is the host, port, database, and username in `src/lib/preview-postgres.ts`. The project ref in that username is `emmzoeeaznhpwevqprkn`. Production remains `kqptdgbttfuqkzxzbazw`. A public HTTP response from `https://<ref>.supabase.co` shows the API host exists. It does not prove which database a deployment uses, and it is not permission to connect.
 
-Public build settings are `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` for the Preview project. `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, and `DIRECT_URL` are secrets. Do not invent either group, and do not copy Production values into the worktree. A missing public pair stops `npm run build` during static generation.
+Public build settings are `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` for the Preview project. `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, and `DIRECT_URL` are secrets. Do not invent either group, and do not copy Production values into the worktree. A missing public pair stops `npm run build` during static generation. With the verified Preview pair in ignored `.env.local`, Next reports `Environments: .env.local` and static generation can finish. That still does not authorise a database session.
 
 Schema inspection, after identity checks pass, is the read-only procedure in `docs/governance/EV-REG-METADATA-INSPECTION.md`. Roll the transaction back. Do not generate or execute the audit migration from that result. Approval boundaries stay in section A.
 
