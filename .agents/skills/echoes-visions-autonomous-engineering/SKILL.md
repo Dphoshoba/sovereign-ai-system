@@ -13,7 +13,7 @@ Impact over automation, then scalability. Inspect the repository before changing
 
 ## B. Repository discovery
 
-Confirm the worktree, branch, full HEAD, and whether the tree is clean. Confirm the specification SHA-256 is `9D3C34F1689BBC0DB673A5E0A3B79A11B343C2792D4F9179BFA8E29E5ECC2419`. Read the implementation that already exists before proposing a new one. Milestones 3N through 4C are complete in code. Milestone 3Z is commit `72617c6b83f50ffaf2a78095c518c2d49b2029a1`. Milestone 4A is commit `080a9cfe4e65c0a7009395831e9eed1c0c35de77`. Milestone 4B is commit `373ef4056566334cb70034ce92424f28a324f63e`. Milestone 3Y's database migration is still blocked. `VERSIONED_EDITORIAL_VERIFIER_ENABLED` stays false, so Prepare for Review still writes `article-grounded-v14`. Do not restart them.
+Confirm the worktree, branch, full HEAD, and whether the tree is clean. Confirm the specification SHA-256 is `9D3C34F1689BBC0DB673A5E0A3B79A11B343C2792D4F9179BFA8E29E5ECC2419`. Read the implementation that already exists before proposing a new one. Milestones 3N through 4D are recorded locally. Milestone 4C is commit `675bb830794e9758ab9fb5d35fd4785081f8e851`. The Preview package is `docs/governance/EV-REG-4D-PREVIEW-VALIDATION.md`. It has not been deployed. Milestone 3Y's database migration is still blocked. `VERSIONED_EDITORIAL_VERIFIER_ENABLED` stays false. Do not restart them.
 
 ## C. Research governance
 
@@ -47,7 +47,7 @@ Plan the whole authorised milestone. Implement, test, and correct failures cause
 
 Read, in order: this skill, the adopted specification, the latest milestone evidence, current Git state, and the relevant implementation and tests. Continue from the last verified checkpoint. Do not restart the programme.
 
-Verified checkpoint after Milestone 4C: the legacy publication-gate response keeps its existing research keys and adds `articlePublicationAuthorised: false`. The article publication guard rejects that decision. Generation routes are unchanged. No live database was inspected and no migration was executed.
+Verified checkpoint after Milestone 4D: the Preview validation package is local and has not been deployed. Prepare for Review still writes `article-grounded-v14`. Versioned publication checks apply only when an audit carries the adopted specification version. Legacy publication JSON cannot authorise an article. No live database was inspected and no migration was executed. The next human boundary is Preview deployment approval.
 
 ## I. Skill maintenance
 
