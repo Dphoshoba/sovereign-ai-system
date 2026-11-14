@@ -21,7 +21,7 @@ import {
   type EvidenceRegistryResult,
 } from "./evidence-registry";
 import { publicationGate } from "./publication-gate";
-import { CURRENT_RESEARCH_AUDIT_ENGINE_REVISION } from "./research-audit-engine-revision";
+import { revisionWrittenByEditorialPrepare } from "./versioned-publication";
 import { researchAuditCoverage } from "./research-audit-coverage";
 import {
   isUnavailableAcquisitionCategory,
@@ -571,7 +571,7 @@ export async function prepareArticleForReview(
             auditId: audit.id,
             contentFingerprint: lockedFingerprint,
             createdAt: audit.createdAt,
-            engineRevision: CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
+            engineRevision: revisionWrittenByEditorialPrepare(),
           }),
         },
       });
@@ -610,7 +610,7 @@ export async function prepareArticleForReview(
         id: createdAudit.id,
         createdAt: createdAudit.createdAt.toISOString(),
         contentFingerprint,
-        engineRevision: CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
+        engineRevision: revisionWrittenByEditorialPrepare(),
         sourceCount: sourceStats.sourceCount,
         evidenceCount: verification.acceptedEvidence.length,
         factCount: verification.facts.length,

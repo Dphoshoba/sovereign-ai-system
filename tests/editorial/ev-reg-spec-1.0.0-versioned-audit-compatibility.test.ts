@@ -160,6 +160,8 @@ describe("versioned audit compatibility", () => {
       ...favourable,
       specificationVersion: ADOPTED_AUDIT_SPECIFICATION_VERSION,
       disputes: [],
+      engineRevision: VERSIONED_RESEARCH_AUDIT_ENGINE_REVISION,
+      averageVerificationScore: 90,
       facts: [
         {
           claim: "Microsoft documents a geographic availability limit.",
@@ -172,6 +174,21 @@ describe("versioned audit compatibility", () => {
     };
 
     expect(researchPublicationBlockReason(primarySource)).toContain("Human review is required");
+    expect(researchPublicationBlockReason({
+      ...favourable,
+      facts: [
+        {
+          claim: "Two independent works support the statement.",
+          verificationStatus: "verified",
+          verificationMethod: "exact",
+          verificationCount: 2,
+          supportingSources: [
+            { sourceUrl: sourceUrls[0] },
+            { sourceUrl: "https://www.business.gov.au/online/artificial-intelligence" },
+          ],
+        },
+      ],
+    })).toBeNull();
     expect(researchPublicationBlockReason({
       ...favourable,
       specificationVersion: ADOPTED_AUDIT_SPECIFICATION_VERSION,
@@ -187,7 +204,7 @@ describe("versioned audit compatibility", () => {
           ],
         },
       ],
-    })).toBeNull();
+    })).toBe("Versioned audit dispute metadata is missing.");
     expect(publicationGuard("review-required", { hasCurrentAudit: true }).allowed).toBe(false);
     expect(versionedDisputeMetadataProblem(primarySource)).toBeNull();
   });

@@ -299,27 +299,26 @@ describe("baseline characterisation of the safety boundaries", () => {
     expect(plain.verificationScore).toBe(53);
   });
 
-  it("ignores a specification version and a missing disputes array on an otherwise complete audit", () => {
+  it("keeps a baseline audit on the baseline gate and fails closed for versioned metadata", () => {
     expect(isCurrentResearchAuditEngineRevision("article-grounded-v14")).toBe(true);
-    const complete = {
+    const facts = [
+      {
+        claim: FIXTURE_TEXT.twoWorksClaim,
+        verificationStatus: "verified",
+        verificationMethod: "exact",
+        verificationCount: 2,
+        supportingSources: [
+          { sourceUrl: FIXTURE_URLS.business },
+          { sourceUrl: FIXTURE_URLS.nist },
+        ],
+      },
+    ];
+    expect(researchPublicationBlockReason({ ...FAVOURABLE, facts })).toBeNull();
+    expect(researchPublicationBlockReason({
       ...FAVOURABLE,
       specificationVersion: "EV-REG-SPEC-1.0.0",
-      facts: [
-        {
-          claim: FIXTURE_TEXT.twoWorksClaim,
-          verificationStatus: "verified",
-          verificationMethod: "exact",
-          verificationCount: 2,
-          supportingSources: [
-            { sourceUrl: FIXTURE_URLS.business },
-            { sourceUrl: FIXTURE_URLS.nist },
-          ],
-        },
-      ],
-    };
-
-    expect(researchPublicationBlockReason(complete)).toBeNull();
-    expect(complete).not.toHaveProperty("disputes");
+      facts,
+    })).toBe("Versioned audit dispute metadata is missing.");
   });
 
   it("does not let the legacy publication decision satisfy the article guard", () => {

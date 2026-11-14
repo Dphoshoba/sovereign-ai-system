@@ -4,6 +4,7 @@ import {
   PUBLISH_READY_SOURCE_QUALITY_SCORE,
 } from "../research/consensus-engine"
 import { qualifyingPublicationSourceIdentity } from "../research/claim-source-attribution"
+import { versionedPublicationMetadataProblem } from "../research/versioned-publication"
 
 export type ArticlePublishStatus =
   | "draft"
@@ -25,6 +26,10 @@ export type ResearchPublishabilityAudit = {
   publicationRecommendation?: unknown
   unverifiedCount?: unknown
   facts?: unknown
+  specificationVersion?: unknown
+  disputes?: unknown
+  averageVerificationScore?: unknown
+  engineRevision?: unknown
 }
 
 function isFiniteScore(value: unknown): value is number {
@@ -96,6 +101,9 @@ export function researchPublicationBlockReason(
   if (!audit) {
     return "A current publish-ready research audit is required before scheduling or publication."
   }
+
+  const versionedProblem = versionedPublicationMetadataProblem(audit)
+  if (versionedProblem) return versionedProblem
 
   const consensusReady =
     isFiniteScore(audit.consensusScore) &&
