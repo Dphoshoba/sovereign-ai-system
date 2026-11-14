@@ -47,7 +47,7 @@ Plan the whole authorised milestone. Implement, test, and correct failures cause
 
 Read, in order: this skill, the adopted specification, the latest milestone evidence, current Git state, and the relevant implementation and tests. Continue from the last verified checkpoint. Do not restart the programme.
 
-Verified checkpoint after Milestone 4D: the Preview validation package is local and has not been deployed. Prepare for Review still writes `article-grounded-v14`. Versioned publication checks apply only when an audit carries the adopted specification version. Legacy publication JSON cannot authorise an article. No live database was inspected and no migration was executed. The next human boundary is Preview deployment approval.
+Verified checkpoint after Milestone 4D: the Preview validation package is local and has not been deployed. Prepare for Review writes `article-grounded-v14`, and that revision function does not switch when the disabled flag is read. Versioned publication checks apply only when an audit carries the adopted specification version. Legacy publication JSON cannot authorise an article. No live database was inspected and no migration was executed. The next human boundary is Preview deployment approval.
 
 ## I. Skill maintenance
 

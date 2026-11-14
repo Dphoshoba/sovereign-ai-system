@@ -22,7 +22,7 @@ Adopted specification SHA-256 remains `9D3C34F1689BBC0DB673A5E0A3B79A11B343C2792
 
 ## What stays inactive
 
-`VERSIONED_EDITORIAL_VERIFIER_ENABLED` is false. Prepare for Review still writes `article-grounded-v14` and does not persist `specificationVersion` or `disputes`. The conditional migration in `docs/governance/EV-REG-3Y-CONDITIONAL-MIGRATION-PLAN.md` has not been generated or executed. No database connection was opened.
+`VERSIONED_EDITORIAL_VERIFIER_ENABLED` is false. `revisionWrittenByEditorialPrepare` always writes `article-grounded-v14`. Turning the flag on does not by itself switch scoring or the stored revision. Prepare for Review does not persist `specificationVersion` or `disputes`. The conditional migration in `docs/governance/EV-REG-3Y-CONDITIONAL-MIGRATION-PLAN.md` has not been generated or executed. No database connection was opened.
 
 ## Deployment instructions, after explicit approval
 

@@ -5,6 +5,7 @@ import { VERSIONED_RESEARCH_AUDIT_ENGINE_REVISION } from "../../lib/research/res
 import {
   revisionWrittenByEditorialPrepare,
   VERSIONED_EDITORIAL_VERIFIER_ENABLED,
+  VERSIONED_VERIFIER_ACTIVATION_BLOCKER,
   versionedAverageVerificationScore,
 } from "../../lib/research/versioned-publication";
 
@@ -38,6 +39,7 @@ const versioned = {
 describe("versioned editorial verifier boundary", () => {
   it("keeps Prepare for Review on article-grounded-v14 while activation is disabled", () => {
     expect(VERSIONED_EDITORIAL_VERIFIER_ENABLED).toBe(false);
+    expect(VERSIONED_VERIFIER_ACTIVATION_BLOCKER).toContain("verified non-Production");
     expect(revisionWrittenByEditorialPrepare()).toBe("article-grounded-v14");
   });
 

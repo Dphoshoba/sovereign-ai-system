@@ -7,12 +7,11 @@ import {
 
 export const VERSIONED_EDITORIAL_VERIFIER_ENABLED = false;
 
-export function revisionWrittenByEditorialPrepare():
-  | typeof CURRENT_RESEARCH_AUDIT_ENGINE_REVISION
-  | typeof VERSIONED_RESEARCH_AUDIT_ENGINE_REVISION {
-  return VERSIONED_EDITORIAL_VERIFIER_ENABLED
-    ? VERSIONED_RESEARCH_AUDIT_ENGINE_REVISION
-    : CURRENT_RESEARCH_AUDIT_ENGINE_REVISION;
+export const VERSIONED_VERIFIER_ACTIVATION_BLOCKER =
+  "The versioned editorial verifier stays disabled until a verified non-Production audit schema is inspected.";
+
+export function revisionWrittenByEditorialPrepare(): typeof CURRENT_RESEARCH_AUDIT_ENGINE_REVISION {
+  return CURRENT_RESEARCH_AUDIT_ENGINE_REVISION;
 }
 
 export function versionedAverageVerificationScore(scores: number[]): number | null {
