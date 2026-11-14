@@ -11,6 +11,8 @@ Use this skill whenever an agent (ChatGPT, Grok, BlackBoxAI or another assistant
 
 This skill is a workflow and safety contract, **not permission** to perform writes or deployments. Human approval is required separately at each consequential gate. Repository code and current production metadata take precedence over historical notes here; never silently relax controls.
 
+Engineering implementation of the adopted research-governance specification uses `.agents/skills/echoes-visions-autonomous-engineering/SKILL.md`. This file remains the editorial and release safety contract.
+
 ## Operating principles
 
 - Accuracy over volume. No invented sources, statistics, quotes, outcomes or verification claims. Identify commentary, original experiments, interpretations, examples and predictions separately.
