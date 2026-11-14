@@ -13,7 +13,7 @@ Impact over automation, then scalability. Inspect the repository before changing
 
 ## B. Repository discovery
 
-Confirm the worktree, branch, full HEAD, and whether the tree is clean. Confirm the specification SHA-256 is `9D3C34F1689BBC0DB673A5E0A3B79A11B343C2792D4F9179BFA8E29E5ECC2419`. Read the implementation that already exists before proposing a new one. Milestones 3N through 3X are complete. Milestone 3Y code compatibility is complete and its database migration is still blocked. Do not restart them.
+Confirm the worktree, branch, full HEAD, and whether the tree is clean. Confirm the specification SHA-256 is `9D3C34F1689BBC0DB673A5E0A3B79A11B343C2792D4F9179BFA8E29E5ECC2419`. Read the implementation that already exists before proposing a new one. Milestones 3N through 3Z are complete in code. Milestone 3Y's database migration is still blocked. Do not restart them.
 
 ## C. Research governance
 
@@ -38,8 +38,8 @@ Plan the whole authorised milestone. Implement, test, and correct failures cause
 - Docker Desktop can take longer than the 120-second PostgreSQL hook on a cold start. Confirm `docker version` before rerunning that test. Do not delete unrelated containers.
 - The disposable database on port 55432 is a test fixture. It is not live schema verification.
 - Missing `DATABASE_URL` in this worktree is a blocker, not an invitation to copy credentials from another checkout.
-- A title containing a publisher name can currently receive that publisher key. Do not treat that as independent corroboration.
-- Two hostnames of one organisation can count as two identities for an unattributed claim. A named-publisher claim collapses them.
+- Baseline `publishersForSource` still accepts a publisher name in a title. The versioned identity uses the hostname registry only.
+- Baseline unattributed claims can still count two hostnames of one organisation as two identities. `evaluateVersionedClaim` collapses those hosts.
 - Overlapping contradictory text can still score as support. A matcher average can omit zero scores. The consensus average is computed and is not returned on the result.
 - `POST /api/research/publication-gate` JSON is not an article audit and cannot authorise publication.
 
@@ -47,7 +47,7 @@ Plan the whole authorised milestone. Implement, test, and correct failures cause
 
 Read, in order: this skill, the adopted specification, the latest milestone evidence, current Git state, and the relevant implementation and tests. Continue from the last verified checkpoint. Do not restart the programme.
 
-Verified checkpoint after Milestone 3Y: compatibility code and tests are local. Prepare for Review still writes `article-grounded-v14`. `article-grounded-ev-reg-1` is accepted beside it and is not written yet. `NULL` specification version is baseline. Versioned dispute validation fails closed only when that function is called. The publication guard does not call it. No live database was inspected and no migration was executed.
+Verified checkpoint after Milestone 3Z: `lib/research/versioned-evidence.ts` evaluates canonical publisher identity, same-organisation collapse, the Power Platform alias, joint-document identity, full-claim actor agreement, and the five evidence states. Prepare for Review still writes `article-grounded-v14`. The publication guard does not yet apply versioned eligibility. No live database was inspected and no migration was executed.
 
 ## I. Skill maintenance
 
