@@ -1,6 +1,6 @@
 # Preview audit schema inspection
 
-Status: **read-only inspection complete. Migration not approved.** This file is not a Prisma migration and must not be copied into `prisma/migrations`.
+Status: **read-only inspection complete.** The later execution record is `docs/governance/EV-REG-3Y-MIGRATION-EXECUTION.md`. This file is not a Prisma migration and must not be copied into `prisma/migrations`.
 
 Worktree: `C:\Users\David\echoes-visions-preview-security`  
 Branch: `integrate/production-research-integrity`  

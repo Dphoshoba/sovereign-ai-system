@@ -615,7 +615,7 @@ describe("article-grounded-v6 lifecycle", () => {
     expect(both.historicalAudits).toEqual([v5]);
   });
 
-  it("does not change Prisma schema or migrations relative to 3ee14b0", () => {
+  it("adds only the nullable audit columns relative to 3ee14b0", () => {
     const schema = execFileSync(
       "git",
       ["diff", "3ee14b08ece32fd848c173aa703b8f5cf44cef89", "--", "prisma/schema.prisma"],
@@ -626,7 +626,19 @@ describe("article-grounded-v6 lifecycle", () => {
       ["diff", "3ee14b08ece32fd848c173aa703b8f5cf44cef89", "--", "prisma/migrations"],
       { encoding: "utf8" },
     );
-    expect(schema).toBe("");
+    const added = schema
+      .split(/\r?\n/)
+      .filter((line) => line.startsWith("+") && !line.startsWith("+++"))
+      .map((line) => line.slice(1))
+    const removed = schema
+      .split(/\r?\n/)
+      .filter((line) => line.startsWith("-") && !line.startsWith("---"))
+    expect(removed).toEqual([])
+    expect(added).toEqual([
+      "  specificationVersion String?",
+      "  disputes             Json?",
+      "",
+    ])
     expect(migrations).toBe("");
   });
 });

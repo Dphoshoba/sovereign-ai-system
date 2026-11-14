@@ -1,16 +1,16 @@
 # Milestone 3Y conditional migration plan
 
-Status: **not executed**. This file is not a Prisma migration and must not be copied into `prisma/migrations`.
+Status: **executed on the verified Preview database.** The record is `docs/governance/EV-REG-3Y-MIGRATION-EXECUTION.md`. This file is not a Prisma migration and must not be copied into `prisma/migrations`.
 
-## Why it is pending
+## Scope
 
-A read-only inspection of the approved Preview database is recorded in `docs/governance/EV-REG-3Y-SCHEMA-INSPECTION.md`. `ArticleResearchAudit` and `ArticleReviewNote` exist and match the Prisma models. `specificationVersion` and `disputes` are absent. Tracked migrations still do not create either table. The additive change is confirmed as the proposal and remains unexecuted.
+A read-only inspection of the approved Preview database is recorded in `docs/governance/EV-REG-3Y-SCHEMA-INSPECTION.md`. `ArticleResearchAudit` and `ArticleReviewNote` exist. Tracked migrations still do not create either table. The additive change was executed on that Preview database only. It remains unexecuted everywhere else.
 
-No `prisma db push`, `prisma migrate deploy`, or schema-changing SQL has been run for this milestone.
+No `prisma db push` or `prisma migrate deploy` has been run. The only schema change is the explicit Preview statement in the execution record.
 
 ## Prerequisite
 
-The Preview identity and metadata checks are complete. Before any migration artifact is written, a separate human approval is still required. Do not create the tables from this plan, and do not generate the change from the incomplete migration history.
+The Preview identity and metadata checks are complete, and the approved SQL has been executed there. Do not create the tables from this plan, do not generate the change from the incomplete migration history, and do not run it against Production.
 
 ## Intended change
 

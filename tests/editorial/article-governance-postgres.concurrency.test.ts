@@ -85,7 +85,9 @@ CREATE TABLE "ArticleResearchAudit" (
   "evidence" JSONB,
   "facts" JSONB,
   "consensus" JSONB,
-  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW()
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "specificationVersion" TEXT,
+  "disputes" JSONB
 );
 CREATE TABLE "ResearchSource" (
   "id" TEXT PRIMARY KEY,

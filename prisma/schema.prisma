@@ -3992,6 +3992,9 @@ model ArticleResearchAudit {
 
   createdAt DateTime @default(now())
 
+  specificationVersion String?
+  disputes             Json?
+
   @@index([articleId])
 }
 
