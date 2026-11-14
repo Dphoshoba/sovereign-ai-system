@@ -13,7 +13,7 @@ Impact over automation, then scalability. Inspect the repository before changing
 
 ## B. Repository discovery
 
-Confirm the worktree, branch, full HEAD, and whether the tree is clean. Confirm the specification SHA-256 is `9D3C34F1689BBC0DB673A5E0A3B79A11B343C2792D4F9179BFA8E29E5ECC2419`. Read the implementation that already exists before proposing a new one. Milestones 3N through 3Z are complete in code. Milestone 3Y's database migration is still blocked. Do not restart them.
+Confirm the worktree, branch, full HEAD, and whether the tree is clean. Confirm the specification SHA-256 is `9D3C34F1689BBC0DB673A5E0A3B79A11B343C2792D4F9179BFA8E29E5ECC2419`. Read the implementation that already exists before proposing a new one. Milestones 3N through 4A are complete in code. Milestone 3Z is commit `72617c6b83f50ffaf2a78095c518c2d49b2029a1`. Milestone 3Y's database migration is still blocked. Do not restart them.
 
 ## C. Research governance
 
@@ -47,7 +47,7 @@ Plan the whole authorised milestone. Implement, test, and correct failures cause
 
 Read, in order: this skill, the adopted specification, the latest milestone evidence, current Git state, and the relevant implementation and tests. Continue from the last verified checkpoint. Do not restart the programme.
 
-Verified checkpoint after Milestone 3Z: `lib/research/versioned-evidence.ts` evaluates canonical publisher identity, same-organisation collapse, the Power Platform alias, joint-document identity, full-claim actor agreement, and the five evidence states. Prepare for Review still writes `article-grounded-v14`. The publication guard does not yet apply versioned eligibility. No live database was inspected and no migration was executed.
+Verified checkpoint after Milestone 4A: dispute ids and passage checksums match the adopted specification helpers. A resolution stores its own dispute id, source-set fingerprint, and passage checksums. A change to either binding expires only that dispute. A machine candidate cannot clear itself. A resolved primary-source claim stays not publish-ready. Prepare for Review still writes `article-grounded-v14`. No live database was inspected and no migration was executed.
 
 ## I. Skill maintenance
 
