@@ -1,7 +1,7 @@
 # EV-REG Production P2 — migration preparation
 
-Status: **PREPARED — not executed.**  
-This package does **not** authorise Production PostgreSQL connection, DDL execution, deployment, flag enablement, or article operations. Execution requires a separate human **P2 execution approval**.
+Status: **PREPARED; execution recorded separately.**  
+Execution evidence: `docs/governance/EV-REG-PRODUCTION-P2-MIGRATION-EXECUTION.md`. This preparation file remains the reviewed plan/SQL package. It does **not** authorise deploy, verifier enablement, or article operations.
 
 Linked from `.agents/skills/echoes-visions-autonomous-engineering/SKILL.md` and `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md`.  
 Supersedes: nothing — new P2 preparation package; does not replace P1 evidence or Preview `EV-REG-3Y-MIGRATION-EXECUTION.md`.

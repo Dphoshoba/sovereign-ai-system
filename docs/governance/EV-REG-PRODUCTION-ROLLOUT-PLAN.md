@@ -1,9 +1,9 @@
 # EV-REG-1.0.0 — Production rollout plan
 
-Status: **P0–P1 complete; P2 migration package prepared — execution approval required.**  
-Preview certification remains **PREVIEW CERTIFIED — NOT PRODUCTION AUTHORISED** until P2 execution and P3–P4 complete under separate approvals.  
+Status: **P0–P2 complete; P3 Production deploy approval required.**  
+Preview certification remains **PREVIEW CERTIFIED — NOT PRODUCTION AUTHORISED** until P3–P4 complete under separate approvals.  
 P1 evidence: `docs/governance/EV-REG-PRODUCTION-P1-SCHEMA-INSPECTION.md`.  
-P2 preparation: `docs/governance/EV-REG-PRODUCTION-P2-MIGRATION-PREPARATION.md` + `docs/governance/sql/ev-reg-production-p2-article-research-audit.sql` (**not executed**).
+P2 execution: `docs/governance/EV-REG-PRODUCTION-P2-MIGRATION-EXECUTION.md` (`specificationVersion` / `disputes` present on Production; flag unset; no deploy).
 
 Linked from `.agents/skills/echoes-visions-autonomous-engineering/SKILL.md` section K. Does not supersede `docs/releases/EV-REG-1.0.0-PREVIEW-CERTIFIED.md`.
 
@@ -66,10 +66,10 @@ Constraints:
 
 ### Blockers / residual unknowns for later phases
 
-1. ~~Production column absence~~ — **cleared by P1** (`specificationVersion` / `disputes` absent).
+1. ~~Production column absence / P2 DDL~~ — **cleared by P2 execution** (nullable columns present; see execution evidence).
 2. ~~Production DB credential rotation / `DIRECT_URL`~~ — **cleared** (cleanup verified; secrets not printed).
-3. **P2 DDL not yet executed** — package prepared; requires execution approval.
-4. Integration HEAD remains a **proposed** Production candidate only — requires P3–P4 certification gates.
+3. Integration HEAD remains a **proposed** Production candidate only — requires **P3–P4** certification gates.
+4. Production app still on pre-activation binary (`3ade3125…`) — P3 deploy still required before flag enablement.
 
 ## 5. Preflight checks (before each phase)
 
@@ -130,4 +130,4 @@ Constraints:
 | **P3** | Production deploy of approved candidate with flag unset | Flag enablement, article ops |
 | **P4** | Production flag enablement + post-activation probes | Article Prepare/approve/schedule/publish (separate editorial approvals) |
 
-**Next approval required:** **P2 execution — run prepared Production additive migration** (`EV-REG-PRODUCTION-P2-MIGRATION-PREPARATION.md`; flag unset; no deploy).
+**Next approval required:** **P3 — Production application deploy** of the approved candidate with `VERSIONED_EDITORIAL_VERIFIER_ENABLED` still unset.
