@@ -9,11 +9,26 @@ Release worktree: `C:\Users\David\echoes-visions-preview-security`. Branch: `int
 
 ## A. Operating principles
 
-Impact over automation, then scalability. Inspect the repository before changing it. The production baseline at `d654d85c1583b1fe426d65052d991c3a5c967a14` stays frozen. Preserve the adopted specification bytes. Finish the authorised milestone before asking for routine approval. Human approval remains at genuine authority boundaries: remote push, deployment, unverified database access, persistent migrations, production data, specification edits, publication thresholds, historical audit rewrites, Prepare for Review, article approval, scheduling, and publication.
+Impact over automation, then scalability. Inspect the repository before changing it. The production baseline at `d654d85c1583b1fe426d65052d991c3a5c967a14` stays frozen until an authorised Production programme replaces it. Preserve the adopted specification bytes. Finish the authorised milestone before asking for routine approval. Human approval remains at genuine authority boundaries: remote push, deployment, unverified database access, persistent migrations, production data, specification edits, publication thresholds, historical audit rewrites, Prepare for Review, article approval, scheduling, and publication.
 
 ## B. Repository discovery
 
-Confirm the worktree, branch, full HEAD, and whether the tree is clean. Confirm the specification SHA-256 is `9D3C34F1689BBC0DB673A5E0A3B79A11B343C2792D4F9179BFA8E29E5ECC2419`. Read the implementation that already exists before proposing a new one. Milestones 3N through 4D, Preview activation, and programme closure are complete. The certified Preview baseline is `docs/releases/EV-REG-1.0.0-PREVIEW-CERTIFIED.md` (tag `ev-reg-1.0.0-preview-certified`). Supporting evidence: `docs/governance/EV-REG-RELEASE-READINESS.md`, `docs/governance/EV-REG-3Y-MIGRATION-EXECUTION.md`, `docs/governance/EV-REG-PREVIEW-ACTIVATION.md`. Production must keep the flag unset. Do not restart completed milestones.
+Confirm the worktree, branch, full HEAD, and whether the tree is clean. Confirm the specification SHA-256 is `9D3C34F1689BBC0DB673A5E0A3B79A11B343C2792D4F9179BFA8E29E5ECC2419`. Read the implementation that already exists before proposing a new one.
+
+Completed and must not be restarted:
+
+- EV-REG Preview milestones 3N–4D, Preview schema migration, Preview activation, and Preview programme closure
+- Connector CI maintenance (PR #1) and Calendar `read()` remediation (PR #2) merged into the integration branch
+
+Evidence roots:
+
+- Certified Preview: `docs/releases/EV-REG-1.0.0-PREVIEW-CERTIFIED.md` (tag `ev-reg-1.0.0-preview-certified` → `d8f59aceac3bdc775760a8bc4d076eb1e1d9074d`)
+- Preview activation: `docs/governance/EV-REG-PREVIEW-ACTIVATION.md`
+- Preview migration: `docs/governance/EV-REG-3Y-MIGRATION-EXECUTION.md`
+- Connector integration: `docs/governance/EV-REG-CONNECTOR-CI-INTEGRATION.md`
+- Production programme plan: `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md`
+
+Do not treat the current integration HEAD as Production-certified. Production keep the versioned flag unset until an explicit Production activation gate.
 
 ## C. Research governance
 
@@ -25,9 +40,9 @@ Characterise current behaviour before changing it. Keep future-contract files ou
 
 ## E. Database safety
 
-Verify database identity before connecting. Do not treat an environment-variable name as proof that a database is non-Production. Reject any URL that identifies Supabase project `kqptdgbttfuqkzxzbazw`. Never print credentials. Inspect live metadata before writing a migration. `prisma/schema.prisma` contains `ArticleResearchAudit` and `ArticleReviewNote`, and the tracked migration history does not create them. Prefer additive nullable columns. Roll an additive change back by deploying the previous code first and leaving the columns in place. Do not execute a Production migration without explicit approval.
+Verify database identity before connecting. Do not treat an environment-variable name as proof that a database is non-Production. Reject any URL that identifies Supabase project `kqptdgbttfuqkzxzbazw` when the authorised target is Preview. Never print credentials. Inspect live metadata before writing a migration. `prisma/schema.prisma` contains `ArticleResearchAudit` and `ArticleReviewNote`, and the tracked migration history does not create them. Prefer additive nullable columns. Roll an additive change back by deploying the previous code first and leaving the columns in place. Do not execute a Production migration without explicit approval.
 
-The Milestone 3Y columns now exist on the verified Preview database. The SQL was an explicit transaction with a 5-second lock timeout, not a Prisma diff. Do not copy it into `prisma/migrations` and do not run it against Production. Do not derive a further change from the incomplete migration history.
+The Milestone 3Y columns exist on the verified Preview database (`emmzoeeaznhpwevqprkn`) only. Production (`kqptdgbttfuqkzxzbazw`) has not received them. The SQL was an explicit transaction with a 5-second lock timeout, not a Prisma diff. Do not copy it into `prisma/migrations`. Do not derive a further change from the incomplete migration history.
 
 ## F. Engineering execution
 
@@ -48,26 +63,48 @@ Plan the whole authorised milestone. Implement, test, and correct failures cause
 - Turbopack can warn that a parent `pnpm-lock.yaml` is the workspace root, and Next can warn that `middleware` is deprecated. Neither warning failed the verified Preview build. Do not change them while checking credentials.
 - The Supabase pooler username `postgres.emmzoeeaznhpwevqprkn` opens a session whose `current_user` is `postgres`. Confirm the project ref on the URL before connecting. An absent `sslmode` is acceptable when the pinned CA verifies the certificate. Keep an inspection in `BEGIN READ ONLY` and `ROLLBACK`. A write needs its own transaction, a bounded `lock_timeout`, a metadata recheck, and a rollback path before commit. The inspection role can write and bypasses row security.
 - The disposable article-governance database must include the same nullable `specificationVersion` and `disputes` columns as the Prisma model. Historical schema-diff tests allow only those additions and still require an empty migration diff.
-- Controlled Preview deploy uses `npx vercel deploy --yes` against the existing `sovereign-ai-executive` project. Never pass `--prod`. Confirm `environment` is `preview` and `productionUrl` is null. Production aliases for `www.echoesandvisions.com` must remain on the prior Production deployment. `vercel link` can rewrite ignored `.env.local`; re-check Preview identity afterwards. Vercel Secrets cannot be pulled; rely on public Preview settings, the `databaseUrlForRuntime` guard, and post-deploy probes. Deployment Protection requires `vercel curl` for Preview checks.
-- Versioned Prepare activation is gated by Preview env `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true`. The compile-time default stays false. `/api/health` reports the non-secret flag boolean and the revision Prepare would write. Do not set the flag on Production without a separate approval.
+- Controlled Preview deploy uses `npx vercel deploy --yes` against the existing `sovereign-ai-executive` project. Never pass `--prod` unless a Production programme explicitly authorises it. Confirm `environment` is `preview` and `productionUrl` is null for Preview. Production aliases for `www.echoesandvisions.com` must remain on the intended Production deployment. `vercel link` can rewrite ignored `.env.local`; re-check identity afterwards. Vercel Secrets cannot be pulled; rely on public settings, the `databaseUrlForRuntime` guard, and post-deploy probes. Deployment Protection requires `vercel curl` for Preview checks.
+- Versioned Prepare activation is gated by env `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true`. The compile-time default stays false. `/api/health` on builds that include the activation commit reports the non-secret flag boolean and the revision Prepare would write. Do not set the flag on Production without a separate approval.
+- Connector CI workflows require CI-only Supabase placeholders on the build step. Path filters skip workflow-only pushes; `workflow_dispatch` is available. Calendar validation requires `async read(` on the Calendar api-client.
 
 ## H. Agent handoff
 
-Read, in order: this skill, the adopted specification, `docs/releases/EV-REG-1.0.0-PREVIEW-CERTIFIED.md`, current Git state, and only the implementation required for a newly authorised programme. Do not restart EV-REG-1.0.0 Preview milestones.
+Read, in order: this skill, the adopted specification, `docs/releases/EV-REG-1.0.0-PREVIEW-CERTIFIED.md`, `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md`, current Git state, and only the implementation required for the next authorised Production phase. Do not restart completed Preview milestones or connector CI remediations.
 
 ### Certified Preview baseline
 
 - Verdict: **PREVIEW CERTIFIED — NOT PRODUCTION AUTHORISED**
-- Annotated tag: `ev-reg-1.0.0-preview-certified`
-- Activation commit: `f6a648e8`; activation docs: `2b2348e8`
+- Annotated tag: `ev-reg-1.0.0-preview-certified` → `d8f59aceac3bdc775760a8bc4d076eb1e1d9074d`
+- Activation commit: `f6a648e8`; activation docs: `2b2348e8`; closure docs: `d8f59ace`
 - Preview deployment: `dpl_8nTq8rdqjYnqEV9onrAukGpKiDxN`
 - Verifier revision when flag is true: `article-grounded-ev-reg-1`
-- Feature flag: Preview env `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true` selects the versioned Prepare path; unset/false keeps `article-grounded-v14`. Compile-time constant remains `false`.
+- Feature flag: env `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true` selects the versioned Prepare path; unset/false keeps `article-grounded-v14`. Compile-time constant remains `false`.
 - Database: Preview `ArticleResearchAudit` has nullable `specificationVersion` and `disputes` on project `emmzoeeaznhpwevqprkn`. Production project `kqptdgbttfuqkzxzbazw` was not migrated.
-- Recovery: disable the Preview flag, redeploy the prior Preview revision if needed, leave the nullable columns, do not delete historical audits.
-- Human-authority boundaries still closed: remote push/tag push, Production deploy or flag, Production migration, specification edits, threshold changes, Prepare for Review, article approval, scheduling, publication.
+- Recovery (Preview): disable the Preview flag, redeploy the prior Preview revision if needed, leave the nullable columns, do not delete historical audits.
 
-No further development is authorised under the closed EV-REG-1.0.0 Preview programme.
+### Connector CI maintenance (complete)
+
+- PR #1 merge: `15e9ed81` — CI Supabase placeholders + `workflow_dispatch`
+- PR #2 merge: `a5b876a6` — Calendar authenticated `read()` + tests
+- Evidence: `docs/governance/EV-REG-CONNECTOR-CI-INTEGRATION.md`
+- Calendar and Slack `connector:validate`: **100/100** on integrate (Actions runs `43702960411`, `43702963354`)
+
+### Current integration HEAD (not Production-certified)
+
+- Branch: `integrate/production-research-integrity`
+- HEAD at P0: `8be3605f93da8df77d5cb54db9d69f71ef3f5761`
+- Delta since certified Preview tag: connector CI workflows, Calendar `read()` remediation, and governance evidence docs only
+- Proposed Production candidate pending P1–P4 gates: that integration HEAD (or a later explicitly approved pin). **Not yet Production-certified.**
+
+### Production programme status
+
+- Phase **P0** (skill + readiness + plan): in progress / complete when this skill and `EV-REG-PRODUCTION-ROLLOUT-PLAN.md` are committed
+- Phases **P1–P4** require separate human approval before any Production schema inspection write-up execution, migration, deployment, or flag activation
+- Production must keep `VERSIONED_EDITORIAL_VERIFIER_ENABLED` unset until the activation gate
+
+### Human-authority boundaries (still closed without explicit approval)
+
+Remote push of Production-affecting work when required by the phase, Production deploy, Production migration, Production env changes, Production flag enablement, specification edits, threshold changes, Prepare for Review, article approval, scheduling, publication, release retagging of the certified Preview tag.
 
 ## I. Skill maintenance
 
@@ -79,6 +116,19 @@ Discover the environment before connecting. The approved Preview database target
 
 Public build settings are `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` for the Preview project. `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, and `DIRECT_URL` are secrets. Do not invent either group, and do not copy Production values into the worktree. A missing public pair stops `npm run build` during static generation. With the verified Preview pair in ignored `.env.local`, Next reports `Environments: .env.local` and static generation can finish. That still does not authorise a database session.
 
-Schema inspection, after identity checks pass, is the read-only procedure in `docs/governance/EV-REG-METADATA-INSPECTION.md`. The Preview inspection is `docs/governance/EV-REG-3Y-SCHEMA-INSPECTION.md`, and the executed column change is `docs/governance/EV-REG-3Y-MIGRATION-EXECUTION.md`. Do not repeat that change against Production. Approval boundaries stay in section A.
+Schema inspection, after identity checks pass, is the read-only procedure in `docs/governance/EV-REG-METADATA-INSPECTION.md`. The Preview inspection is `docs/governance/EV-REG-3Y-SCHEMA-INSPECTION.md`, and the executed column change is `docs/governance/EV-REG-3Y-MIGRATION-EXECUTION.md`. Do not repeat that change against Production without a Production programme approval. Approval boundaries stay in section A.
 
 The editor-boundary test walks every privileged route. Anonymous and viewer checks stay serial because they assert that no side effect runs. The editor check continues past the gate, so its runtime is the cost of those handlers. A full-suite run measured 301 seconds against the old 300-second cap, while isolated runs finish. The cap for that one test is 420 seconds. Do not raise it again to hide a new failure, and do not drop the status assertions.
+
+## K. Production rollout governance
+
+Follow `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md`. Required sequence (each gate separately approved):
+
+1. **P1** — Production identity + read-only schema inspection (no writes)
+2. **P2** — Additive Production migration for nullable `specificationVersion` / `disputes` (flag remains unset)
+3. **P3** — Production application deploy of the approved candidate with flag still unset; verify baseline behaviour and health keys
+4. **P4** — Enable `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true` on Production only after P3 verification; post-activation probes; no article Prepare without separate editorial approval
+
+Rollback: disable the Production flag first; redeploy the prior Production revision if required; leave nullable columns in place; do not delete historical audits; do not move Production aliases except as an explicit rollback step.
+
+Stop conditions: Production project ref mismatch, missing migration columns when deploying Prisma fields, unexpected Production flag state, health regression, alias drift, or any attempt to re-audit/publish the governing article without editorial approval.

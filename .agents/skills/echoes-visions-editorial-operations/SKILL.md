@@ -78,6 +78,10 @@ Engineering implementation of the adopted research-governance specification uses
 - Journal sites may reject automated fetches. A blocked fetch is not proof that the research is false. Record unavailable verification accurately and use permitted authoritative copies.
 - Preserve original DOI and source URLs. A secondary institutional article explaining the same study is not an independent second experiment.
 
+## EV-REG Production programme
+
+EV-REG-1.0.0 Preview is certified (`ev-reg-1.0.0-preview-certified`). Production rollout follows `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md` and `.agents/skills/echoes-visions-autonomous-engineering/SKILL.md`. Do not enable Production versioned scoring, migrate Production, or Prepare/approve/publish articles from EV-REG engineering gates alone.
+
 ## Production release and operational workflow (OR-4/OR-5)
 
 - First establish release commit and current production baseline. Keep the dirty development worktree untouched. Prepare a **fresh clean isolated worktree** at the intended commit; verify no `.env*`, `.next`, `.vercel`, credentials or unrelated files enter upload.
