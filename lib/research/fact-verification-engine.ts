@@ -26,7 +26,7 @@ export type VerifiedFact = ExtractedFact & {
     | "verified"
     | "partially verified"
     | "unverified"
-  verificationMethod: "exact" | "semantic" | "single-source-supported"
+  verificationMethod: "exact" | "semantic" | "single-source-supported" | "disputed"
   supportingSources: {
     sourceTitle: string
     sourceUrl: string

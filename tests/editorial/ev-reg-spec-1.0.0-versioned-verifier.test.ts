@@ -3,8 +3,10 @@ import { publicationGuard, researchPublicationBlockReason } from "../../lib/publ
 import { ADOPTED_AUDIT_SPECIFICATION_VERSION } from "../../lib/research/audit-specification-compatibility";
 import { VERSIONED_RESEARCH_AUDIT_ENGINE_REVISION } from "../../lib/research/research-audit-engine-revision";
 import {
+  isVersionedEditorialVerifierEnabled,
   revisionWrittenByEditorialPrepare,
   VERSIONED_EDITORIAL_VERIFIER_ENABLED,
+  VERSIONED_EDITORIAL_VERIFIER_ENV,
   VERSIONED_VERIFIER_ACTIVATION_BLOCKER,
   versionedAverageVerificationScore,
 } from "../../lib/research/versioned-publication";
@@ -39,8 +41,27 @@ const versioned = {
 describe("versioned editorial verifier boundary", () => {
   it("keeps Prepare for Review on article-grounded-v14 while activation is disabled", () => {
     expect(VERSIONED_EDITORIAL_VERIFIER_ENABLED).toBe(false);
+    expect(isVersionedEditorialVerifierEnabled({})).toBe(false);
     expect(VERSIONED_VERIFIER_ACTIVATION_BLOCKER).toContain("verified non-Production");
-    expect(revisionWrittenByEditorialPrepare()).toBe("article-grounded-v14");
+    expect(revisionWrittenByEditorialPrepare({})).toBe("article-grounded-v14");
+  });
+
+  it("writes article-grounded-ev-reg-1 only when the Preview env flag is true", () => {
+    expect(
+      isVersionedEditorialVerifierEnabled({
+        [VERSIONED_EDITORIAL_VERIFIER_ENV]: "true",
+      }),
+    ).toBe(true);
+    expect(
+      revisionWrittenByEditorialPrepare({
+        [VERSIONED_EDITORIAL_VERIFIER_ENV]: "true",
+      }),
+    ).toBe("article-grounded-ev-reg-1");
+    expect(
+      revisionWrittenByEditorialPrepare({
+        [VERSIONED_EDITORIAL_VERIFIER_ENV]: "false",
+      }),
+    ).toBe("article-grounded-v14");
   });
 
   it("keeps a zero score inside the versioned average", () => {

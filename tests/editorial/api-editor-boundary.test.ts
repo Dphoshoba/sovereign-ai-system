@@ -190,7 +190,11 @@ describe("public and service routes stay outside the editor gate", () => {
     const db = await import(pathToFileURL(path.join(root, "app/api/health/db/route.ts")).href)
     const healthResponse = await health.GET()
     const dbResponse = await db.GET()
-    expect(Object.keys(await healthResponse.json())).toEqual(["ok"])
+    expect(Object.keys(await healthResponse.json()).sort()).toEqual([
+      "ok",
+      "researchAuditEngineRevision",
+      "versionedEditorialVerifierEnabled",
+    ])
     expect(Object.keys(await dbResponse.json())).toEqual(["ok"])
   })
 

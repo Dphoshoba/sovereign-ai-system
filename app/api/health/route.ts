@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { validateEnv } from "@/lib/startup/validate-env"
+import {
+  isVersionedEditorialVerifierEnabled,
+  revisionWrittenByEditorialPrepare,
+} from "../../../lib/research/versioned-publication"
 
 export async function GET() {
   const envValidation = validateEnv()
@@ -16,5 +20,12 @@ export async function GET() {
 
   const ok = database === "connected" && envValidation.ok
 
-  return NextResponse.json({ ok }, { status: ok ? 200 : 503 })
+  return NextResponse.json(
+    {
+      ok,
+      versionedEditorialVerifierEnabled: isVersionedEditorialVerifierEnabled(),
+      researchAuditEngineRevision: revisionWrittenByEditorialPrepare(),
+    },
+    { status: ok ? 200 : 503 },
+  )
 }

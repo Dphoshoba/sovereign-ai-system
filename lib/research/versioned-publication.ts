@@ -5,13 +5,28 @@ import {
   VERSIONED_RESEARCH_AUDIT_ENGINE_REVISION,
 } from "./research-audit-engine-revision";
 
-export const VERSIONED_EDITORIAL_VERIFIER_ENABLED = false;
+export const VERSIONED_EDITORIAL_VERIFIER_ENV = "VERSIONED_EDITORIAL_VERIFIER_ENABLED";
 
 export const VERSIONED_VERIFIER_ACTIVATION_BLOCKER =
-  "The versioned editorial verifier stays disabled until Preview activation is explicitly approved after the verified non-Production schema is ready.";
+  "The versioned editorial verifier stays disabled unless VERSIONED_EDITORIAL_VERIFIER_ENABLED=true on the verified non-Production Preview environment.";
 
-export function revisionWrittenByEditorialPrepare(): typeof CURRENT_RESEARCH_AUDIT_ENGINE_REVISION {
-  return CURRENT_RESEARCH_AUDIT_ENGINE_REVISION;
+export function isVersionedEditorialVerifierEnabled(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  return env[VERSIONED_EDITORIAL_VERIFIER_ENV] === "true";
+}
+
+/** Compile-time default when the Preview env flag is unset. Prefer isVersionedEditorialVerifierEnabled(). */
+export const VERSIONED_EDITORIAL_VERIFIER_ENABLED = false;
+
+export function revisionWrittenByEditorialPrepare(
+  env: NodeJS.ProcessEnv = process.env,
+):
+  | typeof CURRENT_RESEARCH_AUDIT_ENGINE_REVISION
+  | typeof VERSIONED_RESEARCH_AUDIT_ENGINE_REVISION {
+  return isVersionedEditorialVerifierEnabled(env)
+    ? VERSIONED_RESEARCH_AUDIT_ENGINE_REVISION
+    : CURRENT_RESEARCH_AUDIT_ENGINE_REVISION;
 }
 
 export function versionedAverageVerificationScore(scores: number[]): number | null {

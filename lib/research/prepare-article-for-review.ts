@@ -21,7 +21,11 @@ import {
   type EvidenceRegistryResult,
 } from "./evidence-registry";
 import { publicationGate } from "./publication-gate";
-import { revisionWrittenByEditorialPrepare } from "./versioned-publication";
+import {
+  isVersionedEditorialVerifierEnabled,
+  revisionWrittenByEditorialPrepare,
+} from "./versioned-publication";
+import { versionedFactVerification } from "./versioned-prepare-verification";
 import { researchAuditCoverage } from "./research-audit-coverage";
 import {
   isUnavailableAcquisitionCategory,
@@ -397,12 +401,24 @@ export async function prepareArticleForReview(
       );
     }
 
-    const verification = groundedFactVerification(
-      claimExtraction.claims,
-      evidence.evidence,
-      claimExtraction.normalizedArticleText,
-      sources.map((source) => ({ url: source.url, title: source.title })),
-    );
+    const listedAttribution = sources.map((source) => ({
+      url: source.url,
+      title: source.title,
+    }));
+    const versionedEnabled = isVersionedEditorialVerifierEnabled();
+    const verification = versionedEnabled
+      ? versionedFactVerification(
+          claimExtraction.claims,
+          evidence.evidence,
+          claimExtraction.normalizedArticleText,
+          listedAttribution,
+        )
+      : groundedFactVerification(
+          claimExtraction.claims,
+          evidence.evidence,
+          claimExtraction.normalizedArticleText,
+          listedAttribution,
+        );
 
     if (verification.facts.length === 0) {
       return {
@@ -477,6 +493,7 @@ export async function prepareArticleForReview(
       },
     );
 
+    const engineRevision = revisionWrittenByEditorialPrepare();
     const auditData = {
       articleId: article.id,
       sourceCount: sourceStats.sourceCount,
@@ -499,6 +516,16 @@ export async function prepareArticleForReview(
         groups: consensus.consensusGroups,
         notScoredClaims: claimExtraction.notScoredClaims,
       },
+      ...(versionedEnabled
+        ? {
+            specificationVersion:
+              "specificationVersion" in verification
+                ? verification.specificationVersion
+                : undefined,
+            disputes:
+              "disputes" in verification ? verification.disputes : undefined,
+          }
+        : {}),
     };
 
     const articleUpdate = {
@@ -571,7 +598,7 @@ export async function prepareArticleForReview(
             auditId: audit.id,
             contentFingerprint: lockedFingerprint,
             createdAt: audit.createdAt,
-            engineRevision: revisionWrittenByEditorialPrepare(),
+            engineRevision,
           }),
         },
       });
@@ -610,7 +637,7 @@ export async function prepareArticleForReview(
         id: createdAudit.id,
         createdAt: createdAudit.createdAt.toISOString(),
         contentFingerprint,
-        engineRevision: revisionWrittenByEditorialPrepare(),
+        engineRevision,
         sourceCount: sourceStats.sourceCount,
         evidenceCount: verification.acceptedEvidence.length,
         factCount: verification.facts.length,
