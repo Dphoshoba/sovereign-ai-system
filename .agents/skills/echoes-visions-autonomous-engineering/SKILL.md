@@ -71,11 +71,11 @@ Plan the whole authorised milestone. Implement, test, and correct failures cause
 
 ## H. Agent handoff
 
-Read, in order: this skill, the adopted specification, `docs/releases/EV-REG-1.0.0-PREVIEW-CERTIFIED.md`, `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md`, current Git state, and only the implementation required for the next authorised Production phase. Do not restart completed Preview milestones or connector CI remediations.
+Read, in order: this skill, the adopted specification, `docs/releases/EV-REG-1.0.0-PRODUCTION-CERTIFICATION.md`, `docs/releases/EV-REG-1.0.0-PREVIEW-CERTIFIED.md`, `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md`, and current Git state. Do not restart completed Preview milestones, connector CI remediations, or closed Production P0–P5 rollout work.
 
 ### Certified Preview baseline
 
-- Verdict: **PREVIEW CERTIFIED — NOT PRODUCTION AUTHORISED**
+- Verdict: **PREVIEW CERTIFIED** (historical Preview seal; Production certification is separate — see `EV-REG-1.0.0-PRODUCTION-CERTIFICATION.md`)
 - Annotated tag: `ev-reg-1.0.0-preview-certified` → `d8f59aceac3bdc775760a8bc4d076eb1e1d9074d`
 - Activation commit: `f6a648e8`; activation docs: `2b2348e8`; closure docs: `d8f59ace`
 - Preview deployment: `dpl_8nTq8rdqjYnqEV9onrAukGpKiDxN`
