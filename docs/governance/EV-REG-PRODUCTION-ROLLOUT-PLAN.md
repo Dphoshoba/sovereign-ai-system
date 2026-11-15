@@ -88,8 +88,9 @@ Constraints:
 2. Execute P2 additive migration; verify columns; flag remains unset.
 3. Deploy approved candidate to Production (**P3**) with flag unset; verify health exposes `versionedEditorialVerifierEnabled: false` and revision `article-grounded-v14`.
 4. Complete activation readiness (**P4A**); evidence `EV-REG-PRODUCTION-P4-ACTIVATION-READINESS.md` — **complete**.
-5. Enable Production flag and redeploy approved pin (**P4B**); verify health shows `true` / `article-grounded-ev-reg-1`.
-6. Only then consider separately approved editorial Prepare actions.
+5. Enable Production flag and redeploy approved pin (**P4B**); verify health shows `true` / `article-grounded-ev-reg-1` — **complete**; evidence `EV-REG-PRODUCTION-P4B-ACTIVATION-EXECUTION.md`.
+6. Certification review / programme closure (separate approval).
+7. Only then consider separately approved editorial Prepare actions.
 
 ## 7. Feature-flag strategy
 
@@ -134,4 +135,4 @@ Constraints:
 | **P4A** | Readiness assessment for Production flag enablement (no config change) | Flag enablement, redeploy, article ops |
 | **P4B** | Production flag enablement + redeploy of approved pin + post-activation probes | Article Prepare/approve/schedule/publish (separate editorial approvals) |
 
-**Next approval required:** **P4B — enable `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true` on Production only**, redeploy the approved pin, and probe health (no article Prepare without separate editorial approval). P4A evidence: `docs/governance/EV-REG-PRODUCTION-P4-ACTIVATION-READINESS.md`.
+**Next approval required:** **Certification review / programme closure** after P4B activation. P4B evidence: `docs/governance/EV-REG-PRODUCTION-P4B-ACTIVATION-EXECUTION.md`. Article Prepare/approve/schedule/publish still require separate editorial approvals.

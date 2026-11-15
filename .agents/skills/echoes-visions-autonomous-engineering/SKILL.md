@@ -96,7 +96,7 @@ Read, in order: this skill, the adopted specification, `docs/releases/EV-REG-1.0
 - Branch: `integrate/production-research-integrity`
 - HEAD at P0: `8be3605f93da8df77d5cb54db9d69f71ef3f5761`
 - Delta since certified Preview tag: connector CI workflows, Calendar `read()` remediation, and governance evidence docs only
-- Production application pin live at P3: `8be3605f93da8df77d5cb54db9d69f71ef3f5761` (`dpl_69y1DZGtH3X74UsVB4i91QLAp85L`). **Not yet Production-certified** until P4B activation and programme closure.
+- Production application pin live with verifier activated at P4B: `8be3605f93da8df77d5cb54db9d69f71ef3f5761` (`dpl_7Kdm6gQxWDnFGpyRVpzmXhqzwpb7`). **Not yet Production-certified** until certification review / programme closure.
 
 ### Production programme status
 
@@ -105,9 +105,8 @@ Read, in order: this skill, the adopted specification, `docs/releases/EV-REG-1.0
 - Phase **P2** (additive Production migration): **COMPLETE** — nullable `specificationVersion` (`text`) and `disputes` (`jsonb`) added on Production `ArticleResearchAudit` only. Evidence: `docs/governance/EV-REG-PRODUCTION-P2-MIGRATION-EXECUTION.md`. Flag unset; no Prisma migrate; no deploy.
 - Phase **P3** (Production deploy, flag unset): **COMPLETE** — `dpl_69y1DZGtH3X74UsVB4i91QLAp85L` @ `8be3605f93da8df77d5cb54db9d69f71ef3f5761`. Health reports verifier `false` / `article-grounded-v14`. Evidence: `docs/governance/EV-REG-PRODUCTION-P3-DEPLOYMENT-EXECUTION.md`.
 - Phase **P4A** (activation readiness): **VERIFIED** — Production dormant; flag absent; P2 columns present; 0 versioned audit rows; flag alone does not mutate articles/cron/auth. Evidence: `docs/governance/EV-REG-PRODUCTION-P4-ACTIVATION-READINESS.md`.
-- Phase **P4B** (Production flag enablement + redeploy of approved pin): requires separate human approval
-- Production must keep `VERSIONED_EDITORIAL_VERIFIER_ENABLED` unset until the P4B activation gate
-- Production credential cleanup: `DATABASE_URL` / `DIRECT_URL` Production secrets updated `2026-11-15`; rollback target remains `dpl_DnQpxYFhBihvAuhmGRqxoLrP6XXE` @ `3ade3125…`
+- Phase **P4B** (Production flag enablement + redeploy of approved pin): **COMPLETE** — Production `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true`; deployment `dpl_7Kdm6gQxWDnFGpyRVpzmXhqzwpb7` @ `8be3605f…`; health `true` / `article-grounded-ev-reg-1`. Evidence: `docs/governance/EV-REG-PRODUCTION-P4B-ACTIVATION-EXECUTION.md`. No article ops.
+- Production credential cleanup: `DATABASE_URL` / `DIRECT_URL` Production secrets updated `2026-11-15`; prior Ready pin `dpl_69y1DZGtH3X74UsVB4i91QLAp85L`; older rollback target remains `dpl_DnQpxYFhBihvAuhmGRqxoLrP6XXE` @ `3ade3125…`
 
 ### Human-authority boundaries (still closed without explicit approval)
 
@@ -135,7 +134,8 @@ Follow `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md`. Required sequence (e
 2. **P2** — Additive Production migration for nullable `specificationVersion` / `disputes` (flag remains unset) — **complete**
 3. **P3** — Production application deploy of `8be3605f…` with flag still unset; verify health `false` / `article-grounded-v14` — **complete**
 4. **P4A** — Activation readiness assessment (no flag change) — **complete**; evidence `EV-REG-PRODUCTION-P4-ACTIVATION-READINESS.md`
-5. **P4B** — Enable `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true` on Production only after P4A; redeploy approved pin; post-activation probes; no article Prepare without separate editorial approval — **next approval**
+5. **P4B** — Enable `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true` on Production only after P4A; redeploy approved pin; post-activation probes; no article Prepare without separate editorial approval — **complete**
+6. **Certification review / programme closure** — separate human approval — **next**
 
 Rollback: disable the Production flag first; redeploy so runtime sees the restored env (and the prior Production revision if required); leave nullable columns in place; do not delete historical audits; do not move Production aliases except as an explicit rollback step.
 
