@@ -1,9 +1,13 @@
 /**
  * Calendar Comprehensive Test Suite (95%+ Coverage)
  */
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { CalendarOAuth } from '../../lib/connectors/calendar/oauth-adapter';
-import { CalendarClient } from '../../lib/connectors/calendar/api-client';
+import {
+  CalendarApiError,
+  CalendarClient,
+  GoogleCalendarApiClient,
+} from '../../lib/connectors/calendar/api-client';
 import { CalendarParser } from '../../lib/connectors/calendar/resource-parser';
 import { CalendarActions } from '../../lib/connectors/calendar/action-set';
 import { CalendarReader } from '../../lib/gamma/calendar-reader';
@@ -78,6 +82,98 @@ describe('Calendar Connector', () => {
 
     it('should have quotaDefinitions', () => {
       expect(CalendarClient.quotaDefinitions.length).toBeGreaterThan(0);
+    });
+
+    it('should expose async read on the platform adapter object', async () => {
+      await expect(CalendarClient.read('event', { calendarId: 'primary', eventId: 'e1' })).rejects.toThrow(
+        /requires GoogleCalendarApiClient/,
+      );
+    });
+  });
+
+  describe('GoogleCalendarApiClient.read', () => {
+    const token = 'access_token_valid_1234567890';
+    let fetchMock: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      fetchMock = vi.fn();
+      vi.stubGlobal('fetch', fetchMock);
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('reads a single event successfully', async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          id: 'evt-1',
+          summary: 'Standup',
+          start: { dateTime: '2026-07-01T09:00:00Z', timeZone: 'UTC' },
+          end: { dateTime: '2026-07-01T09:30:00Z', timeZone: 'UTC' },
+          status: 'confirmed',
+          updated: '2026-07-01T08:00:00Z',
+        }),
+      });
+
+      const client = new GoogleCalendarApiClient(token);
+      const event = (await client.read('event', {
+        calendarId: 'primary',
+        eventId: 'evt-1',
+      })) as { id: string; summary: string };
+
+      expect(event.id).toBe('evt-1');
+      expect(event.summary).toBe('Standup');
+      expect(fetchMock).toHaveBeenCalledOnce();
+      const [url, init] = fetchMock.mock.calls[0];
+      expect(String(url)).toContain('/calendars/primary/events/evt-1');
+      expect(init.headers.Authorization).toBe(`Bearer ${token}`);
+    });
+
+    it('returns null for a missing event', async () => {
+      fetchMock.mockResolvedValue({
+        ok: false,
+        status: 404,
+        json: async () => ({}),
+      });
+
+      const client = new GoogleCalendarApiClient(token);
+      await expect(
+        client.read('event', { calendarId: 'primary', eventId: 'missing' }),
+      ).resolves.toBeNull();
+    });
+
+    it('rejects invalid input before calling the network', async () => {
+      const client = new GoogleCalendarApiClient(token);
+      await expect(client.read('')).rejects.toThrow(/resource name/);
+      await expect(client.read('events')).rejects.toThrow(/calendarId/);
+      await expect(client.read('event', { calendarId: 'primary' })).rejects.toThrow(/eventId/);
+      await expect(client.read('unsupported')).rejects.toThrow(/unsupported resource/);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('rejects empty access tokens before calling the network', async () => {
+      const client = new GoogleCalendarApiClient('   ');
+      await expect(client.read('calendars')).rejects.toThrow(/access token/);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('surfaces permission failures', async () => {
+      fetchMock.mockResolvedValue({
+        ok: false,
+        status: 403,
+        json: async () => ({}),
+      });
+
+      const client = new GoogleCalendarApiClient(token);
+      await expect(
+        client.read('event', { calendarId: 'primary', eventId: 'secret' }),
+      ).rejects.toBeInstanceOf(CalendarApiError);
+      await expect(
+        client.read('event', { calendarId: 'primary', eventId: 'secret' }),
+      ).rejects.toThrow(/permission denied/);
     });
   });
 
