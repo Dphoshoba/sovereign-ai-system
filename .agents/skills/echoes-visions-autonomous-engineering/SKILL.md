@@ -48,12 +48,13 @@ Plan the whole authorised milestone. Implement, test, and correct failures cause
 - Turbopack can warn that a parent `pnpm-lock.yaml` is the workspace root, and Next can warn that `middleware` is deprecated. Neither warning failed the verified Preview build. Do not change them while checking credentials.
 - The Supabase pooler username `postgres.emmzoeeaznhpwevqprkn` opens a session whose `current_user` is `postgres`. Confirm the project ref on the URL before connecting. An absent `sslmode` is acceptable when the pinned CA verifies the certificate. Keep an inspection in `BEGIN READ ONLY` and `ROLLBACK`. A write needs its own transaction, a bounded `lock_timeout`, a metadata recheck, and a rollback path before commit. The inspection role can write and bypasses row security.
 - The disposable article-governance database must include the same nullable `specificationVersion` and `disputes` columns as the Prisma model. Historical schema-diff tests allow only those additions and still require an empty migration diff.
+- Controlled Preview deploy uses `npx vercel deploy --yes` against the existing `sovereign-ai-executive` project. Never pass `--prod`. Confirm `environment` is `preview` and `productionUrl` is null. Production aliases for `www.echoesandvisions.com` must remain on the prior Production deployment. `vercel link` can rewrite ignored `.env.local`; re-check Preview identity afterwards. Vercel Secrets cannot be pulled; rely on public Preview settings, the `databaseUrlForRuntime` guard, and post-deploy probes. Deployment Protection requires `vercel curl` for Preview checks.
 
 ## H. Agent handoff
 
 Read, in order: this skill, the adopted specification, the latest milestone evidence, current Git state, and the relevant implementation and tests. Continue from the last verified checkpoint. Do not restart the programme.
 
-Verified checkpoint: Preview schema migration is complete and recorded. The 4D package and release readiness now ask for Preview activation approval. Prepare for Review still writes `article-grounded-v14`. `VERSIONED_EDITORIAL_VERIFIER_ENABLED` stays false. The next human boundary is explicit approval to deploy Preview and, separately, to turn on versioned scoring inside Prepare for Review. That does not authorise Production or publication.
+Verified checkpoint: Preview deployment `dpl_AJuRTkkGfxQrSBTrr7bi3eqKMNiB` is READY for commit `48651704`. Evidence is `docs/governance/EV-REG-PREVIEW-DEPLOYMENT.md`. Prepare for Review still writes `article-grounded-v14`. `VERSIONED_EDITORIAL_VERIFIER_ENABLED` stays false. Production aliases were not moved. The next human boundary is approval to turn on versioned scoring inside Prepare for Review on Preview only.
 
 ## I. Skill maintenance
 

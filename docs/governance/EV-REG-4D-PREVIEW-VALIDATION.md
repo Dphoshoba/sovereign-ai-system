@@ -1,12 +1,12 @@
 # Milestone 4D Preview validation package
 
-Status: **ready for Preview activation approval**. This package does not authorise Preview deployment, Production access, or versioned scoring.
+Status: **Preview deployed; versioned activation approval required**. Deployment evidence is `docs/governance/EV-REG-PREVIEW-DEPLOYMENT.md`. This package does not authorise Production access or versioned scoring.
 
 ## Verified local state
 
 Repository: `C:\Users\David\echoes-visions-preview-security`  
 Branch: `integrate/production-research-integrity`  
-HEAD: `1cc816a83b8e03e166be2400bbfe0aff2802564d`
+HEAD at deploy: `4865170405e178b4594f2090f0ff77911745e343`
 
 | Milestone | Commit | Result |
 |---|---|---|
@@ -58,7 +58,6 @@ Redeploy the previous application revision first. Leave the nullable Preview col
 
 ## Human approvals still required
 
-- Authorise Preview deployment of this HEAD.
 - Authorise the later change that turns on versioned scoring inside Prepare for Review.
 - Any article audit, approval, scheduling, or publication remains a separate decision.
 - Production remains out of scope.

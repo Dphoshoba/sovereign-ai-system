@@ -1,10 +1,11 @@
 # Release readiness — EV-REG-SPEC-1.0.0
 
-Status: **Preview activation approval required**. This report does not authorise deployment, Production access, or versioned scoring.
+Status: **Preview deployed; versioned activation approval required**. Deployment evidence is `docs/governance/EV-REG-PREVIEW-DEPLOYMENT.md`. This report does not authorise Production access or versioned scoring.
 
 Worktree: `C:\Users\David\echoes-visions-preview-security`  
 Branch: `integrate/production-research-integrity`  
-HEAD at verification: `1cc816a83b8e03e166be2400bbfe0aff2802564d`  
+HEAD at deployment: `4865170405e178b4594f2090f0ff77911745e343`  
+Preview deployment: `dpl_AJuRTkkGfxQrSBTrr7bi3eqKMNiB`  
 Specification SHA-256: `9D3C34F1689BBC0DB673A5E0A3B79A11B343C2792D4F9179BFA8E29E5ECC2419`
 
 ## Verification
@@ -68,7 +69,6 @@ Redeploy the previous application revision first. Leave the nullable Preview col
 
 ## Human approvals required
 
-- Authorise Preview deployment of this HEAD.
 - Authorise a later change that turns on versioned scoring inside Prepare for Review.
 - Any article audit, approval, scheduling, or publication remains a separate decision.
 - Production remains out of scope.
