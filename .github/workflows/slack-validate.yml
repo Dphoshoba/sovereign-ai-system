@@ -16,6 +16,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v1
       - run: bun install
+      # Static generation of auth pages requires public Supabase env names.
+      # CI-only placeholders — not Preview or Production credentials.
+      # Repo Actions secrets/variables for these keys were absent at fix time.
       - run: npm run build
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+          NEXT_PUBLIC_SUPABASE_URL: https://ci-build-placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-build-placeholder-anon-key-not-a-secret
       - run: npm test -- tests/connectors/slack.test.ts
       - run: npm run connector:validate -- --name=slack
