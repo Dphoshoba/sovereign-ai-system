@@ -101,8 +101,9 @@ Read, in order: this skill, the adopted specification, `docs/releases/EV-REG-1.0
 ### Production programme status
 
 - Phase **P0** (skill + readiness + plan): complete — `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md`
-- Phase **P1** (read-only Production schema): **BLOCKED** — out-of-repo credential identity still matches Production Session pooler (`postgres.kqptdgbttfuqkzxzbazw` @ `aws-1-ap-southeast-2.pooler.supabase.com:5432`), but a single recovery connect failed again with `28P01` password authentication. File metrics unchanged (URL length 110; password length 12). No read-only session; live Production columns unknown. Evidence: `docs/governance/EV-REG-PRODUCTION-P1-SCHEMA-INSPECTION.md`. Do not reuse Preview `.env.local`. Do not auto-retry or reset passwords.
-- Phases **P2–P4** remain closed until P1 completes a successful `BEGIN READ ONLY` metadata inspection
+- Phase **P1** (read-only Production schema): **VERIFIED** — Session pooler connect to Production project `kqptdgbttfuqkzxzbazw` (`aws-1-ap-southeast-2.pooler.supabase.com:5432`), `transaction_read_only=on`, both audit tables present, **`specificationVersion` and `disputes` absent**. Evidence: `docs/governance/EV-REG-PRODUCTION-P1-SCHEMA-INSPECTION.md`. Do not reuse Preview `.env.local`.
+- Phase **P2** (additive Production migration): requires separate human approval; same two nullable columns as Preview; flag stays unset
+- Phases **P3–P4** remain closed until P2 completes
 - Production must keep `VERSIONED_EDITORIAL_VERIFIER_ENABLED` unset until the activation gate
 
 ### Human-authority boundaries (still closed without explicit approval)

@@ -1,61 +1,115 @@
 # EV-REG Production P1 — schema inspection
 
-Status: **BLOCKED — Production database authentication failed again after credential recovery attempt.**  
-One short-timeout Session-pooler connection was attempted. It failed. No further password retries were made. No schema writes, migrations, deployments, or flag changes occurred. No article or audit row data was read.
+Status: **VERIFIED — read-only Production schema inspection complete.**  
+No schema writes, migrations, deployments, or flag changes occurred. No article or audit row data was read. Session ended with `ROLLBACK`.
 
 Linked from `.agents/skills/echoes-visions-autonomous-engineering/SKILL.md` and `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md`.
 
 Worktree: `C:\Users\David\echoes-visions-preview-security`  
 Branch: `integrate/production-research-integrity`  
-HEAD at recovery attempt: `de6fa45a258339c96d04e984f55a6ea741776d29`  
+HEAD at verification: `3bd33be2a3359434b5117291af4c5fc368ee8429`  
 Certified Preview tag: `ev-reg-1.0.0-preview-certified` → `d8f59aceac3bdc775760a8bc4d076eb1e1d9074d`
 
 ## Verdict
 
-**EV-REG PRODUCTION P1 BLOCKED**
+**EV-REG PRODUCTION P1 VERIFIED — P2 APPROVAL REQUIRED**
 
-## Credential source
+## Credential and identity
 
-`C:\Users\David\.config\echoes-visions\production-db.env` (raw PostgreSQL URL). Value never printed or committed. Repository Preview `.env.local` was not used.
-
-## Identity structure (still valid)
+Source: `C:\Users\David\.config\echoes-visions\production-db.env` (never printed or committed). Preview `.env.local` was not used.
 
 | Field | Result |
 |---|---|
-| Username | `postgres.kqptdgbttfuqkzxzbazw` |
+| Username (URL) | `postgres.kqptdgbttfuqkzxzbazw` |
 | Host | `aws-1-ap-southeast-2.pooler.supabase.com` |
 | Port | `5432` (Session pooler) |
 | Database | `postgres` |
-| `sslmode` | absent in URL; TLS used with pinned Supabase root CA |
-| Production ref present | yes |
+| TLS | pinned `certs/supabase-root-2021.crt`, `rejectUnauthorized: true` |
 | Preview ref present | no |
-| Observed password length | 12 (unchanged vs prior blocked attempt) |
-| File length | 110 characters (unchanged vs prior blocked attempt) |
+| `transaction_read_only` | `on` |
+| `current_user` / `session_user` | `postgres` (normal pooler-mapped role) |
+| Server | PostgreSQL 17.6 |
+| `rolsuper` | false |
+| `rolbypassrls` | true |
+| `rolcanlogin` | true |
 
-## Connection attempt (recovery run)
+## Live Production schema
 
-- Single attempt only
-- Explicit user/host/port/database from the credential
-- `connectionTimeoutMillis: 8000`
-- TLS `rejectUnauthorized: true` + `certs/supabase-root-2021.crt`
-- Result: PostgreSQL `28P01` — password authentication failed for user `postgres` (pooler-mapped role)
+Both tables exist in `public` as ordinary tables. Row security is enabled on both. `pg_policies` returned **no** policies.
 
-No `BEGIN READ ONLY` session was established. Ports were not re-swept; credentials were not auto-reset.
+### `ArticleResearchAudit`
 
-## Schema inspection
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| id | text | no | none |
+| articleId | text | no | none |
+| sourceCount | integer | no | 0 |
+| averageAuthorityScore | integer | no | 0 |
+| averageTrustScore | integer | no | 0 |
+| researchConfidence | integer | no | 0 |
+| evidenceCount | integer | no | 0 |
+| factCount | integer | no | 0 |
+| verifiedCount | integer | no | 0 |
+| partiallyVerifiedCount | integer | no | 0 |
+| unverifiedCount | integer | no | 0 |
+| averageVerificationScore | integer | no | 0 |
+| consensusScore | integer | no | 0 |
+| sourceQualityScore | integer | no | 0 |
+| publicationRecommendation | text | yes | none |
+| sources | jsonb | yes | none |
+| evidence | jsonb | yes | none |
+| facts | jsonb | yes | none |
+| consensus | jsonb | yes | none |
+| createdAt | timestamp without time zone | no | CURRENT_TIMESTAMP |
 
-**Not completed.** Production presence of `specificationVersion` / `disputes` remains **UNKNOWN**.
+**`specificationVersion` is absent. `disputes` is absent.**
 
-| Surface | Status |
-|---|---|
-| Preview | Columns added (prior Preview evidence) |
-| Prisma | Declares nullable `specificationVersion`, `disputes` |
-| Production live | Unknown — auth blocked |
+Primary key: `id`. Foreign key: `articleId` → `public."Article"("id")` ON DELETE CASCADE ON UPDATE CASCADE. Indexes: PK + `ArticleResearchAudit_articleId_idx`.
 
-## Human resolution required
+### `ArticleReviewNote`
 
-Replace the database password in the out-of-repo file with the **current** Supabase/Vercel Production database password for project `kqptdgbttfuqkzxzbazw` (likely longer than 12 characters if using a freshly generated Supabase secret). Confirm the URL still uses Session pooler host/port `5432` and username `postgres.kqptdgbttfuqkzxzbazw`. Do not paste the secret into chat or git. Then re-authorise a single P1 resume.
+| Column | Type | Nullable | Default |
+|---|---|---|---|
+| id | text | no | none |
+| articleId | text | no | none |
+| action | text | no | none |
+| note | text | yes | none |
+| reviewer | text | no | `'system'::text` |
+| createdAt | timestamp without time zone | no | CURRENT_TIMESTAMP |
 
-## P2 status
+Primary key: `id`. Foreign key: `articleId` → `public."Article"("id")` ON DELETE CASCADE ON UPDATE CASCADE. Indexes: PK + `ArticleReviewNote_articleId_idx` + `ArticleReviewNote_action_idx`.
 
-**Not opened.** Additive migration approval requires a successful read-only metadata session first.
+## Comparison
+
+| Surface | `specificationVersion` / `disputes` | Notes |
+|---|---|---|
+| Production (this session) | **Absent** | Matches pre-migration Preview shape |
+| Preview (after 3Y migration) | Present, nullable, no defaults | See `EV-REG-3Y-MIGRATION-EXECUTION.md` |
+| Prisma `ArticleResearchAudit` | Declared nullable | Deploying candidate code without Production columns is unsafe |
+| `ArticleReviewNote` | Unchanged everywhere | Do not alter in P2 |
+
+Tracked Prisma migrations still do not create these tables.
+
+## Migration compatibility (P2 proposal)
+
+Safe to propose the same additive Preview SQL on Production only:
+
+```sql
+ALTER TABLE public."ArticleResearchAudit"
+  ADD COLUMN "specificationVersion" TEXT,
+  ADD COLUMN "disputes" JSONB;
+```
+
+Constraints for P2 approval:
+
+- Nullable, no defaults, no backfill, no indexes, no historical rewrite
+- Not via `prisma migrate diff` / `prisma db push`
+- Flag remains unset; no Production deploy in P2
+- Rollback: redeploy prior app revision first; leave columns in place
+- Inspection role can write and bypasses RLS — P2 must use its own bounded write transaction with rechecks
+
+## Remaining risks
+
+- `rolbypassrls=true` on the pooler `postgres` role — never rely on RLS alone; keep explicit read-only / bounded write discipline
+- Production pooler host is `aws-1-…` (Preview used `aws-0-…`) — keep project-ref username checks
+- P2 still requires separate human approval before any DDL

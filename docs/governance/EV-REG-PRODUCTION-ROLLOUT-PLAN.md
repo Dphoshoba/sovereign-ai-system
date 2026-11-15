@@ -1,8 +1,8 @@
 # EV-REG-1.0.0 — Production rollout plan
 
-Status: **P0 complete; P1 blocked — Production DB auth failed again after recovery attempt.**  
-Preview certification remains **PREVIEW CERTIFIED — NOT PRODUCTION AUTHORISED** until P1–P4 complete under separate approvals.  
-P1 evidence: `docs/governance/EV-REG-PRODUCTION-P1-SCHEMA-INSPECTION.md` (Production identity structure OK; Session pooler auth `28P01`; schema not inspected).
+Status: **P0 complete; P1 verified — P2 migration approval required.**  
+Preview certification remains **PREVIEW CERTIFIED — NOT PRODUCTION AUTHORISED** until P2–P4 complete under separate approvals.  
+P1 evidence: `docs/governance/EV-REG-PRODUCTION-P1-SCHEMA-INSPECTION.md` (Production `ArticleResearchAudit` lacks `specificationVersion` / `disputes`; matches pre-migration Preview shape).
 
 Linked from `.agents/skills/echoes-visions-autonomous-engineering/SKILL.md` section K. Does not supersede `docs/releases/EV-REG-1.0.0-PREVIEW-CERTIFIED.md`.
 
