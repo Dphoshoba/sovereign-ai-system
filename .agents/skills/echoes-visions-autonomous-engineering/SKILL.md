@@ -42,7 +42,7 @@ Characterise current behaviour before changing it. Keep future-contract files ou
 
 Verify database identity before connecting. Do not treat an environment-variable name as proof that a database is non-Production. Reject any URL that identifies Supabase project `kqptdgbttfuqkzxzbazw` when the authorised target is Preview. Never print credentials. Inspect live metadata before writing a migration. `prisma/schema.prisma` contains `ArticleResearchAudit` and `ArticleReviewNote`, and the tracked migration history does not create them. Prefer additive nullable columns. Roll an additive change back by deploying the previous code first and leaving the columns in place. Do not execute a Production migration without explicit approval.
 
-The Milestone 3Y columns exist on the verified Preview database (`emmzoeeaznhpwevqprkn`) only. Production (`kqptdgbttfuqkzxzbazw`) has not received them. The SQL was an explicit transaction with a 5-second lock timeout, not a Prisma diff. Do not copy it into `prisma/migrations`. Do not derive a further change from the incomplete migration history.
+The Milestone 3Y columns exist on the verified Preview database (`emmzoeeaznhpwevqprkn`) and, after Production P2, on Production (`kqptdgbttfuqkzxzbazw`) as the same nullable pair. Both changes used an explicit transaction with a 5-second lock timeout, not a Prisma diff. Do not copy them into `prisma/migrations`. Do not derive a further change from the incomplete migration history.
 
 ## F. Engineering execution
 
