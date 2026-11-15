@@ -34,6 +34,12 @@ const CHROME_STRIP_SELECTORS = [
 ].join(", ");
 
 const PREFERRED_SELECTORS = [
+  // Prefer explicit article bodies before generic <article>, which some help
+  // centres reuse for promo/alert chrome (Zapier lt-article pattern).
+  "[itemprop='articleBody']",
+  ".lt-article__body",
+  ".lt-article-container__article",
+  ".lt-article__box",
   "article",
   "main",
   "[role='main']",
@@ -51,12 +57,35 @@ const PREFERRED_SELECTORS = [
   "#content",
 ];
 
-function collectParagraphs($: ReturnType<typeof load>, root: ReturnType<typeof $>,): string {
-  const blocks = root
+/** Sparse promo/alert shells can clear the minimum length but are not bodies. */
+const PREFERRED_MIN_BLOCKS = 2;
+const PREFERRED_DENSE_MIN_CHARS = 400;
+
+function collectParagraphBlocks(
+  $: ReturnType<typeof load>,
+  root: ReturnType<typeof $>,
+): string[] {
+  const normalize = (value: string) => value.replace(/\s+/g, " ").trim();
+
+  const prose = root
     .find("p, h1, h2, h3, li")
-    .map((_, element) => $(element).text().replace(/\s+/g, " ").trim())
+    .map((_, element) => normalize($(element).text()))
     .get()
     .filter((line) => line.length >= 40 && !isChromePassage(line));
+
+  // Help-centre comparison tables often label actions in short cells
+  // (e.g. "Conversation", "Send Prompt") that fail the prose floor.
+  const tableCells = root
+    .find("td, th")
+    .map((_, element) => normalize($(element).text()))
+    .get()
+    .filter((line) => line.length >= 3 && !isChromePassage(line));
+
+  return [...prose, ...tableCells];
+}
+
+function collectParagraphs($: ReturnType<typeof load>, root: ReturnType<typeof $>,): string {
+  const blocks = collectParagraphBlocks($, root);
 
   if (blocks.length >= 2) {
     return blocks.join("\n");
@@ -68,6 +97,16 @@ function collectParagraphs($: ReturnType<typeof load>, root: ReturnType<typeof $
     .map((line) => line.replace(/\s+/g, " ").trim())
     .filter((line) => line.length >= 40 && !isChromePassage(line))
     .join("\n");
+}
+
+function isSubstantialPreferredCandidate(
+  $: ReturnType<typeof load>,
+  root: ReturnType<typeof $>,
+  candidate: string,
+): boolean {
+  if (candidate.length < JSON_LD_ARTICLE_MINIMUM) return false;
+  if (candidate.length >= PREFERRED_DENSE_MIN_CHARS) return true;
+  return collectParagraphBlocks($, root).length >= PREFERRED_MIN_BLOCKS;
 }
 
 function schemaTypeName(value: string): string {
@@ -144,15 +183,20 @@ export function extractHtmlDocument(html: string): {
   $(HARD_STRIP_SELECTORS).remove();
 
   let extractedText = "";
+  let bestPreferred = "";
   for (const selector of PREFERRED_SELECTORS) {
     const node = $(selector).first();
     if (!node.length) continue;
     const candidate = collectParagraphs($, node);
-    if (candidate.length >= 80) {
-      extractedText = candidate;
-      break;
+    if (
+      !isSubstantialPreferredCandidate($, node, candidate) ||
+      candidate.length <= bestPreferred.length
+    ) {
+      continue;
     }
+    bestPreferred = candidate;
   }
+  extractedText = bestPreferred;
 
   if (!extractedText) {
     $(CHROME_STRIP_SELECTORS).remove();

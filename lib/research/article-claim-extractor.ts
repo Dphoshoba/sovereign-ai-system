@@ -131,6 +131,8 @@ const AUTHORIAL_PATTERNS = [
   /^that is bibleproject/i,
   /\bnamed-source reading\b/i,
   /\bliterary reading\b/i,
+  /^source:/i,
+  /^further reading\b/i,
 ];
 
 const ADVICE_PATTERNS = [
@@ -141,10 +143,10 @@ const ADVICE_PATTERNS = [
 const FICTION_LABEL = /\b(fictional|illustration)\b/i;
 
 const PUBLISHER_ATTRIBUTION_NAME =
-  /\b(microsoft|outlook|copilot|google|gmail|gemini|workspace|meta|facebook|instagram|threads|intuit|quickbooks|xero|jax|nist)\b/i;
+  /\b(microsoft|outlook|copilot|google|gmail|gemini|workspace|meta|facebook|instagram|threads|intuit|quickbooks|xero|jax|nist|zapier|openai|chatgpt)\b/i;
 
 const PUBLISHER_ATTRIBUTION_VERB =
-  /\b(says|states|notes|warns|describes|lists|requires|shows|documents|reports|includes)\b/i;
+  /\b(says|states|notes|warns|describes|lists|requires|shows|documents|reports|includes|identifies|marks|announces|announced)\b/i;
 
 const FACTUAL_SIGNAL = new RegExp(
   [
@@ -277,7 +279,7 @@ export function splitBlockSentences(blockText: string): string[] {
 }
 
 const CLAIM_SHAPE =
-  /\b(is|are|was|were|be|can|could|may|might|will|has|have|helps|supports|improves|reduces|increases|requires|remains|shows|suggests|become|becomes|treats|treated|provides|integrate|integrated|should|distinguishes|describes|argues|notes|emphasizes|states|says|warns|assigned|fell|found|rose)\b/i;
+  /\b(is|are|was|were|be|can|could|may|might|will|has|have|helps|supports|improves|reduces|increases|requires|remains|shows|suggests|become|becomes|treats|treated|provides|integrate|integrated|should|distinguishes|describes|argues|notes|emphasizes|states|says|warns|identifies|marks|announces|assigned|fell|found|rose)\b/i;
 
 const MEASURABLE_NUMERICAL_RESULT = /\b\d+(?:\.\d+)?\s*(?:%|percent)\b/i;
 
@@ -442,7 +444,7 @@ const HYPOTHETICAL_SCENARIO =
   /^(suppose|imagine|hypothetically|what if)\b/i;
 
 const PRACTICAL_INSTRUCTION =
-  /^(draft|check|compare|click|open|send|use|start|choose|review|paste|select|keep|ask|write|add|remove|turn|enable|confirm|make|try|avoid)\b/i;
+  /^(draft|check|compare|click|open|send|use|start|choose|review|paste|select|keep|ask|write|add|remove|turn|enable|confirm|make|try|avoid|prefer|treat)\b/i;
 
 const RECOMMENDATION = /\b(you should|we recommend|we suggest|i recommend)\b/i;
 
@@ -583,8 +585,24 @@ export function extractArticleClaims(input: {
           continue;
         }
 
-        if (sentence.length < 40 && !hasMeasurableNumericalResult(sentence)) continue;
-        if (!hasClaimShape(sentence) && !hasPublisherAttribution(sentence)) continue;
+        // Short publisher-attributed facts (e.g. "Zapier marks it as recommended.")
+        // remain auditable even below the general prose floor.
+        if (
+          sentence.length < 40 &&
+          !hasMeasurableNumericalResult(sentence) &&
+          !hasPublisherAttribution(sentence)
+        ) {
+          continue;
+        }
+        // FACTUAL_SIGNAL / publisher attribution can establish verifiability
+        // even when the sentence uses a verb outside CLAIM_SHAPE (e.g. "identifies").
+        if (
+          !hasClaimShape(sentence) &&
+          !hasPublisherAttribution(sentence) &&
+          !isExternallyVerifiableClaim(sentence)
+        ) {
+          continue;
+        }
         const key = sentence.toLowerCase();
         if (seen.has(key)) continue;
         seen.add(key);

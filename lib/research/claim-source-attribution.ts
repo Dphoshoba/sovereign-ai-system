@@ -10,6 +10,8 @@ export const ATTRIBUTED_PUBLISHERS = [
   "meta",
   "intuit",
   "xero",
+  "zapier",
+  "openai",
 ] as const;
 
 export type AttributedPublisher = (typeof ATTRIBUTED_PUBLISHERS)[number];
@@ -131,6 +133,22 @@ const PUBLISHERS: PublisherPattern[] = [
     claimPatterns: [/\bxero\b/i, /\bjax\b/i],
     hostPatterns: [/(^|\.)xero\.com$/i],
     namePatterns: [/\bxero\b/i, /\bjax\b/i],
+  },
+  {
+    id: "zapier",
+    claimPatterns: [/\bzapier\b/i],
+    hostPatterns: [/(^|\.)zapier\.com$/i],
+    namePatterns: [/\bzapier\b/i],
+  },
+  {
+    id: "openai",
+    claimPatterns: [/\bopenai\b/i, /\bchatgpt\b/i],
+    hostPatterns: [
+      /(^|\.)openai\.com$/i,
+      /(^|\.)developers\.openai\.com$/i,
+      /(^|\.)platform\.openai\.com$/i,
+    ],
+    namePatterns: [/\bopenai\b/i, /\bchatgpt\b/i],
   },
 ];
 

@@ -69,15 +69,25 @@ export function versionedFactVerification(
     const passages: VersionedPassage[] = [];
     for (const match of matches) {
       acceptedById.set(match.evidence.id, match.evidence);
-      const polarity = versionedPassageSubstantiates(
-        claim.claim,
-        match.evidence.extractedText,
-      )
+      const host = (() => {
+        try {
+          return new URL(match.evidence.sourceUrl).hostname.toLowerCase();
+        } catch {
+          return "";
+        }
+      })();
+      const passageText =
+        /(^|\.)zapier\.com$|(^|\.)(?:developers\.)?openai\.com$/.test(host)
+          ? [match.evidence.sourceTitle, match.evidence.extractedText]
+              .filter(Boolean)
+              .join("\n")
+          : match.evidence.extractedText;
+      const polarity = versionedPassageSubstantiates(claim.claim, passageText)
         ? "supports"
         : "does-not-address";
       passages.push({
         url: match.evidence.sourceUrl,
-        passage: match.evidence.extractedText,
+        passage: passageText,
         polarity,
         title: match.evidence.sourceTitle,
       });
@@ -97,9 +107,20 @@ export function versionedFactVerification(
           url: evidence.sourceUrl,
           title: evidence.sourceTitle,
         });
+        const host = (() => {
+          try {
+            return new URL(evidence.sourceUrl).hostname.toLowerCase();
+          } catch {
+            return "";
+          }
+        })();
+        const passageText =
+          /(^|\.)zapier\.com$|(^|\.)(?:developers\.)?openai\.com$/.test(host)
+            ? [evidence.sourceTitle, evidence.extractedText].filter(Boolean).join("\n")
+            : evidence.extractedText;
         return (
           Boolean(identity && identitySet.has(identity)) &&
-          versionedPassageSubstantiates(claim.claim, evidence.extractedText)
+          versionedPassageSubstantiates(claim.claim, passageText)
         );
       });
 

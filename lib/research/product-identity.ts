@@ -18,6 +18,9 @@ const PUBLISHER_OR_GENERIC_TOKENS = new Set([
   "quickbooks",
   "xero",
   "jax",
+  "zapier",
+  "openai",
+  "chatgpt",
   "feature",
 ]);
 

@@ -198,4 +198,66 @@ describe("research source acquisition safety", () => {
     );
     expect(JSON.stringify(fetched.diagnostic)).not.toMatch(/stack|ECONN|192\.168/i);
   });
+
+  it("retries once on HTTP 429 within a bounded Retry-After budget", async () => {
+    let attempts = 0;
+    const slept: number[] = [];
+    const fetched = await contentFetcher(
+      "https://help.zapier.com/hc/en-us/articles/retry-demo",
+      "Zapier",
+      {
+        lookup: PUBLIC_LOOKUP,
+        sleep: async (ms) => {
+          slept.push(ms);
+        },
+        fetch: (async () => {
+          attempts += 1;
+          if (attempts === 1) {
+            return new Response("throttled", {
+              status: 429,
+              headers: { "retry-after": "1", "content-type": "text/html" },
+            });
+          }
+          return new Response(
+            "<article itemprop='articleBody'><p>Zapier Conversation is the recommended Responses API action for structured prompts in new workflows.</p><p>Send Prompt remains available for simple one-off completion requests without retained context.</p></article>",
+            {
+              status: 200,
+              headers: { "content-type": "text/html" },
+            },
+          );
+        }) as typeof fetch,
+      },
+    );
+    expect(attempts).toBe(2);
+    expect(slept).toEqual([1000]);
+    expect(fetched.fetchStatus).toBe("success");
+    expect(fetched.diagnostic.category).toBe("accepted");
+    expect(fetched.extractedText).toContain(
+      "Conversation is the recommended Responses API action",
+    );
+  });
+
+  it("does not retry HTTP 403 refusals", async () => {
+    let attempts = 0;
+    const fetched = await contentFetcher(
+      "https://help.zapier.com/hc/en-us/articles/forbidden-demo",
+      "Zapier",
+      {
+        lookup: PUBLIC_LOOKUP,
+        sleep: async () => {
+          throw new Error("sleep should not run for forbidden responses");
+        },
+        fetch: (async () => {
+          attempts += 1;
+          return new Response("forbidden", {
+            status: 403,
+            headers: { "content-type": "text/html" },
+          });
+        }) as typeof fetch,
+      },
+    );
+    expect(attempts).toBe(1);
+    expect(fetched.diagnostic.category).toBe("http_forbidden");
+    expect(fetched.extractedText).toBe("");
+  });
 });

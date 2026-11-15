@@ -15,6 +15,11 @@ const HOST_REGISTRY: Array<{ id: AttributedPublisher; host: RegExp }> = [
   { id: "meta", host: /(^|\.)(?:about\.fb\.com|meta\.com|facebook\.com)$/i },
   { id: "intuit", host: /(^|\.)intuit\.com$/i },
   { id: "xero", host: /(^|\.)xero\.com$/i },
+  { id: "zapier", host: /(^|\.)zapier\.com$/i },
+  {
+    id: "openai",
+    host: /(^|\.)(?:openai\.com|developers\.openai\.com|platform\.openai\.com)$/i,
+  },
 ];
 
 const ACTOR_WORDS: Record<string, AttributedPublisher> = {
@@ -30,6 +35,9 @@ const ACTOR_WORDS: Record<string, AttributedPublisher> = {
   pwc: "pwc",
   intuit: "intuit",
   xero: "xero",
+  zapier: "zapier",
+  openai: "openai",
+  chatgpt: "openai",
 };
 
 export type VersionedPassagePolarity = "supports" | "does-not-address" | "contradicts";
@@ -92,7 +100,7 @@ function attributesSharedFact(claim: string): boolean {
 
 function leadingActor(text: string): AttributedPublisher | null {
   const match = text.match(
-    /^(?:according to\s+)?(power platform|microsoft|google|gmail|copilot|outlook|nist|meta|deloitte|pwc|intuit|xero)\b/i,
+    /^(?:according to\s+)?(power platform|microsoft|google|gmail|copilot|outlook|nist|meta|deloitte|pwc|intuit|xero|zapier|openai|chatgpt)\b/i,
   );
   if (!match) return null;
   return ACTOR_WORDS[match[1].toLowerCase()] ?? null;

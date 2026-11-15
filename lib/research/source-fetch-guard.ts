@@ -10,6 +10,10 @@ export const RESEARCH_FETCH_TIMEOUT_MS = 20_000;
 export const RESEARCH_PDF_PARSE_TIMEOUT_MS = 12_000;
 export const RESEARCH_FETCH_MAX_BYTES = 4_194_304;
 export const RESEARCH_FETCH_MAX_REDIRECTS = 3;
+/** One bounded retry for transient upstream throttling (429/503). */
+export const RESEARCH_FETCH_MAX_TRANSIENT_RETRIES = 1;
+export const RESEARCH_FETCH_MAX_RETRY_AFTER_MS = 2_000;
+export const RESEARCH_FETCH_DEFAULT_RETRY_AFTER_MS = 250;
 export const RESEARCH_PDF_MAX_SCAN_PAGES = 80;
 export const RESEARCH_PDF_HARD_PAGE_LIMIT = 200;
 export const RESEARCH_PDF_MAX_SCAN_CHARS = 400_000;
@@ -75,7 +79,45 @@ export type GuardedFetchDeps = {
   fetch?: typeof fetch;
   fetchTimeoutMs?: number;
   pdfParseTimeoutMs?: number;
+  sleep?: (ms: number) => Promise<void>;
+  maxTransientRetries?: number;
 };
+
+function isTransientHttpStatus(status: number): boolean {
+  return status === 429 || status === 503;
+}
+
+export function boundedRetryAfterMs(
+  response: { headers: { get(name: string): string | null } },
+  fallbackMs = RESEARCH_FETCH_DEFAULT_RETRY_AFTER_MS,
+): number {
+  const raw = response.headers.get("retry-after");
+  if (!raw) return Math.min(fallbackMs, RESEARCH_FETCH_MAX_RETRY_AFTER_MS);
+  const asSeconds = Number(raw);
+  if (Number.isFinite(asSeconds) && asSeconds >= 0) {
+    return Math.min(Math.round(asSeconds * 1000), RESEARCH_FETCH_MAX_RETRY_AFTER_MS);
+  }
+  const asDate = Date.parse(raw);
+  if (Number.isFinite(asDate)) {
+    return Math.min(
+      Math.max(0, asDate - Date.now()),
+      RESEARCH_FETCH_MAX_RETRY_AFTER_MS,
+    );
+  }
+  return Math.min(fallbackMs, RESEARCH_FETCH_MAX_RETRY_AFTER_MS);
+}
+
+async function sleepMs(
+  ms: number,
+  sleep: ((value: number) => Promise<void>) | undefined,
+): Promise<void> {
+  if (ms <= 0) return;
+  if (sleep) {
+    await sleep(ms);
+    return;
+  }
+  await new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
 
 export class UnsafeResearchUrlError extends ResearchSourceFetchError {
   constructor(
@@ -271,90 +313,106 @@ export async function fetchGuardedResearchSource(
   deps: GuardedFetchDeps = {},
 ): Promise<{ url: string; contentType: string; body: Uint8Array; httpStatus: number }> {
   let current = rawUrl;
+  const maxTransientRetries =
+    deps.maxTransientRetries ?? RESEARCH_FETCH_MAX_TRANSIENT_RETRIES;
 
   for (let hop = 0; hop <= RESEARCH_FETCH_MAX_REDIRECTS; hop += 1) {
     const target = await resolveSafeResearchTarget(current, deps);
     const fetchTimeoutMs = deps.fetchTimeoutMs ?? RESEARCH_FETCH_TIMEOUT_MS;
-    let inflight: Response | undefined;
-    let response: Response;
-    let body: Uint8Array | null = null;
-    try {
-      const fetched = await withResearchTimeout(
-        fetchTimeoutMs,
-        "timeout",
-        "Source fetch timed out.",
-        async () => {
-          const nextResponse = deps.fetch
-            ? await deps.fetch(target.url.toString(), {
-                method: "GET",
-                redirect: "manual",
-                headers: RESEARCH_REQUEST_HEADERS,
-                signal: AbortSignal.timeout(fetchTimeoutMs),
-              })
-            : await fetchPinnedHttps(target, fetchTimeoutMs);
-          inflight = nextResponse;
-          if (nextResponse.status >= 300 && nextResponse.status < 400) {
-            return { response: nextResponse, body: null as Uint8Array | null };
-          }
-          return {
-            response: nextResponse,
-            body: await readLimitedBody(nextResponse),
-          };
-        },
-      );
-      response = fetched.response;
-      body = fetched.body;
-    } catch (error) {
-      if (inflight?.body) {
-        void inflight.body.cancel().catch(() => undefined);
-      }
-      throw mapFetchException(error);
-    }
+    let transientAttempts = 0;
 
-    if (response.status >= 300 && response.status < 400) {
-      const location = response.headers.get("location");
-      if (!location) {
-        throw new UnsafeResearchUrlError(
-          "Redirect is missing a Location header.",
-          "redirect_rejected",
-        );
-      }
-      let nextUrl: string;
+    while (true) {
+      let inflight: Response | undefined;
+      let response: Response;
+      let body: Uint8Array | null = null;
       try {
-        nextUrl = new URL(location, target.url).toString();
-      } catch {
-        throw new UnsafeResearchUrlError(
-          "Redirect target is not a valid URL.",
-          "redirect_rejected",
+        const fetched = await withResearchTimeout(
+          fetchTimeoutMs,
+          "timeout",
+          "Source fetch timed out.",
+          async () => {
+            const nextResponse = deps.fetch
+              ? await deps.fetch(target.url.toString(), {
+                  method: "GET",
+                  redirect: "manual",
+                  headers: RESEARCH_REQUEST_HEADERS,
+                  signal: AbortSignal.timeout(fetchTimeoutMs),
+                })
+              : await fetchPinnedHttps(target, fetchTimeoutMs);
+            inflight = nextResponse;
+            if (nextResponse.status >= 300 && nextResponse.status < 400) {
+              return { response: nextResponse, body: null as Uint8Array | null };
+            }
+            if (isTransientHttpStatus(nextResponse.status)) {
+              void nextResponse.body?.cancel().catch(() => undefined);
+              return { response: nextResponse, body: null as Uint8Array | null };
+            }
+            return {
+              response: nextResponse,
+              body: await readLimitedBody(nextResponse),
+            };
+          },
+        );
+        response = fetched.response;
+        body = fetched.body;
+      } catch (error) {
+        if (inflight?.body) {
+          void inflight.body.cancel().catch(() => undefined);
+        }
+        throw mapFetchException(error);
+      }
+
+      if (response.status >= 300 && response.status < 400) {
+        const location = response.headers.get("location");
+        if (!location) {
+          throw new UnsafeResearchUrlError(
+            "Redirect is missing a Location header.",
+            "redirect_rejected",
+          );
+        }
+        let nextUrl: string;
+        try {
+          nextUrl = new URL(location, target.url).toString();
+        } catch {
+          throw new UnsafeResearchUrlError(
+            "Redirect target is not a valid URL.",
+            "redirect_rejected",
+          );
+        }
+        current = nextUrl;
+        break;
+      }
+
+      if (response.status === 401 || response.status === 403 || response.status === 407) {
+        throw new ResearchSourceFetchError(
+          "http_forbidden",
+          "Source refused the request.",
+          response.status,
         );
       }
-      current = nextUrl;
-      continue;
-    }
 
-    if (response.status === 401 || response.status === 403 || response.status === 407) {
-      throw new ResearchSourceFetchError(
-        "http_forbidden",
-        "Source refused the request.",
-        response.status,
-      );
-    }
+      if (isTransientHttpStatus(response.status) && transientAttempts < maxTransientRetries) {
+        transientAttempts += 1;
+        await sleepMs(boundedRetryAfterMs(response), deps.sleep);
+        continue;
+      }
 
-    if (!response.ok) {
-      throw new ResearchSourceFetchError(
-        "http_error",
-        "Source returned an HTTP error.",
-        response.status,
-      );
-    }
+      if (!response.ok) {
+        throw new ResearchSourceFetchError(
+          "http_error",
+          "Source returned an HTTP error.",
+          response.status,
+        );
+      }
 
-    const contentType = response.headers.get("content-type") || "";
-    return {
-      url: target.url.toString(),
-      contentType,
-      body: body ?? new Uint8Array(),
-      httpStatus: response.status,
-    };
+      const contentType = response.headers.get("content-type") || "";
+      return {
+        url: target.url.toString(),
+        contentType,
+        body: body ?? new Uint8Array(),
+        httpStatus: response.status,
+      };
+    }
   }
 
   throw new UnsafeResearchUrlError("Too many redirects.", "redirect_rejected");

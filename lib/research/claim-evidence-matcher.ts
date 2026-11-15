@@ -100,6 +100,21 @@ function documentKindForUrl(url: string): "html" | "pdf" {
   return /\.pdf(?:$|[?#])/i.test(url) ? "pdf" : "html";
 }
 
+function helpCentrePassageText(evidence: EvidenceRecord): string {
+  const host = (() => {
+    try {
+      return new URL(evidence.sourceUrl).hostname.toLowerCase();
+    } catch {
+      return "";
+    }
+  })();
+  // Zapier/OpenAI help chunks often omit the brand token that remains in the page title.
+  if (/(^|\.)zapier\.com$|(^|\.)(?:developers\.)?openai\.com$/.test(host)) {
+    return [evidence.sourceTitle, evidence.extractedText].filter(Boolean).join("\n");
+  }
+  return evidence.extractedText;
+}
+
 function passageMatch(
   clause: string,
   evidence: EvidenceRecord,
@@ -110,7 +125,8 @@ function passageMatch(
   const documentKind = documentKindForUrl(evidence.sourceUrl);
   const singleContinuation = continuationExcerpt !== null && clauseCount === 1;
   const overlapTarget = singleContinuation ? continuationExcerpt : clause;
-  if (!passageSupportsClaim(overlapTarget, evidence.extractedText, { documentKind })) {
+  const passageText = helpCentrePassageText(evidence);
+  if (!passageSupportsClaim(overlapTarget, passageText, { documentKind })) {
     return null;
   }
   if (
@@ -124,17 +140,15 @@ function passageMatch(
   }
   if (
     continuationExcerpt &&
-    !passageSupportsContinuationSentence(
-      continuationExcerpt,
-      evidence.extractedText,
-      { documentKind },
-    )
+    !passageSupportsContinuationSentence(continuationExcerpt, passageText, {
+      documentKind,
+    })
   ) {
     return null;
   }
   return {
     evidence,
-    overlap: uniqueContentOverlap(overlapTarget, evidence.extractedText).overlap.length,
+    overlap: uniqueContentOverlap(overlapTarget, passageText).overlap.length,
   };
 }
 
