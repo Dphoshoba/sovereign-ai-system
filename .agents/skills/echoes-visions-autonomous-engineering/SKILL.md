@@ -96,7 +96,7 @@ Read, in order: this skill, the adopted specification, `docs/releases/EV-REG-1.0
 - Branch: `integrate/production-research-integrity`
 - HEAD at P0: `8be3605f93da8df77d5cb54db9d69f71ef3f5761`
 - Delta since certified Preview tag: connector CI workflows, Calendar `read()` remediation, and governance evidence docs only
-- Proposed Production candidate pending P3–P4 gates: that integration HEAD (or a later explicitly approved pin). **Not yet Production-certified.**
+- Production application pin live at P3: `8be3605f93da8df77d5cb54db9d69f71ef3f5761` (`dpl_69y1DZGtH3X74UsVB4i91QLAp85L`). **Not yet Production-certified** until P4B activation and programme closure.
 
 ### Production programme status
 
@@ -104,8 +104,9 @@ Read, in order: this skill, the adopted specification, `docs/releases/EV-REG-1.0
 - Phase **P1** (read-only Production schema): **VERIFIED** — Session pooler connect to Production project `kqptdgbttfuqkzxzbazw` (`aws-1-ap-southeast-2.pooler.supabase.com:5432`), `transaction_read_only=on`, both audit tables present, **`specificationVersion` and `disputes` absent**. Evidence: `docs/governance/EV-REG-PRODUCTION-P1-SCHEMA-INSPECTION.md`. Do not reuse Preview `.env.local`.
 - Phase **P2** (additive Production migration): **COMPLETE** — nullable `specificationVersion` (`text`) and `disputes` (`jsonb`) added on Production `ArticleResearchAudit` only. Evidence: `docs/governance/EV-REG-PRODUCTION-P2-MIGRATION-EXECUTION.md`. Flag unset; no Prisma migrate; no deploy.
 - Phase **P3** (Production deploy, flag unset): **COMPLETE** — `dpl_69y1DZGtH3X74UsVB4i91QLAp85L` @ `8be3605f93da8df77d5cb54db9d69f71ef3f5761`. Health reports verifier `false` / `article-grounded-v14`. Evidence: `docs/governance/EV-REG-PRODUCTION-P3-DEPLOYMENT-EXECUTION.md`.
-- Phase **P4** (Production flag enablement): requires separate human approval
-- Production must keep `VERSIONED_EDITORIAL_VERIFIER_ENABLED` unset until the P4 activation gate
+- Phase **P4A** (activation readiness): **VERIFIED** — Production dormant; flag absent; P2 columns present; 0 versioned audit rows; flag alone does not mutate articles/cron/auth. Evidence: `docs/governance/EV-REG-PRODUCTION-P4-ACTIVATION-READINESS.md`.
+- Phase **P4B** (Production flag enablement + redeploy of approved pin): requires separate human approval
+- Production must keep `VERSIONED_EDITORIAL_VERIFIER_ENABLED` unset until the P4B activation gate
 - Production credential cleanup: `DATABASE_URL` / `DIRECT_URL` Production secrets updated `2026-11-15`; rollback target remains `dpl_DnQpxYFhBihvAuhmGRqxoLrP6XXE` @ `3ade3125…`
 
 ### Human-authority boundaries (still closed without explicit approval)
@@ -133,8 +134,9 @@ Follow `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md`. Required sequence (e
 1. **P1** — Production identity + read-only schema inspection (no writes) — **complete**
 2. **P2** — Additive Production migration for nullable `specificationVersion` / `disputes` (flag remains unset) — **complete**
 3. **P3** — Production application deploy of `8be3605f…` with flag still unset; verify health `false` / `article-grounded-v14` — **complete**
-4. **P4** — Enable `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true` on Production only after P3 verification; post-activation probes; no article Prepare without separate editorial approval — **next approval**
+4. **P4A** — Activation readiness assessment (no flag change) — **complete**; evidence `EV-REG-PRODUCTION-P4-ACTIVATION-READINESS.md`
+5. **P4B** — Enable `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true` on Production only after P4A; redeploy approved pin; post-activation probes; no article Prepare without separate editorial approval — **next approval**
 
-Rollback: disable the Production flag first; redeploy the prior Production revision if required; leave nullable columns in place; do not delete historical audits; do not move Production aliases except as an explicit rollback step.
+Rollback: disable the Production flag first; redeploy so runtime sees the restored env (and the prior Production revision if required); leave nullable columns in place; do not delete historical audits; do not move Production aliases except as an explicit rollback step.
 
 Stop conditions: Production project ref mismatch, missing migration columns when deploying Prisma fields, unexpected Production flag state, health regression, alias drift, or any attempt to re-audit/publish the governing article without editorial approval.

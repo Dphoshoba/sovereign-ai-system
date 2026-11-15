@@ -80,7 +80,7 @@ Engineering implementation of the adopted research-governance specification uses
 
 ## EV-REG Production programme
 
-EV-REG-1.0.0 Preview is certified (`ev-reg-1.0.0-preview-certified`). Production rollout follows `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md` and `.agents/skills/echoes-visions-autonomous-engineering/SKILL.md`. Do not enable Production versioned scoring, migrate Production, or Prepare/approve/publish articles from EV-REG engineering gates alone.
+EV-REG-1.0.0 Preview is certified (`ev-reg-1.0.0-preview-certified`). Production rollout follows `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md` and `.agents/skills/echoes-visions-autonomous-engineering/SKILL.md`. P3 application pin is live with the versioned verifier **disabled**; P4A readiness is recorded in `docs/governance/EV-REG-PRODUCTION-P4-ACTIVATION-READINESS.md`. Do not enable Production versioned scoring, migrate Production, or Prepare/approve/publish articles from EV-REG engineering gates alone.
 
 ## Production release and operational workflow (OR-4/OR-5)
 

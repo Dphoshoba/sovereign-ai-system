@@ -87,16 +87,17 @@ Constraints:
 1. Complete P1 inspection evidence.
 2. Execute P2 additive migration; verify columns; flag remains unset.
 3. Deploy approved candidate to Production (**P3**) with flag unset; verify health exposes `versionedEditorialVerifierEnabled: false` and revision `article-grounded-v14`.
-4. Enable Production flag (**P4**); verify health shows `true` / `article-grounded-ev-reg-1`.
-5. Only then consider separately approved editorial Prepare actions.
+4. Complete activation readiness (**P4A**); evidence `EV-REG-PRODUCTION-P4-ACTIVATION-READINESS.md` — **complete**.
+5. Enable Production flag and redeploy approved pin (**P4B**); verify health shows `true` / `article-grounded-ev-reg-1`.
+6. Only then consider separately approved editorial Prepare actions.
 
 ## 7. Feature-flag strategy
 
 | Environment | Flag | Expected Prepare revision |
 |---|---|---|
 | Preview (current) | `true` | `article-grounded-ev-reg-1` |
-| Production before P4 | unset / not `true` | `article-grounded-v14` |
-| Production after P4 | `true` | `article-grounded-ev-reg-1` |
+| Production before P4B | unset / not `true` | `article-grounded-v14` |
+| Production after P4B | `true` | `article-grounded-ev-reg-1` |
 | Compile-time constant | always `false` | N/A — runtime env gate only |
 
 ## 8. Verification procedures
@@ -130,6 +131,7 @@ Constraints:
 | **P1** | Read-only Production identity + schema inspection | Migration, deploy, flag |
 | **P2** | Additive Production column migration | Deploy, flag, article ops |
 | **P3** | Production deploy of approved candidate with flag unset | Flag enablement, article ops |
-| **P4** | Production flag enablement + post-activation probes | Article Prepare/approve/schedule/publish (separate editorial approvals) |
+| **P4A** | Readiness assessment for Production flag enablement (no config change) | Flag enablement, redeploy, article ops |
+| **P4B** | Production flag enablement + redeploy of approved pin + post-activation probes | Article Prepare/approve/schedule/publish (separate editorial approvals) |
 
-**Next approval required:** **P4 — enable `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true` on Production only** after reconfirming P3 health/dormancy (no article Prepare without separate editorial approval).
+**Next approval required:** **P4B — enable `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true` on Production only**, redeploy the approved pin, and probe health (no article Prepare without separate editorial approval). P4A evidence: `docs/governance/EV-REG-PRODUCTION-P4-ACTIVATION-READINESS.md`.
