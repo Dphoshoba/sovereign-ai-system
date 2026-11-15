@@ -67,6 +67,7 @@ Plan the whole authorised milestone. Implement, test, and correct failures cause
 - Versioned Prepare activation is gated by env `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true`. The compile-time default stays false. `/api/health` on builds that include the activation commit reports the non-secret flag boolean and the revision Prepare would write. Do not set the flag on Production without a separate approval.
 - Connector CI workflows require CI-only Supabase placeholders on the build step. Path filters skip workflow-only pushes; `workflow_dispatch` is available. Calendar validation requires `async read(` on the Calendar api-client.
 - Vercel Production secrets (including `DATABASE_URL`) cannot be pulled into the worktree; `vercel env pull --environment production` writes `[SENSITIVE]` placeholders. Do not treat a successful public Supabase URL/JWT ref check as permission to connect. Do not reuse Preview `DATABASE_URL` for Production P1.
+- Approved out-of-repo Production DB URL path: `C:\Users\David\.config\echoes-visions\production-db.env` (raw URL or env assignment). Never print it. Identity must show username `postgres.kqptdgbttfuqkzxzbazw` and must not contain Preview ref `emmzoeeaznhpwevqprkn`. Production pooler host observed as `aws-1-ap-southeast-2.pooler.supabase.com` (Preview used `aws-0-…`). Use pinned CA; require `transaction_read_only=on` before metadata queries; always `ROLLBACK`. Auth failure after identity match is a blocker, not permission to try Preview credentials.
 
 ## H. Agent handoff
 
@@ -100,8 +101,8 @@ Read, in order: this skill, the adopted specification, `docs/releases/EV-REG-1.0
 ### Production programme status
 
 - Phase **P0** (skill + readiness + plan): complete — `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md`
-- Phase **P1** (read-only Production schema): **BLOCKED** — Production `DATABASE_URL` secret is not pullable via `vercel env pull` (placeholder only). Local `.env.local` is Preview-only and must not be reused. Evidence: `docs/governance/EV-REG-PRODUCTION-P1-SCHEMA-INSPECTION.md`. Public Production Supabase ref `kqptdgbttfuqkzxzbazw` was confirmed from `NEXT_PUBLIC_SUPABASE_*` / anon JWT only; that is not a PostgreSQL identity proof.
-- Phases **P2–P4** remain closed until P1 unblocks with an out-of-repo Production database credential and a completed read-only session
+- Phase **P1** (read-only Production schema): **BLOCKED** — out-of-repo credential at `C:\Users\David\.config\echoes-visions\production-db.env` identity-checks to Production (`postgres.kqptdgbttfuqkzxzbazw` on `aws-1-ap-southeast-2.pooler.supabase.com`), but password authentication failed on ports 5432 and 6543. No read-only session; live Production columns still unknown. Evidence: `docs/governance/EV-REG-PRODUCTION-P1-SCHEMA-INSPECTION.md`. Do not reuse Preview `.env.local`.
+- Phases **P2–P4** remain closed until P1 completes a successful `BEGIN READ ONLY` metadata inspection
 - Production must keep `VERSIONED_EDITORIAL_VERIFIER_ENABLED` unset until the activation gate
 
 ### Human-authority boundaries (still closed without explicit approval)

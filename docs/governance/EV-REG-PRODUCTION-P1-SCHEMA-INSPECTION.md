@@ -1,85 +1,73 @@
 # EV-REG Production P1 — schema inspection
 
-Status: **BLOCKED — Production database credential unavailable for a verified connection.**  
-No Production PostgreSQL session was opened. No schema writes, migrations, deployments, or flag changes occurred.
+Status: **BLOCKED — Production database authentication failed after identity structure verification.**  
+No successful Production PostgreSQL session was established. No schema writes, migrations, deployments, or flag changes occurred. No article or audit row data was read.
 
 Linked from `.agents/skills/echoes-visions-autonomous-engineering/SKILL.md` and `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md`. Does not supersede Preview inspection records.
 
 Worktree: `C:\Users\David\echoes-visions-preview-security`  
 Branch: `integrate/production-research-integrity`  
-HEAD at inspection attempt: `f3d883fed6218299a2e60cffc795f66d845725c0`  
+HEAD at resume: `f0fb622a6b06f8c5d9a83f1e3cf301c16ba656b5`  
 Certified Preview tag: `ev-reg-1.0.0-preview-certified` → `d8f59aceac3bdc775760a8bc4d076eb1e1d9074d`  
 Spec SHA-256: `9D3C34F1689BBC0DB673A5E0A3B79A11B343C2792D4F9179BFA8E29E5ECC2419`
 
 ## Verdict
 
-**EV-REG PRODUCTION P1 BLOCKED — IDENTITY OR SCHEMA VERIFICATION**
+**EV-REG PRODUCTION P1 BLOCKED**
 
-## What was verified without connecting
+## Credential source
 
-| Check | Result |
+Out-of-repo file: `C:\Users\David\.config\echoes-visions\production-db.env`  
+Format observed: raw PostgreSQL URL (not `KEY=value`). Value never printed or committed.
+
+Repository Preview `.env.local` `DATABASE_URL` was **not** used.
+
+## Identity structure (verified without printing the secret)
+
+| Field | Result |
 |---|---|
-| Governance / plan / Preview inspection docs | Read |
-| Spec hash | Matches expected digest |
-| Certified Preview tag | Unchanged at `d8f59ace…` |
-| Expected Production Supabase project | `kqptdgbttfuqkzxzbazw` |
-| Excluded Preview project | `emmzoeeaznhpwevqprkn` |
-| Local `.env.local` `DATABASE_URL` | Preview only (`postgres.emmzoeeaznhpwevqprkn`); **not used** |
-| Process env Production DB URL | Absent |
-| `vercel env pull --environment production` | `DATABASE_URL` written as `[SENSITIVE]` placeholder — **22 Production secrets cannot be pulled** |
-| Production public `NEXT_PUBLIC_SUPABASE_URL` | Host ref `kqptdgbttfuqkzxzbazw` |
-| Production anon JWT payload (decoded locally) | `ref=kqptdgbttfuqkzxzbazw`, `role=anon` |
-| Production `DATABASE_URL` secret exists in Vercel | Yes (listed; value unread) |
-| Preview `VERSIONED_EDITORIAL_VERIFIER_ENABLED` | Preview secret only |
+| Protocol | `postgres` / `postgresql` |
+| Username | `postgres.kqptdgbttfuqkzxzbazw` |
+| Host | `aws-1-ap-southeast-2.pooler.supabase.com` |
+| Port in URL | `5432` |
+| Database | `postgres` |
+| `sslmode` query param | absent |
+| Contains Production ref `kqptdgbttfuqkzxzbazw` | yes |
+| Contains Preview ref `emmzoeeaznhpwevqprkn` | no |
+| CA used for attempt | pinned `certs/supabase-root-2021.crt` (fingerprint match) |
 
-Public Auth/API project identity for Production is consistent with `kqptdgbttfuqkzxzbazw`. That does **not** satisfy the P1 rule to verify the Production **PostgreSQL** credential (host, port, database name, username, SSL, privilege class) before connecting. Hostname/public URL alone is insufficient for the database session.
+Public Production Auth identity (from earlier P0/P1 work) remains `kqptdgbttfuqkzxzbazw`. Pooler host class for this credential is **aws-1** (Preview inspection used **aws-0**).
 
-## What was not done
+## Connection attempt
 
-- No Production PostgreSQL connection
-- No `BEGIN READ ONLY` session
-- No `information_schema` inspection of `ArticleResearchAudit` / `ArticleReviewNote`
-- No confirmation whether Production already has `specificationVersion` / `disputes`
-- No migration SQL generated or executed
+After identity checks passed, connection was attempted with:
 
-## Schema comparison (evidence status)
+- explicit user / host / database from the credential
+- TLS `rejectUnauthorized: true` + pinned Supabase root CA
+- ports `5432` and `6543`
+
+Both attempts failed with PostgreSQL `28P01` password authentication failure (server reported role `postgres`, the normal pooler-mapped login role). No `BEGIN READ ONLY` session was established.
+
+## Schema inspection
+
+**Not completed.** Live Production column presence for `specificationVersion` / `disputes` remains **UNKNOWN**.
 
 | Surface | Status |
 |---|---|
-| Preview live schema | Known from `EV-REG-3Y-SCHEMA-INSPECTION.md` / migration execution: columns **added** on Preview |
-| Prisma model | Declares nullable `specificationVersion` and `disputes` on `ArticleResearchAudit` |
-| Production live schema | **UNKNOWN** — blocked pending credential |
+| Preview live schema | Columns added (Preview evidence) |
+| Prisma model | Declares nullable `specificationVersion`, `disputes` |
+| Production live schema | Unknown — auth blocked session |
 
-## Migration compatibility (provisional, pending live P1)
+## Migration compatibility
 
-If a later authorised session confirms Production tables match the pre-migration Preview shape (tables exist; both columns absent):
+Still provisional only. P2 must not proceed until a successful read-only session confirms table shape.
 
-- The same additive two-column Preview SQL remains the proposed P2 shape
-- Do not use `prisma migrate diff` / `prisma db push` (tables are outside tracked migrations)
-- Rollback: redeploy prior app revision first; leave nullable columns
-- Flag stays unset through P2–P3
+## Human resolution required
 
-This provisional assessment is **not** a P2 approval.
-
-## Blocker for human resolution
-
-Supply an out-of-repo Production `DATABASE_URL` for this worktree (or another approved non-printing access path) such that identity checks can confirm:
-
-- username / URL contains project ref `kqptdgbttfuqkzxzbazw`
-- does **not** contain `emmzoeeaznhpwevqprkn`
-- host, port, database name, SSL mode, and role privilege class can be recorded without printing the secret
-
-Then re-run P1 connection + read-only metadata inspection only.
-
-## Proposed P2 approval scope (after unblocked P1)
-
-Only if live Production metadata shows both columns absent and tables match expectations:
-
-- Explicit additive `ALTER TABLE` for nullable `specificationVersion` / `disputes` on Production `ArticleResearchAudit`
-- Flag remains unset; no deploy; no article operations
+Refresh or replace the Production database password in `C:\Users\David\.config\echoes-visions\production-db.env` so it matches the live Vercel Production `DATABASE_URL` / Supabase database password for project `kqptdgbttfuqkzxzbazw`, then re-run P1. Do not paste the secret into chat or the repository.
 
 ## Remaining risks
 
-- Production `DATABASE_URL` pooler host/port may differ from Preview (`aws-0` vs historical `aws-1` notes) — must be read from the credential, not assumed
-- Public Supabase ref matching Production does not prove `DATABASE_URL` points at the same project until the secret is identity-checked
-- Elevated `rolbypassrls` on pooler `postgres` role (Preview finding) may also apply on Production — read-only transaction discipline remains mandatory
+- Stale or truncated out-of-repo password (observed password length is short relative to typical Supabase secrets)
+- Host/port class differences between Preview (`aws-0`) and this Production credential (`aws-1`) must be respected once auth succeeds
+- Pooler role may still `rolbypassrls` after connect — read-only transaction discipline remains mandatory
