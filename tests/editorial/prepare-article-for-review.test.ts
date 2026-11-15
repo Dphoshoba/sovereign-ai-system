@@ -12,6 +12,7 @@ import {
   RESEARCH_AUDIT_FINGERPRINT_ACTION,
   parseArticleAuditAssociation,
   serializeArticleAuditAssociation,
+  utcIsoFromTimestampWithoutTimezone,
 } from "../../lib/research/article-audit-association"
 import { CURRENT_RESEARCH_AUDIT_ENGINE_REVISION } from "../../lib/research/research-audit-engine-revision"
 import { GROUNDED_ARTICLE_CLAIM, GROUNDED_EVIDENCE_TEXT } from "../fixtures/research-audit/article-2"
@@ -310,14 +311,20 @@ describe("prepareArticleForReview", () => {
         (entry as { data: { action: string } }).data.action ===
         RESEARCH_AUDIT_FINGERPRINT_ACTION,
     ) as { data: { action: string; note: string } }
-    expect(parseArticleAuditAssociation(associationCreate.data)).toMatchObject({
+    // Behaviour: association note uses naive wall ISO; API returns absolute ISO.
+    // Module: article-audit-association (utcIsoFromTimestampWithoutTimezone).
+    // User instruction: preserve exact binding; do not accept alternate ISO paths.
+    const parsedAssociation = parseArticleAuditAssociation(associationCreate.data)
+    expect(parsedAssociation).toMatchObject({
       auditId: result.audit.id,
       contentFingerprint: fingerprintFor(article),
-      createdAt: result.audit.createdAt,
       algorithm: "sha256",
       version: 2,
       engineRevision: CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
     })
+    expect(parsedAssociation?.createdAt).toBe(
+      utcIsoFromTimestampWithoutTimezone(new Date(result.audit.createdAt)),
+    )
     expect(tx.$queryRaw).toHaveBeenCalledTimes(1)
 
     const articleUpdate = articleUpdates[0] as {
