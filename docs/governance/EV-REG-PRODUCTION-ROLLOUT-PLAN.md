@@ -1,7 +1,8 @@
 # EV-REG-1.0.0 — Production rollout plan
 
-Status: **P0 plan only — not authorised for execution.**  
-Preview certification remains **PREVIEW CERTIFIED — NOT PRODUCTION AUTHORISED** until P1–P4 complete under separate approvals.
+Status: **P0 complete; P1 blocked pending Production DB credential.**  
+Preview certification remains **PREVIEW CERTIFIED — NOT PRODUCTION AUTHORISED** until P1–P4 complete under separate approvals.  
+P1 evidence: `docs/governance/EV-REG-PRODUCTION-P1-SCHEMA-INSPECTION.md`.
 
 Linked from `.agents/skills/echoes-visions-autonomous-engineering/SKILL.md` section K. Does not supersede `docs/releases/EV-REG-1.0.0-PREVIEW-CERTIFIED.md`.
 

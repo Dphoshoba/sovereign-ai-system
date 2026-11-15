@@ -66,6 +66,7 @@ Plan the whole authorised milestone. Implement, test, and correct failures cause
 - Controlled Preview deploy uses `npx vercel deploy --yes` against the existing `sovereign-ai-executive` project. Never pass `--prod` unless a Production programme explicitly authorises it. Confirm `environment` is `preview` and `productionUrl` is null for Preview. Production aliases for `www.echoesandvisions.com` must remain on the intended Production deployment. `vercel link` can rewrite ignored `.env.local`; re-check identity afterwards. Vercel Secrets cannot be pulled; rely on public settings, the `databaseUrlForRuntime` guard, and post-deploy probes. Deployment Protection requires `vercel curl` for Preview checks.
 - Versioned Prepare activation is gated by env `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true`. The compile-time default stays false. `/api/health` on builds that include the activation commit reports the non-secret flag boolean and the revision Prepare would write. Do not set the flag on Production without a separate approval.
 - Connector CI workflows require CI-only Supabase placeholders on the build step. Path filters skip workflow-only pushes; `workflow_dispatch` is available. Calendar validation requires `async read(` on the Calendar api-client.
+- Vercel Production secrets (including `DATABASE_URL`) cannot be pulled into the worktree; `vercel env pull --environment production` writes `[SENSITIVE]` placeholders. Do not treat a successful public Supabase URL/JWT ref check as permission to connect. Do not reuse Preview `DATABASE_URL` for Production P1.
 
 ## H. Agent handoff
 
@@ -98,8 +99,9 @@ Read, in order: this skill, the adopted specification, `docs/releases/EV-REG-1.0
 
 ### Production programme status
 
-- Phase **P0** (skill + readiness + plan): in progress / complete when this skill and `EV-REG-PRODUCTION-ROLLOUT-PLAN.md` are committed
-- Phases **P1–P4** require separate human approval before any Production schema inspection write-up execution, migration, deployment, or flag activation
+- Phase **P0** (skill + readiness + plan): complete — `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md`
+- Phase **P1** (read-only Production schema): **BLOCKED** — Production `DATABASE_URL` secret is not pullable via `vercel env pull` (placeholder only). Local `.env.local` is Preview-only and must not be reused. Evidence: `docs/governance/EV-REG-PRODUCTION-P1-SCHEMA-INSPECTION.md`. Public Production Supabase ref `kqptdgbttfuqkzxzbazw` was confirmed from `NEXT_PUBLIC_SUPABASE_*` / anon JWT only; that is not a PostgreSQL identity proof.
+- Phases **P2–P4** remain closed until P1 unblocks with an out-of-repo Production database credential and a completed read-only session
 - Production must keep `VERSIONED_EDITORIAL_VERIFIER_ENABLED` unset until the activation gate
 
 ### Human-authority boundaries (still closed without explicit approval)
