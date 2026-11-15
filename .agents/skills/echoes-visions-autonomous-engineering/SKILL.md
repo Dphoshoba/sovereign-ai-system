@@ -102,9 +102,10 @@ Read, in order: this skill, the adopted specification, `docs/releases/EV-REG-1.0
 
 - Phase **P0** (skill + readiness + plan): complete — `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md`
 - Phase **P1** (read-only Production schema): **VERIFIED** — Session pooler connect to Production project `kqptdgbttfuqkzxzbazw` (`aws-1-ap-southeast-2.pooler.supabase.com:5432`), `transaction_read_only=on`, both audit tables present, **`specificationVersion` and `disputes` absent**. Evidence: `docs/governance/EV-REG-PRODUCTION-P1-SCHEMA-INSPECTION.md`. Do not reuse Preview `.env.local`.
-- Phase **P2** (additive Production migration): requires separate human approval; same two nullable columns as Preview; flag stays unset
-- Phases **P3–P4** remain closed until P2 completes
+- Phase **P2** (additive Production migration): **PREPARED — not executed**. Package: `docs/governance/EV-REG-PRODUCTION-P2-MIGRATION-PREPARATION.md` + `docs/governance/sql/ev-reg-production-p2-article-research-audit.sql`. Same two nullable columns as Preview; flag stays unset; no Prisma migrate. Requires separate **execution** approval.
+- Phases **P3–P4** remain closed until P2 execution completes
 - Production must keep `VERSIONED_EDITORIAL_VERIFIER_ENABLED` unset until the activation gate
+- Production credential cleanup: `DATABASE_URL` / `DIRECT_URL` Production secrets updated `2026-11-15`; deployment `dpl_DnQpxYFhBihvAuhmGRqxoLrP6XXE` @ `3ade3125…` healthy
 
 ### Human-authority boundaries (still closed without explicit approval)
 
@@ -129,7 +130,7 @@ The editor-boundary test walks every privileged route. Anonymous and viewer chec
 Follow `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md`. Required sequence (each gate separately approved):
 
 1. **P1** — Production identity + read-only schema inspection (no writes) — **complete**
-2. **P2** — Additive Production migration for nullable `specificationVersion` / `disputes` (flag remains unset) — **next approval**
+2. **P2** — Additive Production migration for nullable `specificationVersion` / `disputes` (flag remains unset) — **package prepared; execution approval required**
 3. **P3** — Production application deploy of the approved candidate with flag still unset; verify baseline behaviour and health keys
 4. **P4** — Enable `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true` on Production only after P3 verification; post-activation probes; no article Prepare without separate editorial approval
 

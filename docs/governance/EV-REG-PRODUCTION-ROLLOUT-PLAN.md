@@ -1,8 +1,9 @@
 # EV-REG-1.0.0 — Production rollout plan
 
-Status: **P0 complete; P1 verified — P2 migration approval required.**  
-Preview certification remains **PREVIEW CERTIFIED — NOT PRODUCTION AUTHORISED** until P2–P4 complete under separate approvals.  
-P1 evidence: `docs/governance/EV-REG-PRODUCTION-P1-SCHEMA-INSPECTION.md` (Production `ArticleResearchAudit` lacks `specificationVersion` / `disputes`; matches pre-migration Preview shape).
+Status: **P0–P1 complete; P2 migration package prepared — execution approval required.**  
+Preview certification remains **PREVIEW CERTIFIED — NOT PRODUCTION AUTHORISED** until P2 execution and P3–P4 complete under separate approvals.  
+P1 evidence: `docs/governance/EV-REG-PRODUCTION-P1-SCHEMA-INSPECTION.md`.  
+P2 preparation: `docs/governance/EV-REG-PRODUCTION-P2-MIGRATION-PREPARATION.md` + `docs/governance/sql/ev-reg-production-p2-article-research-audit.sql` (**not executed**).
 
 Linked from `.agents/skills/echoes-visions-autonomous-engineering/SKILL.md` section K. Does not supersede `docs/releases/EV-REG-1.0.0-PREVIEW-CERTIFIED.md`.
 
@@ -23,13 +24,13 @@ Linked from `.agents/skills/echoes-visions-autonomous-engineering/SKILL.md` sect
 | Field | Verified in P0 | Value / note |
 |---|---|---|
 | Vercel project | Yes | `sovereign-ai-executive` (`prj_ogfO2yCJl7motADB98mCobU2Aviq`) |
-| Current Production deployment | Yes | `sovereign-ai-executive-cvw9iwkxn-…` (Ready; aliases include `www.echoesandvisions.com`, `echoesandvisions.com`, `sovereign-ai-executive.vercel.app`) |
+| Current Production deployment | Yes (rechecked at P2 prep) | `dpl_DnQpxYFhBihvAuhmGRqxoLrP6XXE` (`5b2doqdfl`) @ `3ade3125…` — Ready; aliases include `www.echoesandvisions.com`, `echoesandvisions.com`, `sovereign-ai-executive.vercel.app` |
 | Production health | Yes | `GET https://www.echoesandvisions.com/api/health` → `200` `{"ok":true}` (no verifier keys — pre-activation binary) |
 | Protected API | Yes | `GET /api/articles` → `401` |
-| Expected Production Supabase project | Documented + historical public host | `kqptdgbttfuqkzxzbazw` (security assessment from Production `/login` JS). **P0 did not re-read Production `DATABASE_URL` secret.** |
+| Expected Production Supabase project | P1 verified | `kqptdgbttfuqkzxzbazw` — Session pooler `aws-1-ap-southeast-2.pooler.supabase.com:5432` |
 | Preview Supabase project (contrast) | Yes | `emmzoeeaznhpwevqprkn` |
-| `VERSIONED_EDITORIAL_VERIFIER_ENABLED` | Yes (env listing) | Present as **Preview** secret only; **not** listed under Production |
-| Production `DATABASE_URL` / `NEXT_PUBLIC_SUPABASE_*` | Names present | Values not pulled; secrets must not be printed |
+| `VERSIONED_EDITORIAL_VERIFIER_ENABLED` | Yes | Present as **Preview** secret only; **not** listed under Production |
+| Production `DATABASE_URL` / `DIRECT_URL` | Credential cleanup verified | `DATABASE_URL` updated `2026-11-15T11:11:43Z`; `DIRECT_URL` updated `2026-11-15T11:56:46Z`; values not printed |
 
 ## 3. Required schema changes (Production)
 
@@ -65,9 +66,10 @@ Constraints:
 
 ### Blockers / residual unknowns for later phases
 
-1. **Production `DATABASE_URL` host class** not reconfirmed from the secret in P0 (must match `kqptdgbttfuqkzxzbazw` before migration).
-2. **Production column absence** must be confirmed by authorised read-only inspection (P1) before migration (P2).
-3. Integration HEAD is a **proposed** candidate only — requires Production certification gates, not Preview tag equivalence.
+1. ~~Production column absence~~ — **cleared by P1** (`specificationVersion` / `disputes` absent).
+2. ~~Production DB credential rotation / `DIRECT_URL`~~ — **cleared** (cleanup verified; secrets not printed).
+3. **P2 DDL not yet executed** — package prepared; requires execution approval.
+4. Integration HEAD remains a **proposed** Production candidate only — requires P3–P4 certification gates.
 
 ## 5. Preflight checks (before each phase)
 
@@ -128,4 +130,4 @@ Constraints:
 | **P3** | Production deploy of approved candidate with flag unset | Flag enablement, article ops |
 | **P4** | Production flag enablement + post-activation probes | Article Prepare/approve/schedule/publish (separate editorial approvals) |
 
-**Next approval required after P1:** **P2 — Additive Production migration** for nullable `specificationVersion` / `disputes` on `ArticleResearchAudit` (flag unset; no deploy).
+**Next approval required:** **P2 execution — run prepared Production additive migration** (`EV-REG-PRODUCTION-P2-MIGRATION-PREPARATION.md`; flag unset; no deploy).
