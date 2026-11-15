@@ -91,26 +91,25 @@ Read, in order: this skill, the adopted specification, `docs/releases/EV-REG-1.0
 - Evidence: `docs/governance/EV-REG-CONNECTOR-CI-INTEGRATION.md`
 - Calendar and Slack `connector:validate`: **100/100** on integrate (Actions runs `43702960411`, `43702963354`)
 
-### Current integration HEAD (not Production-certified)
+### Current integration HEAD
 
 - Branch: `integrate/production-research-integrity`
-- HEAD at P0: `8be3605f93da8df77d5cb54db9d69f71ef3f5761`
+- Application pin (Production): `8be3605f93da8df77d5cb54db9d69f71ef3f5761`
 - Delta since certified Preview tag: connector CI workflows, Calendar `read()` remediation, and governance evidence docs only
-- Production application pin live with verifier activated at P4B: `8be3605f93da8df77d5cb54db9d69f71ef3f5761` (`dpl_7Kdm6gQxWDnFGpyRVpzmXhqzwpb7`). **Not yet Production-certified** until certification review / programme closure.
+- **Production certified** under scope in `docs/releases/EV-REG-1.0.0-PRODUCTION-CERTIFICATION.md`: deployment `dpl_7Kdm6gQxWDnFGpyRVpzmXhqzwpb7`, verifier `article-grounded-ev-reg-1`, flag Production `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true`.
 
-### Production programme status
+### Production programme status — CLOSED
 
-- Phase **P0** (skill + readiness + plan): complete — `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md`
-- Phase **P1** (read-only Production schema): **VERIFIED** — Session pooler connect to Production project `kqptdgbttfuqkzxzbazw` (`aws-1-ap-southeast-2.pooler.supabase.com:5432`), `transaction_read_only=on`, both audit tables present, **`specificationVersion` and `disputes` absent**. Evidence: `docs/governance/EV-REG-PRODUCTION-P1-SCHEMA-INSPECTION.md`. Do not reuse Preview `.env.local`.
-- Phase **P2** (additive Production migration): **COMPLETE** — nullable `specificationVersion` (`text`) and `disputes` (`jsonb`) added on Production `ArticleResearchAudit` only. Evidence: `docs/governance/EV-REG-PRODUCTION-P2-MIGRATION-EXECUTION.md`. Flag unset; no Prisma migrate; no deploy.
-- Phase **P3** (Production deploy, flag unset): **COMPLETE** — `dpl_69y1DZGtH3X74UsVB4i91QLAp85L` @ `8be3605f93da8df77d5cb54db9d69f71ef3f5761`. Health reports verifier `false` / `article-grounded-v14`. Evidence: `docs/governance/EV-REG-PRODUCTION-P3-DEPLOYMENT-EXECUTION.md`.
-- Phase **P4A** (activation readiness): **VERIFIED** — Production dormant; flag absent; P2 columns present; 0 versioned audit rows; flag alone does not mutate articles/cron/auth. Evidence: `docs/governance/EV-REG-PRODUCTION-P4-ACTIVATION-READINESS.md`.
-- Phase **P4B** (Production flag enablement + redeploy of approved pin): **COMPLETE** — Production `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true`; deployment `dpl_7Kdm6gQxWDnFGpyRVpzmXhqzwpb7` @ `8be3605f…`; health `true` / `article-grounded-ev-reg-1`. Evidence: `docs/governance/EV-REG-PRODUCTION-P4B-ACTIVATION-EXECUTION.md`. No article ops.
-- Production credential cleanup: `DATABASE_URL` / `DIRECT_URL` Production secrets updated `2026-11-15`; prior Ready pin `dpl_69y1DZGtH3X74UsVB4i91QLAp85L`; older rollback target remains `dpl_DnQpxYFhBihvAuhmGRqxoLrP6XXE` @ `3ade3125…`
+Do **not** repeat P0–P5 rollout work. Read the Production certification record first.
+
+- Phase **P0**–**P4B**: complete (see prior evidence under `docs/governance/EV-REG-PRODUCTION-*`).
+- Phase **P5** (certification + programme closure): **COMPLETE** — `docs/releases/EV-REG-1.0.0-PRODUCTION-CERTIFICATION.md`.
+- Active Production verifier: `article-grounded-ev-reg-1` on `dpl_7Kdm6gQxWDnFGpyRVpzmXhqzwpb7` @ `8be3605f…`.
+- Rollback: disable Production flag and redeploy so runtime sees it; optional restore `dpl_69y1DZGtH3X74UsVB4i91QLAp85L` (same SHA, pre-flag era) or `dpl_DnQpxYFhBihvAuhmGRqxoLrP6XXE` @ `3ade3125…`; leave P2 columns; do not delete audits.
 
 ### Human-authority boundaries (still closed without explicit approval)
 
-Remote push of Production-affecting work when required by the phase, Production deploy, Production migration, Production env changes, Production flag enablement, specification edits, threshold changes, Prepare for Review, article approval, scheduling, publication, release retagging of the certified Preview tag.
+Prepare for Review, article approval, scheduling, publication, specification or threshold edits, Production env/flag/deploy changes beyond the certified baseline, remote push when required, release retagging of `ev-reg-1.0.0-preview-certified`. The closed Production programme does **not** authorise live editorial operations.
 
 ## I. Skill maintenance
 
@@ -135,7 +134,9 @@ Follow `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md`. Required sequence (e
 3. **P3** — Production application deploy of `8be3605f…` with flag still unset; verify health `false` / `article-grounded-v14` — **complete**
 4. **P4A** — Activation readiness assessment (no flag change) — **complete**; evidence `EV-REG-PRODUCTION-P4-ACTIVATION-READINESS.md`
 5. **P4B** — Enable `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true` on Production only after P4A; redeploy approved pin; post-activation probes; no article Prepare without separate editorial approval — **complete**
-6. **Certification review / programme closure** — separate human approval — **next**
+6. **P5** — Production certification + programme closure — **complete**; `docs/releases/EV-REG-1.0.0-PRODUCTION-CERTIFICATION.md`
+
+**Programme closed.** Do not re-run P0–P5. Next work requiring authority is outside this programme (e.g. separately approved editorial Prepare).
 
 Rollback: disable the Production flag first; redeploy so runtime sees the restored env (and the prior Production revision if required); leave nullable columns in place; do not delete historical audits; do not move Production aliases except as an explicit rollback step.
 

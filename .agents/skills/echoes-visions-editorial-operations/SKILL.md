@@ -80,7 +80,7 @@ Engineering implementation of the adopted research-governance specification uses
 
 ## EV-REG Production programme
 
-EV-REG-1.0.0 Preview is certified (`ev-reg-1.0.0-preview-certified`). Production rollout follows `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md` and `.agents/skills/echoes-visions-autonomous-engineering/SKILL.md`. P4B activated Production `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true` on pin `8be3605f…` (`dpl_7Kdm6gQxWDnFGpyRVpzmXhqzwpb7`); health reports `article-grounded-ev-reg-1`. Evidence: `docs/governance/EV-REG-PRODUCTION-P4B-ACTIVATION-EXECUTION.md`. Do not Prepare/approve/publish articles from EV-REG engineering gates alone; certification review remains a separate gate.
+EV-REG-1.0.0 Preview remains sealed at `ev-reg-1.0.0-preview-certified` → `d8f59ace…`. Production programme is **closed** under `docs/releases/EV-REG-1.0.0-PRODUCTION-CERTIFICATION.md` (scope: Production deployment, schema compatibility, versioned verifier activation). Live Production: SHA `8be3605f…`, deployment `dpl_7Kdm6gQxWDnFGpyRVpzmXhqzwpb7`, flag `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true`, verifier `article-grounded-ev-reg-1`. Do **not** repeat P0–P5 rollout. Prepare/approve/schedule/publish remain separate human editorial gates; engineering certification does not authorise them.
 
 ## Production release and operational workflow (OR-4/OR-5)
 

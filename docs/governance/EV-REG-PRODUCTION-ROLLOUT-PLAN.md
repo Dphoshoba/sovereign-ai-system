@@ -89,8 +89,8 @@ Constraints:
 3. Deploy approved candidate to Production (**P3**) with flag unset; verify health exposes `versionedEditorialVerifierEnabled: false` and revision `article-grounded-v14`.
 4. Complete activation readiness (**P4A**); evidence `EV-REG-PRODUCTION-P4-ACTIVATION-READINESS.md` — **complete**.
 5. Enable Production flag and redeploy approved pin (**P4B**); verify health shows `true` / `article-grounded-ev-reg-1` — **complete**; evidence `EV-REG-PRODUCTION-P4B-ACTIVATION-EXECUTION.md`.
-6. Certification review / programme closure (separate approval).
-7. Only then consider separately approved editorial Prepare actions.
+6. Certification review / programme closure (**P5**) — **complete**; `docs/releases/EV-REG-1.0.0-PRODUCTION-CERTIFICATION.md`.
+7. Separately approved editorial Prepare actions remain outside this closed programme.
 
 ## 7. Feature-flag strategy
 
@@ -135,4 +135,4 @@ Constraints:
 | **P4A** | Readiness assessment for Production flag enablement (no config change) | Flag enablement, redeploy, article ops |
 | **P4B** | Production flag enablement + redeploy of approved pin + post-activation probes | Article Prepare/approve/schedule/publish (separate editorial approvals) |
 
-**Next approval required:** **Certification review / programme closure** after P4B activation. P4B evidence: `docs/governance/EV-REG-PRODUCTION-P4B-ACTIVATION-EXECUTION.md`. Article Prepare/approve/schedule/publish still require separate editorial approvals.
+**Programme status:** **CLOSED** — Production certified under `docs/releases/EV-REG-1.0.0-PRODUCTION-CERTIFICATION.md`. Do not repeat P0–P5. Article Prepare/approve/schedule/publish still require separate editorial approvals outside this programme.
