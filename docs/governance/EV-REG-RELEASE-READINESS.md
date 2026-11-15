@@ -1,11 +1,11 @@
 # Release readiness — EV-REG-SPEC-1.0.0
 
-Status: **Preview deployed; versioned activation approval required**. Deployment evidence is `docs/governance/EV-REG-PREVIEW-DEPLOYMENT.md`. This report does not authorise Production access or versioned scoring.
+Status: **Preview versioned verifier activated**. Evidence is `docs/governance/EV-REG-PREVIEW-ACTIVATION.md`. This report does not authorise Production enablement.
 
 Worktree: `C:\Users\David\echoes-visions-preview-security`  
 Branch: `integrate/production-research-integrity`  
-HEAD at deployment: `4865170405e178b4594f2090f0ff77911745e343`  
-Preview deployment: `dpl_AJuRTkkGfxQrSBTrr7bi3eqKMNiB`  
+Activation commit: `f6a648e8c565e86c26cff6f9308084b02626288c`  
+Preview deployment: `dpl_8nTq8rdqjYnqEV9onrAukGpKiDxN`  
 Specification SHA-256: `9D3C34F1689BBC0DB673A5E0A3B79A11B343C2792D4F9179BFA8E29E5ECC2419`
 
 ## Verification
@@ -34,10 +34,9 @@ Baseline publication behaviour for an audit with no `specificationVersion` is un
 
 The versioned evaluator covers canonical registry identity, same-organisation collapse, the Power Platform alias, joint-document identity, actor agreement, the five evidence states, dispute binding, and fail-closed versioned metadata. Legacy publication JSON sets `articlePublicationAuthorised` to false, and the article guard rejects it.
 
-These items are not activated:
+Preview activation is live. These items remain incomplete or Production-blocked:
 
-- Prepare for Review does not call `evaluateVersionedClaim`.
-- `revisionWrittenByEditorialPrepare` always returns `article-grounded-v14`.
+- Production must keep the versioned flag unset.
 - Baseline `evidenceCorroborationKey`, `qualifyingPublicationSourceIdentity`, `independentDocumentKey`, and `factVerificationEngine` keep their current behaviour.
 - The versioned evaluator does not yet implement the scripture, named-secondary-document, or ambiguous “according to” rows in section 6.3.
 - A machine contradiction detector is not implemented. Human-recorded disputes are.
@@ -69,6 +68,5 @@ Redeploy the previous application revision first. Leave the nullable Preview col
 
 ## Human approvals required
 
-- Authorise a later change that turns on versioned scoring inside Prepare for Review.
 - Any article audit, approval, scheduling, or publication remains a separate decision.
-- Production remains out of scope.
+- Production enablement remains out of scope.

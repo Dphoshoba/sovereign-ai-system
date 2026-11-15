@@ -1,6 +1,6 @@
 # Milestone 4D Preview validation package
 
-Status: **Preview deployed; versioned activation approval required**. Deployment evidence is `docs/governance/EV-REG-PREVIEW-DEPLOYMENT.md`. This package does not authorise Production access or versioned scoring.
+Status: **Preview versioned verifier activated**. Activation evidence is `docs/governance/EV-REG-PREVIEW-ACTIVATION.md`. This package does not authorise Production enablement.
 
 ## Verified local state
 
@@ -28,9 +28,9 @@ Local verification already recorded for this HEAD:
 - `npm run build` finished TypeScript and 656 static pages
 - live Preview metadata rechecked after migration: both columns nullable, no defaults, RLS still enabled
 
-## What stays inactive
+## What stays inactive on Production
 
-`VERSIONED_EDITORIAL_VERIFIER_ENABLED` is false. `revisionWrittenByEditorialPrepare` always writes `article-grounded-v14`. Turning the flag on does not by itself switch scoring or the stored revision. Prepare for Review does not call `evaluateVersionedClaim` and does not persist `specificationVersion` or `disputes`.
+Production must keep `VERSIONED_EDITORIAL_VERIFIER_ENABLED` unset. On Preview, the flag is `true`, Prepare writes `article-grounded-ev-reg-1`, calls `evaluateVersionedClaim`, and persists `specificationVersion` with a `disputes` array.
 
 ## Preview database
 
@@ -58,6 +58,5 @@ Redeploy the previous application revision first. Leave the nullable Preview col
 
 ## Human approvals still required
 
-- Authorise the later change that turns on versioned scoring inside Prepare for Review.
 - Any article audit, approval, scheduling, or publication remains a separate decision.
-- Production remains out of scope.
+- Production enablement remains a separate decision.

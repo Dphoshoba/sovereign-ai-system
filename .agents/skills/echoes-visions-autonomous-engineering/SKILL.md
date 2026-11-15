@@ -13,7 +13,7 @@ Impact over automation, then scalability. Inspect the repository before changing
 
 ## B. Repository discovery
 
-Confirm the worktree, branch, full HEAD, and whether the tree is clean. Confirm the specification SHA-256 is `9D3C34F1689BBC0DB673A5E0A3B79A11B343C2792D4F9179BFA8E29E5ECC2419`. Read the implementation that already exists before proposing a new one. Milestones 3N through 4D are recorded locally. Release readiness is `docs/governance/EV-REG-RELEASE-READINESS.md`. The Preview additive migration is executed and recorded in `docs/governance/EV-REG-3Y-MIGRATION-EXECUTION.md`. Versioned scoring stays unapproved. `VERSIONED_EDITORIAL_VERIFIER_ENABLED` stays false. Do not restart them.
+Confirm the worktree, branch, full HEAD, and whether the tree is clean. Confirm the specification SHA-256 is `9D3C34F1689BBC0DB673A5E0A3B79A11B343C2792D4F9179BFA8E29E5ECC2419`. Read the implementation that already exists before proposing a new one. Milestones 3N through 4D are recorded locally. Release readiness is `docs/governance/EV-REG-RELEASE-READINESS.md`. The Preview additive migration is executed and recorded in `docs/governance/EV-REG-3Y-MIGRATION-EXECUTION.md`. Preview versioned scoring is activated via Preview env `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true` and recorded in `docs/governance/EV-REG-PREVIEW-ACTIVATION.md`. Production must keep the flag unset. Do not restart them.
 
 ## C. Research governance
 
@@ -49,12 +49,13 @@ Plan the whole authorised milestone. Implement, test, and correct failures cause
 - The Supabase pooler username `postgres.emmzoeeaznhpwevqprkn` opens a session whose `current_user` is `postgres`. Confirm the project ref on the URL before connecting. An absent `sslmode` is acceptable when the pinned CA verifies the certificate. Keep an inspection in `BEGIN READ ONLY` and `ROLLBACK`. A write needs its own transaction, a bounded `lock_timeout`, a metadata recheck, and a rollback path before commit. The inspection role can write and bypasses row security.
 - The disposable article-governance database must include the same nullable `specificationVersion` and `disputes` columns as the Prisma model. Historical schema-diff tests allow only those additions and still require an empty migration diff.
 - Controlled Preview deploy uses `npx vercel deploy --yes` against the existing `sovereign-ai-executive` project. Never pass `--prod`. Confirm `environment` is `preview` and `productionUrl` is null. Production aliases for `www.echoesandvisions.com` must remain on the prior Production deployment. `vercel link` can rewrite ignored `.env.local`; re-check Preview identity afterwards. Vercel Secrets cannot be pulled; rely on public Preview settings, the `databaseUrlForRuntime` guard, and post-deploy probes. Deployment Protection requires `vercel curl` for Preview checks.
+- Versioned Prepare activation is gated by Preview env `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true`. The compile-time default stays false. `/api/health` reports the non-secret flag boolean and the revision Prepare would write. Do not set the flag on Production without a separate approval.
 
 ## H. Agent handoff
 
 Read, in order: this skill, the adopted specification, the latest milestone evidence, current Git state, and the relevant implementation and tests. Continue from the last verified checkpoint. Do not restart the programme.
 
-Verified checkpoint: Preview deployment `dpl_AJuRTkkGfxQrSBTrr7bi3eqKMNiB` is READY for commit `48651704`. Evidence is `docs/governance/EV-REG-PREVIEW-DEPLOYMENT.md`. Prepare for Review still writes `article-grounded-v14`. `VERSIONED_EDITORIAL_VERIFIER_ENABLED` stays false. Production aliases were not moved. The next human boundary is approval to turn on versioned scoring inside Prepare for Review on Preview only.
+Verified checkpoint: Preview versioned verifier is active on deployment `dpl_8nTq8rdqjYnqEV9onrAukGpKiDxN` for commit `f6a648e8`. Health reports `versionedEditorialVerifierEnabled: true` and `researchAuditEngineRevision: article-grounded-ev-reg-1`. Evidence is `docs/governance/EV-REG-PREVIEW-ACTIVATION.md`. Production aliases were not moved and Production does not have the flag. The next human boundary is any Production enablement, or a Prepare for Review / publication action.
 
 ## I. Skill maintenance
 
