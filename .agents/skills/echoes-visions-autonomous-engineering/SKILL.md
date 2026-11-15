@@ -103,8 +103,8 @@ Read, in order: this skill, the adopted specification, `docs/releases/EV-REG-1.0
 - Phase **P0** (skill + readiness + plan): complete — `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md`
 - Phase **P1** (read-only Production schema): **VERIFIED** — Session pooler connect to Production project `kqptdgbttfuqkzxzbazw` (`aws-1-ap-southeast-2.pooler.supabase.com:5432`), `transaction_read_only=on`, both audit tables present, **`specificationVersion` and `disputes` absent**. Evidence: `docs/governance/EV-REG-PRODUCTION-P1-SCHEMA-INSPECTION.md`. Do not reuse Preview `.env.local`.
 - Phase **P2** (additive Production migration): **COMPLETE** — nullable `specificationVersion` (`text`) and `disputes` (`jsonb`) added on Production `ArticleResearchAudit` only. Evidence: `docs/governance/EV-REG-PRODUCTION-P2-MIGRATION-EXECUTION.md`. Flag unset; no Prisma migrate; no deploy.
-- Phase **P3** (Production deploy, flag unset): requires separate human approval
-- Phase **P4** remains closed until P3 completes
+- Phase **P3** (Production deploy, flag unset): **PREFLIGHT PASSED — not deployed**. Evidence: `docs/governance/EV-REG-PRODUCTION-P3-DEPLOYMENT-PREFLIGHT.md`. Deploy pin `8be3605f93da8df77d5cb54db9d69f71ef3f5761` (not local docs HEAD). Requires separate **deployment** approval.
+- Phase **P4** remains closed until P3 deployment completes
 - Production must keep `VERSIONED_EDITORIAL_VERIFIER_ENABLED` unset until the activation gate
 - Production credential cleanup: `DATABASE_URL` / `DIRECT_URL` Production secrets updated `2026-11-15`; deployment still `dpl_DnQpxYFhBihvAuhmGRqxoLrP6XXE` @ `3ade3125…` (unchanged by P2)
 
@@ -132,7 +132,7 @@ Follow `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md`. Required sequence (e
 
 1. **P1** — Production identity + read-only schema inspection (no writes) — **complete**
 2. **P2** — Additive Production migration for nullable `specificationVersion` / `disputes` (flag remains unset) — **complete**
-3. **P3** — Production application deploy of the approved candidate with flag still unset; verify baseline behaviour and health keys — **next approval**
+3. **P3** — Production application deploy of `8be3605f…` with flag still unset; verify health `false` / `article-grounded-v14` — **preflight complete; deployment approval required**
 4. **P4** — Enable `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true` on Production only after P3 verification; post-activation probes; no article Prepare without separate editorial approval
 
 Rollback: disable the Production flag first; redeploy the prior Production revision if required; leave nullable columns in place; do not delete historical audits; do not move Production aliases except as an explicit rollback step.

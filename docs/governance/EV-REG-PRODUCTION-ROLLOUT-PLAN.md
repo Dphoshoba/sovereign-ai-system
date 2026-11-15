@@ -1,9 +1,10 @@
 # EV-REG-1.0.0 — Production rollout plan
 
-Status: **P0–P2 complete; P3 Production deploy approval required.**  
+Status: **P0–P2 complete; P3 preflight passed — deployment approval required.**  
 Preview certification remains **PREVIEW CERTIFIED — NOT PRODUCTION AUTHORISED** until P3–P4 complete under separate approvals.  
 P1 evidence: `docs/governance/EV-REG-PRODUCTION-P1-SCHEMA-INSPECTION.md`.  
-P2 execution: `docs/governance/EV-REG-PRODUCTION-P2-MIGRATION-EXECUTION.md` (`specificationVersion` / `disputes` present on Production; flag unset; no deploy).
+P2 execution: `docs/governance/EV-REG-PRODUCTION-P2-MIGRATION-EXECUTION.md`.  
+P3 preflight: `docs/governance/EV-REG-PRODUCTION-P3-DEPLOYMENT-PREFLIGHT.md` (deploy pin `8be3605f…`; **not deployed**).
 
 Linked from `.agents/skills/echoes-visions-autonomous-engineering/SKILL.md` section K. Does not supersede `docs/releases/EV-REG-1.0.0-PREVIEW-CERTIFIED.md`.
 
@@ -130,4 +131,4 @@ Constraints:
 | **P3** | Production deploy of approved candidate with flag unset | Flag enablement, article ops |
 | **P4** | Production flag enablement + post-activation probes | Article Prepare/approve/schedule/publish (separate editorial approvals) |
 
-**Next approval required:** **P3 — Production application deploy** of the approved candidate with `VERSIONED_EDITORIAL_VERIFIER_ENABLED` still unset.
+**Next approval required:** **P3 deployment — Production deploy of `8be3605f93da8df77d5cb54db9d69f71ef3f5761`** with `VERSIONED_EDITORIAL_VERIFIER_ENABLED` still unset (see P3 preflight).
