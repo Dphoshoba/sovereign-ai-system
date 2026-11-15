@@ -27,9 +27,12 @@ Integration HEAD after both merges: `a5b876a66042516fe3fb24ee2ce12ae201ff048e`.
 - Local Calendar + Slack unit tests: 58 passed
 - Local `connector:validate` calendar: **100/100**
 - Local `connector:validate` slack: **100/100**
-- GitHub Actions (dispatch on integrate): filled after run completion
-- `main` / `gamma`: unchanged by these merges
-- Certified tag: unchanged
+- GitHub Actions Calendar on integrate: [43702960411](https://github.com/Dphoshoba/sovereign-ai-system/actions/runs/43702960411) **success**
+- GitHub Actions Slack on integrate: [43702963354](https://github.com/Dphoshoba/sovereign-ai-system/actions/runs/43702963354) **success**
+- `main` / `gamma`: unchanged (`d564ce13` / `235ea52a`)
+- Certified tag: unchanged (`d8f59ace…`)
+- Production deployments: none for these SHAs (latest Production records remain May 2026)
+- Preview deployments observed for merge of PR #1 (`15e9ed81`): `Preview – sovereign-ai-executive`, `Preview – sovereign-ai-system` (and possibly other linked Preview projects). No Production alias change.
 
 ## Remaining limitations
 
