@@ -1,10 +1,10 @@
 # EV-REG-1.0.0 — Production rollout plan
 
-Status: **P0–P2 complete; P3 preflight passed — deployment approval required.**  
-Preview certification remains **PREVIEW CERTIFIED — NOT PRODUCTION AUTHORISED** until P3–P4 complete under separate approvals.  
+Status: **P0–P3 complete; P4 verifier activation approval required.**  
+Preview certification remains **PREVIEW CERTIFIED — NOT PRODUCTION AUTHORISED** until P4 completes under separate approval.  
 P1 evidence: `docs/governance/EV-REG-PRODUCTION-P1-SCHEMA-INSPECTION.md`.  
 P2 execution: `docs/governance/EV-REG-PRODUCTION-P2-MIGRATION-EXECUTION.md`.  
-P3 preflight: `docs/governance/EV-REG-PRODUCTION-P3-DEPLOYMENT-PREFLIGHT.md` (deploy pin `8be3605f…`; **not deployed**).
+P3 execution: `docs/governance/EV-REG-PRODUCTION-P3-DEPLOYMENT-EXECUTION.md` (`dpl_69y1DZGtH3X74UsVB4i91QLAp85L` @ `8be3605f…`; verifier disabled).
 
 Linked from `.agents/skills/echoes-visions-autonomous-engineering/SKILL.md` section K. Does not supersede `docs/releases/EV-REG-1.0.0-PREVIEW-CERTIFIED.md`.
 
@@ -25,8 +25,9 @@ Linked from `.agents/skills/echoes-visions-autonomous-engineering/SKILL.md` sect
 | Field | Verified in P0 | Value / note |
 |---|---|---|
 | Vercel project | Yes | `sovereign-ai-executive` (`prj_ogfO2yCJl7motADB98mCobU2Aviq`) |
-| Current Production deployment | Yes (rechecked at P2 prep) | `dpl_DnQpxYFhBihvAuhmGRqxoLrP6XXE` (`5b2doqdfl`) @ `3ade3125…` — Ready; aliases include `www.echoesandvisions.com`, `echoesandvisions.com`, `sovereign-ai-executive.vercel.app` |
-| Production health | Yes | `GET https://www.echoesandvisions.com/api/health` → `200` `{"ok":true}` (no verifier keys — pre-activation binary) |
+| Current Production deployment | Yes (P3) | `dpl_69y1DZGtH3X74UsVB4i91QLAp85L` (`a9547ntdn`) @ `8be3605f…` — Ready; aliases include `www.echoesandvisions.com`, `echoesandvisions.com`, `sovereign-ai-executive.vercel.app` |
+| Production health | Yes (P3) | `200` `{"ok":true,"versionedEditorialVerifierEnabled":false,"researchAuditEngineRevision":"article-grounded-v14"}` |
+| Rollback deployment | Yes | `dpl_DnQpxYFhBihvAuhmGRqxoLrP6XXE` @ `3ade3125…` |
 | Protected API | Yes | `GET /api/articles` → `401` |
 | Expected Production Supabase project | P1 verified | `kqptdgbttfuqkzxzbazw` — Session pooler `aws-1-ap-southeast-2.pooler.supabase.com:5432` |
 | Preview Supabase project (contrast) | Yes | `emmzoeeaznhpwevqprkn` |
@@ -69,8 +70,8 @@ Constraints:
 
 1. ~~Production column absence / P2 DDL~~ — **cleared by P2 execution** (nullable columns present; see execution evidence).
 2. ~~Production DB credential rotation / `DIRECT_URL`~~ — **cleared** (cleanup verified; secrets not printed).
-3. Integration HEAD remains a **proposed** Production candidate only — requires **P3–P4** certification gates.
-4. Production app still on pre-activation binary (`3ade3125…`) — P3 deploy still required before flag enablement.
+3. ~~P3 application deploy~~ — **cleared** (`8be3605f…` live; verifier still disabled).
+4. **P4 flag enablement** still required before versioned Prepare scoring is active on Production.
 
 ## 5. Preflight checks (before each phase)
 
@@ -131,4 +132,4 @@ Constraints:
 | **P3** | Production deploy of approved candidate with flag unset | Flag enablement, article ops |
 | **P4** | Production flag enablement + post-activation probes | Article Prepare/approve/schedule/publish (separate editorial approvals) |
 
-**Next approval required:** **P3 deployment — Production deploy of `8be3605f93da8df77d5cb54db9d69f71ef3f5761`** with `VERSIONED_EDITORIAL_VERIFIER_ENABLED` still unset (see P3 preflight).
+**Next approval required:** **P4 — enable `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true` on Production only** after reconfirming P3 health/dormancy (no article Prepare without separate editorial approval).

@@ -1,7 +1,7 @@
 # EV-REG Production P3 — deployment preflight
 
-Status: **PREFLIGHT PASSED — not deployed.**  
-This document does **not** authorise Production deployment, verifier enablement, database changes, environment edits, or article operations. Deployment requires a separate human **P3 deployment approval**.
+Status: **PREFLIGHT PASSED; deployment recorded separately.**  
+Execution evidence: `docs/governance/EV-REG-PRODUCTION-P3-DEPLOYMENT-EXECUTION.md`. This preflight remains the reviewed plan. It does **not** authorise P4 flag enablement or article operations.
 
 Linked from `.agents/skills/echoes-visions-autonomous-engineering/SKILL.md` and `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md`.  
 Supersedes: nothing — new P3 preflight package after P2 execution (`EV-REG-PRODUCTION-P2-MIGRATION-EXECUTION.md`).  
