@@ -81,7 +81,7 @@ Read, in order: this skill, the adopted specification, `docs/releases/EV-REG-1.0
 - Preview deployment: `dpl_8nTq8rdqjYnqEV9onrAukGpKiDxN`
 - Verifier revision when flag is true: `article-grounded-ev-reg-1`
 - Feature flag: env `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true` selects the versioned Prepare path; unset/false keeps `article-grounded-v14`. Compile-time constant remains `false`.
-- Database: Preview `ArticleResearchAudit` has nullable `specificationVersion` and `disputes` on project `emmzoeeaznhpwevqprkn`. Production project `kqptdgbttfuqkzxzbazw` was not migrated.
+- Database: Preview and Production `ArticleResearchAudit` both have nullable `specificationVersion` and `disputes` (`emmzoeeaznhpwevqprkn` / `kqptdgbttfuqkzxzbazw`). Production P2 evidence: `EV-REG-PRODUCTION-P2-MIGRATION-EXECUTION.md`.
 - Recovery (Preview): disable the Preview flag, redeploy the prior Preview revision if needed, leave the nullable columns, do not delete historical audits.
 
 ### Connector CI maintenance (complete)
@@ -96,7 +96,7 @@ Read, in order: this skill, the adopted specification, `docs/releases/EV-REG-1.0
 - Branch: `integrate/production-research-integrity`
 - HEAD at P0: `8be3605f93da8df77d5cb54db9d69f71ef3f5761`
 - Delta since certified Preview tag: connector CI workflows, Calendar `read()` remediation, and governance evidence docs only
-- Proposed Production candidate pending P2–P4 gates: that integration HEAD (or a later explicitly approved pin). **Not yet Production-certified.**
+- Proposed Production candidate pending P3–P4 gates: that integration HEAD (or a later explicitly approved pin). **Not yet Production-certified.**
 
 ### Production programme status
 
