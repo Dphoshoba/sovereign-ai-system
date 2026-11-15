@@ -38,6 +38,10 @@ These are not Preview (`emmzoeeaznhpwevqprkn`) or Production (`kqptdgbttfuqkzxzb
 
 Certified tag `ev-reg-1.0.0-preview-certified` and branch `integrate/production-research-integrity` were not moved.
 
+## Path-filter behaviour
+
+Push/PR path filters only match connector source/test paths. Changes limited to `.github/workflows/*` and docs do not start these jobs. Tag pushes ignore path filters (historical failure mode). `workflow_dispatch` was added so the maintenance branch can be validated without touching connector code or protected branches.
+
 ## Optional follow-up (not in this fix)
 
 - Add real non-Production Actions variables later if CI must talk to a live Supabase project.

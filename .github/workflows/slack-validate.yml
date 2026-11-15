@@ -1,6 +1,7 @@
 name: Slack Connector Validation
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'lib/connectors/slack/**'
