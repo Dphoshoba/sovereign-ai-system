@@ -1,6 +1,6 @@
 # Release readiness — EV-REG-SPEC-1.0.0
 
-Status: **Preview versioned verifier activated**. Evidence is `docs/governance/EV-REG-PREVIEW-ACTIVATION.md`. This report does not authorise Production enablement.
+Status: **Preview programme certified — not Production authorised**. Seal record: `docs/releases/EV-REG-1.0.0-PREVIEW-CERTIFIED.md`. Activation evidence remains `docs/governance/EV-REG-PREVIEW-ACTIVATION.md`. This report does not authorise Production enablement.
 
 Worktree: `C:\Users\David\echoes-visions-preview-security`  
 Branch: `integrate/production-research-integrity`  

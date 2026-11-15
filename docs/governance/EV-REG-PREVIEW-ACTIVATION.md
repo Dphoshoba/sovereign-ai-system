@@ -1,6 +1,6 @@
 # Preview versioned verifier activation
 
-Status: **activated on Preview only.** This record does not authorise Production enablement, article audit, approval, scheduling, or publication.
+Status: **activated on Preview only.** Programme seal: `docs/releases/EV-REG-1.0.0-PREVIEW-CERTIFIED.md`. This record does not authorise Production enablement, article audit, approval, scheduling, or publication.
 
 ## Activation identity
 

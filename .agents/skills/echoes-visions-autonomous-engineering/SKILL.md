@@ -13,7 +13,7 @@ Impact over automation, then scalability. Inspect the repository before changing
 
 ## B. Repository discovery
 
-Confirm the worktree, branch, full HEAD, and whether the tree is clean. Confirm the specification SHA-256 is `9D3C34F1689BBC0DB673A5E0A3B79A11B343C2792D4F9179BFA8E29E5ECC2419`. Read the implementation that already exists before proposing a new one. Milestones 3N through 4D are recorded locally. Release readiness is `docs/governance/EV-REG-RELEASE-READINESS.md`. The Preview additive migration is executed and recorded in `docs/governance/EV-REG-3Y-MIGRATION-EXECUTION.md`. Preview versioned scoring is activated via Preview env `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true` and recorded in `docs/governance/EV-REG-PREVIEW-ACTIVATION.md`. Production must keep the flag unset. Do not restart them.
+Confirm the worktree, branch, full HEAD, and whether the tree is clean. Confirm the specification SHA-256 is `9D3C34F1689BBC0DB673A5E0A3B79A11B343C2792D4F9179BFA8E29E5ECC2419`. Read the implementation that already exists before proposing a new one. Milestones 3N through 4D, Preview activation, and programme closure are complete. The certified Preview baseline is `docs/releases/EV-REG-1.0.0-PREVIEW-CERTIFIED.md` (tag `ev-reg-1.0.0-preview-certified`). Supporting evidence: `docs/governance/EV-REG-RELEASE-READINESS.md`, `docs/governance/EV-REG-3Y-MIGRATION-EXECUTION.md`, `docs/governance/EV-REG-PREVIEW-ACTIVATION.md`. Production must keep the flag unset. Do not restart completed milestones.
 
 ## C. Research governance
 
@@ -53,9 +53,21 @@ Plan the whole authorised milestone. Implement, test, and correct failures cause
 
 ## H. Agent handoff
 
-Read, in order: this skill, the adopted specification, the latest milestone evidence, current Git state, and the relevant implementation and tests. Continue from the last verified checkpoint. Do not restart the programme.
+Read, in order: this skill, the adopted specification, `docs/releases/EV-REG-1.0.0-PREVIEW-CERTIFIED.md`, current Git state, and only the implementation required for a newly authorised programme. Do not restart EV-REG-1.0.0 Preview milestones.
 
-Verified checkpoint: Preview versioned verifier is active on deployment `dpl_8nTq8rdqjYnqEV9onrAukGpKiDxN` for commit `f6a648e8`. Health reports `versionedEditorialVerifierEnabled: true` and `researchAuditEngineRevision: article-grounded-ev-reg-1`. Evidence is `docs/governance/EV-REG-PREVIEW-ACTIVATION.md`. Production aliases were not moved and Production does not have the flag. The next human boundary is any Production enablement, or a Prepare for Review / publication action.
+### Certified Preview baseline
+
+- Verdict: **PREVIEW CERTIFIED — NOT PRODUCTION AUTHORISED**
+- Annotated tag: `ev-reg-1.0.0-preview-certified`
+- Activation commit: `f6a648e8`; activation docs: `2b2348e8`
+- Preview deployment: `dpl_8nTq8rdqjYnqEV9onrAukGpKiDxN`
+- Verifier revision when flag is true: `article-grounded-ev-reg-1`
+- Feature flag: Preview env `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true` selects the versioned Prepare path; unset/false keeps `article-grounded-v14`. Compile-time constant remains `false`.
+- Database: Preview `ArticleResearchAudit` has nullable `specificationVersion` and `disputes` on project `emmzoeeaznhpwevqprkn`. Production project `kqptdgbttfuqkzxzbazw` was not migrated.
+- Recovery: disable the Preview flag, redeploy the prior Preview revision if needed, leave the nullable columns, do not delete historical audits.
+- Human-authority boundaries still closed: remote push/tag push, Production deploy or flag, Production migration, specification edits, threshold changes, Prepare for Review, article approval, scheduling, publication.
+
+No further development is authorised under the closed EV-REG-1.0.0 Preview programme.
 
 ## I. Skill maintenance
 
