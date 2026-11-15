@@ -128,8 +128,8 @@ The editor-boundary test walks every privileged route. Anonymous and viewer chec
 
 Follow `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md`. Required sequence (each gate separately approved):
 
-1. **P1** — Production identity + read-only schema inspection (no writes)
-2. **P2** — Additive Production migration for nullable `specificationVersion` / `disputes` (flag remains unset)
+1. **P1** — Production identity + read-only schema inspection (no writes) — **complete**
+2. **P2** — Additive Production migration for nullable `specificationVersion` / `disputes` (flag remains unset) — **next approval**
 3. **P3** — Production application deploy of the approved candidate with flag still unset; verify baseline behaviour and health keys
 4. **P4** — Enable `VERSIONED_EDITORIAL_VERIFIER_ENABLED=true` on Production only after P3 verification; post-activation probes; no article Prepare without separate editorial approval
 

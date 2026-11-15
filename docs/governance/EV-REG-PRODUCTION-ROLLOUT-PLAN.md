@@ -128,4 +128,4 @@ Constraints:
 | **P3** | Production deploy of approved candidate with flag unset | Flag enablement, article ops |
 | **P4** | Production flag enablement + post-activation probes | Article Prepare/approve/schedule/publish (separate editorial approvals) |
 
-**Next approval required after P0:** **P1 — Production identity and read-only schema inspection.**
+**Next approval required after P1:** **P2 — Additive Production migration** for nullable `specificationVersion` / `disputes` on `ArticleResearchAudit` (flag unset; no deploy).
