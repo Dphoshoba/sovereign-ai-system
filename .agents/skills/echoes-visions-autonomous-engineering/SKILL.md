@@ -96,7 +96,7 @@ Read, in order: this skill, the adopted specification, `docs/releases/EV-REG-1.0
 - Branch: `integrate/production-research-integrity`
 - HEAD at P0: `8be3605f93da8df77d5cb54db9d69f71ef3f5761`
 - Delta since certified Preview tag: connector CI workflows, Calendar `read()` remediation, and governance evidence docs only
-- Proposed Production candidate pending P1–P4 gates: that integration HEAD (or a later explicitly approved pin). **Not yet Production-certified.**
+- Proposed Production candidate pending P2–P4 gates: that integration HEAD (or a later explicitly approved pin). **Not yet Production-certified.**
 
 ### Production programme status
 
