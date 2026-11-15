@@ -101,7 +101,7 @@ Read, in order: this skill, the adopted specification, `docs/releases/EV-REG-1.0
 ### Production programme status
 
 - Phase **P0** (skill + readiness + plan): complete — `docs/governance/EV-REG-PRODUCTION-ROLLOUT-PLAN.md`
-- Phase **P1** (read-only Production schema): **BLOCKED** — out-of-repo credential at `C:\Users\David\.config\echoes-visions\production-db.env` identity-checks to Production (`postgres.kqptdgbttfuqkzxzbazw` on `aws-1-ap-southeast-2.pooler.supabase.com`), but password authentication failed on ports 5432 and 6543. No read-only session; live Production columns still unknown. Evidence: `docs/governance/EV-REG-PRODUCTION-P1-SCHEMA-INSPECTION.md`. Do not reuse Preview `.env.local`.
+- Phase **P1** (read-only Production schema): **BLOCKED** — out-of-repo credential identity still matches Production Session pooler (`postgres.kqptdgbttfuqkzxzbazw` @ `aws-1-ap-southeast-2.pooler.supabase.com:5432`), but a single recovery connect failed again with `28P01` password authentication. File metrics unchanged (URL length 110; password length 12). No read-only session; live Production columns unknown. Evidence: `docs/governance/EV-REG-PRODUCTION-P1-SCHEMA-INSPECTION.md`. Do not reuse Preview `.env.local`. Do not auto-retry or reset passwords.
 - Phases **P2–P4** remain closed until P1 completes a successful `BEGIN READ ONLY` metadata inspection
 - Production must keep `VERSIONED_EDITORIAL_VERIFIER_ENABLED` unset until the activation gate
 
