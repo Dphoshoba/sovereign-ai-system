@@ -38,6 +38,12 @@ import {
   verifyGeneratedArticleAgainstEvidence,
 } from "../../../../lib/research/ground-generated-article";
 import {
+  assessArticleTeachingCoverage,
+  assessEvidenceTeachingCoverage,
+  buildScriptureTeachingPlan,
+  formatTeachingPlanForPrompt,
+} from "../../../../lib/research/biblical-teaching-completeness";
+import {
   isVersionedEditorialVerifierEnabled,
   revisionWrittenByEditorialPrepare,
 } from "../../../../lib/research/versioned-publication";
@@ -184,6 +190,58 @@ export async function POST(request: Request) {
       );
     }
 
+    const teachingPlan = buildScriptureTeachingPlan(String(topic || ""), category);
+    if (teachingPlan?.oversizedBrief) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: teachingPlan.oversizedReason,
+          articleUnchanged: true,
+          teachingCompleteness: {
+            ok: false,
+            missingChapterKeys: teachingPlan.truncatedChapterKeys,
+            coveredChapterKeys: teachingPlan.requiredChapterKeys,
+            missingMovements: [],
+            reason: teachingPlan.oversizedReason,
+          },
+          publicationDecision: {
+            approved: false,
+            status: "blocked",
+            reason: teachingPlan.oversizedReason,
+          },
+        },
+        { status: 422 },
+      );
+    }
+    if (teachingPlan && teachingPlan.requiredChapterKeys.length >= 2) {
+      const teachingCoverage = assessEvidenceTeachingCoverage(
+        evidence.evidence,
+        teachingPlan,
+      );
+      if (!teachingCoverage.ok) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: teachingCoverage.reason,
+            articleUnchanged: true,
+            teachingCompleteness: teachingCoverage,
+            publicationDecision: {
+              approved: false,
+              status: "blocked",
+              reason: teachingCoverage.reason,
+            },
+            researchAudit: {
+              sourceCount: sourceCollection.sourceCount,
+              evidenceCount: evidence.evidenceCount,
+              missingRequiredPassages: teachingCoverage.missingChapterKeys,
+              coveredRequiredPassages: teachingCoverage.coveredChapterKeys,
+            },
+          },
+          { status: 422 },
+        );
+      }
+    }
+
     const factExtraction = factExtractor(topic, evidence.evidence, category);
     const factVerification = factVerificationEngine(factExtraction.facts);
     const consensus = consensusEngine(factVerification.verifiedFacts);
@@ -320,10 +378,15 @@ export async function POST(request: Request) {
         "\n\n" +
         factsBlock +
         "\n\n" +
+        (teachingPlan ? formatTeachingPlanForPrompt(teachingPlan) + "\n\n" : "") +
         "ARTICLE STRUCTURE REQUIREMENT:\n" +
         "Create one major section for each verified fact.\n" +
         "Use the verified facts as H2 headings or the basis of H2 headings.\n" +
-        "Expand each fact with explanation, examples, implications and practical guidance.\n\n" +
+        "Expand each fact with explanation, examples, implications and practical guidance.\n" +
+        (teachingPlan
+          ? "When a required scripture coverage list is supplied, create a dedicated section for every required movement or passage before closing the article.\n"
+          : "") +
+        "\n" +
         "STRICT RULES:\n" +
         "- Stay faithful to the category.\n" +
         "- Write only from verified or partially verified facts.\n" +
@@ -335,6 +398,7 @@ export async function POST(request: Request) {
         "- Use verified facts as the backbone of the article structure.\n" +
         "- Do not invent statistics, quotes, dates, historical claims, companies, or sources.\n" +
         "- If evidence is limited, clearly say so and write a cautious article around what is supported.\n" +
+        "- Never omit a required scripture coverage item when evidence for that passage was supplied.\n" +
         "- Return valid JSON only.\n" +
         "- Use plain ASCII punctuation only.\n" +
         "- Use straight apostrophes (').\n" +
@@ -511,6 +575,35 @@ export async function POST(request: Request) {
     }
 
     const finalContent = cleanedContent;
+
+    if (
+      teachingPlan &&
+      teachingPlan.requiredChapterKeys.length >= 2 &&
+      typeof finalContent === "string" &&
+      finalContent.trim().length > 0
+    ) {
+      const articleCoverage = assessArticleTeachingCoverage(
+        finalContent,
+        teachingPlan,
+      );
+      if (!articleCoverage.ok) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: articleCoverage.reason,
+            articleUnchanged: true,
+            teachingCompleteness: articleCoverage,
+            publicationDecision: {
+              approved: false,
+              status: "blocked",
+              reason: articleCoverage.reason,
+            },
+          },
+          { status: 422 },
+        );
+      }
+    }
+
     const groundedRecommendation =
       articleGrounding?.publicationRecommendation || publicationRecommendation;
     const groundedConsensusScore =

@@ -433,3 +433,46 @@ export function selectClaimEvidenceInBatches(input: {
   }
   return assembleBatchEvidenceSelections(plan, runs);
 }
+
+/**
+ * Non-claim generate path: round-robin passages across documents so early
+ * verbose sources cannot consume RESEARCH_MAX_UNIQUE_AUDIT_PASSAGES before
+ * later required chapters contribute evidence.
+ * Called by evidenceRegistry() when claimTexts is empty.
+ */
+export function selectSourceBalancedEvidence(
+  documents: SelectableDocument[],
+  maxPassages: number = RESEARCH_MAX_UNIQUE_AUDIT_PASSAGES,
+): ClaimAwareSelection {
+  const perDocument = documents.map((document) => recordsFromDocument(document));
+  const selected: EvidenceRecord[] = [];
+  const seenKeys = new Set<string>();
+  let round = 0;
+  let progressed = true;
+  const totalAvailable = perDocument.reduce(
+    (sum, records) => sum + records.length,
+    0,
+  );
+
+  while (selected.length < maxPassages && progressed) {
+    progressed = false;
+    for (const records of perDocument) {
+      if (selected.length >= maxPassages) break;
+      const record = records[round];
+      if (!record) continue;
+      const key = passageKey(record.sourceUrl, record.extractedText);
+      if (seenKeys.has(key)) continue;
+      seenKeys.add(key);
+      selected.push(record);
+      progressed = true;
+    }
+    round += 1;
+  }
+
+  return {
+    evidence: selected,
+    mappings: [],
+    uniquePassageCount: selected.length,
+    bounded: totalAvailable > selected.length,
+  };
+}

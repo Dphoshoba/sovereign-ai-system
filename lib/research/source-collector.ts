@@ -131,10 +131,13 @@ export async function sourceCollector(
       ? searchResults
       : fallbackSources(topic, category)
 
+  // Bible multi-passage briefs need more than 8 slots so Exodus + supporting
+  // NT chapters are not truncated after the first four dual-host chapters.
+  const sourceCap = bibleCategory ? 16 : 8;
   const collectedSources = normalizeSources([
     ...manualSources,
     ...searchedSources,
-  ]).slice(0, 8)
+  ]).slice(0, sourceCap)
 
   const sourceCount = collectedSources.length
 

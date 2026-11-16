@@ -2,11 +2,11 @@
 
 **Worktree:** `C:\Users\David\echoes-visions-preview-security`
 **Branch:** `integrate/production-research-integrity`
-**Updated:** 2026-11-17 (Mission 006R2 Production release)
+**Updated:** 2026-11-17 (Mission 006R3 multi-passage completeness — local)
 
 ## Operating contract
 
-Mission 005R Production release complete (`dpl_EMYTUsKCeCxUMDsQiXBy7K9A5HxG` @ `5fbdfd05`). Mission 006R Production release complete (`dpl_HtFNkrbPNrTuzJuuwJPEREHTPDER` @ `3fe423ec` — **rollback baseline**). Mission **006R2** scoped Production release authorised. No Production article mutations; Mission 006 editorial recovery still requires separate authorisation. Space discoveries remains ON HOLD.
+Mission 005R Production release complete (`dpl_EMYTUsKCeCxUMDsQiXBy7K9A5HxG` @ `5fbdfd05`). Mission 006R Production release complete (`dpl_HtFNkrbPNrTuzJuuwJPEREHTPDER` @ `3fe423ec` — **rollback baseline**). Mission **006R2** Production release complete (`dpl_7YV3q6WRoXyvkn3RGNa3zEt9R12z` @ `5587d4c0`). Mission 006 Final recovery on Production returned REQUEST CHANGES. Mission **006R3** local remediation authorised; Production deploy **not** authorised. Space discoveries remains ON HOLD.
 
 ## EV-REG-SPEC-1.1.0 release
 
@@ -156,4 +156,75 @@ Decision board instructs “Correct unverified claims, then run Prepare for Revi
 | Production | No article/audit changes; no regenerate; no Prepare/approve/schedule/publish |
 | Rollback baseline | Prior Ready Production `dpl_HtFNkrbPNrTuzJuuwJPEREHTPDER` @ `3fe423ec` |
 | Commit scope | bible-extractor + fact-extractor + claim-source-attribution + generate-article + mission-006r2 tests + progress.md; **excluded** `scripts/final-exec-*.cjs` |
-| Status | Production release in progress under Director CONDITIONAL APPROVAL |
+| Status | **Deployed** — `5587d4c0` → `dpl_7YV3q6WRoXyvkn3RGNa3zEt9R12z` (Ready); health ok; engine `article-grounded-ev-reg-1` |
+
+## Mission 006 — Final Autonomous Editorial Recovery (Production)
+
+| Field | Value |
+|---|---|
+| Authority | Director **AUTHORISED** — generate / research / verify / Prepare only; no approve / schedule / publish / Director impersonation |
+| Production | Ready `dpl_7YV3q6WRoXyvkn3RGNa3zEt9R12z` @ `5587d4c0037e6e98dbd6c7bac03d2d40a080ba56` |
+| Health | `ok=true`, verifier `article-grounded-ev-reg-1`, versioned flag enabled |
+| Workflow | Authenticated `/admin/ai-generator` → Generate for Review → list Prepare for Review → audit board |
+| Canonical article | `cmwjrlw9c000008l5ssad82bx` |
+| Title | Pharaoh’s First Pushback: When God Says “Let Go” and Power Says “No” |
+| Slug | `pharaoh-s-first-pushback-when-god-says-let-go-and-power-says-no` |
+| Status | `review-required` (not approved; not scheduled; not published) |
+| Word count | ~608 |
+| Category | `bible-stories` |
+| Sources (8) | Exodus 5/8/10 + John 10 (BibleGateway + BibleHub each) — **no David & Goliath** |
+| Evidence records | **1** (Exodus 5 KJV chunk only; Ex 8/10/John sources collected but unused in evidence) |
+| Article-grounded claims | **3** (genuine; Exodus-subject; no D&G) |
+| Verified / partial / unsupported | **0 / 2 / 1** |
+| Scores | consensus **38** · source quality **50** · avg verification **35** |
+| Recommendation | `review-required` — publication permitted: **No** |
+| Prepare | Executed; Audit State **Current**; Prepare control cleared on list |
+| Body coverage | Only Exodus **5:1–2**; editorial note admits later Exodus scenes not verified here |
+| Mission brief gaps | Missing movements 2–5 (Ex 8:25–28; 8:28; 10:8–11; 10:24–26); missing John 10:10 / 2 Cor 2:11 in body |
+| Historical articles preserved | `cmwjb1tld…`, `cmwjmu0ep…`, `cmwjn252i…` (+ earlier Pharaoh drafts) untouched |
+| Manual interventions | 0 (no source injection, no DB edits, no score bypass, no approve/publish) |
+| Primary-source confirmations outstanding | Ex 5:1 and 5:2 claims remain single-publisher / needs corroboration; 1 unsupported meta-claim; no confirm UI offered on audit |
+| Director decision required | **REQUEST CHANGES** — article incomplete vs five-movement brief; EV-REG gate not publish-ready |
+| Verdict | **BLOCKED — EVIDENCE PROVIDED** |
+| Engineering | No new programme started |
+
+### Acceptance snapshot
+- A Production 006R2 Ready + autonomous generate: PASS
+- B No D&G contamination in body/sources/claims: PASS
+- C Subject-correct Scripture sources collected (Ex 5/8/10 + John 10): PASS
+- D Full five-movement + NT teaching body: FAIL (Ex 5:1–2 only)
+- E Article-grounded evidence for all brief passages: FAIL (1 evidence record; Ex 8/10/John unused)
+- F EV-REG-SPEC-1.1.0 publish-ready gate: FAIL (consensus 38 / SQ 50 / avg 35; 0 verified)
+- G Prepare executed without bypass: PASS
+- H Approve/schedule/publish boundary: HELD
+
+## Mission 006R3 — Multi-passage editorial completeness (local)
+
+| Field | Value |
+|---|---|
+| Authority | Director **REQUEST CHANGES** + local engineering **AUTHORISED**; Production deploy / article mutate / Prepare / approve / publish **NOT AUTHORISED** |
+| Root cause | `evidenceRegistry()` non-claim path flattened chunks then `slice(0, 24)`, so Exodus 5 consumed the audit cap; later chapters fetched but got zero selected passages. Composition then only received Exodus 5 publishable facts. Secondary: chapter dual-host + collector `slice(0, 8)` dropped NT chapters after four chapters. |
+| Fix A | `selectSourceBalancedEvidence` — round-robin passages across documents under `RESEARCH_MAX_UNIQUE_AUDIT_PASSAGES` |
+| Fix B | `scriptureSourcesFromTopic` — Gateway-first up to 12 chapters, then Hub corroboration |
+| Fix C | `sourceCollector` bible cap **16** (non-bible remains 8) |
+| Fix D | `biblical-teaching-completeness.ts` — teaching plan, evidence/article coverage diagnostics, Mission 006 fixture |
+| Fix E | `generate-article` — block incomplete multi-passage evidence before compose; required coverage prompt; block incomplete article before save |
+| Fix F | `bible-extractor` — evidence-source-aware extraction + supporting NT textual claims; `fact-extractor` usefulness patterns for thief/Christ/devil/etc. |
+| Review follow-up | Closed Medium items from review: aligned 12-chapter teaching/source cap with oversized-brief diagnostic; verse-qualified non-Exodus coverage; dedicated-section Exodus movement checks |
+| Production article `cmwjrlw9c…` | **Unchanged** (no regenerate / Prepare / DB edits) |
+| Tests | Focused 006R+R2+R3 **27/27**; full editorial **110 / 1,182**; `tsc --noEmit` 0; `npm run build` 0 (pre-NT polish build; post-polish tsc+editorial green) |
+| Commit / push / deploy | CONDITIONAL APPROVAL received — release gate in progress |
+| Pre-release verification | Focused 30/30; editorial 110/1,185; tsc 0; build 0; MEDIUM review items closed; thresholds 80/70 unchanged |
+| Verdict | **READY FOR GOVERNED RELEASE** (deploy authorised) |
+
+### Acceptance snapshot
+- 1 Five Exodus movements in complete article fixture: PASS
+- 2 Exodus 5/8/10 evidence under balanced selection: PASS
+- 3 Supporting NT refs retained in collection: PASS
+- 4 No D&G contamination: PASS
+- 5 Claims bind to correct passages: PASS
+- 6 Unsupported remain unsupported: PASS
+- 7 Missing required passages → explicit failure: PASS
+- 8 Single-passage bible still works: PASS
+- 9 Non-bible generation unaffected: PASS
+- 10 EV-REG Prepare/approve boundaries intact: PASS

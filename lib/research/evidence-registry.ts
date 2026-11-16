@@ -9,6 +9,7 @@ import { planClaimBatches } from "./article-claim-extractor"
 import {
   assembleBatchEvidenceSelections,
   selectClaimAwareEvidence,
+  selectSourceBalancedEvidence,
   type BatchEvidenceRun,
   type ClaimAwareSelection,
   type ClaimEvidenceMapping,
@@ -57,44 +58,6 @@ export type EvidenceRegistryOptions = ContentFetchDeps & {
   fetchContent?: typeof contentFetcher
   claimTexts?: string[]
   listedSources?: AttributableSource[]
-}
-
-function sourceTypeBoost(sourceType: string): number {
-  switch (sourceType) {
-    case "government":
-      return 15
-    case "academic":
-      return 15
-    case "industry-research":
-      return 12
-    case "research-media":
-      return 10
-    case "policy":
-      return 10
-    case "authority":
-      return 8
-    default:
-      return 0
-  }
-}
-
-function evidenceFromChunks(
-  source: SourceRecord,
-  fetchedTitle: string,
-  chunks: Array<{ id: string; text: string }>,
-): EvidenceRecord[] {
-  return chunks.map((chunk) => ({
-    id: `${source.title.toLowerCase().replace(/\s+/g, "-")}-${chunk.id}`,
-    sourceTitle: fetchedTitle || source.title,
-    sourceUrl: source.url,
-    sourceType: source.sourceType,
-    extractedText: chunk.text,
-    confidence: Math.min(
-      100,
-      (source.relevanceScore ?? 70) + sourceTypeBoost(source.sourceType),
-    ),
-    requiresHumanReview: true,
-  }))
 }
 
 type CollectedDocument = {
@@ -258,23 +221,7 @@ export async function evidenceRegistry(
           documents,
           listedSources,
         })
-      : {
-          evidence: documents.flatMap((document) =>
-            evidenceFromChunks(
-              {
-                title: document.title,
-                url: document.url,
-                sourceType: document.sourceType,
-                relevanceScore: document.relevanceScore,
-              } as SourceRecord,
-              document.fetchedTitle || document.title,
-              document.chunks,
-            ),
-          ).slice(0, RESEARCH_MAX_UNIQUE_AUDIT_PASSAGES),
-          mappings: [],
-          uniquePassageCount: 0,
-          bounded: false,
-        }
+      : selectSourceBalancedEvidence(documents, RESEARCH_MAX_UNIQUE_AUDIT_PASSAGES)
 
   const evidenceRecords = selection.evidence
   const sourceDiagnostics = applySelectedPassages(collected, evidenceRecords)

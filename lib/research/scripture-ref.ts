@@ -160,6 +160,9 @@ export function inferTopicScriptureSeeds(topic: string): ScriptureRef[] {
   return [];
 }
 
+/** Max unique chapters collected for a bible topic (Gateway-first + Hub). */
+export const MAX_SCRIPTURE_CHAPTERS = 12;
+
 export function scriptureSourcesFromTopic(topic: string): Array<{
   title: string;
   url: string;
@@ -172,7 +175,9 @@ export function scriptureSourcesFromTopic(topic: string): Array<{
       ? explicit
       : inferTopicScriptureSeeds(topic);
 
-  // Cap chapters so collector slice stays on-subject.
+  // Prefer chapter diversity for multi-passage briefs. Dual-host redundancy
+  // is kept when few chapters are cited; otherwise Gateway-first fills slots.
+  // Keep in sync with biblical-teaching-completeness MAX_SCRIPTURE_TEACHING_CHAPTERS.
   const uniqueChapters: ScriptureRef[] = [];
   const seenChapter = new Set<string>();
   for (const ref of refs) {
@@ -183,8 +188,10 @@ export function scriptureSourcesFromTopic(topic: string): Array<{
       book: ref.book,
       bookDisplay: ref.bookDisplay,
       chapter: ref.chapter,
+      verseStart: ref.verseStart,
+      verseEnd: ref.verseEnd,
     });
-    if (uniqueChapters.length >= 4) break;
+    if (uniqueChapters.length >= MAX_SCRIPTURE_CHAPTERS) break;
   }
 
   const sources: Array<{
@@ -193,6 +200,8 @@ export function scriptureSourcesFromTopic(topic: string): Array<{
     sourceType: string;
     relevanceScore: number;
   }> = [];
+
+  // Pass 1: one primary host per chapter (preserves all required passages).
   for (const ref of uniqueChapters) {
     sources.push({
       title: `BibleGateway ${ref.bookDisplay} ${ref.chapter} (KJV)`,
@@ -200,6 +209,10 @@ export function scriptureSourcesFromTopic(topic: string): Array<{
       sourceType: "scripture-reference",
       relevanceScore: 95,
     });
+  }
+
+  // Pass 2: secondary host for corroboration while slots remain.
+  for (const ref of uniqueChapters) {
     sources.push({
       title: `Bible Hub ${ref.bookDisplay} ${ref.chapter}`,
       url: bibleHubChapterUrl(ref),

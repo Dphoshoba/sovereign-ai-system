@@ -367,6 +367,112 @@ function extractGeneric(lower: string): Omit<BibleExtractionResult, "subject"> {
 }
 
 /**
+ * Text-tethered supporting-passage claims for multi-brief teaching.
+ * Only fires when the evidence sentence itself contains the markers.
+ */
+function extractSupportingPassageClaims(
+  lower: string,
+): Omit<BibleExtractionResult, "subject"> {
+  const claims: string[] = [];
+  const events: string[] = [];
+  const themes: string[] = [];
+
+  if (
+    includesAny(lower, [
+      "thief cometh",
+      "steal, and to kill",
+      "more abundantly",
+    ])
+  ) {
+    claims.push(
+      "According to John 10:10, the thief comes to steal, kill, and destroy, while Christ gives life more abundantly.",
+    );
+    events.push("Jesus contrasts the thief with abundant life.");
+  }
+  if (
+    includesAny(lower, ["not ignorant of his devices", "advantage of us"])
+  ) {
+    claims.push(
+      "According to 2 Corinthians 2:11, believers must not be ignorant of Satan's devices.",
+    );
+  }
+  if (includesAny(lower, ["deny himself", "take up his cross", "follow me"])) {
+    claims.push(
+      "According to Mark 8:34, discipleship requires denying self, taking up the cross, and following Christ.",
+    );
+  }
+  if (includesAny(lower, ["choose you this day", "whom ye will serve"])) {
+    claims.push(
+      "According to Joshua 24:15, the people must choose whom they will serve.",
+    );
+  }
+  if (
+    includesAny(lower, [
+      "living sacrifice",
+      "transformed by the renewing",
+      "not conformed to this world",
+    ])
+  ) {
+    claims.push(
+      "According to Romans 12:1-2, believers present themselves as a living sacrifice and are transformed by renewing the mind.",
+    );
+  }
+  if (
+    includesAny(lower, [
+      "seek those things which are above",
+      "set your affection on things above",
+      "hid with christ in god",
+    ])
+  ) {
+    claims.push(
+      "According to Colossians 3:1-4, believers set their affection on things above where Christ is.",
+    );
+  }
+  if (includesAny(lower, ["whole armour of god", "stand against the wiles"])) {
+    claims.push(
+      "According to Ephesians 6:11, believers put on the whole armour of God to stand against the devil's wiles.",
+    );
+  }
+  if (
+    includesAny(lower, [
+      "be sober, be vigilant",
+      "adversary the devil",
+      "roaring lion",
+    ])
+  ) {
+    claims.push(
+      "According to 1 Peter 5:8, believers must be sober and vigilant because the adversary walks about as a roaring lion.",
+    );
+  }
+  if (includesAny(lower, ["resist the devil", "he will flee"])) {
+    claims.push(
+      "According to James 4:7, believers submit to God, resist the devil, and he will flee.",
+    );
+  }
+
+  if (claims.length > 0) themes.push("Spiritual vigilance");
+
+  return {
+    people: [],
+    places: [],
+    objects: [],
+    events: unique(events),
+    dialogue: [],
+    themes: unique(themes),
+    applications: [],
+    claims: unique(claims),
+  };
+}
+
+function sourceLooksLikeExodus(url: string, title: string): boolean {
+  return /\bexodus\b/i.test(`${url} ${title}`);
+}
+
+function sourceLooksLikeSamuel(url: string, title: string): boolean {
+  return /\b1\s*samuel\b|samuel%2017|1-samuel/i.test(`${url} ${title}`);
+}
+
+/**
  * Extract biblical entities and claims from a passage sentence.
  * @param text Passage or evidence sentence
  * @param topicOrOptions Director topic string, or options with topic/chapter/source
@@ -385,27 +491,45 @@ export function bibleExtractor(
     chapterFromScriptureSource(options.sourceUrl ?? "", options.sourceTitle ?? "");
   const lower = text.toLowerCase();
   const subject = detectBibleSubject(topic, text);
+  const sourceUrl = options.sourceUrl ?? "";
+  const sourceTitle = options.sourceTitle ?? "";
+  const exodusSource = sourceLooksLikeExodus(sourceUrl, sourceTitle);
+  const samuelSource = sourceLooksLikeSamuel(sourceUrl, sourceTitle);
 
-  const base =
-    subject === "david-goliath"
-      ? extractDavidGoliath(lower)
-      : subject === "exodus-deliverance"
-        ? extractExodusDeliverance(lower, chapter)
-        : extractGeneric(lower);
+  // Prefer extraction matched to the evidence source book so an Exodus topic
+  // still extracts John/Paul/James claims from those chapters' evidence.
+  let base: Omit<BibleExtractionResult, "subject">;
+  if (subject === "david-goliath" && (samuelSource || !exodusSource)) {
+    base = extractDavidGoliath(lower);
+  } else if (subject === "exodus-deliverance" && (exodusSource || !sourceUrl)) {
+    base = extractExodusDeliverance(lower, chapter);
+  } else if (subject === "exodus-deliverance" && !exodusSource) {
+    base = extractGeneric(lower);
+  } else if (subject === "david-goliath") {
+    base = extractDavidGoliath(lower);
+  } else {
+    base = extractGeneric(lower);
+  }
+
+  const supporting = extractSupportingPassageClaims(lower);
+  const mergedClaims = unique([...base.claims, ...supporting.claims]);
+  const mergedEvents = unique([...base.events, ...supporting.events]);
+  const mergedThemes = unique([...base.themes, ...supporting.themes]);
 
   // Hard guard: never emit D&G claim strings outside the D&G subject.
   const claims =
     subject === "david-goliath"
-      ? base.claims
-      : base.claims.filter((claim) => !isDavidGoliathNarrativeClaim(claim));
+      ? mergedClaims
+      : mergedClaims.filter((claim) => !isDavidGoliathNarrativeClaim(claim));
 
   const events =
     subject === "david-goliath"
-      ? base.events
-      : base.events.filter((event) => !isDavidGoliathNarrativeClaim(event));
+      ? mergedEvents
+      : mergedEvents.filter((event) => !isDavidGoliathNarrativeClaim(event));
 
   return {
     ...base,
+    themes: mergedThemes,
     claims: unique(claims),
     events: unique(events),
     subject,

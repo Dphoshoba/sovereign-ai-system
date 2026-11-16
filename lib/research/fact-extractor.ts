@@ -285,6 +285,20 @@ function isUsefulSentence(sentence: string) {
     /\bfaith\b/,
     /\bsling\b/,
     /\bstone\b/,
+    /\bthief\b/,
+    /\bchrist\b/,
+    /\bjesus\b/,
+    /\bsatan\b/,
+    /\bdevil\b/,
+    /\bdisciple/,
+    /\bcross\b/,
+    /\barmour\b/,
+    /\barmor\b/,
+    /\bvigilant\b/,
+    /\bresist\b/,
+    /\bsacrifice\b/,
+    /\bdevices\b/,
+    /\babundantly\b/,
   ]
 
   return usefulPatterns.some((pattern) => pattern.test(text))
