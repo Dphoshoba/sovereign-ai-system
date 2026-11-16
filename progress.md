@@ -213,9 +213,13 @@ Decision board instructs “Correct unverified claims, then run Prepare for Revi
 | Review follow-up | Closed Medium items from review: aligned 12-chapter teaching/source cap with oversized-brief diagnostic; verse-qualified non-Exodus coverage; dedicated-section Exodus movement checks |
 | Production article `cmwjrlw9c…` | **Unchanged** (no regenerate / Prepare / DB edits) |
 | Tests | Focused 006R+R2+R3 **27/27**; full editorial **110 / 1,182**; `tsc --noEmit` 0; `npm run build` 0 (pre-NT polish build; post-polish tsc+editorial green) |
-| Commit / push / deploy | CONDITIONAL APPROVAL received — release gate in progress |
+| Commit | `563dc34fd997a7bf83a3f86feb9e15ca2bca8176` |
+| Production deployment | `dpl_CPaaai2ez9oxn4VSRXnK1ojCkohC` (Ready) — aliased to www.echoesandvisions.com |
+| Rollback | Prior Ready `dpl_7YV3q6WRoXyvkn3RGNa3zEt9R12z` @ `5587d4c0` |
 | Pre-release verification | Focused 30/30; editorial 110/1,185; tsc 0; build 0; MEDIUM review items closed; thresholds 80/70 unchanged |
-| Verdict | **READY FOR GOVERNED RELEASE** (deploy authorised) |
+| Post-deploy | health ok; verifier `article-grounded-ev-reg-1`; generate POST 401; prepare POST 401; admin 307; published article 200 |
+| Production articles | Unchanged (no regenerate / Prepare / approve / publish) |
+| Verdict | **PRODUCTION RELEASE COMPLETE — PASS** |
 
 ### Acceptance snapshot
 - 1 Five Exodus movements in complete article fixture: PASS
