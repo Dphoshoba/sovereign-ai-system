@@ -210,9 +210,18 @@ export function EditArticleForm({
     }
   }
 
+  // Rendered by app/admin/articles/[id]/edit/page.tsx. No other edit form.
+  // User: "Avoid unnecessary redesign" / "Create → Research → Verify → Review → Approve → Schedule/Publish"
   return (
     <main style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
       <h1>Edit Article</h1>
+      <p style={{ marginTop: "8px" }}>
+        <a href={`/admin/articles/${article.id}/audit`}>
+          Open research &amp; editorial decision board
+        </a>
+        {" · "}
+        Workflow: Create → Research → Verify → Review → Approve → Schedule/Publish
+      </p>
 
       <div
         data-score-currency={hasCurrentAudit ? "current" : "not-current"}

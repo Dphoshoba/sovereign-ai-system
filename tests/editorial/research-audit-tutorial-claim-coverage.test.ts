@@ -17,7 +17,7 @@ The US National Institute of Standards and Technology (NIST) identifies risks as
 
 ## Day 2 — Map the workflow
 
-This arrangement helps address the over-reliance risks discussed in the NIST Generative AI Profile.
+Keeping those decisions with people is a practical response to the over-reliance risks discussed in the NIST Generative AI Profile.
 
 ## Choose the right OpenAI action
 
@@ -86,6 +86,14 @@ describe("tutorial claim coverage for Zapier and OpenAI docs", () => {
     ).toBe(true);
     expect(claims.some((claim) => /^Prefer Conversation\b/i.test(claim))).toBe(false);
     expect(claims.some((claim) => /^Treat Send Prompt\b/i.test(claim))).toBe(false);
+    expect(
+      claims.some((claim) => /practical response to the over-reliance/i.test(claim)),
+    ).toBe(false);
+    expect(
+      extracted.authorialAssertions.some((claim) =>
+        /practical response to the over-reliance/i.test(claim.claim),
+      ),
+    ).toBe(true);
     expect(hasPublisherAttribution("Zapier marks it as recommended.")).toBe(true);
     expect(publishersNamedInClaim("Zapier marks it as recommended.")).toEqual(["zapier"]);
     expect(

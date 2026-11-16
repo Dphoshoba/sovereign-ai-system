@@ -133,6 +133,11 @@ const AUTHORIAL_PATTERNS = [
   /\bliterary reading\b/i,
   /^source:/i,
   /^further reading\b/i,
+  // Tutorial / editorial interpretation of cited risk frameworks (not source assertions)
+  /\bthis arrangement\b.{0,100}\b(helps address|is a practical)\b/i,
+  /\bkeeping (those|these) decisions with people\b/i,
+  /\bpractical response to\b.{0,120}\b(over-reliance|risks? discussed)\b/i,
+  /\bhelps address\b.{0,80}\b(over-reliance|risks? discussed)\b/i,
 ];
 
 const ADVICE_PATTERNS = [
@@ -696,6 +701,23 @@ export function passageContainsClaimPercentages(claim: string, passage: string):
     if (!present.has(value)) return false;
   }
   return true;
+}
+
+/**
+ * Rank passages that already support a claim. Prefer distinctive claim tokens
+ * (long, hyphenated, or numeric) so a weak generic blurb loses to the passage
+ * that actually contains the claim's named concepts.
+ */
+export function distinctiveSupportScore(claim: string, passage: string): number {
+  const { overlap } = uniqueContentOverlap(claim, passage);
+  const distinctive = overlap.filter(
+    (token) => token.length >= 6 || token.includes("-") || /\d/.test(token),
+  );
+  return (
+    overlap.length * 10 +
+    distinctive.length * 25 +
+    distinctive.reduce((sum, token) => sum + token.length, 0)
+  );
 }
 
 export function uniqueContentOverlap(claim: string, passage: string): {

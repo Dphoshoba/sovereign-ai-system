@@ -1,111 +1,80 @@
 # Echoes & Visions — Agent Progress
 
-**Worktree:** `C:\Users\David\echoes-visions-preview-security`  
-**Branch:** `integrate/production-research-integrity`  
-**HEAD:** `ec32d7af4a861a00302e914da8ccd0f8261973e6` — Zapier evidence extraction + claim verification  
-**Updated:** 2026-11-16 (Final Director Mission — complete)
+**Worktree:** `C:\Users\David\echoes-visions-preview-security`
+**Branch:** `integrate/production-research-integrity`
+**HEAD:** `6f33a18dbbd9b4e69b185fe273c5c96d2580167d` (local Mission 004 changes uncommitted)
+**Updated:** 2026-11-16 (Mission 004 — publishing usability)
 
-## Operating contract (closed for this mission)
+## Operating contract
 
-Final Director Mission authorised, as one bounded train:
-1. Engineering commit + push + Production deploy of M001–M002 verification fixes (includes prior timezone commit `807712fa`)
-2. One Production content save of Mission 003 Markdown
-3. One Prepare for Review after save/deploy verification
-
-Still forbidden without new authority: approve, schedule, publish, cron, schema changes, space discoveries, threshold weakening.
+**Mission 004 authorised:** restore reliable article publishing (local engineering + dashboard UX).
+Still forbidden without new authority: Production data changes, commit/push/deploy, Prepare on Production, approve/schedule/publish, threshold weakening, schema changes, space discoveries (ON HOLD).
 
 ## Current mission
 
-**Final Director Mission — AI Automation engineering release + editorial completion**  
-**Article:** `cmqrvyx860000ycun5wo9ny8c`
+**Mission 004 — Restore Reliable Article Publishing**
 
 ### Acceptance criteria
 
-1. Engineering release — **PASS**
-2. Corrected article saved — **PASS**
-3. New Production research audit — **PASS**
-4. Genuine editorial readiness — **PASS as review-required** (avg verification 56 < 80)
-5. Complete operational evidence — **PASS** (this file)
+1. Root cause established — **PASS**
+2. Reliable verification (passage preference + authorial framing) — **PASS**
+3. Usable editorial decisions in dashboard — **PASS**
+4. Controlled end-to-end publishability demonstration — **PASS**
+5. Regression suite + tsc + build — **PASS** (105 files / 1145 tests; tsc clean; build exit 0)
 
-## Engineering release
+## Root causes (AI Automation remains review-required)
 
-- Prior timezone commit: `807712fa105981fca78717a5b3c0af4690e21b38`
-- Release commit: `ec32d7af4a861a00302e914da8ccd0f8261973e6`
-- Message: `fix(research): harden Zapier evidence extraction and claim verification`
-- Branch push: `origin/integrate/production-research-integrity`
-- Production deployment: `dpl_9r9eqfAehGGF9gNNf16GkGxf1soa`
-- Deploy URL: `https://sovereign-ai-executive-qgxw3j2kd-davidoshoba-3659s-projects.vercel.app`
-- Aliases: `www.echoesandvisions.com`, `echoesandvisions.com`, `sovereign-ai-executive.vercel.app`
-- `gitCommitSha` (Vercel meta): `ec32d7af4a861a00302e914da8ccd0f8261973e6` (exact match)
-- Health: `ok=true`, `versionedEditorialVerifierEnabled=true`, `researchAuditEngineRevision=article-grounded-ev-reg-1`
+1. **EV-REG single-publisher rule (governance, not a defect)**
+   Zapier/NIST tutorial claims are correctly **partial** when one publisher document supports them. `publish-ready` requires **two independent publisher identities per claim**, consensus ≥80, source quality ≥70, average verification ≥80, zero unverified. Human ACCEPT/QUALIFY docs are out-of-band and do not re-score audits.
 
-### Released changes (narrow scope)
+2. **Interpretive Claim 3 scored as factual (software defect — fixed)**
+   “Keeping those decisions with people is a practical response…” was pulled as factual because `\bnist\b` matched `FACTUAL_SIGNAL`, then failed lexical PDF match → unverified score 0. Now classified **authorial**.
 
-- HTML body extraction + table labels (`html-text-extractor.ts`)
-- Claim attribution for Zapier/OpenAI/NIST tutorial facts (`article-claim-extractor.ts`)
-- Publisher registry (`claim-source-attribution.ts`, `product-identity.ts`, `versioned-evidence.ts`)
-- Help-centre title identity for Zapier/OpenAI passages (`claim-evidence-matcher.ts`, `versioned-prepare-verification.ts`)
-- Bounded 429/503 retry (`source-fetch-guard.ts`)
-- Tests: help-centre extraction, tutorial claims, acquisition retries
-- Timezone-stable audit association (prior commit)
+3. **Weak passage preference (software defect — fixed)**
+   When multiple passages supported a claim, ranking used raw overlap only, so a generic NIST blurb could beat the Human-AI Configuration / over-reliance passage. Ranking now uses `distinctiveSupportScore`.
 
-### Test / build evidence (pre-release)
+4. **Dashboard opacity (product gap — fixed)**
+   Directors saw raw scores/JSON without clear verified / needs corroboration / needs correction / decision / publication-permitted language.
 
-- `tests/editorial`: **103 files / 1141 tests pass**
-- `tsc --noEmit`: clean
-- `npm run build`: succeeded in release verification
+## Changes implemented
 
-## Mission 003 Production save
+| Area | Change |
+|---|---|
+| `lib/research/article-claim-extractor.ts` | Authorial patterns for interpretive NIST framing; export `distinctiveSupportScore` |
+| `lib/research/claim-evidence-selector.ts` | Rank supporting passages with distinctive boost |
+| `lib/research/claim-evidence-matcher.ts` | Prefer distinctive matches when selecting primary evidence |
+| `app/admin/articles/ArticleAuditPanel.tsx` | Editorial decision board + claim decision list |
+| `app/admin/articles/[id]/edit/EditArticleForm.tsx` | Link to decision board + workflow reminder |
+| Tests | `mission004-passage-preference.test.ts`, `mission004-publishability-workflow.test.ts`, tutorial coverage update |
 
-- Draft path: `%USERPROFILE%\.config\echoes-visions\recovery\corrected-markdown-cmqrvyx860000ycun5wo9ny8c.md`
-- Backup: `mission003-corrected-markdown.md`
-- **Draft SHA-256:** `98FF1A76A739FA36A2BB79929298C3D3CACEC9A60B2DB58201C268D0BF1D483C`
-- Pre-save Production SHA: `2020A71B919C4C09A6C9EEBC8BED5DBFB625D4D0C749FF1ABCE8AF8E9A4FB5C4` (unchanged unexpectedly; safe to overwrite)
-- Save path: authenticated `PATCH /api/articles/cmqrvyx860000ycun5wo9ny8c` (content only; sources untouched)
-- **Post-save SHA-256:** `98FF1A76A739FA36A2BB79929298C3D3CACEC9A60B2DB58201C268D0BF1D483C` (exact match)
-- Corrections present: NIST / Conversation / Send Prompt — all verified in saved content
-- Sources preserved: **9/9** (NIST×2, Zapier×6, OpenAI×1)
-- Article status after save: `review-required`
+## Tests and build
 
-## Production Prepare (one run)
-
-- Endpoint: `POST /api/articles/prepare-for-review`
-- Result: HTTP 200, `ok=true`
-- **Audit ID:** `cmwihk7eq000008icri2x0wmo`
-- Fingerprint note: `cmwihk88o000108ic7th5nxoa`
-- Content fingerprint: `cecfd7dae9c2d1f4b0c735b5f9c8eb51cb4a0fbd154e329f24a69ddb28bed147`
-- Engine: `article-grounded-ev-reg-1`
-- Spec: `EV-REG-SPEC-1.0.0`
-- Claims / evidence: factCount **7**, evidenceCount **8**
-- Verification: verified **0**, partial **7**, unverified **0**
-- Scores: consensus **100**, source quality **81**, average verification **56**
-- Recommendation: **`review-required`**
-- Source diagnostics: 5 accepted (NIST PDF/HTML + Zapier ChatGPT guides); 4 reachable but no relevant passage (Sheets/troubleshoot/OpenAI data controls)
-- Artifact: `%USERPROFILE%\.config\echoes-visions\recovery\final-mission-prepare-cmwihk7eq.json`
-
-## Editorial readiness assessment
-
-Publication gate requires consensus ≥80, source quality ≥70, average verification ≥80, recommendation `publish-ready`.
-
-- Consensus 100 and source quality 81 meet numeric floors.
-- Average verification **56** does not meet the 80-point requirement.
-- All seven scorable claims are only partially verified against extracted evidence; none fully verified.
-- Outcome is honest evidentiary limitation under EV-REG, not a verifier defect to weaken.
-- Article correctly remains `review-required`. No approve / schedule / publish performed.
+- Focused Mission 004 tests: **pass**
+- `tests/editorial`: **105 files / 1145 tests pass**
+- `tsc --noEmit`: **clean**
+- `npm run build` (CI Supabase placeholders): **exit 0**
 
 ## Decisions
 
-- Deployed CLI Production release of `ec32d7af` after clean push and health/commit verification.
-- Content-only PATCH to preserve the intentional nine-source register.
-- Exactly one Prepare after save; no retries to chase score.
-- Report `review-required` rather than force `publish-ready`.
+- Did **not** weaken EV-REG thresholds or invent dual-publisher corroboration.
+- Did **not** add a silent human override of `publish-ready`.
+- Human **Approve** remains a separate workflow gate; schedule/publish still require research publication eligibility.
+- Single-publisher tutorials (e.g. AI Automation) will remain `review-required` under certified rules unless claims gain independent second-publisher support or the Director authorises a governance-contract change.
 
-## Outstanding / Director decisions
+## Remaining risks
 
-1. Whether to authorise further source-grounded editorial tightening aimed at lifting average verification above 80.
-2. Editorial approval, scheduling, and publication — separate gates; not part of this mission.
-3. Space discoveries article remains **ON HOLD**.
+1. Production AI Automation article still reflects the prior audit until a separately authorised save/Prepare after this release.
+2. Vendor help-centre HTML drift can still change extraction quality.
+3. `consensusEngine` computes average verification for the gate but does not return that field on `ConsensusResult` (pre-existing; Prepare stores matcher average separately).
 
-## Next action
+## Exact next authorised action
 
-Await Director publication / remediation decision. No further Production mutation authorised under this mission.
+1. Director review of this Mission 004 diff.
+2. Separately authorise **commit → push → Production deploy** of Mission 004.
+3. Separately authorise Production Prepare for AI Automation only after deploy (optional; expect continued `review-required` under single-publisher rule unless content/sources change).
+4. For publication of vendor-doc tutorials: either add independent corroborating sources, or request a governed programme to change EV-REG publication rules (Director decision).
+
+## Prior closed work (reference)
+
+- Engineering release `ec32d7af` + Production save SHA `9D426B59…` + Prepare `cmwilpof2000008l9xoo7jwg5` (`review-required`, avg verification 47).
+- Space discoveries remains **ON HOLD**.

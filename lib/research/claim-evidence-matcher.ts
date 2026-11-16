@@ -9,6 +9,7 @@ import {
   articleContainsExcerpt,
   assessPassageSupport,
   boundContinuationExcerpt,
+  distinctiveSupportScore,
   passageSupportsClaim,
   passageSupportsContinuationSentence,
   uniqueContentOverlap,
@@ -30,6 +31,7 @@ import { RESEARCH_MAX_PASSAGES_PER_CLAIM } from "./source-fetch-guard";
 export type GroundedEvidenceMatch = {
   evidence: EvidenceRecord;
   overlap: number;
+  distinctive: number;
 };
 
 function authorityScoreForUrl(url: string): number {
@@ -149,6 +151,7 @@ function passageMatch(
   return {
     evidence,
     overlap: uniqueContentOverlap(overlapTarget, passageText).overlap.length,
+    distinctive: distinctiveSupportScore(overlapTarget, passageText),
   };
 }
 
@@ -173,6 +176,10 @@ function compoundMatchesForDocument(
       })
       .sort(
         (left, right) =>
+          right.overlap +
+            right.distinctive -
+            (left.overlap + left.distinctive) ||
+          right.distinctive - left.distinctive ||
           right.overlap - left.overlap ||
           left.evidence.id.localeCompare(right.evidence.id),
       );
@@ -182,7 +189,11 @@ function compoundMatchesForDocument(
   const unique = new Map<string, GroundedEvidenceMatch>();
   for (const match of clauseMatches) {
     const existing = unique.get(match.evidence.id);
-    if (!existing || match.overlap < existing.overlap) {
+    if (
+      !existing ||
+      match.overlap + match.distinctive >
+        existing.overlap + existing.distinctive
+    ) {
       unique.set(match.evidence.id, match);
     }
   }
@@ -396,7 +407,15 @@ export function groundedFactVerification(
         ? listedSources
         : listedSourcesFromEvidence(evidenceRecords);
     const matches = matchEvidenceToClaim(claim, evidenceRecords, sources)
-      .sort((left, right) => right.overlap - left.overlap || left.evidence.id.localeCompare(right.evidence.id))
+      .sort(
+        (left, right) =>
+          right.overlap +
+            right.distinctive -
+            (left.overlap + left.distinctive) ||
+          right.distinctive - left.distinctive ||
+          right.overlap - left.overlap ||
+          left.evidence.id.localeCompare(right.evidence.id),
+      )
       .slice(0, RESEARCH_MAX_PASSAGES_PER_CLAIM);
     const uniqueSources = new Map<string, EvidenceRecord>();
     const mappedPassages: EvidenceRecord[] = [];

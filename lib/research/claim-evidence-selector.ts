@@ -1,5 +1,6 @@
 import {
   boundContinuationExcerpt,
+  distinctiveSupportScore,
   passageSupportsClaim,
   passageSupportsContinuationSentence,
   planClaimBatches,
@@ -56,6 +57,7 @@ export type ClaimAwareSelection = {
 type RankedCandidate = {
   evidence: EvidenceRecord;
   overlap: number;
+  distinctive: number;
   verseBoost: number;
   documentOrder: number;
 };
@@ -136,7 +138,11 @@ function overlapScore(claim: string, passage: string): number {
 
 function compareCandidates(left: RankedCandidate, right: RankedCandidate): number {
   return (
-    right.overlap + right.verseBoost - (left.overlap + left.verseBoost) ||
+    right.overlap +
+      right.distinctive +
+      right.verseBoost -
+      (left.overlap + left.distinctive + left.verseBoost) ||
+    right.distinctive - left.distinctive ||
     right.overlap - left.overlap ||
     left.documentOrder - right.documentOrder ||
     left.evidence.id.localeCompare(right.evidence.id)
@@ -233,6 +239,7 @@ export function selectClaimAwareEvidence(input: {
         candidates.push({
           evidence: record,
           overlap: overlapScore(claim, record.extractedText),
+          distinctive: distinctiveSupportScore(claim, record.extractedText),
           verseBoost: passageOverlapsVerseWindow(
             record.extractedText,
             windowsForSource,
@@ -269,7 +276,8 @@ export function selectClaimAwareEvidence(input: {
         candidate.evidence.sourceUrl,
         candidate.evidence.extractedText,
       );
-      const score = candidate.overlap + candidate.verseBoost;
+      const score =
+        candidate.overlap + candidate.distinctive + candidate.verseBoost;
       const existing = selectedByKey.get(key);
       if (!existing || score > existing.score) {
         selectedByKey.set(key, { evidence: candidate.evidence, score });

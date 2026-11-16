@@ -197,6 +197,11 @@ export function ArticleAuditPanel({
               />
             </div>
           </div>
+          <EditorialDecisionBoard
+            articleStatus={article.status}
+            audit={currentAudit}
+          />
+          <ClaimDecisionList facts={currentAudit.facts} />
           <JsonCard title="Sources Used" data={currentAudit.sources} />
           <JsonCard title="Evidence Used" data={currentAudit.evidence} />
           <JsonCard title="Facts Extracted" data={currentAudit.facts} />
@@ -283,6 +288,164 @@ export function scoreDisplayValue(
   if (hasCurrentAudit) return value ?? "Not scored";
   if (historicalAuditCount > 0) return "Not current";
   return value == null ? "Not scored" : "Not current";
+}
+
+type AuditFactRow = {
+  claim?: string;
+  verificationStatus?: string;
+  verificationScore?: number;
+  verificationMethod?: string;
+  matchDiagnostics?: unknown;
+};
+
+function asFactRows(facts: unknown): AuditFactRow[] {
+  if (!Array.isArray(facts)) return [];
+  return facts.filter(
+    (row): row is AuditFactRow => Boolean(row) && typeof row === "object",
+  );
+}
+
+function EditorialDecisionBoard({
+  articleStatus,
+  audit,
+}: {
+  articleStatus: string;
+  audit: NonNullable<AuditPanelState["currentAudit"]>;
+}) {
+  const recommendation = audit.publicationRecommendation ?? "Not available";
+  const verified = audit.verifiedCount ?? 0;
+  const partial = audit.partiallyVerifiedCount ?? 0;
+  const unverified = audit.unverifiedCount ?? 0;
+  const publicationPermitted = recommendation === "publish-ready";
+  const canApproveWorkflow =
+    (articleStatus === "review-required" || articleStatus === "review") &&
+    Boolean(audit);
+  const blockers: string[] = [];
+  if ((audit.consensusScore ?? 0) < 80) {
+    blockers.push(
+      `Consensus is ${audit.consensusScore ?? 0} (needs at least 80).`,
+    );
+  }
+  if ((audit.sourceQualityScore ?? 0) < 70) {
+    blockers.push(
+      `Source quality is ${audit.sourceQualityScore ?? 0} (needs at least 70).`,
+    );
+  }
+  if ((audit.averageVerificationScore ?? 0) < 80) {
+    blockers.push(
+      `Average verification is ${audit.averageVerificationScore ?? 0} (needs at least 80).`,
+    );
+  }
+  if (unverified > 0) {
+    blockers.push(
+      `${unverified} claim${unverified === 1 ? "" : "s"} still unverified — correct wording or evidence before publication.`,
+    );
+  }
+  if (partial > 0 && !publicationPermitted) {
+    blockers.push(
+      `${partial} claim${partial === 1 ? "" : "s"} only have single-publisher support. Publication requires independent corroboration from a second publisher for every claim.`,
+    );
+  }
+
+  let decisionRequired = "No action required from this panel.";
+  if (!publicationPermitted && unverified > 0) {
+    decisionRequired =
+      "Correct unverified claims, then run Prepare for Review again.";
+  } else if (!publicationPermitted && canApproveWorkflow) {
+    decisionRequired =
+      "You may approve for the editorial workflow, but schedule/publish stays blocked until the research recommendation is publish-ready.";
+  } else if (publicationPermitted && articleStatus === "review-required") {
+    decisionRequired =
+      "Research looks publish-ready. Approve, then schedule or publish through the governed actions.";
+  } else if (publicationPermitted && articleStatus === "approved") {
+    decisionRequired = "Article is approved. Schedule or publish when ready.";
+  }
+
+  return (
+    <div data-editorial-decision-board="true" style={card}>
+      <h3>Editorial decision</h3>
+      <p style={{ marginTop: 0 }}>
+        Plain-language status for Create → Research → Verify → Review → Approve
+        → Schedule/Publish.
+      </p>
+      <ul style={{ lineHeight: 1.6, paddingLeft: "20px" }}>
+        <li>
+          <strong>Verified:</strong> {verified} claim
+          {verified === 1 ? "" : "s"} independently corroborated
+        </li>
+        <li>
+          <strong>Needs corroboration:</strong> {partial} claim
+          {partial === 1 ? "" : "s"} supported by one publisher only
+        </li>
+        <li>
+          <strong>Needs correction:</strong> {unverified} unverified claim
+          {unverified === 1 ? "" : "s"}
+        </li>
+        <li>
+          <strong>Decision required:</strong> {decisionRequired}
+        </li>
+        <li>
+          <strong>Publication permitted:</strong>{" "}
+          {publicationPermitted
+            ? "Yes — research gate is publish-ready."
+            : "No — research gate is not publish-ready."}
+        </li>
+        <li>
+          <strong>Research recommendation:</strong> {recommendation}
+        </li>
+      </ul>
+      {blockers.length > 0 && (
+        <div style={{ marginTop: "12px" }}>
+          <strong>Why publication is blocked</strong>
+          <ul style={{ lineHeight: 1.6, paddingLeft: "20px" }}>
+            {blockers.map((blocker) => (
+              <li key={blocker}>{blocker}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ClaimDecisionList({ facts }: { facts: unknown }) {
+  const rows = asFactRows(facts);
+  if (rows.length === 0) return null;
+  return (
+    <div data-claim-decision-list="true" style={card}>
+      <h3>Claims under review</h3>
+      <ol style={{ paddingLeft: "20px", lineHeight: 1.55 }}>
+        {rows.map((fact, index) => {
+          const status = fact.verificationStatus ?? "unknown";
+          const label =
+            status === "verified"
+              ? "Verified"
+              : status === "partially verified"
+                ? "Needs corroboration"
+                : status === "unverified"
+                  ? "Needs correction"
+                  : status;
+          return (
+            <li
+              key={`${index}-${fact.claim?.slice(0, 40) ?? "claim"}`}
+              style={{ marginBottom: "10px" }}
+            >
+              <div>
+                <strong>{label}</strong>
+                {typeof fact.verificationScore === "number"
+                  ? ` · score ${fact.verificationScore}`
+                  : ""}
+                {fact.verificationMethod
+                  ? ` · ${fact.verificationMethod}`
+                  : ""}
+              </div>
+              <div>{fact.claim ?? "(claim text unavailable)"}</div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
 }
 
 function Metric({
