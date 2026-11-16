@@ -14,6 +14,7 @@ import { recommendationWithEvidenceCompleteness } from "./evidence-completeness"
 import { extractArticleSourceLinks } from "./article-source-links";
 import { groundedFactVerification } from "./claim-evidence-matcher";
 import { consensusEngine } from "./consensus-engine";
+import { ADOPTED_AUDIT_SPECIFICATION_VERSION } from "./audit-specification-compatibility";
 import { resolveArticleAuditState } from "./current-article-audit";
 import {
   collectBoundedBatchEvidence,
@@ -132,6 +133,7 @@ export type PrepareForReviewArticle = {
     id: string;
     articleId: string;
     createdAt: Date | string;
+    specificationVersion?: string | null;
   }[];
   reviewNotes: {
     action: string;
@@ -345,14 +347,23 @@ export async function prepareArticleForReview(
     sources.map((source) => source.url),
   );
 
-  if (resolveArticleAuditState(article).currentAudit) {
-    return {
-      ok: false,
-      code: "duplicate_audit",
-      error:
-        "A research audit already exists for this content revision. Duplicate audit records are not created.",
-      articleUnchanged: true,
-    };
+  {
+    const { currentAudit } = resolveArticleAuditState(article);
+    // EV-REG-SPEC-1.1.0: allow one re-Prepare when the current audit is on an
+    // older specification so the article can adopt the amended gate without a
+    // content rewrite. Same adopted version remains duplicate-blocked.
+    if (
+      currentAudit &&
+      currentAudit.specificationVersion === ADOPTED_AUDIT_SPECIFICATION_VERSION
+    ) {
+      return {
+        ok: false,
+        code: "duplicate_audit",
+        error:
+          "A research audit already exists for this content revision. Duplicate audit records are not created.",
+        articleUnchanged: true,
+      };
+    }
   }
 
   if (sources.length === 0) {
@@ -581,8 +592,16 @@ export async function prepareArticleForReview(
         throw new ArticleChangedDuringAuditError();
       }
 
-      if (resolveArticleAuditState(lockedArticle).currentAudit) {
-        throw new DuplicateAuditError();
+      {
+        const { currentAudit: lockedCurrent } =
+          resolveArticleAuditState(lockedArticle);
+        if (
+          lockedCurrent &&
+          lockedCurrent.specificationVersion ===
+            ADOPTED_AUDIT_SPECIFICATION_VERSION
+        ) {
+          throw new DuplicateAuditError();
+        }
       }
 
       const audit = (await tx.articleResearchAudit.create({

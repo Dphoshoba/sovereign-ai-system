@@ -39,6 +39,8 @@ export type AssociatedAudit = {
   id: string;
   articleId: string;
   createdAt: Date | string;
+  /** Present on versioned audits; used to allow spec-upgrade re-Prepare. */
+  specificationVersion?: string | null;
 };
 
 function isExactIsoTimestamp(value: unknown): value is string {
