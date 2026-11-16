@@ -4,6 +4,7 @@ import {
 } from "./publication-guard";
 import { resolveArticleAuditState } from "../research/current-article-audit";
 import { computeArticleAuditFingerprint } from "../research/article-audit-fingerprint";
+import { parseArticleAuditAssociation } from "../research/article-audit-association";
 import {
   collectEffectiveAuditedChanges,
   serializeCorrectionGovernanceNote,
@@ -63,7 +64,13 @@ export type LifecycleArticle = {
     createdAt: Date | string;
     consensusScore?: number | null;
     sourceQualityScore?: number | null;
+    averageVerificationScore?: number | null;
+    unverifiedCount?: number | null;
     publicationRecommendation?: string | null;
+    specificationVersion?: string | null;
+    disputes?: unknown;
+    facts?: unknown;
+    engineRevision?: string;
   }>;
   reviewNotes: Array<{ action: string; note: string | null }>;
 };
@@ -321,7 +328,14 @@ export async function transitionArticleLifecycle(
     }
 
     if (input.transition === "schedule" || input.transition === "publish") {
-      const researchBlock = researchPublicationBlockReason(currentAudit);
+      const association = article.reviewNotes
+        .map(parseArticleAuditAssociation)
+        .find((row) => row && row.auditId === currentAudit.id);
+      const researchBlock = researchPublicationBlockReason({
+        ...currentAudit,
+        engineRevision:
+          currentAudit.engineRevision ?? association?.engineRevision,
+      });
       if (researchBlock) {
         return failure("research_not_publishable", researchBlock);
       }

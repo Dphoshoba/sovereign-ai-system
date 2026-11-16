@@ -1,10 +1,11 @@
 # EV-REG Amendment Proposal — Authoritative Primary-Source Publication Pathway
 
-**Status:** DRAFT — awaiting Director approval of terms
+**Status:** APPROVED — Director Option A with §3.4 redline (2026-11-16); implemented as `EV-REG-SPEC-1.1.0`
 **Date:** 2026-11-16
 **Triggered by:** Mission 004 + Director publication authorisation for article `cmqrvyx860000ycun5wo9ny8c`
-**Governing baseline:** `docs/governance/EV-REG-SPEC-1.0.0.md` (certified)
-**Supersedes:** nothing (proposal only; EV-REG-SPEC-1.0.0 remains in force)
+**Governing baseline:** `docs/governance/EV-REG-SPEC-1.0.0.md` (certified; immutable)
+**Adopted amendment:** `docs/governance/EV-REG-SPEC-1.1.0.md`
+**Supersedes:** 1.0.0 publication effect for primary-source claims **only on 1.1.0 audits** after implementing release verification
 **Linked from:** `progress.md` (Mission 004 addendum / publication decision boundary)
 **User instruction (verbatim excerpt):** "If the certified contract requires two independent publishers without exception, do not bypass that requirement. Instead, prepare a specific governance amendment for Director approval..." / "Do not deploy a governance amendment without explicit approval of its terms." / "If a new governance decision is required, stop at that decision boundary and present the exact issue rather than starting another engineering mission."
 **This document does not change Production behaviour until separately approved and implemented.**
@@ -104,11 +105,26 @@ Rules:
 
 ### 3.4 How evidence and exceptions are audited
 
+**Director redline (approved 2026-11-16):**
+
+For claims eligible under the authoritative primary-source pathway, publication eligibility must be determined by complete primary-document support, claim classification and valid editorial confirmation.
+
+The verifier must retain and report the original consensus, source-quality and verification scores without alteration.
+
+Numerical thresholds designed to measure independent corroboration must not independently disqualify a properly confirmed primary-source claim merely because a second publisher is absent.
+
+For claims requiring independent corroboration, retain the existing certified thresholds.
+
+For articles containing both claim categories, every factual claim must independently satisfy its applicable pathway. Any unsupported, disputed or unconfirmed factual claim blocks publication.
+
+Operational rules:
+
 1. Prepare continues to produce machine states under EV-REG (unsupported / partial / primary-source supported / independently corroborated / disputed).
-2. `publish-ready` under the amended gate requires:
-   - consensus ≥ 80, source quality ≥ 70, average verification ≥ 80 (or a Director-approved alternative threshold stated in the approval),
-   - zero unsupported / disputed claims,
+2. `publish-ready` under EV-REG-SPEC-1.1.0 requires:
+   - source quality ≥ 70,
+   - zero unsupported / disputed / ordinary-partial / unconfirmed primary-source claims,
    - every scored claim either independently corroborated **or** primary-source supported with a valid confirmation record,
+   - when any claim uses the independent pathway: consensus ≥ 80 and average verification ≥ 80,
    - current revision-matched audit,
    - separate article-level Approve after that audit.
 3. The publication guard must fail closed if confirmation metadata is missing, malformed, or bound to a different audit/claim text.

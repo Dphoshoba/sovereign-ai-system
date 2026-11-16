@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { publicationGuard, researchPublicationBlockReason } from "../../lib/publishing/publication-guard";
-import { ADOPTED_AUDIT_SPECIFICATION_VERSION } from "../../lib/research/audit-specification-compatibility";
+import { EV_REG_SPEC_1_0_0 } from "../../lib/research/audit-specification-compatibility";
 import { VERSIONED_RESEARCH_AUDIT_ENGINE_REVISION } from "../../lib/research/research-audit-engine-revision";
 import {
   isVersionedEditorialVerifierEnabled,
@@ -32,7 +32,7 @@ const favourable = {
 
 const versioned = {
   ...favourable,
-  specificationVersion: ADOPTED_AUDIT_SPECIFICATION_VERSION,
+  specificationVersion: EV_REG_SPEC_1_0_0,
   disputes: [] as Array<Record<string, unknown>>,
   engineRevision: VERSIONED_RESEARCH_AUDIT_ENGINE_REVISION,
   averageVerificationScore: 90,

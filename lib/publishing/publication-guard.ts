@@ -4,6 +4,10 @@ import {
   PUBLISH_READY_SOURCE_QUALITY_SCORE,
 } from "../research/consensus-engine"
 import { qualifyingPublicationSourceIdentity } from "../research/claim-source-attribution"
+import {
+  evaluateEvReg11PublicationEligibility,
+  isEvReg110Audit,
+} from "../research/primary-source-publication"
 import { versionedPublicationMetadataProblem } from "../research/versioned-publication"
 
 export type ArticlePublishStatus =
@@ -21,6 +25,7 @@ export type PublicationGuardResult = {
 }
 
 export type ResearchPublishabilityAudit = {
+  id?: unknown
   consensusScore?: unknown
   sourceQualityScore?: unknown
   publicationRecommendation?: unknown
@@ -104,6 +109,23 @@ export function researchPublicationBlockReason(
 
   const versionedProblem = versionedPublicationMetadataProblem(audit)
   if (versionedProblem) return versionedProblem
+
+  // EV-REG-SPEC-1.1.0: pathway eligibility with Director §3.4 redline.
+  if (isEvReg110Audit(audit.specificationVersion)) {
+    if (audit.publicationRecommendation !== PUBLISH_READY_RECOMMENDATION) {
+      return "Current research audit is not publish-ready."
+    }
+    const eligibility = evaluateEvReg11PublicationEligibility({
+      auditId: typeof audit.id === "string" ? audit.id : null,
+      specificationVersion: audit.specificationVersion,
+      consensusScore: audit.consensusScore,
+      sourceQualityScore: audit.sourceQualityScore,
+      averageVerificationScore: audit.averageVerificationScore,
+      publicationRecommendation: audit.publicationRecommendation,
+      facts: audit.facts,
+    })
+    return eligibility.ready ? null : eligibility.reason
+  }
 
   const consensusReady =
     isFiniteScore(audit.consensusScore) &&

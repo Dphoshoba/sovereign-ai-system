@@ -152,6 +152,7 @@ export function versionedFactVerification(
       verificationCount: versioned.verificationCount,
       verificationStatus: versioned.verificationStatus,
       verificationMethod,
+      evidenceState: versioned.evidenceState,
       supportingSources: supporting.map((evidence) => ({
         sourceTitle: evidence.sourceTitle,
         sourceUrl: evidence.sourceUrl,

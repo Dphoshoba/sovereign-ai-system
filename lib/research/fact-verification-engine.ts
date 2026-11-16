@@ -38,6 +38,22 @@ export type VerifiedFact = ExtractedFact & {
   }[]
   verificationScore: number
   matchDiagnostics?: ClaimMatchDiagnostic[]
+  /** Persisted by versioned Prepare for EV-REG-SPEC-1.1.0 eligibility. */
+  evidenceState?:
+    | "unsupported"
+    | "partially supported"
+    | "primary-source supported"
+    | "independently corroborated"
+    | "disputed"
+  primarySourceConfirmation?: {
+    claimChecksum: string
+    decision: "confirmed" | "declined"
+    decidedBy: string
+    decidedAt: string
+    primarySourceUrl: string
+    rationale: string
+    auditId: string
+  }
 }
 
 export type FactVerificationEngineResult = {

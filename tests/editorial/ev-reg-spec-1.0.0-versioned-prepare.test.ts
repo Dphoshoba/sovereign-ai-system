@@ -69,7 +69,7 @@ describe("versioned Prepare for Review verification", () => {
         engineRevision: VERSIONED_RESEARCH_AUDIT_ENGINE_REVISION,
         averageVerificationScore: 90,
       }),
-    ).toContain("Human review is required");
+    ).toMatch(/Human review is required|confirmation/i);
   });
 
   it("requires two independent works for corroboration and keeps zeros in the average", () => {

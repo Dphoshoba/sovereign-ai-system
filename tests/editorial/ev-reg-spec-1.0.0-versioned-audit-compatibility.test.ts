@@ -11,6 +11,7 @@ import {
 } from "../../lib/research/article-audit-association";
 import {
   ADOPTED_AUDIT_SPECIFICATION_VERSION,
+  EV_REG_SPEC_1_0_0,
   auditSpecificationSemantics,
   versionedDisputeMetadataProblem,
 } from "../../lib/research/audit-specification-compatibility";
@@ -158,7 +159,7 @@ describe("versioned audit compatibility", () => {
     expect(PUBLISH_READY_SOURCE_QUALITY_SCORE).toBe(70);
     const primarySource = {
       ...favourable,
-      specificationVersion: ADOPTED_AUDIT_SPECIFICATION_VERSION,
+      specificationVersion: EV_REG_SPEC_1_0_0,
       disputes: [],
       engineRevision: VERSIONED_RESEARCH_AUDIT_ENGINE_REVISION,
       averageVerificationScore: 90,
@@ -191,7 +192,7 @@ describe("versioned audit compatibility", () => {
     })).toBeNull();
     expect(researchPublicationBlockReason({
       ...favourable,
-      specificationVersion: ADOPTED_AUDIT_SPECIFICATION_VERSION,
+      specificationVersion: EV_REG_SPEC_1_0_0,
       facts: [
         {
           claim: "Two independent works support the statement.",

@@ -1,5 +1,11 @@
-import { ADOPTED_AUDIT_SPECIFICATION_VERSION } from "./audit-specification-compatibility";
+import {
+  isRecognizedVersionedSpecification,
+} from "./audit-specification-compatibility";
 import { PUBLISH_READY_CONSENSUS_SCORE } from "./consensus-engine";
+import {
+  evaluateEvReg11PublicationEligibility,
+  isEvReg110Audit,
+} from "./primary-source-publication";
 import {
   CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
   VERSIONED_RESEARCH_AUDIT_ENGINE_REVISION,
@@ -35,13 +41,18 @@ export function versionedAverageVerificationScore(scores: number[]): number | nu
 }
 
 export function versionedPublicationMetadataProblem(audit: {
+  id?: unknown;
   specificationVersion?: unknown;
   disputes?: unknown;
   averageVerificationScore?: unknown;
   engineRevision?: unknown;
+  consensusScore?: unknown;
+  sourceQualityScore?: unknown;
+  publicationRecommendation?: unknown;
+  facts?: unknown;
 } | null | undefined): string | null {
   if (!audit || audit.specificationVersion == null) return null;
-  if (audit.specificationVersion !== ADOPTED_AUDIT_SPECIFICATION_VERSION) {
+  if (!isRecognizedVersionedSpecification(audit.specificationVersion)) {
     return "Versioned audit specification is not the adopted contract.";
   }
   if (!Array.isArray(audit.disputes)) {
@@ -61,10 +72,29 @@ export function versionedPublicationMetadataProblem(audit: {
   if (audit.engineRevision !== VERSIONED_RESEARCH_AUDIT_ENGINE_REVISION) {
     return "Versioned audit engine revision is missing.";
   }
-  if (
-    typeof audit.averageVerificationScore !== "number" ||
-    audit.averageVerificationScore < PUBLISH_READY_CONSENSUS_SCORE
-  ) {
+  if (typeof audit.averageVerificationScore !== "number") {
+    return "Versioned audit average verification is below the publication threshold.";
+  }
+  // EV-REG-SPEC-1.1.0: independence thresholds must not disqualify confirmed
+  // primary-source-only articles. Defer numeric independence checks to the
+  // primary-source eligibility evaluator when recommendation is publish-ready.
+  if (isEvReg110Audit(audit.specificationVersion)) {
+    if (audit.publicationRecommendation === "publish-ready") {
+      const eligibility = evaluateEvReg11PublicationEligibility({
+        auditId: typeof audit.id === "string" ? audit.id : null,
+        specificationVersion: audit.specificationVersion,
+        consensusScore: audit.consensusScore,
+        sourceQualityScore: audit.sourceQualityScore,
+        averageVerificationScore: audit.averageVerificationScore,
+        publicationRecommendation: audit.publicationRecommendation,
+        facts: audit.facts,
+      });
+      if (!eligibility.ready) return eligibility.reason;
+      return null;
+    }
+    return null;
+  }
+  if (audit.averageVerificationScore < PUBLISH_READY_CONSENSUS_SCORE) {
     return "Versioned audit average verification is below the publication threshold.";
   }
   return null;

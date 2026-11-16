@@ -1,4 +1,5 @@
 import { PrepareForReviewButton } from "./PrepareForReviewButton";
+import { ConfirmPrimarySourceButton } from "./ConfirmPrimarySourceButton";
 import { isResearchAuditFingerprintNote } from "../../../lib/research/article-audit-association";
 
 export type AuditPanelArticle = {
@@ -28,6 +29,7 @@ export type AuditPanelArticle = {
     verifiedCount?: number | null;
     partiallyVerifiedCount?: number | null;
     unverifiedCount?: number | null;
+    specificationVersion?: string | null;
     sources?: unknown;
     evidence?: unknown;
     facts?: unknown;
@@ -201,7 +203,12 @@ export function ArticleAuditPanel({
             articleStatus={article.status}
             audit={currentAudit}
           />
-          <ClaimDecisionList facts={currentAudit.facts} />
+          <ClaimDecisionList
+            articleId={article.id}
+            auditId={currentAudit.id}
+            specificationVersion={currentAudit.specificationVersion}
+            facts={currentAudit.facts}
+          />
           <JsonCard title="Sources Used" data={currentAudit.sources} />
           <JsonCard title="Evidence Used" data={currentAudit.evidence} />
           <JsonCard title="Facts Extracted" data={currentAudit.facts} />
@@ -295,6 +302,10 @@ type AuditFactRow = {
   verificationStatus?: string;
   verificationScore?: number;
   verificationMethod?: string;
+  evidenceState?: string;
+  primarySourceConfirmation?: {
+    decision?: string;
+  };
   matchDiagnostics?: unknown;
 };
 
@@ -408,23 +419,42 @@ function EditorialDecisionBoard({
   );
 }
 
-function ClaimDecisionList({ facts }: { facts: unknown }) {
+function ClaimDecisionList({
+  articleId,
+  auditId,
+  specificationVersion,
+  facts,
+}: {
+  articleId: string;
+  auditId: string;
+  specificationVersion?: string | null;
+  facts: unknown;
+}) {
   const rows = asFactRows(facts);
   if (rows.length === 0) return null;
+  const is110 = specificationVersion === "EV-REG-SPEC-1.1.0";
   return (
     <div data-claim-decision-list="true" style={card}>
       <h3>Claims under review</h3>
       <ol style={{ paddingLeft: "20px", lineHeight: 1.55 }}>
         {rows.map((fact, index) => {
           const status = fact.verificationStatus ?? "unknown";
+          const primary =
+            fact.evidenceState === "primary-source supported";
+          const confirmed =
+            fact.primarySourceConfirmation?.decision === "confirmed";
           const label =
             status === "verified"
               ? "Verified"
-              : status === "partially verified"
-                ? "Needs corroboration"
-                : status === "unverified"
-                  ? "Needs correction"
-                  : status;
+              : primary && confirmed
+                ? "Primary-source confirmed"
+                : primary
+                  ? "Needs primary-source confirmation"
+                  : status === "partially verified"
+                    ? "Needs corroboration"
+                    : status === "unverified"
+                      ? "Needs correction"
+                      : status;
           return (
             <li
               key={`${index}-${fact.claim?.slice(0, 40) ?? "claim"}`}
@@ -435,11 +465,20 @@ function ClaimDecisionList({ facts }: { facts: unknown }) {
                 {typeof fact.verificationScore === "number"
                   ? ` · score ${fact.verificationScore}`
                   : ""}
-                {fact.verificationMethod
-                  ? ` · ${fact.verificationMethod}`
-                  : ""}
+                {fact.evidenceState
+                  ? ` · ${fact.evidenceState}`
+                  : fact.verificationMethod
+                    ? ` · ${fact.verificationMethod}`
+                    : ""}
               </div>
               <div>{fact.claim ?? "(claim text unavailable)"}</div>
+              {is110 && primary && !confirmed && typeof fact.claim === "string" ? (
+                <ConfirmPrimarySourceButton
+                  articleId={articleId}
+                  auditId={auditId}
+                  claim={fact.claim}
+                />
+              ) : null}
             </li>
           );
         })}
