@@ -236,7 +236,21 @@ export function splitMarkdownBlocks(
   for (const line of lines) {
     if (/^#{1,6}\s+/.test(line)) {
       flush();
-      const text = line.replace(/^#{1,6}\s+/, "").trim();
+      const raw = line.replace(/^#{1,6}\s+/, "").trim();
+      // Generators sometimes glue body prose onto the heading line. Keep a
+      // short heading label and treat the remainder as paragraph text so
+      // scripture claims remain auditable.
+      const glued = raw.match(
+        /^(.{3,120}?)(?:\s{2,}|\.\s+|:\s+)(?=[A-Z“"‘'(])/,
+      );
+      const text =
+        glued && /[.!?]/.test(raw.slice(glued[1].length))
+          ? glued[1].trim()
+          : raw.length > 160 && /[.!?]/.test(raw)
+            ? raw.slice(0, raw.indexOf(".") + 1).replace(/\s+/g, " ").trim()
+            : raw;
+      const remainder =
+        text !== raw ? raw.slice(text.length).replace(/^[\s.:–-]+/, "").trim() : "";
       currentHeading = text;
       blocks.push({
         section,
@@ -244,6 +258,10 @@ export function splitMarkdownBlocks(
         text,
         heading: text,
       });
+      if (remainder) {
+        currentType = "paragraph";
+        current.push(remainder);
+      }
       continue;
     }
     if (/^>\s?/.test(line)) {
@@ -334,11 +352,56 @@ function isAdviceFraming(sentence: string): boolean {
   return ADVICE_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
+/**
+ * True when the sentence is a checkable description or quotation of a cited
+ * biblical passage — not pastoral advice or meta-editorial framing.
+ */
+export function isScriptureTextualClaim(sentence: string): boolean {
+  if (
+    !/\b(?:genesis|exodus|leviticus|numbers|deuteronomy|joshua|judges|ruth|samuel|kings|psalms?|proverbs|isaiah|jeremiah|ezekiel|daniel|matthew|mark|luke|john|acts|romans|corinthians|galatians|ephesians|philippians|colossians|thessalonians|timothy|titus|philemon|hebrews|james|peter|jude|revelation)\b/i.test(
+      sentence,
+    )
+  ) {
+    return false;
+  }
+  if (
+    !/\b(?:[1-3]\s+)?[A-Za-z]+\s+\d{1,3}(?::\d{1,3}(?:\s*[–-]\s*\d{1,3})?)?\b/.test(
+      sentence,
+    )
+  ) {
+    return false;
+  }
+  if (
+    isAdviceFraming(sentence) ||
+    isPracticalInstruction(sentence) ||
+    isRecommendation(sentence)
+  ) {
+    return false;
+  }
+  if (isHardAuthorialFraming(sentence)) return false;
+  if (
+    /\b(christians? today|practical (?:guidance|application|examples?|steps?)|for believers today|do it now)\b/i.test(
+      sentence,
+    ) &&
+    !/[“"‘'].+[”"'’]/.test(sentence)
+  ) {
+    return false;
+  }
+  return (
+    /[“"‘'].+[”"'’]/.test(sentence) ||
+    /\b(warns|says|said|states|records|describes|answers|orders|accuses|delivers?|tells?|shows?|intensified|increased|permits?|offers?|refuses?)\b/i.test(
+      sentence,
+    ) ||
+    /\baccording to\b/i.test(sentence)
+  );
+}
+
 export function isExternallyVerifiableClaim(sentence: string): boolean {
   if (isChromePassage(sentence)) return false;
   if (isHardAuthorialFraming(sentence)) return false;
   if (hasPublisherAttribution(sentence)) return true;
   if (isAdviceFraming(sentence)) return false;
+  if (isScriptureTextualClaim(sentence)) return true;
   return FACTUAL_SIGNAL.test(sentence);
 }
 

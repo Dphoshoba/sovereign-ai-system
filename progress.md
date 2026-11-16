@@ -2,12 +2,12 @@
 
 **Worktree:** `C:\Users\David\echoes-visions-preview-security`
 **Branch:** `integrate/production-research-integrity`
-**HEAD:** `5dc0151ae3c370879ec4411125992f43dfca405c`
-**Updated:** 2026-11-16 (Mission 005R autonomous editorial recovery — local repair ready for governed release)
+**HEAD:** `d5ed6e983118ebc721441c530bb6b4cc696c57ca` (+ local Mission 006R uncommitted)
+**Updated:** 2026-11-17 (Mission 006R scripture editorial reliability — local fix ready for governed release)
 
 ## Operating contract
 
-Mission 004 accepted. Mission 005 Director decision: **REQUEST CHANGES** for `cmwj5wal7000008juka6kjr35` (kept `review-required`; no approve/schedule/publish). Mission 005R repaired Prepare recovery + article-grounded generation locally. No commit/push/deploy/Production Prepare without separate authorisation. Space discoveries remains ON HOLD.
+Mission 005R Production release complete (`dpl_EMYTUsKCeCxUMDsQiXBy7K9A5HxG` @ `5fbdfd05`). Mission 006 Director decision: **REQUEST CHANGES** on `cmwjb1tld000u07jp2rz3ydrm` (preserved in Production; no approve/schedule/publish). Mission 006R repaired bible-stories subject-preserving research + scripture claim auditability locally. No deploy / Production regenerate without separate authorisation. Space discoveries remains ON HOLD.
 
 ## EV-REG-SPEC-1.1.0 release
 
@@ -88,7 +88,31 @@ Decision board instructs “Correct unverified claims, then run Prepare for Revi
 | Live Mission 005 article | Not modified |
 | Tests | 107 editorial files / 1,155 tests passing; tsc clean; `npm run build` exit 0 |
 | Release readiness re-verify | Focused 61 + full editorial 1,155; tsc 0; build 0 (2026-11-16 readiness pass) |
+| Release | **Deployed** — `5fbdfd05` → `dpl_EMYTUsKCeCxUMDsQiXBy7K9A5HxG` (Ready); prior Ready rollback `dpl_5cmzX5e1FtKeeDwwSKegZ9bxCuc7` |
+| Commit scope | Prepare UI/API + generate-article grounding + tests + progress.md; excluded `gamma/research/index.json` and `scripts/final-exec-*.cjs` |
+| Production baseline | `dpl_EMYTUsKCeCxUMDsQiXBy7K9A5HxG` @ `5fbdfd05…`; health ok; versioned verifier on; engine `article-grounded-ev-reg-1` |
+| Rollback | Re-alias to `dpl_5cmzX5e1FtKeeDwwSKegZ9bxCuc7` — does not reverse DB writes |
+
+## Mission 006 — Director biblical publishing (Production)
+
+| Field | Value |
+|---|---|
+| Director decision | **REQUEST CHANGES** |
+| Canonical article | `cmwjb1tld000u07jp2rz3ydrm` — Pharaoh's Counterplans: 5 Devilish Tactics That Keep Believers Bound |
+| Status | `review-required` (preserved; not approved/published) |
+| Audit | `EV-REG-SPEC-1.1.0` recorded; recommendation `review-required`; factCount 0 |
+| Prepare | Blocked — `insufficient_article_evidence` |
+| Root causes recorded | (A) bible-stories fallback hard-coded to 1 Samuel 17; (B) scripture narrative/quotations classified non-auditable / primary-scripture limited to 1 Samuel 17 |
+| Production mutations after decision | None |
+
+## Mission 006R — Scripture editorial reliability (local)
+
+| Field | Value |
+|---|---|
+| Defect A fix | `scripture-ref.ts` + `fallback-source-provider.ts` + `source-collector.ts` — topic-derived BibleGateway/BibleHub sources; empty = safe failure; never silent D&G substitution |
+| Defect B fix | `isScriptureTextualClaim` + generalized primary-scripture claim/source binding + verse locator; glued-heading split so body prose remains auditable; pastoral advice stays authorial |
+| Governance | Compatible with EV-REG-SPEC-1.1.0 primary-source pathway; **no amendment required**; thresholds unchanged; `insufficient_article_evidence` retained |
+| Tests | Focused Mission 006R + Article-3 identity/coverage green; full editorial **108 files / 1,162 tests** pass; `tsc --noEmit` 0; `npm run build` 0 |
+| Production article | Not regenerated; evidence article preserved |
 | Release | **Not deployed** — awaiting Director governed-release authorisation |
-| Commit scope (candidate) | Prepare UI/API + generate-article grounding + tests + progress.md; exclude `gamma/research/index.json` and `scripts/final-exec-*.cjs` |
-| Production baseline | `dpl_5cmzX5e1FtKeeDwwSKegZ9bxCuc7` @ `5dc0151a…`; health ok; versioned verifier on |
-| Rollback | Re-alias to `dpl_5cmzX5e1FtKeeDwwSKegZ9bxCuc7` (or prior Ready pin) — does not reverse DB writes |
+| Commit scope (candidate) | scripture-ref + fallback/collector + claim extractor/attribution + verse locator + mission-006r tests + progress.md; exclude generated artefacts / secrets |

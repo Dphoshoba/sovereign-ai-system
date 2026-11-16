@@ -1,4 +1,11 @@
 import { canonicalizeSourceUrl } from "./article-audit-fingerprint";
+import {
+  hasScriptureCitation,
+  isScriptureHostUrl,
+  primaryCitationFromClaim,
+  scriptureDocumentKey,
+  sourceMatchesScriptureRef,
+} from "./scripture-ref";
 
 export const ATTRIBUTED_PUBLISHERS = [
   "nist",
@@ -156,6 +163,10 @@ const PRIMARY_SCRIPTURE_CLAIM_PATTERNS = [
   /\baccording to\s+1\s+samuel\s+17\b/i,
   /\bthe narrative in\s+1\s+samuel\s+17\b/i,
   /\b1\s+samuel\s+17\s+(states|describes|says|records)\b/i,
+  // General primary-scripture framing for any cited biblical book/chapter.
+  /\baccording to\s+(?:[1-3]\s+)?[a-z]+(?:\s+[a-z]+)?\s+\d+/i,
+  /\bthe (?:narrative|passage|account|text) in\s+(?:[1-3]\s+)?[a-z]+(?:\s+[a-z]+)?\s+\d+/i,
+  /\b(?:[1-3]\s+)?[a-z]+(?:\s+[a-z]+)?\s+\d+(?::\d+(?:\s*[–-]\s*\d+)?)?\s+(states|describes|says|records)\b/i,
 ];
 
 const SAMUEL_GUIDE_CLAIM_PATTERNS = [
@@ -219,7 +230,23 @@ function sourceIdentityText(source: AttributableSource): string {
 }
 
 export function isPrimaryScriptureClaim(claim: string): boolean {
-  return PRIMARY_SCRIPTURE_CLAIM_PATTERNS.some((pattern) => pattern.test(claim));
+  // Secondary named documents (e.g. Samuel guide) must not be treated as
+  // primary scripture even when they mention book names.
+  if (namedSecondaryDocuments(claim).length > 0) return false;
+  if (PRIMARY_SCRIPTURE_CLAIM_PATTERNS.some((pattern) => pattern.test(claim))) {
+    return true;
+  }
+  // Direct quotation or narrative description bound to an explicit citation.
+  if (!hasScriptureCitation(claim)) return false;
+  if (
+    /[“"‘'].+[”"'’]/.test(claim) ||
+    /\b(warns|says|said|states|records|describes|answers|orders|accuses|delivers?)\b/i.test(
+      claim,
+    )
+  ) {
+    return true;
+  }
+  return false;
 }
 
 export function namedSecondaryDocuments(claim: string): NamedSecondaryDocument[] {
@@ -245,7 +272,19 @@ export function isPrimaryScriptureSource(source: AttributableSource): boolean {
     /search=1(%20|\+| )samuel(%20|\+| )17/i.test(url);
   const isBibleGateway =
     /biblegateway\.com/i.test(url) || /\bbiblegateway\b/i.test(identity);
-  return hasSamuel17 && isBibleGateway;
+  if (hasSamuel17 && isBibleGateway) return true;
+  // Any scripture-host passage URL is eligible as a primary scripture source;
+  // claim binding narrows to the cited book/chapter when a claim is supplied.
+  return isScriptureHostUrl(source.url);
+}
+
+export function isPrimaryScriptureSourceForClaim(
+  source: AttributableSource,
+  claim: string,
+): boolean {
+  const citation = primaryCitationFromClaim(claim);
+  if (!citation) return isPrimaryScriptureSource(source);
+  return sourceMatchesScriptureRef(source.url, source.title, citation);
 }
 
 export function isBibleProjectSource(source: AttributableSource): boolean {
@@ -433,10 +472,15 @@ export function resolveClaimSourceBinding(
   const namedDocs = namedSecondaryDocuments(claim);
 
   if (isPrimaryScriptureClaim(claim) && !multiSource) {
+    const citation = primaryCitationFromClaim(claim);
     return {
       role: "primary-scripture",
-      exclusiveUrl: resolveExclusiveUrl(listedSources, isPrimaryScriptureSource),
-      exclusiveDocumentKey: "1-samuel-17",
+      exclusiveUrl: resolveExclusiveUrl(listedSources, (source) =>
+        isPrimaryScriptureSourceForClaim(source, claim),
+      ),
+      exclusiveDocumentKey: citation
+        ? scriptureDocumentKey(citation)
+        : "1-samuel-17",
       isMultiSource: false,
     };
   }

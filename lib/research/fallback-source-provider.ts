@@ -1,4 +1,5 @@
 import type { SourceRecord } from "./source-collector"
+import { scriptureSourcesFromTopic } from "./scripture-ref"
 
 const AI_SOURCES: SourceRecord[] = [
   { title: "OpenAI", url: "https://openai.com", sourceType: "authority", relevanceScore: 90 },
@@ -8,33 +9,6 @@ const AI_SOURCES: SourceRecord[] = [
   { title: "Stanford HAI", url: "https://hai.stanford.edu", sourceType: "academic", relevanceScore: 82 },
   { title: "NIST AI", url: "https://www.nist.gov/artificial-intelligence", sourceType: "government", relevanceScore: 78 },
 ]
-
-const BIBLE_SOURCES: SourceRecord[] = [
-    {
-      title: "BibleGateway 1 Samuel 17",
-      url: "https://www.biblegateway.com/passage/?search=1%20Samuel%2017&version=KJV",
-      sourceType: "scripture-reference",
-      relevanceScore: 95,
-    },
-    {
-      title: "Bible Hub 1 Samuel 17",
-      url: "https://biblehub.com/1_samuel/17.htm",
-      sourceType: "scripture-reference",
-      relevanceScore: 92,
-    },
-    {
-      title: "Blue Letter Bible 1 Samuel 17",
-      url: "https://www.blueletterbible.org/kjv/1sa/17/1/s_253001",
-      sourceType: "scripture-reference",
-      relevanceScore: 90,
-    },
-    {
-      title: "King James Bible Online 1 Samuel 17",
-      url: "https://www.kingjamesbibleonline.org/1-Samuel-Chapter-17/",
-      sourceType: "scripture-reference",
-      relevanceScore: 88,
-    },
-  ]
 
 const HISTORY_SOURCES: SourceRecord[] = [
   { title: "Britannica", url: "https://www.britannica.com", sourceType: "encyclopedia", relevanceScore: 90 },
@@ -60,13 +34,20 @@ const MOTIVATION_SOURCES: SourceRecord[] = [
   { title: "Greater Good Science Center", url: "https://greatergood.berkeley.edu", sourceType: "wellbeing-research", relevanceScore: 84 },
 ]
 
+/**
+ * Category fallback when search returns nothing.
+ * Bible-stories: derive passages from the topic, or return [] (safe failure).
+ * Never substitutes an unrelated hard-coded biblical story.
+ */
 export function fallbackSources(
   topic: string,
   category = "ai-tools"
 ): SourceRecord[] {
   const normalizedCategory = category.toLowerCase()
 
-  if (normalizedCategory.includes("bible")) return BIBLE_SOURCES
+  if (normalizedCategory.includes("bible")) {
+    return scriptureSourcesFromTopic(topic)
+  }
   if (normalizedCategory.includes("history")) return HISTORY_SOURCES
   if (normalizedCategory.includes("health")) return HEALTH_SOURCES
   if (normalizedCategory.includes("space")) return SPACE_SOURCES

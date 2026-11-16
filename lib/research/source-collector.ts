@@ -1,5 +1,6 @@
 import { searchAdapter } from "./search-adapter"
 import { fallbackSources } from "./fallback-source-provider"
+import { scriptureSourcesFromTopic } from "./scripture-ref"
 
 export type SourceRecord = {
   title: string
@@ -115,9 +116,20 @@ export async function sourceCollector(
   category = "ai-tools"
 ): Promise<SourceCollectionResult> {
   const searchResults = await searchAdapter(topic)
+  const bibleCategory = category.toLowerCase().includes("bible")
+  const topicScripture = bibleCategory ? scriptureSourcesFromTopic(topic) : []
 
-  const searchedSources =
-    searchResults.length > 0 ? searchResults : fallbackSources(topic, category)
+  // Bible topics: keep subject-preserving scripture sources first so empty or
+  // noisy search cannot silently substitute an unrelated biblical story.
+  const searchedSources = bibleCategory
+    ? topicScripture.length > 0
+      ? [...topicScripture, ...searchResults]
+      : searchResults.length > 0
+        ? searchResults
+        : fallbackSources(topic, category)
+    : searchResults.length > 0
+      ? searchResults
+      : fallbackSources(topic, category)
 
   const collectedSources = normalizeSources([
     ...manualSources,
