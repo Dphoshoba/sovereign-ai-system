@@ -127,6 +127,18 @@ function exclusivePrimary(claim: string, identities: string[]): boolean {
   if (/\bpower platform\b/i.test(claim) && identities[0] === "publisher:microsoft") return true;
   const named = versionedPublishersNamedInClaim(claim);
   if (named.length === 1 && !attributesSharedFact(claim)) return true;
+  // Vendor-doc claims ("Zapier's … guide…") stay exclusive to that vendor even
+  // when the documented product names another registry alias (e.g. ChatGPT/OpenAI).
+  const docOwner = claim.match(
+    /\b(zapier|microsoft|google|openai|nist|meta|intuit|xero)'?s\b/i,
+  );
+  if (
+    docOwner &&
+    identities[0] === `publisher:${docOwner[1].toLowerCase()}` &&
+    !attributesSharedFact(claim)
+  ) {
+    return true;
+  }
   return (
     named.length === 0 &&
     /\b(information sheet|official guidance|documentation)\b/i.test(claim)

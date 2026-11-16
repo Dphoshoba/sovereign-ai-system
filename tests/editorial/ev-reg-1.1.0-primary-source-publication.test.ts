@@ -183,6 +183,26 @@ describe("EV-REG-SPEC-1.1.0 primary-source publication", () => {
     ).toBe(true)
   })
 
+  it("classifies Zapier documentation claims as primary-source even when OpenAI is named", async () => {
+    const { evaluateVersionedClaim } = await import(
+      "../../lib/research/versioned-evidence"
+    )
+    const claim =
+      "Zapier's ChatGPT setup guide requires an OpenAI account with prepaid billing enabled."
+    const result = evaluateVersionedClaim({
+      claim,
+      passages: [
+        {
+          url: "https://help.zapier.com/hc/en-us/articles/14860148802829",
+          passage:
+            "Zapier's ChatGPT setup guide requires an OpenAI account with prepaid billing enabled.",
+          polarity: "supports",
+        },
+      ],
+    })
+    expect(result.evidenceState).toBe("primary-source supported")
+  })
+
   it("does not mutate reported scores when evaluating eligibility", () => {
     const facts = [
       primaryFact(
