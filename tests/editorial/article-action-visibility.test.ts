@@ -11,6 +11,10 @@ import { canShowApprovalActions } from "../../app/admin/articles/ArticleAuditPan
 import { canShowWithdrawForCorrection } from "../../app/admin/articles/WithdrawForCorrectionPanel";
 import { ARTICLE_3_TITLE } from "../fixtures/research-audit/article-3";
 import { CURRENT_RESEARCH_AUDIT_ENGINE_REVISION } from "../../lib/research/research-audit-engine-revision";
+import {
+  ADOPTED_AUDIT_SPECIFICATION_VERSION,
+  EV_REG_SPEC_1_0_0,
+} from "../../lib/research/audit-specification-compatibility";
 
 function read(relativePath: string): string {
   return readFileSync(join(process.cwd(), relativePath), "utf8");
@@ -42,10 +46,11 @@ describe("admin article action visibility", () => {
     expect(canShowScheduleAction(input)).toBe(false);
   });
 
-  it("shows Approve and hides Publish and Schedule when review-required has a current audit", () => {
+  it("shows Approve and hides Publish and Schedule when review-required has a current adopted audit", () => {
     const input = {
       status: "review-required",
       hasCurrentAudit: true,
+      currentAuditSpecificationVersion: ADOPTED_AUDIT_SPECIFICATION_VERSION,
       approvedAt: null,
       approvedBy: null,
       hasFeaturedImage: true,
@@ -57,6 +62,41 @@ describe("admin article action visibility", () => {
     );
     expect(canShowImmediatePublishAction(input)).toBe(false);
     expect(canShowScheduleAction(input)).toBe(false);
+  });
+
+  it("shows Prepare for Review for baseline/older audits only when the versioned verifier is active", () => {
+    expect(
+      canShowPrepareForReviewAction({
+        status: "review-required",
+        hasCurrentAudit: true,
+        currentAuditSpecificationVersion: null,
+        versionedVerifierEnabled: false,
+      }),
+    ).toBe(false);
+    expect(
+      canShowPrepareForReviewAction({
+        status: "review-required",
+        hasCurrentAudit: true,
+        currentAuditSpecificationVersion: null,
+        versionedVerifierEnabled: true,
+      }),
+    ).toBe(true);
+    expect(
+      canShowPrepareForReviewAction({
+        status: "review-required",
+        hasCurrentAudit: true,
+        currentAuditSpecificationVersion: EV_REG_SPEC_1_0_0,
+        versionedVerifierEnabled: true,
+      }),
+    ).toBe(true);
+    expect(
+      canShowPrepareForReviewAction({
+        status: "review-required",
+        hasCurrentAudit: true,
+        currentAuditSpecificationVersion: ADOPTED_AUDIT_SPECIFICATION_VERSION,
+        versionedVerifierEnabled: true,
+      }),
+    ).toBe(false);
   });
 
   it("shows Publish and Schedule for an approved article with a current audit, approval metadata, and featured image", () => {

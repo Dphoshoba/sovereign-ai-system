@@ -342,6 +342,8 @@ export default async function AdminArticlesPage({
                   {canShowPrepareForReviewAction({
                     status: article.status,
                     hasCurrentAudit,
+                    currentAuditSpecificationVersion:
+                      audit?.specificationVersion ?? null,
                   }) && <PrepareForReviewButton articleId={article.id} />}
 
                   {canShowApprovalActions(article.status, hasCurrentAudit) && (

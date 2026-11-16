@@ -57,6 +57,9 @@ export default async function EditArticlePage({
         seoGrade: article.seoGrade,
       }}
       hasCurrentAudit={Boolean(currentAudit)}
+      currentAuditSpecificationVersion={
+        currentAudit?.specificationVersion ?? null
+      }
       historicalAuditCount={historicalAudits.length}
     />
   )

@@ -48,16 +48,23 @@ export type EditArticleFormArticle = {
 export function EditArticleForm({
   initialArticle,
   hasCurrentAudit: initialHasCurrentAudit,
+  currentAuditSpecificationVersion:
+    initialCurrentAuditSpecificationVersion = null,
   historicalAuditCount: initialHistoricalAuditCount,
 }: {
   initialArticle: EditArticleFormArticle
   hasCurrentAudit: boolean
+  currentAuditSpecificationVersion?: string | null
   historicalAuditCount: number
 }) {
   const router = useRouter()
   const [article, setArticle] = useState<EditArticleFormArticle>(initialArticle)
   const [statusChanged, setStatusChanged] = useState(false)
   const [hasCurrentAudit, setHasCurrentAudit] = useState(initialHasCurrentAudit)
+  const [
+    currentAuditSpecificationVersion,
+    setCurrentAuditSpecificationVersion,
+  ] = useState<string | null>(initialCurrentAuditSpecificationVersion)
   const [historicalAuditCount, setHistoricalAuditCount] = useState(
     initialHistoricalAuditCount,
   )
@@ -72,6 +79,7 @@ export function EditArticleForm({
   const canPrepareForReview = canShowPrepareForReviewAction({
     status: article.status,
     hasCurrentAudit,
+    currentAuditSpecificationVersion,
   })
   const hasFeaturedImage = Boolean(article.featuredImage?.trim())
   const showImmediatePublish = canShowImmediatePublishAction({
@@ -466,7 +474,9 @@ export function EditArticleForm({
         {canPrepareForReview ? (
           <div data-current-audit-required="true">
             <p style={{ fontSize: "14px", margin: "0 0 8px" }}>
-              A current research audit is required before approval.
+              {hasCurrentAudit
+                ? "The current research audit is on an older governance version or needs re-evaluation. Run Prepare for Review to refresh it."
+                : "A current research audit is required before approval."}
             </p>
             <PrepareForReviewButton
               articleId={article.id}
@@ -477,6 +487,17 @@ export function EditArticleForm({
                 }))
                 setStatusChanged(false)
                 setHasCurrentAudit(true)
+                const nextSpec =
+                  result &&
+                  typeof result === "object" &&
+                  "audit" in result &&
+                  result.audit &&
+                  typeof result.audit === "object" &&
+                  "specificationVersion" in result.audit
+                    ? (result.audit as { specificationVersion?: string | null })
+                        .specificationVersion ?? null
+                    : currentAuditSpecificationVersion
+                setCurrentAuditSpecificationVersion(nextSpec)
               }}
             />
           </div>

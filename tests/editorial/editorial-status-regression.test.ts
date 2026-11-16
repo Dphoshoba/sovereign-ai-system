@@ -61,6 +61,24 @@ describe("editorial status regression", () => {
       canShowPrepareForReviewAction({
         status: "review-required",
         hasCurrentAudit: true,
+        currentAuditSpecificationVersion: "EV-REG-SPEC-1.1.0",
+        versionedVerifierEnabled: true,
+      }),
+    ).toBe(false)
+    expect(
+      canShowPrepareForReviewAction({
+        status: "review-required",
+        hasCurrentAudit: true,
+        currentAuditSpecificationVersion: null,
+        versionedVerifierEnabled: true,
+      }),
+    ).toBe(true)
+    expect(
+      canShowPrepareForReviewAction({
+        status: "review-required",
+        hasCurrentAudit: true,
+        currentAuditSpecificationVersion: null,
+        versionedVerifierEnabled: false,
       }),
     ).toBe(false)
   })

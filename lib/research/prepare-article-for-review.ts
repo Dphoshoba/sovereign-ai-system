@@ -349,13 +349,16 @@ export async function prepareArticleForReview(
 
   {
     const { currentAudit } = resolveArticleAuditState(article);
-    // EV-REG-SPEC-1.1.0: allow one re-Prepare when the current audit is on an
-    // older specification so the article can adopt the amended gate without a
-    // content rewrite. Same adopted version remains duplicate-blocked.
-    if (
+    // When the versioned verifier is active, allow one re-Prepare so a
+    // baseline/older audit can adopt the current governance specification
+    // without a content rewrite. Adopted-version audits stay duplicate-blocked.
+    // When the versioned verifier is off, any current audit is duplicate-blocked.
+    const versionedEnabled = isVersionedEditorialVerifierEnabled();
+    const allowSpecUpgrade =
+      versionedEnabled &&
       currentAudit &&
-      currentAudit.specificationVersion === ADOPTED_AUDIT_SPECIFICATION_VERSION
-    ) {
+      currentAudit.specificationVersion !== ADOPTED_AUDIT_SPECIFICATION_VERSION;
+    if (currentAudit && !allowSpecUpgrade) {
       return {
         ok: false,
         code: "duplicate_audit",
@@ -595,11 +598,12 @@ export async function prepareArticleForReview(
       {
         const { currentAudit: lockedCurrent } =
           resolveArticleAuditState(lockedArticle);
-        if (
+        const lockedAllowSpecUpgrade =
+          versionedEnabled &&
           lockedCurrent &&
-          lockedCurrent.specificationVersion ===
-            ADOPTED_AUDIT_SPECIFICATION_VERSION
-        ) {
+          lockedCurrent.specificationVersion !==
+            ADOPTED_AUDIT_SPECIFICATION_VERSION;
+        if (lockedCurrent && !lockedAllowSpecUpgrade) {
           throw new DuplicateAuditError();
         }
       }

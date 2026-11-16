@@ -8,7 +8,10 @@ export function PrepareForReviewButton({
   onPrepared,
 }: {
   articleId: string
-  onPrepared?: (result: { article?: { status?: unknown } | null }) => void
+  onPrepared?: (result: {
+    article?: { status?: unknown } | null
+    audit?: { specificationVersion?: string | null } | null
+  }) => void
 }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)

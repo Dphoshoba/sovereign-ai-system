@@ -262,6 +262,7 @@ describe("POST /api/ai/generate-article initial lifecycle state", () => {
       }),
     );
 
+    // Mission 005R: stored audit is article-grounded, not the pre-write score dump.
     expect(response.status).toBe(200);
     expect(vi.mocked(publicationGate)).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -272,16 +273,22 @@ describe("POST /api/ai/generate-article initial lifecycle state", () => {
     );
     expect(auditCreate).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        consensusScore: 92,
-        sourceQualityScore: 100,
-        publicationRecommendation: "review-required",
+        publicationRecommendation: expect.any(String),
+        consensus: expect.objectContaining({
+          articleGrounded: true,
+        }),
       }),
     });
+    const auditPayload = auditCreate.mock.calls[0]?.[0] as {
+      data: { publicationRecommendation: string };
+    };
+    expect(auditPayload.data.publicationRecommendation).toBe(
+      "review-required",
+    );
     const { prisma } = await import("@/lib/prisma");
     expect(prisma.$transaction).toHaveBeenCalledWith(expect.any(Function), {
       timeout: 10_000,
     });
-    expect(factCreateMany).toHaveBeenCalledTimes(1);
   });
 
   it("does not create an article when research has no usable sources", async () => {

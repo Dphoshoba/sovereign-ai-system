@@ -29,6 +29,14 @@ import {
   serializeArticleAuditAssociation,
 } from "../../../../lib/research/article-audit-association";
 import { applyArticleSourceMutationInTransaction } from "../../../../lib/research/article-source-mutation";
+import {
+  unsupportedClaimsRevisionBrief,
+  verifyGeneratedArticleAgainstEvidence,
+} from "../../../../lib/research/ground-generated-article";
+import {
+  isVersionedEditorialVerifierEnabled,
+  revisionWrittenByEditorialPrepare,
+} from "../../../../lib/research/versioned-publication";
 
 function slugify(value: string) {
   return value
@@ -346,25 +354,169 @@ export async function POST(request: Request) {
       throw parseError;
     }
 
-    const cleanedContent = parsed.content
+    let cleanedContent = parsed.content
       ? finalTextCleanup(
           contentSafeNormalizer(encodingNormalizer(parsed.content)),
         )
       : null;
 
-    const finalContent = cleanedContent;
-
-    const cleanedExcerpt = parsed.excerpt
+    let cleanedExcerpt = parsed.excerpt
       ? finalTextCleanup(encodingNormalizer(parsed.excerpt))
       : null;
 
-    const cleanedSeoDescription = parsed.seoDescription
+    let cleanedSeoDescription = parsed.seoDescription
       ? finalTextCleanup(encodingNormalizer(parsed.seoDescription))
       : null;
 
-    const faq = Array.isArray(parsed.faq) ? parsed.faq : [];
+    let title = finalTextCleanup(parsed.title || topic);
+    let seoTitle = finalTextCleanup(parsed.seoTitle || title);
+    let seoKeywords = parsed.seoKeywords
+      ? finalTextCleanup(parsed.seoKeywords)
+      : null;
 
-    const title = finalTextCleanup(parsed.title || topic);
+    const faq = Array.isArray(parsed.faq) ? parsed.faq : [];
+    const listedAttribution = (sourceCollection.collectedSources || []).map(
+      (source) => ({
+        url: source.url,
+        title: source.title,
+      }),
+    );
+    const versionedEnabled = isVersionedEditorialVerifierEnabled();
+
+    const groundDraft = (draft: {
+      title: string;
+      excerpt: string | null;
+      content: string;
+    }) =>
+      verifyGeneratedArticleAgainstEvidence({
+        title: draft.title,
+        excerpt: draft.excerpt,
+        content: draft.content,
+        evidence: Array.isArray(evidence.evidence) ? evidence.evidence : [],
+        listedSources: listedAttribution,
+        versioned: versionedEnabled,
+      });
+
+    let articleGrounding =
+      cleanedContent && cleanedContent.trim().length > 0
+        ? groundDraft({
+            title,
+            excerpt: cleanedExcerpt,
+            content: cleanedContent,
+          })
+        : null;
+
+    if (
+      articleGrounding &&
+      articleGrounding.unsupportedFactualClaims.length > 0 &&
+      cleanedContent
+    ) {
+      const revision = await getOpenAI().responses.create({
+        model: "gpt-5.2",
+        instructions:
+          "You are the Echoes & Visions editorial grounding reviser. " +
+          DAVID_WRITING_DNA +
+          " Return only valid JSON. No markdown wrapper.",
+        input:
+          "Revise this draft so every factual claim is supported by the supplied evidence-supported facts. " +
+          "Omit, qualify as editorial guidance, or rewrite any unsupported factual statement. " +
+          "Do not invent statistics, quotations, citations, or independent corroboration. " +
+          "Preserve practical guidance and the Echoes & Visions voice.\n\n" +
+          "EVIDENCE-SUPPORTED FACTS:\n" +
+          (verifiedFactsText || "None") +
+          "\n\nUNSUPPORTED FACTUAL CLAIMS TO REMOVE OR QUALIFY:\n" +
+          unsupportedClaimsRevisionBrief(
+            articleGrounding.unsupportedFactualClaims,
+          ) +
+          "\n\nCURRENT DRAFT JSON FIELDS:\n" +
+          JSON.stringify({
+            title,
+            excerpt: cleanedExcerpt,
+            content: cleanedContent,
+            seoTitle,
+            seoDescription: cleanedSeoDescription,
+            seoKeywords,
+          }) +
+          '\n\nReturn JSON only: {"title":"...","excerpt":"...","content":"...","seoTitle":"...","seoDescription":"...","seoKeywords":"..."}',
+      });
+
+      try {
+        const revised = JSON.parse(
+          (() => {
+            const text = revision.output_text || "";
+            const start = text.indexOf("{");
+            const end = text.lastIndexOf("}");
+            if (start === -1 || end === -1 || end <= start) {
+              throw new Error("Revision returned no JSON object.");
+            }
+            return text.slice(start, end + 1);
+          })(),
+        );
+        if (typeof revised.content === "string" && revised.content.trim()) {
+          cleanedContent = finalTextCleanup(
+            contentSafeNormalizer(encodingNormalizer(revised.content)),
+          );
+        }
+        if (typeof revised.excerpt === "string") {
+          cleanedExcerpt = finalTextCleanup(
+            encodingNormalizer(revised.excerpt),
+          );
+        }
+        if (typeof revised.title === "string" && revised.title.trim()) {
+          title = finalTextCleanup(revised.title);
+        }
+        if (typeof revised.seoTitle === "string" && revised.seoTitle.trim()) {
+          seoTitle = finalTextCleanup(revised.seoTitle);
+        }
+        if (typeof revised.seoDescription === "string") {
+          cleanedSeoDescription = finalTextCleanup(
+            encodingNormalizer(revised.seoDescription),
+          );
+        }
+        if (typeof revised.seoKeywords === "string") {
+          seoKeywords = finalTextCleanup(revised.seoKeywords);
+        }
+        articleGrounding = groundDraft({
+          title,
+          excerpt: cleanedExcerpt,
+          content: cleanedContent || "",
+        });
+      } catch (revisionError) {
+        console.error(
+          "Grounded revision parse failed; keeping original draft:",
+          revisionError,
+        );
+      }
+    }
+
+    const finalContent = cleanedContent;
+    const groundedRecommendation =
+      articleGrounding?.publicationRecommendation || publicationRecommendation;
+    const groundedConsensusScore =
+      articleGrounding?.consensusScore ?? consensus.consensusScore;
+    const groundedVerified =
+      articleGrounding?.verifiedCount ?? factVerification.verifiedCount;
+    const groundedPartial =
+      articleGrounding?.partiallyVerifiedCount ??
+      factVerification.partiallyVerifiedCount;
+    const groundedUnverified =
+      articleGrounding?.unverifiedCount ?? factVerification.unverifiedCount;
+    const groundedAvg =
+      articleGrounding?.averageVerificationScore ??
+      factVerification.averageVerificationScore;
+    const groundedSourceQuality =
+      articleGrounding?.sourceQualityScore ?? consensus.sourceQualityScore;
+    const groundedFacts =
+      articleGrounding?.facts ??
+      factVerification.verifiedFacts.filter(
+        (fact) =>
+          fact.verificationStatus === "verified" ||
+          fact.verificationStatus === "partially verified",
+      );
+    const groundedEvidence =
+      articleGrounding?.acceptedEvidence ??
+      (Array.isArray(evidence.evidence) ? evidence.evidence : []);
+
     const baseSlug = slugify(title);
     const slug = await createUniqueSlug(baseSlug, category);
 
@@ -376,14 +528,14 @@ export async function POST(request: Request) {
       wordCount,
       hasTitle: Boolean(title),
       hasExcerpt: Boolean(cleanedExcerpt),
-      hasSeoTitle: Boolean(parsed.seoTitle || title),
+      hasSeoTitle: Boolean(seoTitle),
       hasSeoDescription: Boolean(cleanedSeoDescription || cleanedExcerpt),
       hasFeaturedImage: true,
-      consensusScore: consensus.consensusScore,
-      verifiedCount: factVerification.verifiedCount,
-      partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
-      unverifiedCount: factVerification.unverifiedCount,
-      publicationRecommendation,
+      consensusScore: groundedConsensusScore,
+      verifiedCount: groundedVerified,
+      partiallyVerifiedCount: groundedPartial,
+      unverifiedCount: groundedUnverified,
+      publicationRecommendation: groundedRecommendation,
     });
 
     const qualityResult = articleQualityScorer({
@@ -393,9 +545,9 @@ export async function POST(request: Request) {
     });
 
     const seoResult = seoScorer({
-      seoTitle: parsed.seoTitle || title,
+      seoTitle,
       seoDescription: cleanedSeoDescription || cleanedExcerpt || "",
-      seoKeywords: parsed.seoKeywords || "",
+      seoKeywords: seoKeywords || "",
     });
 
     const article = await prisma.$transaction(async (tx) => {
@@ -410,11 +562,9 @@ export async function POST(request: Request) {
           excerpt: cleanedExcerpt,
           content: finalContent,
           featuredImage: null,
-          seoTitle: finalTextCleanup(parsed.seoTitle || title),
+          seoTitle,
           seoDescription: cleanedSeoDescription || cleanedExcerpt || null,
-          seoKeywords: parsed.seoKeywords
-            ? finalTextCleanup(parsed.seoKeywords)
-            : null,
+          seoKeywords,
           publishedAt: null,
           scheduledFor: null,
           editorialScore: editorialQuality.score,
@@ -436,19 +586,30 @@ export async function POST(request: Request) {
           averageAuthorityScore: sourceCollection.averageAuthorityScore,
           averageTrustScore: sourceCollection.averageTrustScore,
           researchConfidence: sourceCollection.researchConfidence,
-          evidenceCount: evidence.evidenceCount,
-          factCount: factVerification.verifiedFacts.length,
-          verifiedCount: factVerification.verifiedCount,
-          partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
-          unverifiedCount: factVerification.unverifiedCount,
-          averageVerificationScore: factVerification.averageVerificationScore,
-          consensusScore: consensus.consensusScore,
-          sourceQualityScore: consensus.sourceQualityScore,
-          publicationRecommendation,
+          evidenceCount: groundedEvidence.length,
+          factCount: groundedFacts.length,
+          verifiedCount: groundedVerified,
+          partiallyVerifiedCount: groundedPartial,
+          unverifiedCount: groundedUnverified,
+          averageVerificationScore: groundedAvg,
+          consensusScore: groundedConsensusScore,
+          sourceQualityScore: groundedSourceQuality,
+          publicationRecommendation: groundedRecommendation,
           sources: sourceCollection.collectedSources,
-          evidence: Array.isArray(evidence.evidence) ? evidence.evidence : [],
-          facts: factVerification.verifiedFacts,
-          consensus: consensus.consensusGroups,
+          evidence: groundedEvidence,
+          facts: groundedFacts,
+          consensus: {
+            groups: consensus.consensusGroups,
+            notScoredClaims: articleGrounding?.extraction.notScoredClaims ?? [],
+            articleGrounded: true,
+            engineRevision: revisionWrittenByEditorialPrepare(),
+          },
+          ...(versionedEnabled && articleGrounding?.specificationVersion
+            ? {
+                specificationVersion: articleGrounding.specificationVersion,
+                disputes: articleGrounding.disputes ?? [],
+              }
+            : {}),
         },
       });
 
@@ -472,10 +633,9 @@ export async function POST(request: Request) {
         throw new Error(sourceMutation.error);
       }
 
-      const verifiedFacts = factVerification.verifiedFacts || [];
-      if (verifiedFacts.length > 0) {
+      if (groundedFacts.length > 0) {
         await tx.researchFact.createMany({
-          data: verifiedFacts.map((fact) => ({
+          data: groundedFacts.map((fact) => ({
             articleId: createdArticle.id,
             claim: fact.claim || "",
             verificationStatus: fact.verificationStatus || "unverified",
@@ -526,8 +686,9 @@ export async function POST(request: Request) {
     }
 
     const editorialWarning =
-      publicationRecommendation === "blocked"
-        ? "Research pipeline marked this article as blocked for publication readiness because the available facts lack sufficient cross-source verification. The article was still saved as review-required for human editorial review."
+      groundedRecommendation === "blocked" ||
+      groundedUnverified > 0
+        ? "Article-grounded verification found unsupported or incomplete evidence. The article was saved as review-required for human editorial review."
         : null;
 
     return NextResponse.json({
@@ -544,17 +705,19 @@ export async function POST(request: Request) {
         averageAuthorityScore: sourceCollection.averageAuthorityScore,
         averageTrustScore: sourceCollection.averageTrustScore,
         researchConfidence: sourceCollection.researchConfidence,
-        evidenceCount: evidence.evidenceCount,
-        factCount: factVerification.verifiedFacts.length,
+        evidenceCount: groundedEvidence.length,
+        factCount: groundedFacts.length,
         extractedFactCount: factExtraction.factCount,
-        verifiedCount: factVerification.verifiedCount,
-        averageVerificationScore: factVerification.averageVerificationScore,
-        partiallyVerifiedCount: factVerification.partiallyVerifiedCount,
-        unverifiedCount: factVerification.unverifiedCount,
-        consensusScore: consensus.consensusScore,
-        sourceQualityScore: consensus.sourceQualityScore,
-        publicationRecommendation,
+        verifiedCount: groundedVerified,
+        averageVerificationScore: groundedAvg,
+        partiallyVerifiedCount: groundedPartial,
+        unverifiedCount: groundedUnverified,
+        consensusScore: groundedConsensusScore,
+        sourceQualityScore: groundedSourceQuality,
+        publicationRecommendation: groundedRecommendation,
         publicationDecision,
+        articleGrounded: true,
+        specificationVersion: articleGrounding?.specificationVersion ?? null,
         editorialWarning,
         editorialQuality,
       },

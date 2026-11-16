@@ -1,6 +1,7 @@
 import { PrepareForReviewButton } from "./PrepareForReviewButton";
 import { ConfirmPrimarySourceButton } from "./ConfirmPrimarySourceButton";
 import { isResearchAuditFingerprintNote } from "../../../lib/research/article-audit-association";
+import { canShowPrepareForReviewAction } from "../../../lib/publishing/article-action-visibility";
 
 export type AuditPanelArticle = {
   id: string;
@@ -136,9 +137,10 @@ export function ArticleAuditPanel({
             No audit matches this content revision. Legacy and earlier-revision
             audits remain historical.
           </p>
-          {(article.status === "review" ||
-            article.status === "draft" ||
-            article.status === "review-required") && (
+          {canShowPrepareForReviewAction({
+            status: article.status,
+            hasCurrentAudit: false,
+          }) && (
             <div style={{ marginTop: "12px" }}>
               <PrepareForReviewButton articleId={article.id} />
             </div>
@@ -148,6 +150,24 @@ export function ArticleAuditPanel({
         <>
           <div data-audit-state="current" style={card}>
             <h3>Current Research Audit</h3>
+            {canShowPrepareForReviewAction({
+              status: article.status,
+              hasCurrentAudit: true,
+              currentAuditSpecificationVersion:
+                currentAudit.specificationVersion ?? null,
+            }) && (
+              <div
+                data-prepare-reevaluation="true"
+                style={{ marginBottom: "12px" }}
+              >
+                <p style={{ marginTop: 0 }}>
+                  This audit is not on the active governance specification.
+                  Run Prepare for Review to re-evaluate under the current
+                  contract.
+                </p>
+                <PrepareForReviewButton articleId={article.id} />
+              </div>
+            )}
             <div style={grid}>
               <Metric
                 label="Research Confidence"
