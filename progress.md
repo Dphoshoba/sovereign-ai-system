@@ -2,115 +2,78 @@
 
 **Worktree:** `C:\Users\David\echoes-visions-preview-security`
 **Branch:** `integrate/production-research-integrity`
-**HEAD:** `08bba0ab411b3f32ea47c5ebb1d38756e8860551`
-**Updated:** 2026-11-16 (Mission 004 — Production release)
+**HEAD:** `0fc62282b9249437ae38782700ea3ba53bbcb005` (pre-amendment-doc commit; see below)
+**Updated:** 2026-11-16 (Mission 004 complete + publication decision boundary)
 
 ## Operating contract
 
-**Mission 004 Production release authorised** (commit → push → deploy → verify → report).
-Still forbidden without new authority: Production article edits, Prepare, approve/schedule/publish, cron, schema/threshold changes, space discoveries (ON HOLD).
+Mission 004 Production release is **complete**.
+Director addendum authorised publication of AI Automation **only through existing governed workflow** and forbade bypassing EV-REG dual-publisher rules.
+Still forbidden without new authority: DB lifecycle writes, cron force-publish, score manipulation, deploying an unapproved governance amendment, space discoveries (ON HOLD).
 
-## Mission 004 — Governed Production release
+---
 
-### Starting Production baseline (pre-release)
-
-| Field | Value |
-|---|---|
-| Project | `sovereign-ai-executive` (`prj_ogfO2yCJl7motADB98mCobU2Aviq`) |
-| Deployment | `dpl_9r9eqfAehGGF9gNNf16GkGxf1soa` |
-| Status | Ready |
-| Commit (prior engineering) | `ec32d7af4a861a00302e914da8ccd0f8261973e6` |
-| Aliases | `www.echoesandvisions.com`, `echoesandvisions.com`, `sovereign-ai-executive.vercel.app` |
-| Health | `ok=true`, verifier `article-grounded-ev-reg-1`, flag enabled |
-
-### Release integrity
-
-- Starting local HEAD before commit: `6f33a18dbbd9b4e69b185fe273c5c96d2580167d`
-- Release commit: `08bba0ab411b3f32ea47c5ebb1d38756e8860551`
-- Message: `fix(editorial): improve evidence matching and decision board usability`
-- Files: ArticleAuditPanel, EditArticleForm, article-claim-extractor, claim-evidence-matcher, claim-evidence-selector, mission004 tests, tutorial coverage test, AI_AUTOMATION_FINAL_HUMAN_ASSESSMENT.md, progress.md
-- Excluded: `scripts/final-exec-*.cjs` (one-off recovery helpers)
-- Remote: pushed to `origin/integrate/production-research-integrity` (SHA match confirmed)
-- Branch protection: none configured on this branch (GitHub 404)
-
-### Pre-commit verification (re-run before commit)
-
-- Focused Mission 004 regression: **62/62 pass**
-- Full editorial suite: **105 files / 1,145 tests pass**
-- `tsc --noEmit`: **clean**
-- `npm run build` (CI Supabase placeholders): **exit 0**
-
-### Production deployment
+## Mission 004 — Production release (COMPLETE)
 
 | Field | Value |
 |---|---|
-| Method | Clean worktree `C:\Users\David\echoes-visions-m004-release` @ `08bba0ab…` → `npx vercel deploy --prod --yes` |
-| New deployment | `dpl_zqhmJWch2fDkEpRRGdfRXdC8Z5GG` |
-| Status | **Ready** |
-| Target | production |
-| Git commit (deployment meta) | `08bba0ab411b3f32ea47c5ebb1d38756e8860551` |
-| Project `targets.production` | `dpl_zqhmJWch2fDkEpRRGdfRXdC8Z5GG` |
-| Aliases reassigned | `www.echoesandvisions.com`, `echoesandvisions.com`, `sovereign-ai-executive.vercel.app` |
-| Public asset query `dpl=` | `dpl_zqhmJWch2fDkEpRRGdfRXdC8Z5GG` |
+| Release commit | `08bba0ab411b3f32ea47c5ebb1d38756e8860551` |
+| Progress evidence commit | `0fc62282b9249437ae38782700ea3ba53bbcb005` |
+| Deployment | `dpl_zqhmJWch2fDkEpRRGdfRXdC8Z5GG` (Ready) |
+| Production git SHA | `08bba0ab411b3f32ea47c5ebb1d38756e8860551` |
+| Project | `sovereign-ai-executive` |
+| Prior baseline (rollback) | `dpl_9r9eqfAehGGF9gNNf16GkGxf1soa` @ `ec32d7af…` |
+| Health | `ok=true`, flag enabled, verifier `article-grounded-ev-reg-1` |
+| Tests pre-commit | 62 focused / 105 files · 1145 editorial / tsc clean / build 0 |
+| Editorial board smoke | PASS (decision board + claim findings on Production) |
+| Unauth admin | 307 → `/login` |
+| Verdict | **MISSION 004 RELEASE COMPLETE — PRODUCTION VERIFIED** |
 
-### Health and public smoke
+---
 
-- `https://www.echoesandvisions.com/api/health` → `{"ok":true,"versionedEditorialVerifierEnabled":true,"researchAuditEngineRevision":"article-grounded-ev-reg-1"}`
-- `https://sovereign-ai-executive.vercel.app/api/health` → same
-- Apex `echoesandvisions.com` → 308 → www (expected); followed health OK
-- Homepage 200
-- Public blog article 200: `/blog/how-to-start-using-ai-in-your-small-business-without-losing-human-control` (and others)
+## Director addendum — publication attempt outcome
 
-### Editorial dashboard smoke (authorised editor session)
+### Article
 
-- Edit page loads; status **Review Required**; content title/slug unchanged
-- Link present: **Open research & editorial decision board** → `/admin/articles/.../audit`
-- Decision board loads on Production deployment assets:
-  - **Editorial decision** plain-language summary
-  - Claim-level findings (Needs corroboration / Needs correction)
-  - Publication Recommendation: `review-required`
-  - Consensus 78 / avg verification 47 messaging retained
-- No article fields mutated during smoke
+- ID: `cmqrvyx860000ycun5wo9ny8c`
+- Title: AI Automation for Creators: Build Your First Workflow in 7 Days
+- Status: `review-required` (unchanged)
+- Content SHA: `9D426B59…`
+- Audit: `cmwilpof2000008l9xoo7jwg5` → `review-required` (0 verified / 6 partial / 1 unverified)
 
-### Security and governance preservation
+### Blocker classification
 
-- Unauthenticated `/admin/articles` and edit route → **307** → `/login`
-- Approve / Save / Schedule controls remain present; no new human override of research gate
-- Verifier remains `article-grounded-ev-reg-1`; versioned flag remains enabled
-- EV-REG thresholds not changed in this release
-
-### Article and audit preservation (read-only Production DB)
-
-| Check | Result |
+| Category | Finding |
 |---|---|
-| AI Automation `cmqrvyx860000ycun5wo9ny8c` status | `review-required` |
-| Content SHA-256 | `9D426B5962C5C82160BC9B13234716A4B7EE27C6C097A2CF40A062C37BD052F2` |
-| Latest audit | `cmwilpof2000008l9xoo7jwg5` (`review-required`, avg 47, consensus 78, SQ 83) |
-| New Prepare since release | **None** |
-| Space discoveries `cmqss549k000004l1xbraihwz` | still `review-required` (ON HOLD) |
+| Software defects (Mission 004) | Resolved and deployed (authorial NIST framing, distinctive passage ranking, decision-board UX) |
+| Repetitive verification | Fresh Prepare would clear interpretive Claim 3 as authorial; **does not** clear six single-source claims |
+| Evidence-matching failures | Not the publication blocker for the six vendor/NIST product facts |
+| Genuine unsupported claims | One interpretive claim on the frozen audit; not the dual-publisher wall |
+| Certified publication policy | **BLOCKER** — EV-REG-SPEC-1.0.0 §4.3 / §9 / §11: no primary-source exception; publication guard requires `publish-ready` with zero single-source facts |
 
-### Rollback readiness
+### Existing compliant pathway?
 
-- Prior Ready Production deployment retained: `dpl_9r9eqfAehGGF9gNNf16GkGxf1soa` @ `ec32d7af…`
-- Rollback would re-alias to prior Ready deployment; does **not** reverse DB data (none changed by this release)
-- No migrations executed
+**No.** The certified contract explicitly forbids publishing on primary-source-supported / single-source claims. Human confirmation does not promote them. Fabricating a second publisher is forbidden. Bypassing `publication-guard` is forbidden.
 
-### Remaining risks / next actions
+### Action taken
 
-1. AI Automation remains `review-required` under certified single-publisher rule until separately authorised content/source/Prepare work.
-2. Optional separately authorised Prepare after any future content change.
-3. Space discoveries remains ON HOLD.
+Prepared draft governance amendment (not deployed, not activated):
 
-## Acceptance criteria
+`docs/governance/EV-REG-AMENDMENT-PROPOSAL-PRIMARY-SOURCE-PUBLICATION.md`
 
-1. Release integrity — **PASS**
-2. Verification and build — **PASS**
-3. Production deployment — **PASS**
-4. Production smoke tests — **PASS**
-5. Operational evidence (`progress.md`) — **PASS**
+Defines: when primary-source docs suffice; when dual-publisher remains mandatory; how human confirmations are recorded; how exceptions are audited; how unsupported/high-risk claims stay blocked.
 
-## Prior closed work (reference)
+### Publication result
 
-- Pre-Mission-004 engineering baseline `ec32d7af` / `dpl_9r9eqf…`
-- Production save SHA `9D426B59…` + Prepare `cmwilpof2000008l9xoo7jwg5`
-- EV-REG Production certification: `docs/releases/EV-REG-1.0.0-PRODUCTION-CERTIFICATION.md`
+**Not published.** Genuine governance blocker identified. Stopped at Director decision boundary (options A / B / C in the amendment draft).
+
+### Remaining risks
+
+1. Without amendment approval + implementation (or real independent corroboration), this article cannot pass the Production publish workflow.
+2. Space discoveries remains ON HOLD.
+3. Average verification / consensus on the current audit are also below thresholds; those would be re-evaluated after any approved Prepare under amended rules.
+
+### Exact next Director action
+
+Approve amendment option **A**, **B**, or **C** in `EV-REG-AMENDMENT-PROPOSAL-PRIMARY-SOURCE-PUBLICATION.md`.
+Do not start another open-ended engineering mission until that decision is made.
