@@ -41,7 +41,10 @@ import {
   assessArticleTeachingCoverage,
   assessEvidenceTeachingCoverage,
   buildScriptureTeachingPlan,
+  formatMissingCoverageRevisionBrief,
   formatTeachingPlanForPrompt,
+  isTeachingCompositionFact,
+  teachingEvidenceRelevancePatterns,
 } from "../../../../lib/research/biblical-teaching-completeness";
 import {
   isVersionedEditorialVerifierEnabled,
@@ -150,6 +153,11 @@ export async function POST(request: Request) {
       ? body.manualSources
       : [];
 
+    const teachingPlan = buildScriptureTeachingPlan(
+      String(topic || ""),
+      category,
+    );
+
     const sourceCollection = await sourceCollector(
       topic,
       manualSources,
@@ -173,6 +181,12 @@ export async function POST(request: Request) {
     const evidence = await evidenceRegistry(
       topic,
       sourceCollection.collectedSources,
+      {
+        teachingRelevancePatterns: teachingPlan
+          ? teachingEvidenceRelevancePatterns(teachingPlan)
+          : [],
+        teachingRequiredRefs: teachingPlan?.requiredRefs ?? [],
+      },
     );
     if (evidence.evidenceCount === 0) {
       return NextResponse.json(
@@ -190,7 +204,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const teachingPlan = buildScriptureTeachingPlan(String(topic || ""), category);
     if (teachingPlan?.oversizedBrief) {
       return NextResponse.json(
         {
@@ -305,10 +318,13 @@ export async function POST(request: Request) {
       ? detectBibleSubject(String(topic || ""), evidenceBlob)
       : "generic";
     const publishableFacts = factVerification.verifiedFacts.filter((fact) => {
-      const statusOk =
-        fact.verificationStatus === "verified" ||
-        fact.verificationStatus === "partially verified";
-      if (!statusOk) return false;
+      // Mission 006R4: teaching briefs may use single-host scripture for
+      // composition input; Prepare/publication thresholds stay unchanged.
+      const compositionOk = teachingPlan
+        ? isTeachingCompositionFact(fact)
+        : fact.verificationStatus === "verified" ||
+          fact.verificationStatus === "partially verified";
+      if (!compositionOk) return false;
       // Defense in depth: never feed unrelated D&G FACT blocks into non-D&G bible topics.
       if (
         bibleSubject !== "david-goliath" &&
@@ -380,22 +396,25 @@ export async function POST(request: Request) {
         "\n\n" +
         (teachingPlan ? formatTeachingPlanForPrompt(teachingPlan) + "\n\n" : "") +
         "ARTICLE STRUCTURE REQUIREMENT:\n" +
-        "Create one major section for each verified fact.\n" +
-        "Use the verified facts as H2 headings or the basis of H2 headings.\n" +
-        "Expand each fact with explanation, examples, implications and practical guidance.\n" +
         (teachingPlan
-          ? "When a required scripture coverage list is supplied, create a dedicated section for every required movement or passage before closing the article.\n"
-          : "") +
+          ? "Use the required scripture coverage list as the primary outline. Create a dedicated H2 for every required movement and supporting passage. Use verified facts as evidence inside those sections.\n"
+          : "Create one major section for each verified fact.\nUse the verified facts as H2 headings or the basis of H2 headings.\n") +
+        "Expand each section with explanation, examples, implications and practical guidance.\n" +
         "\n" +
         "STRICT RULES:\n" +
         "- Stay faithful to the category.\n" +
         "- Write only from verified or partially verified facts.\n" +
         "- Every verified fact must appear somewhere in the article.\n" +
-        "- Create at least one section heading for each major verified fact.\n" +
+        "- Create at least one section heading for each major verified fact" +
+        (teachingPlan
+          ? ", while still completing every required scripture coverage section.\n"
+          : ".\n") +
         "- Expand verified facts into practical examples, implications, benefits, risks, and applications.\n" +
         "- Do not summarize multiple facts into one sentence.\n" +
         "- If five verified facts are supplied, discuss all five.\n" +
-        "- Use verified facts as the backbone of the article structure.\n" +
+        (teachingPlan
+          ? "- The required scripture coverage list is the backbone of the article structure; verified facts supply the evidence for each section.\n"
+          : "- Use verified facts as the backbone of the article structure.\n") +
         "- Do not invent statistics, quotes, dates, historical claims, companies, or sources.\n" +
         "- If evidence is limited, clearly say so and write a cautious article around what is supported.\n" +
         "- Never omit a required scripture coverage item when evidence for that passage was supplied.\n" +
@@ -574,7 +593,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const finalContent = cleanedContent;
+    let finalContent = cleanedContent;
 
     if (
       teachingPlan &&
@@ -582,10 +601,88 @@ export async function POST(request: Request) {
       typeof finalContent === "string" &&
       finalContent.trim().length > 0
     ) {
-      const articleCoverage = assessArticleTeachingCoverage(
+      let articleCoverage = assessArticleTeachingCoverage(
         finalContent,
         teachingPlan,
       );
+
+      // Mission 006R4: one bounded completeness revision before failing safely.
+      if (!articleCoverage.ok) {
+        try {
+          const completenessRevision = await getOpenAI().responses.create({
+            model: "gpt-5.2",
+            instructions:
+              "You are the Echoes & Visions biblical teaching completeness reviser. " +
+              DAVID_WRITING_DNA +
+              " Return only valid JSON. No markdown wrapper.",
+            input:
+              formatMissingCoverageRevisionBrief(teachingPlan, articleCoverage) +
+              "\n\n" +
+              formatTeachingPlanForPrompt(teachingPlan) +
+              "\n\nEVIDENCE-SUPPORTED FACTS (the only factual material you may use):\n" +
+              (verifiedFactsText || "None") +
+              "\n\nCURRENT DRAFT JSON FIELDS:\n" +
+              JSON.stringify({
+                title,
+                excerpt: cleanedExcerpt,
+                content: finalContent,
+                seoTitle,
+                seoDescription: cleanedSeoDescription,
+                seoKeywords,
+              }) +
+              '\n\nReturn JSON only: {"title":"...","excerpt":"...","content":"...","seoTitle":"...","seoDescription":"...","seoKeywords":"..."}',
+          });
+
+          const revisedText = completenessRevision.output_text || "";
+          const start = revisedText.indexOf("{");
+          const end = revisedText.lastIndexOf("}");
+          if (start === -1 || end === -1 || end <= start) {
+            throw new Error("Completeness revision returned no JSON object.");
+          }
+          const revised = JSON.parse(revisedText.slice(start, end + 1));
+          if (typeof revised.content === "string" && revised.content.trim()) {
+            cleanedContent = finalTextCleanup(
+              contentSafeNormalizer(encodingNormalizer(revised.content)),
+            );
+            finalContent = cleanedContent;
+          }
+          if (typeof revised.excerpt === "string") {
+            cleanedExcerpt = finalTextCleanup(
+              encodingNormalizer(revised.excerpt),
+            );
+          }
+          if (typeof revised.title === "string" && revised.title.trim()) {
+            title = finalTextCleanup(revised.title);
+          }
+          if (typeof revised.seoTitle === "string" && revised.seoTitle.trim()) {
+            seoTitle = finalTextCleanup(revised.seoTitle);
+          }
+          if (typeof revised.seoDescription === "string") {
+            cleanedSeoDescription = finalTextCleanup(
+              encodingNormalizer(revised.seoDescription),
+            );
+          }
+          if (typeof revised.seoKeywords === "string") {
+            seoKeywords = finalTextCleanup(revised.seoKeywords);
+          }
+
+          articleGrounding = groundDraft({
+            title,
+            excerpt: cleanedExcerpt,
+            content: finalContent || "",
+          });
+          articleCoverage = assessArticleTeachingCoverage(
+            finalContent || "",
+            teachingPlan,
+          );
+        } catch (completenessError) {
+          console.error(
+            "Teaching completeness revision failed; keeping original draft:",
+            completenessError,
+          );
+        }
+      }
+
       if (!articleCoverage.ok) {
         return NextResponse.json(
           {

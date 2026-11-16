@@ -163,6 +163,37 @@ export function inferTopicScriptureSeeds(topic: string): ScriptureRef[] {
 /** Max unique chapters collected for a bible topic (Gateway-first + Hub). */
 export const MAX_SCRIPTURE_CHAPTERS = 12;
 
+/**
+ * Collapse refs to one fetch target per chapter.
+ * Multiple verse ranges in the same chapter (Exodus 8:25-27 + 8:28) become a
+ * chapter-level request so later ranges are not discarded.
+ */
+export function mergeRefsToUniqueChapters(refs: ScriptureRef[]): ScriptureRef[] {
+  const grouped = new Map<string, ScriptureRef[]>();
+  for (const ref of refs) {
+    const key = `${ref.book}-${ref.chapter}`;
+    const list = grouped.get(key) ?? [];
+    list.push(ref);
+    grouped.set(key, list);
+  }
+
+  const uniqueChapters: ScriptureRef[] = [];
+  for (const list of grouped.values()) {
+    const first = list[0];
+    if (!first) continue;
+    if (list.length === 1) {
+      uniqueChapters.push(first);
+      continue;
+    }
+    uniqueChapters.push({
+      book: first.book,
+      bookDisplay: first.bookDisplay,
+      chapter: first.chapter,
+    });
+  }
+  return uniqueChapters;
+}
+
 export function scriptureSourcesFromTopic(topic: string): Array<{
   title: string;
   url: string;
@@ -178,21 +209,13 @@ export function scriptureSourcesFromTopic(topic: string): Array<{
   // Prefer chapter diversity for multi-passage briefs. Dual-host redundancy
   // is kept when few chapters are cited; otherwise Gateway-first fills slots.
   // Keep in sync with biblical-teaching-completeness MAX_SCRIPTURE_TEACHING_CHAPTERS.
-  const uniqueChapters: ScriptureRef[] = [];
-  const seenChapter = new Set<string>();
-  for (const ref of refs) {
-    const key = `${ref.book}-${ref.chapter}`;
-    if (seenChapter.has(key)) continue;
-    seenChapter.add(key);
-    uniqueChapters.push({
-      book: ref.book,
-      bookDisplay: ref.bookDisplay,
-      chapter: ref.chapter,
-      verseStart: ref.verseStart,
-      verseEnd: ref.verseEnd,
-    });
-    if (uniqueChapters.length >= MAX_SCRIPTURE_CHAPTERS) break;
-  }
+  //
+  // Mission 006R4: when a chapter is cited more than once (Exodus 8:25-27 and
+  // Exodus 8:28), keep a chapter-level fetch so later ranges are not dropped.
+  const uniqueChapters = mergeRefsToUniqueChapters(refs).slice(
+    0,
+    MAX_SCRIPTURE_CHAPTERS,
+  );
 
   const sources: Array<{
     title: string;

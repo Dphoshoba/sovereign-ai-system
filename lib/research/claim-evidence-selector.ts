@@ -26,6 +26,10 @@ import {
   parseScriptureVerseRanges,
   passageOverlapsVerseWindow,
 } from "./scripture-verse-locator";
+import type { ScriptureRef } from "./scripture-ref";
+import {
+  sourceMatchesScriptureRef,
+} from "./scripture-ref";
 import {
   RESEARCH_MAX_CHUNKS_PER_DOCUMENT,
   RESEARCH_MAX_PASSAGES_PER_CLAIM,
@@ -438,7 +442,8 @@ export function selectClaimEvidenceInBatches(input: {
  * Non-claim generate path: round-robin passages across documents so early
  * verbose sources cannot consume RESEARCH_MAX_UNIQUE_AUDIT_PASSAGES before
  * later required chapters contribute evidence.
- * Called by evidenceRegistry() when claimTexts is empty.
+ * Called by evidenceRegistry() when claimTexts is empty and no teaching
+ * relevance patterns are supplied.
  */
 export function selectSourceBalancedEvidence(
   documents: SelectableDocument[],
@@ -465,6 +470,129 @@ export function selectSourceBalancedEvidence(
       seenKeys.add(key);
       selected.push(record);
       progressed = true;
+    }
+    round += 1;
+  }
+
+  return {
+    evidence: selected,
+    mappings: [],
+    uniquePassageCount: selected.length,
+    bounded: totalAvailable > selected.length,
+  };
+}
+
+/**
+ * Mission 006R4: prefer passages that match required teaching movements /
+ * verse markers before filling remaining slots with balanced round-robin.
+ * Prevents early-chapter plague chunks from starving Exodus 8:25–28 / 10:24–26.
+ */
+export function selectTeachingBalancedEvidence(
+  documents: SelectableDocument[],
+  relevancePatterns: readonly RegExp[],
+  maxPassages: number = RESEARCH_MAX_UNIQUE_AUDIT_PASSAGES,
+  requiredRefs: readonly ScriptureRef[] = [],
+): ClaimAwareSelection {
+  if (!relevancePatterns.length && requiredRefs.length === 0) {
+    return selectSourceBalancedEvidence(documents, maxPassages);
+  }
+
+  const perDocument = documents.map((document) => recordsFromDocument(document));
+  const selected: EvidenceRecord[] = [];
+  const seenKeys = new Set<string>();
+  const totalAvailable = perDocument.reduce(
+    (sum, records) => sum + records.length,
+    0,
+  );
+
+  const tryPush = (record: EvidenceRecord | undefined): boolean => {
+    if (!record || selected.length >= maxPassages) return false;
+    const key = passageKey(record.sourceUrl, record.extractedText);
+    if (seenKeys.has(key)) return false;
+    seenKeys.add(key);
+    selected.push(record);
+    return true;
+  };
+
+  const isRelevant = (record: EvidenceRecord): boolean =>
+    relevancePatterns.some((pattern) => pattern.test(record.extractedText));
+
+  // Pass -1: exact verse windows for cited ranges (Exodus 10:8-11 / 10:24-26).
+  for (const ref of requiredRefs) {
+    if (selected.length >= maxPassages) break;
+    if (ref.verseStart == null) continue;
+    for (const document of documents) {
+      if (selected.length >= maxPassages) break;
+      if (!sourceMatchesScriptureRef(document.url, document.title, ref)) {
+        continue;
+      }
+      const windows = locateVerseWindows(document.extractedText, [
+        {
+          start: ref.verseStart,
+          end: ref.verseEnd ?? ref.verseStart,
+          chapter: ref.chapter,
+          book: ref.book,
+        },
+      ]);
+      for (const text of windows) {
+        tryPush({
+          id: evidenceId(
+            document.title,
+            `teach-verse-${ref.chapter}-${ref.verseStart}-${ref.verseEnd ?? ref.verseStart}`,
+          ),
+          sourceTitle: document.fetchedTitle || document.title,
+          sourceUrl: document.url,
+          sourceType: document.sourceType,
+          extractedText: text,
+          confidence: Math.min(
+            100,
+            (document.relevanceScore ?? 70) +
+              sourceTypeBoost(document.sourceType) +
+              5,
+          ),
+          requiresHumanReview: true,
+        });
+      }
+    }
+  }
+
+  // Pass 0: one passage per document so supporting NT chapters are not
+  // starved by multi-hit Exodus movement selection. Prefer a relevant chunk.
+  for (const records of perDocument) {
+    if (selected.length >= maxPassages) break;
+    const preferred = records.find((record) => isRelevant(record)) ?? records[0];
+    tryPush(preferred);
+  }
+
+  // Pass 1: one relevant hit per pattern (movement / verse), scanning all docs.
+  for (const pattern of relevancePatterns) {
+    if (selected.length >= maxPassages) break;
+    outer: for (const records of perDocument) {
+      for (const record of records) {
+        if (pattern.test(record.extractedText) && tryPush(record)) {
+          break outer;
+        }
+      }
+    }
+  }
+
+  // Pass 2: within each document, prefer remaining relevant chunks before
+  // falling through to document order (covers multi-hit chapters).
+  for (const records of perDocument) {
+    if (selected.length >= maxPassages) break;
+    for (const record of records.filter((item) => isRelevant(item))) {
+      if (!tryPush(record)) break;
+    }
+  }
+
+  // Pass 3: balanced fill for remaining capacity / corroboration.
+  let round = 0;
+  let progressed = true;
+  while (selected.length < maxPassages && progressed) {
+    progressed = false;
+    for (const records of perDocument) {
+      if (selected.length >= maxPassages) break;
+      if (tryPush(records[round])) progressed = true;
     }
     round += 1;
   }

@@ -2,11 +2,11 @@
 
 **Worktree:** `C:\Users\David\echoes-visions-preview-security`
 **Branch:** `integrate/production-research-integrity`
-**Updated:** 2026-11-17 (Mission 006R3 multi-passage completeness — local)
+**Updated:** 2026-11-17 (Mission 006R4 Production release + article completion)
 
 ## Operating contract
 
-Mission 005R Production release complete (`dpl_EMYTUsKCeCxUMDsQiXBy7K9A5HxG` @ `5fbdfd05`). Mission 006R Production release complete (`dpl_HtFNkrbPNrTuzJuuwJPEREHTPDER` @ `3fe423ec` — **rollback baseline**). Mission **006R2** Production release complete (`dpl_7YV3q6WRoXyvkn3RGNa3zEt9R12z` @ `5587d4c0`). Mission 006 Final recovery on Production returned REQUEST CHANGES. Mission **006R3** local remediation authorised; Production deploy **not** authorised. Space discoveries remains ON HOLD.
+Mission **006R4** Production release in progress (rollback baseline `dpl_CPaaai2ez9oxn4VSRXnK1ojCkohC` @ `563dc34f` / prior Ready `dpl_7YV3q6WRoXyvkn3RGNa3zEt9R12z` @ `5587d4c0`). Director authorised commit, deploy, generate, and Prepare. Approve / schedule / publish remain closed. Space discoveries remains ON HOLD.
 
 ## EV-REG-SPEC-1.1.0 release
 
@@ -232,3 +232,64 @@ Decision board instructs “Correct unverified claims, then run Prepare for Revi
 - 8 Single-passage bible still works: PASS
 - 9 Non-bible generation unaffected: PASS
 - 10 EV-REG Prepare/approve boundaries intact: PASS
+
+## Mission 006 — Final Production Editorial Acceptance
+
+| Field | Value |
+|---|---|
+| Authority | Director **AUTHORISED** — generate / research / verify / Prepare; no approve / schedule / publish |
+| Production | Ready `dpl_CPaaai2ez9oxn4VSRXnK1ojCkohC` @ `563dc34fd997a7bf83a3f86feb9e15ca2bca8176` |
+| Health | `ok=true`, verifier `article-grounded-ev-reg-1` |
+| Workflow | Authenticated `/admin/ai-generator` as `davidoshoba@gmail.com` · topic = Mission 006 brief · category `bible-stories` |
+| Generate result | **HTTP 422** — `articleUnchanged: true` (no new article row created) |
+| Exact blocker | `Article incomplete: missing required teaching coverage (exodus-8-in-land, exodus-8-not-far, exodus-10-children, exodus-10-livestock, john-10, 2-corinthians-2, mark-8, joshua-24, ephesians-6, 1-peter-5, james-4).` |
+| Draft coverage observed | Covered keys in rejected draft check: `exodus-5`, `romans-12`, `colossians-3` only |
+| Missing movements | 2–5 (worship in Egypt; not very far; children; livestock) |
+| Missing supporting (verse-level) | John 10:10, 2 Cor 2:11, Mark 8:34, Joshua 24:15, Eph 6:11, 1 Pet 5:8, James 4:7 |
+| Final article ID | **None** (save blocked by teaching-completeness gate) |
+| Prepare | **Not run** — no article produced |
+| Historical Mission 006 articles | Preserved (`cmwjrlw9c…`, `cmwjn252i…`, `cmwjmu0ep…`, `cmwjb1tld…`, …) |
+| Manual interventions | 0 |
+| Approve/schedule/publish | Not attempted |
+| Engineering | None started |
+| Director decision required | **REQUEST CHANGES** — platform correctly refused incomplete composition; end-to-end acceptance not achieved |
+| Verdict | **BLOCKED — EVIDENCE PROVIDED** |
+
+### Acceptance snapshot
+- A Production 006R3 Ready + authenticated generate: PASS
+- B Completeness gate refuses incomplete multi-passage draft: PASS (safeguard held)
+- C Five-movement + verse-level NT article saved: FAIL (422; no article)
+- D Prepare / audit for Director review: FAIL (no article to prepare)
+- E Approve/schedule/publish boundary: HELD
+
+## Mission 006R4 — Complete multi-section article composition (local)
+
+| Field | Value |
+|---|---|
+| Authority | Director **REQUEST CHANGES** + local engineering **AUTHORISED**; Production deploy / commit / push / article mutate / Prepare / approve / publish **NOT AUTHORISED** |
+| Confirmed root cause | (1) `scriptureSourcesFromTopic` kept only the first verse range per chapter, so Exodus 8:28 and Exodus 10:24-26 were dropped from Gateway fetches. (2) `selectSourceBalancedEvidence` took early-chapter chunks, so plague/locust text starved late movement verses. (3) Evidence gate accepted URL-only chapter hits without movement text. (4) Single-host scripture movement claims stayed `unverified`, so RESEARCH LOCK composition never received Exodus 8/10 movement facts. (5) No completeness-aware revision before the 006R3 gate. |
+| Fix A | `mergeRefsToUniqueChapters` — multi-range chapters fetch at chapter level |
+| Fix B | `selectTeachingBalancedEvidence` — verse windows + movement-relevant chunks + per-document diversity |
+| Fix C | Evidence coverage requires movement text, not URL-only chapter keys |
+| Fix D | Teaching-structured prompt + one bounded completeness revision before fail-closed 422 |
+| Fix E | `isTeachingCompositionFact` — composition may use single-host scripture; Prepare thresholds unchanged |
+| Fix F | KJV-aligned Exodus 8/10 extractor claims (`not go very far`, sons/daughters, herds stayed) |
+| 006R3 gate | Intact — incomplete drafts still rejected; no persistence on failed generation |
+| Live research | PASS — real BibleGateway/Hub fetch retains all five Exodus movement texts + publishable composition facts |
+| Live model compose | **NOT VERIFIED** — `OPENAI_API_KEY` unavailable locally (Vercel secrets pull returns `[SENSITIVE]` placeholder) |
+| Tests | Focused 006R–R4 **39/39**; full editorial **112 / 1,193**; `tsc --noEmit` 0; `npm run build` 0 |
+| Production articles | Unchanged |
+| Commit / push / deploy | Not performed |
+| Verdict | **BLOCKED — LIVE GENERATION NOT VERIFIED** |
+
+### Acceptance snapshot
+- 1 Same-chapter verse ranges retained: PASS
+- 2 Teaching-aware selection recovers late movements: PASS
+- 3 Evidence gate rejects URL-only / early-chapter misses: PASS
+- 4 Completeness gate still rejects incomplete drafts: PASS
+- 5 Complete five-movement fixture still passes: PASS
+- 6 Single-passage bible unchanged: PASS
+- 7 Non-bible topics skip teaching plan: PASS
+- 8 Live research five-movement evidence + facts: PASS
+- 9 Live model-generated complete article: FAIL (OpenAI key unavailable)
+- 10 EV-REG thresholds 80/70 unchanged: PASS

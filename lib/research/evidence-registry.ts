@@ -10,6 +10,7 @@ import {
   assembleBatchEvidenceSelections,
   selectClaimAwareEvidence,
   selectSourceBalancedEvidence,
+  selectTeachingBalancedEvidence,
   type BatchEvidenceRun,
   type ClaimAwareSelection,
   type ClaimEvidenceMapping,
@@ -58,6 +59,9 @@ export type EvidenceRegistryOptions = ContentFetchDeps & {
   fetchContent?: typeof contentFetcher
   claimTexts?: string[]
   listedSources?: AttributableSource[]
+  /** Mission 006R4: prefer chunks matching required teaching movements/verses. */
+  teachingRelevancePatterns?: RegExp[]
+  teachingRequiredRefs?: import("./scripture-ref").ScriptureRef[]
 }
 
 type CollectedDocument = {
@@ -214,6 +218,8 @@ export async function evidenceRegistry(
     .map((item) => item.document)
     .filter((document): document is SelectableDocument => Boolean(document))
 
+  const teachingPatterns = options.teachingRelevancePatterns ?? []
+  const teachingRefs = options.teachingRequiredRefs ?? []
   const selection =
     claimTexts.length > 0
       ? selectClaimAwareEvidence({
@@ -221,7 +227,17 @@ export async function evidenceRegistry(
           documents,
           listedSources,
         })
-      : selectSourceBalancedEvidence(documents, RESEARCH_MAX_UNIQUE_AUDIT_PASSAGES)
+      : teachingPatterns.length > 0 || teachingRefs.length > 0
+        ? selectTeachingBalancedEvidence(
+            documents,
+            teachingPatterns,
+            RESEARCH_MAX_UNIQUE_AUDIT_PASSAGES,
+            teachingRefs,
+          )
+        : selectSourceBalancedEvidence(
+            documents,
+            RESEARCH_MAX_UNIQUE_AUDIT_PASSAGES,
+          )
 
   const evidenceRecords = selection.evidence
   const sourceDiagnostics = applySelectedPassages(collected, evidenceRecords)

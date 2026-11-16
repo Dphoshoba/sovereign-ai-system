@@ -1,20 +1,18 @@
 /**
- * Multi-passage biblical teaching completeness for Mission 006R3.
+ * Multi-passage biblical teaching completeness for Mission 006R3/R4.
  *
  * Callers:
  * - app/api/ai/generate-article/route.ts (pre-composition evidence gate + prompt plan
- *   + post-draft article coverage check)
- * - tests/editorial/mission-006r3-multi-passage-completeness.test.ts
+ *   + post-draft article coverage check + completeness revision)
+ * - lib/research/claim-evidence-selector.ts (teaching-aware passage selection)
+ * - tests/editorial/mission-006r3-*.test.ts, mission-006r4-*.test.ts
  *
- * No existing module covers mandatory multi-passage teaching plans;
- * evidence-completeness.ts only adjusts publish-ready recommendations.
- *
- * Schemas: reads topic/category strings and EvidenceRecord sourceUrl/title;
+ * Schemas: reads topic/category strings and EvidenceRecord sourceUrl/title/text;
  * returns TeachingCoverageResult / ScriptureTeachingPlan. No database writes.
  *
  * Director: "All mandatory Scripture passages are represented in research
  * evidence" / "Missing mandatory evidence produces a clear diagnostic rather
- * than a misleadingly complete article."
+ * than a misleadingly complete article." / Mission 006R4 composition reliability.
  */
 import type { EvidenceRecord } from "./evidence-registry";
 import {
@@ -32,7 +30,10 @@ export type TeachingMovement = {
   id: string;
   label: string;
   chapterKey: string;
+  /** Patterns that must co-occur in one article section. */
   articlePatterns: RegExp[];
+  /** Any one pattern marks evidence text as relevant to this movement. */
+  evidencePatterns: RegExp[];
 };
 
 export type ScriptureTeachingPlan = {
@@ -74,6 +75,10 @@ const EXODUS_MOVEMENTS: TeachingMovement[] = [
       /exodus\s*5/i,
       /more work|straw|brick|heavier|taskmaster|suffer|bondage|let my people go/i,
     ],
+    evidencePatterns: [
+      /exodus\s*5/i,
+      /more work|straw|brick|heavier|taskmaster|let my people go|who is the lord/i,
+    ],
   },
   {
     id: "exodus-8-in-land",
@@ -83,12 +88,17 @@ const EXODUS_MOVEMENTS: TeachingMovement[] = [
       /exodus\s*8:2[5-7]|exodus\s*8(?!\s*:?\s*28)/i,
       /in the land|within egypt|sacrifice.*land|serve.*in the land/i,
     ],
+    evidencePatterns: [
+      /exodus\s*8:2[5-7]/i,
+      /sacrifice to your god in the land|go ye, sacrifice|in the land/i,
+    ],
   },
   {
     id: "exodus-8-not-far",
     label: "Departure but not very far (Exodus 8:28)",
     chapterKey: "exodus-8",
-    articlePatterns: [/exodus\s*8:28|not very far/i],
+    articlePatterns: [/exodus\s*8:28|not (?:go )?very far/i],
+    evidencePatterns: [/exodus\s*8:28|not (?:go )?very far/i],
   },
   {
     id: "exodus-10-children",
@@ -97,6 +107,10 @@ const EXODUS_MOVEMENTS: TeachingMovement[] = [
     articlePatterns: [
       /exodus\s*10:8|exodus\s*10:9|exodus\s*10:10|exodus\s*10:11|little ones|children/i,
     ],
+    evidencePatterns: [
+      /exodus\s*10:(?:8|9|10|11)\b/i,
+      /little ones|who are they that shall go|go now ye that are men|sons and (with )?our daughters|young and with our old/i,
+    ],
   },
   {
     id: "exodus-10-livestock",
@@ -104,6 +118,10 @@ const EXODUS_MOVEMENTS: TeachingMovement[] = [
     chapterKey: "exodus-10",
     articlePatterns: [
       /exodus\s*10:2[4-6]|flocks? and (your )?herds?|livestock|cattle/i,
+    ],
+    evidencePatterns: [
+      /exodus\s*10:2[4-6]/i,
+      /flocks? and (your )?herds?|herds be stayed|livestock|cattle|leave their flocks/i,
     ],
   },
 ];
@@ -200,6 +218,19 @@ export function buildScriptureTeachingPlan(
   };
 }
 
+function evidenceTextBlob(evidence: readonly EvidenceRecord[]): string {
+  return evidence.map((record) => record.extractedText ?? "").join("\n");
+}
+
+export function movementHasEvidenceText(
+  evidence: readonly EvidenceRecord[],
+  movement: TeachingMovement,
+): boolean {
+  const blob = evidenceTextBlob(evidence);
+  if (!blob.trim()) return false;
+  return movement.evidencePatterns.some((pattern) => pattern.test(blob));
+}
+
 export function assessEvidenceTeachingCoverage(
   evidence: readonly EvidenceRecord[],
   plan: ScriptureTeachingPlan,
@@ -208,17 +239,34 @@ export function assessEvidenceTeachingCoverage(
   const missingChapterKeys = plan.requiredChapterKeys.filter(
     (key) => !covered.has(key),
   );
-  const ok = missingChapterKeys.length === 0;
+  const missingMovements =
+    plan.movements.length > 0
+      ? plan.movements
+          .filter((movement) => !movementHasEvidenceText(evidence, movement))
+          .map((movement) => movement.id)
+      : [];
+  const ok = missingChapterKeys.length === 0 && missingMovements.length === 0;
+  const missingLabels = [
+    ...missingChapterKeys,
+    ...missingMovements,
+  ];
   return {
     ok,
-    missingChapterKeys,
+    missingChapterKeys: [
+      ...new Set([
+        ...missingChapterKeys,
+        ...plan.movements
+          .filter((movement) => missingMovements.includes(movement.id))
+          .map((movement) => movement.chapterKey),
+      ]),
+    ],
     coveredChapterKeys: plan.requiredChapterKeys.filter((key) =>
       covered.has(key),
     ),
-    missingMovements: [],
+    missingMovements,
     reason: ok
       ? ""
-      : `Research incomplete: missing evidence for required passages: ${missingChapterKeys.join(", ")}.`,
+      : `Research incomplete: missing evidence for required passages: ${missingLabels.join(", ")}.`,
   };
 }
 
@@ -353,17 +401,35 @@ export function formatTeachingPlanForPrompt(
 ): string {
   const lines: string[] = [
     "REQUIRED SCRIPTURE COVERAGE (do not omit any item):",
+    "Build the article as a structured teaching with a dedicated H2 section for each required movement or supporting passage below.",
   ];
   if (plan.movements.length > 0) {
     for (const [index, movement] of plan.movements.entries()) {
-      lines.push(`${index + 1}. ${movement.label}`);
+      lines.push(
+        `${index + 1}. SECTION: ${movement.label} — include the cited Exodus reference, biblical narrative, theological interpretation, and pastoral application in this section.`,
+      );
     }
     if (plan.supportingChapterKeys.length > 0) {
       lines.push(
-        "Supporting passages that must appear with accurate KJV citation:",
+        "Supporting passages that must appear with accurate verse-qualified KJV citation in their own section or clearly marked subsection:",
       );
       for (const key of plan.supportingChapterKeys) {
-        lines.push(`- ${key.replace(/-/g, " ")}`);
+        const refs = refsForChapterKey(plan, key);
+        if (refs.length > 0) {
+          for (const ref of refs) {
+            const verse =
+              ref.verseStart != null
+                ? `:${ref.verseStart}${
+                    ref.verseEnd != null && ref.verseEnd !== ref.verseStart
+                      ? `-${ref.verseEnd}`
+                      : ""
+                  }`
+                : "";
+            lines.push(`- ${ref.bookDisplay} ${ref.chapter}${verse}`);
+          }
+        } else {
+          lines.push(`- ${key.replace(/-/g, " ")}`);
+        }
       }
     }
     lines.push(
@@ -371,6 +437,9 @@ export function formatTeachingPlanForPrompt(
     );
     lines.push(
       "Do not claim that Exodus itself labels Pharaoh's negotiations as five satanic tactics.",
+    );
+    lines.push(
+      "Do not stop after the first Exodus movement. Every listed movement and supporting passage is mandatory.",
     );
   } else {
     for (const key of plan.requiredChapterKeys) {
@@ -380,4 +449,87 @@ export function formatTeachingPlanForPrompt(
     }
   }
   return lines.join("\n");
+}
+
+/** Brief used by the bounded completeness revision pass. */
+export function formatMissingCoverageRevisionBrief(
+  plan: ScriptureTeachingPlan,
+  coverage: TeachingCoverageResult,
+): string {
+  const lines = [
+    "The previous draft is incomplete. Expand it so every missing item below has substantive coverage grounded only in the supplied evidence-supported facts.",
+    "Preserve existing accurate sections. Do not invent quotations or unsupported history.",
+    "Missing required coverage:",
+  ];
+  for (const movementId of coverage.missingMovements) {
+    const movement = plan.movements.find((item) => item.id === movementId);
+    lines.push(`- Movement: ${movement?.label ?? movementId}`);
+  }
+  for (const key of coverage.missingChapterKeys) {
+    if (plan.movements.some((movement) => movement.chapterKey === key)) {
+      continue;
+    }
+    const refs = refsForChapterKey(plan, key);
+    if (refs.length > 0) {
+      for (const ref of refs) {
+        const verse =
+          ref.verseStart != null
+            ? `:${ref.verseStart}${
+                ref.verseEnd != null && ref.verseEnd !== ref.verseStart
+                  ? `-${ref.verseEnd}`
+                  : ""
+              }`
+            : "";
+        lines.push(`- Supporting passage: ${ref.bookDisplay} ${ref.chapter}${verse}`);
+      }
+    } else {
+      lines.push(`- Passage: ${key.replace(/-/g, " ")}`);
+    }
+  }
+  return lines.join("\n");
+}
+
+/**
+ * Composition-only fact eligibility for multi-passage bible teachings.
+ * Does not change Prepare/publication verification thresholds.
+ */
+export function isTeachingCompositionFact(fact: {
+  verificationStatus: string;
+  verificationMethod?: string;
+  sourceUrl?: string;
+  supportingSources?: { sourceUrl?: string }[];
+}): boolean {
+  if (
+    fact.verificationStatus === "verified" ||
+    fact.verificationStatus === "partially verified"
+  ) {
+    return true;
+  }
+  if (fact.verificationMethod !== "single-source-supported") return false;
+  const url = fact.supportingSources?.[0]?.sourceUrl || fact.sourceUrl || "";
+  return /biblegateway\.com|biblehub\.com|blueletterbible\.org|kingjamesbibleonline\.org/i.test(
+    url,
+  );
+}
+
+/** Patterns used to prefer teaching-relevant evidence chunks. */
+export function teachingEvidenceRelevancePatterns(
+  plan: ScriptureTeachingPlan,
+): RegExp[] {
+  const patterns: RegExp[] = [];
+  for (const movement of plan.movements) {
+    patterns.push(...movement.evidencePatterns);
+  }
+  for (const ref of plan.requiredRefs) {
+    const book = escapeRegExp(ref.bookDisplay);
+    if (ref.verseStart != null) {
+      patterns.push(
+        new RegExp(
+          `${book}\\s+${ref.chapter}\\s*:\\s*${ref.verseStart}`,
+          "i",
+        ),
+      );
+    }
+  }
+  return patterns;
 }

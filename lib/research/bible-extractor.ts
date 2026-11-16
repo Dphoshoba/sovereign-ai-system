@@ -292,27 +292,45 @@ function extractExodusDeliverance(
   if (includesAny(lower, ["not very far", "not go very far", "go not very far"])) {
     events.push("Pharaoh limits how far Israel may go.");
     claims.push(
-      `${accordingTo} Pharaoh says Israel may go but not very far away.`,
+      `${accordingTo} Pharaoh says Israel may go, only ye shall not go very far away.`,
     );
   }
 
   if (
-    includesAny(lower, ["little ones", "children", "your little"]) &&
-    includesAny(lower, ["pharaoh", "go", "leave", "stay"])
+    includesAny(lower, [
+      "little ones",
+      "children",
+      "your little",
+      "sons and",
+      "daughters",
+      "who are they that shall go",
+      "go now ye that are men",
+    ]) &&
+    includesAny(lower, ["pharaoh", "go", "leave", "stay", "moses"])
   ) {
     events.push("Pharaoh seeks to keep Israel's children behind.");
     claims.push(
-      `${accordingTo} Pharaoh tries to make Israel leave their children behind.`,
+      lower.includes("little ones")
+        ? `${accordingTo} Pharaoh says go ye serve the Lord; only let your little ones also go, while restricting who may go.`
+        : `${accordingTo} Pharaoh asks who are they that shall go, and Moses answers with young and old, sons and daughters.`,
     );
   }
 
   if (
     includesAny(lower, ["flock", "herd", "cattle", "livestock"]) &&
-    includesAny(lower, ["leave", "stay", "remain", "behind", "pharaoh"])
+    includesAny(lower, [
+      "leave",
+      "stay",
+      "stayed",
+      "remain",
+      "behind",
+      "pharaoh",
+      "only let your",
+    ])
   ) {
     events.push("Pharaoh seeks to keep Israel's possessions in Egypt.");
     claims.push(
-      `${accordingTo} Pharaoh tries to make Israel leave their flocks and possessions behind.`,
+      `${accordingTo} Pharaoh says only let your flocks and your herds be stayed.`,
     );
   }
 
