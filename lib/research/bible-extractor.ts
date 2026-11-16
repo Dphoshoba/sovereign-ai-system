@@ -1,108 +1,413 @@
+/**
+ * Subject-preserving biblical passage extraction.
+ * Claims must follow the requested topic / passage subject.
+ * Never invent David-and-Goliath assertions from generic religious vocabulary.
+ *
+ * Called by: lib/research/fact-extractor.ts buildClaims (bible category path).
+ */
+
+export type BibleSubject = "david-goliath" | "exodus-deliverance" | "generic";
+
 export type BibleExtractionResult = {
-    people: string[]
-    places: string[]
-    objects: string[]
-    events: string[]
-    dialogue: string[]
-    themes: string[]
-    applications: string[]
-    claims: string[]
+  people: string[];
+  places: string[];
+  objects: string[];
+  events: string[];
+  dialogue: string[];
+  themes: string[];
+  /** Pastoral/application notes — must not be promoted to verified FACT claims. */
+  applications: string[];
+  claims: string[];
+  subject: BibleSubject;
+};
+
+function unique(values: string[]) {
+  return Array.from(new Set(values)).filter(Boolean);
+}
+
+function includesAny(text: string, terms: string[]) {
+  return terms.some((term) => text.includes(term));
+}
+
+/**
+ * True when a claim/event string belongs to the David-and-Goliath narrative,
+ * including Philistine / confrontation phrasing that omits the word "Goliath".
+ */
+export function isDavidGoliathNarrativeClaim(claim: string): boolean {
+  const text = claim.toLowerCase();
+  if (/\bdavid and goliath\b/.test(text) || /\bgoliath\b/.test(text)) return true;
+  if (/\bphilistines?\b/.test(text)) return true;
+  if (/\b1\s*sam(?:uel)?\s*17\b/.test(text)) return true;
+  if (
+    /\bdavid\b/.test(text) &&
+    /\b(confrontation|confront|sling|stone|saul questions|volunteers to confront|simple weapons)\b/.test(
+      text,
+    )
+  ) {
+    return true;
   }
-  
-  function unique(values: string[]) {
-    return Array.from(new Set(values)).filter(Boolean)
+  if (/saul questions david/i.test(text)) return true;
+  return false;
+}
+
+/** Resolve a chapter number from a BibleGateway / Bible Hub source identity. */
+export function chapterFromScriptureSource(
+  url: string,
+  title = "",
+): number | null {
+  let decoded = `${url} ${title}`;
+  try {
+    decoded = `${decodeURIComponent(url)} ${title}`;
+  } catch {
+    // keep raw identity
   }
-  
-  function includesAny(text: string, terms: string[]) {
-    return terms.some((term) => text.includes(term))
+  const match = decoded.match(
+    /\b(?:exodus|1\s*samuel|1samuel|samuel)[\s%+/_-]*(\d{1,3})\b/i,
+  );
+  if (!match) return null;
+  const chapter = Number(match[1]);
+  return Number.isInteger(chapter) && chapter > 0 ? chapter : null;
+}
+
+/**
+ * Prefer an explicit topic subject; fall back to passage markers.
+ * Generic Lord/God/Israel alone never selects David and Goliath.
+ * Saul + David alone is not enough (anointing / fugitive narratives).
+ */
+export function detectBibleSubject(topic: string, passageText = ""): BibleSubject {
+  const topicLower = topic.toLowerCase();
+  const passageLower = passageText.toLowerCase();
+
+  if (
+    /\b(david\s+and\s+goliath|goliath|1\s*sam(?:uel)?\s*17|1samuel\s*17)\b/.test(
+      topicLower,
+    ) ||
+    (/\bdavid\b/.test(topicLower) && /\b(philistine|goliath)\b/.test(topicLower))
+  ) {
+    return "david-goliath";
   }
-  
-  export function bibleExtractor(text: string): BibleExtractionResult {
-    const lower = text.toLowerCase()
-  
-    const people: string[] = []
-    const places: string[] = []
-    const objects: string[] = []
-    const events: string[] = []
-    const dialogue: string[] = []
-    const themes: string[] = []
-    const applications: string[] = []
-    const claims: string[] = []
-  
-    if (lower.includes("david")) people.push("David")
-    if (lower.includes("goliath")) people.push("Goliath")
-    if (lower.includes("saul")) people.push("Saul")
-    if (lower.includes("jesse")) people.push("Jesse")
-    if (lower.includes("philistine")) people.push("Philistines")
-    if (lower.includes("israel")) people.push("Israel")
-  
-    if (lower.includes("elah")) places.push("Valley of Elah")
-    if (lower.includes("bethlehem")) places.push("Bethlehem")
-  
-    if (includesAny(lower, ["sling", "stone", "staff"])) {
-      objects.push("David's simple weapons")
-    }
-  
-    if (includesAny(lower, ["armor", "sword", "spear", "shield"])) {
-      objects.push("Conventional battle equipment")
-    }
-  
-    if (includesAny(lower, ["fight", "battle", "war", "army", "camp"])) {
-      events.push("David and Goliath is set within a military conflict.")
-    }
-  
-    if (lower.includes("saul") && includesAny(lower, ["cannot", "not able", "boy", "youth"])) {
-      events.push("Saul questions David's ability to fight Goliath.")
-    }
-  
-    if (lower.includes("david") && lower.includes("goliath")) {
-      events.push("David confronts Goliath.")
-      claims.push("The account of David and Goliath centers on David confronting Goliath.")
-    }
-  
-    if (lower.includes("philistine")) {
-      themes.push("Conflict")
-      claims.push("The David and Goliath account involves conflict with the Philistines.")
-    }
-  
-    if (lower.includes("saul")) {
-      claims.push("The David and Goliath account takes place during the reign of Saul.")
-    }
-  
-    if (includesAny(lower, ["lord", "god", "faith", "trust"])) {
-      themes.push("Trust in God")
-      applications.push("Faith can shape courage in intimidating circumstances.")
-      claims.push("The David and Goliath account highlights trust in God.")
-    }
-  
-    if (includesAny(lower, ["heart fail", "afraid", "fear"])) {
-      themes.push("Courage over fear")
-      applications.push("Fear can be confronted through faithful action.")
-    }
-  
-    if (includesAny(lower, ["go and fight", "will go", "fight him"])) {
-      dialogue.push("David expresses willingness to confront the Philistine.")
-      events.push("David volunteers to confront the Philistine.")
-    }
-  
-    if (includesAny(lower, ["stone", "sling"])) {
-      events.push("David uses simple weapons in the confrontation.")
-      claims.push("David used simple weapons in the confrontation with Goliath.")
-    }
-  
-    if (includesAny(lower, ["defy", "challenge"])) {
-      events.push("Goliath challenges Israel.")
-      claims.push("Goliath challenged Israel in the David and Goliath account.")
-    }
-  
-    return {
-      people: unique(people),
-      places: unique(places),
-      objects: unique(objects),
-      events: unique(events),
-      dialogue: unique(dialogue),
-      themes: unique(themes),
-      applications: unique(applications),
-      claims: unique(claims),
-    }
+
+  if (
+    /\b(pharaoh|exodus|egypt|moses|israel'?s?\s+deliverance|let my people go)\b/.test(
+      topicLower,
+    )
+  ) {
+    return "exodus-deliverance";
   }
+
+  if (
+    /\b(david\s+and\s+goliath|goliath|1\s*sam(?:uel)?\s*17)\b/.test(passageLower) ||
+    (/\bdavid\b/.test(passageLower) && /\b(goliath|philistine)\b/.test(passageLower))
+  ) {
+    return "david-goliath";
+  }
+
+  if (
+    /\b(pharaoh|exodus|moses|egypt|let my people go|bricks?|straw)\b/.test(passageLower)
+  ) {
+    return "exodus-deliverance";
+  }
+
+  return "generic";
+}
+
+export type BibleExtractOptions = {
+  topic?: string;
+  chapter?: number | null;
+  sourceUrl?: string;
+  sourceTitle?: string;
+};
+
+function extractDavidGoliath(lower: string): Omit<BibleExtractionResult, "subject"> {
+  const people: string[] = [];
+  const places: string[] = [];
+  const objects: string[] = [];
+  const events: string[] = [];
+  const dialogue: string[] = [];
+  const themes: string[] = [];
+  const applications: string[] = [];
+  const claims: string[] = [];
+
+  if (lower.includes("david")) people.push("David");
+  if (lower.includes("goliath")) people.push("Goliath");
+  if (lower.includes("saul")) people.push("Saul");
+  if (lower.includes("jesse")) people.push("Jesse");
+  if (lower.includes("philistine")) people.push("Philistines");
+  if (lower.includes("israel")) people.push("Israel");
+
+  if (lower.includes("elah")) places.push("Valley of Elah");
+  if (lower.includes("bethlehem")) places.push("Bethlehem");
+
+  if (includesAny(lower, ["sling", "stone", "staff"])) {
+    objects.push("David's simple weapons");
+  }
+
+  if (includesAny(lower, ["armor", "sword", "spear", "shield"])) {
+    objects.push("Conventional battle equipment");
+  }
+
+  if (
+    lower.includes("david") &&
+    lower.includes("goliath") &&
+    includesAny(lower, ["fight", "battle", "war", "army", "camp", "confront"])
+  ) {
+    events.push("David and Goliath is set within a military conflict.");
+  }
+
+  if (lower.includes("saul") && includesAny(lower, ["cannot", "not able", "boy", "youth"])) {
+    events.push("Saul questions David's ability to fight Goliath.");
+  }
+
+  if (lower.includes("david") && lower.includes("goliath")) {
+    events.push("David confronts Goliath.");
+    claims.push("The account of David and Goliath centers on David confronting Goliath.");
+  }
+
+  if (lower.includes("philistine")) {
+    themes.push("Conflict");
+    claims.push("The David and Goliath account involves conflict with the Philistines.");
+  }
+
+  if (lower.includes("saul") && (lower.includes("david") || lower.includes("goliath"))) {
+    claims.push("The David and Goliath account takes place during the reign of Saul.");
+  }
+
+  if (
+    (lower.includes("david") || lower.includes("goliath")) &&
+    includesAny(lower, ["lord", "god", "faith", "trust"])
+  ) {
+    themes.push("Trust in God");
+    applications.push("Faith can shape courage in intimidating circumstances.");
+    claims.push("The David and Goliath account highlights trust in God.");
+  }
+
+  if (includesAny(lower, ["heart fail", "afraid", "fear"]) && lower.includes("david")) {
+    themes.push("Courage over fear");
+    applications.push("Fear can be confronted through faithful action.");
+  }
+
+  if (
+    lower.includes("david") &&
+    includesAny(lower, ["go and fight", "will go", "fight him"])
+  ) {
+    dialogue.push("David expresses willingness to confront the Philistine.");
+    events.push("David volunteers to confront the Philistine.");
+  }
+
+  if (includesAny(lower, ["stone", "sling"]) && lower.includes("david")) {
+    events.push("David uses simple weapons in the confrontation with Goliath.");
+    claims.push("David used simple weapons in the confrontation with Goliath.");
+  }
+
+  if (lower.includes("goliath") && includesAny(lower, ["defy", "challenge"])) {
+    events.push("Goliath challenges Israel.");
+    claims.push("Goliath challenged Israel in the David and Goliath account.");
+  }
+
+  return {
+    people: unique(people),
+    places: unique(places),
+    objects: unique(objects),
+    events: unique(events),
+    dialogue: unique(dialogue),
+    themes: unique(themes),
+    applications: unique(applications),
+    claims: unique(claims),
+  };
+}
+
+function extractExodusDeliverance(
+  lower: string,
+  chapter?: number | null,
+): Omit<BibleExtractionResult, "subject"> {
+  const people: string[] = [];
+  const places: string[] = [];
+  const objects: string[] = [];
+  const events: string[] = [];
+  const dialogue: string[] = [];
+  const themes: string[] = [];
+  const applications: string[] = [];
+  const claims: string[] = [];
+  const accordingTo =
+    chapter != null && chapter > 0
+      ? `According to Exodus ${chapter},`
+      : "According to Exodus,";
+
+  if (lower.includes("pharaoh")) people.push("Pharaoh");
+  if (lower.includes("moses")) people.push("Moses");
+  if (lower.includes("aaron")) people.push("Aaron");
+  if (includesAny(lower, ["israel", "israelites", "hebrews"])) people.push("Israel");
+
+  if (lower.includes("egypt")) places.push("Egypt");
+  if (lower.includes("wilderness")) places.push("wilderness");
+
+  if (includesAny(lower, ["brick", "straw", "taskmaster"])) {
+    objects.push("Forced labor materials");
+  }
+
+  if (includesAny(lower, ["flock", "herd", "cattle", "livestock"])) {
+    objects.push("Livestock and possessions");
+  }
+
+  if (includesAny(lower, ["let my people go", "let israel go"])) {
+    dialogue.push("The Lord commands Pharaoh to let Israel go.");
+    claims.push(
+      `${accordingTo} the Lord commands Pharaoh to let Israel go and worship Him.`,
+    );
+  }
+
+  if (
+    lower.includes("pharaoh") &&
+    includesAny(lower, [
+      "who is the lord",
+      "know not the lord",
+      "will not let",
+      "neither will i let",
+    ])
+  ) {
+    events.push("Pharaoh refuses the Lord's command to release Israel.");
+    claims.push(`${accordingTo} Pharaoh refuses to let Israel go.`);
+  }
+
+  if (
+    includesAny(lower, ["more work", "heavier", "brick", "straw", "task"]) &&
+    includesAny(lower, ["pharaoh", "taskmaster", "people", "israel"])
+  ) {
+    events.push("Israel's labor burden increases under Pharaoh.");
+    claims.push(
+      `${accordingTo} Pharaoh increases Israel's suffering through heavier labor.`,
+    );
+  }
+
+  if (
+    includesAny(lower, ["sacrifice", "serve", "worship"]) &&
+    includesAny(lower, ["land", "egypt", "here"])
+  ) {
+    events.push("Pharaoh offers worship confined within Egypt.");
+    claims.push(
+      `${accordingTo} Pharaoh offers a compromise that Israel serve God within Egypt.`,
+    );
+  }
+
+  if (includesAny(lower, ["not very far", "not go very far", "go not very far"])) {
+    events.push("Pharaoh limits how far Israel may go.");
+    claims.push(
+      `${accordingTo} Pharaoh says Israel may go but not very far away.`,
+    );
+  }
+
+  if (
+    includesAny(lower, ["little ones", "children", "your little"]) &&
+    includesAny(lower, ["pharaoh", "go", "leave", "stay"])
+  ) {
+    events.push("Pharaoh seeks to keep Israel's children behind.");
+    claims.push(
+      `${accordingTo} Pharaoh tries to make Israel leave their children behind.`,
+    );
+  }
+
+  if (
+    includesAny(lower, ["flock", "herd", "cattle", "livestock"]) &&
+    includesAny(lower, ["leave", "stay", "remain", "behind", "pharaoh"])
+  ) {
+    events.push("Pharaoh seeks to keep Israel's possessions in Egypt.");
+    claims.push(
+      `${accordingTo} Pharaoh tries to make Israel leave their flocks and possessions behind.`,
+    );
+  }
+
+  if (lower.includes("moses") && lower.includes("aaron") && lower.includes("pharaoh")) {
+    events.push("Moses and Aaron confront Pharaoh.");
+  }
+
+  if (includesAny(lower, ["lord", "god"]) && lower.includes("pharaoh")) {
+    themes.push("Obedience under pressure");
+  }
+
+  if (includesAny(lower, ["compromise", "not very far", "within egypt", "leave"])) {
+    themes.push("Resistance through compromise");
+    applications.push(
+      "Spiritual pressure often arrives as a compromise that keeps part of life in bondage.",
+    );
+  }
+
+  return {
+    people: unique(people),
+    places: unique(places),
+    objects: unique(objects),
+    events: unique(events),
+    dialogue: unique(dialogue),
+    themes: unique(themes),
+    applications: unique(applications),
+    claims: unique(claims),
+  };
+}
+
+function extractGeneric(lower: string): Omit<BibleExtractionResult, "subject"> {
+  const themes: string[] = [];
+
+  // Neutral themes only — never story-specific canned narratives.
+  if (includesAny(lower, ["lord", "god", "faith", "trust"])) {
+    themes.push("Trust in God");
+  }
+  if (includesAny(lower, ["afraid", "fear", "courage"])) {
+    themes.push("Courage over fear");
+  }
+
+  return {
+    people: [],
+    places: [],
+    objects: [],
+    events: [],
+    dialogue: [],
+    themes: unique(themes),
+    applications: [],
+    claims: [],
+  };
+}
+
+/**
+ * Extract biblical entities and claims from a passage sentence.
+ * @param text Passage or evidence sentence
+ * @param topicOrOptions Director topic string, or options with topic/chapter/source
+ */
+export function bibleExtractor(
+  text: string,
+  topicOrOptions: string | BibleExtractOptions = "",
+): BibleExtractionResult {
+  const options: BibleExtractOptions =
+    typeof topicOrOptions === "string"
+      ? { topic: topicOrOptions }
+      : topicOrOptions;
+  const topic = options.topic ?? "";
+  const chapter =
+    options.chapter ??
+    chapterFromScriptureSource(options.sourceUrl ?? "", options.sourceTitle ?? "");
+  const lower = text.toLowerCase();
+  const subject = detectBibleSubject(topic, text);
+
+  const base =
+    subject === "david-goliath"
+      ? extractDavidGoliath(lower)
+      : subject === "exodus-deliverance"
+        ? extractExodusDeliverance(lower, chapter)
+        : extractGeneric(lower);
+
+  // Hard guard: never emit D&G claim strings outside the D&G subject.
+  const claims =
+    subject === "david-goliath"
+      ? base.claims
+      : base.claims.filter((claim) => !isDavidGoliathNarrativeClaim(claim));
+
+  const events =
+    subject === "david-goliath"
+      ? base.events
+      : base.events.filter((event) => !isDavidGoliathNarrativeClaim(event));
+
+  return {
+    ...base,
+    claims: unique(claims),
+    events: unique(events),
+    subject,
+  };
+}

@@ -478,9 +478,8 @@ export function resolveClaimSourceBinding(
       exclusiveUrl: resolveExclusiveUrl(listedSources, (source) =>
         isPrimaryScriptureSourceForClaim(source, claim),
       ),
-      exclusiveDocumentKey: citation
-        ? scriptureDocumentKey(citation)
-        : "1-samuel-17",
+      // Never default an uncited primary-scripture claim to 1 Samuel 17.
+      exclusiveDocumentKey: citation ? scriptureDocumentKey(citation) : null,
       isMultiSource: false,
     };
   }
@@ -533,11 +532,51 @@ export function resolveClaimSourceBinding(
   };
 }
 
+/**
+ * Reject cross-narrative matches: a David-and-Goliath claim must not be
+ * supported by an Exodus passage (and vice versa) even when both mention God.
+ */
+export function biblicalNarrativeAllowsEvidence(
+  claim: string,
+  source: AttributableSource,
+): boolean {
+  const claimText = claim.toLowerCase();
+  const identity = `${source.url} ${source.title ?? ""} ${source.publisher ?? ""}`.toLowerCase();
+
+  const claimDavidGoliath =
+    /\bdavid and goliath\b/.test(claimText) ||
+    /\bgoliath\b/.test(claimText) ||
+    /\bphilistines?\b/.test(claimText) ||
+    /\b1\s*sam(?:uel)?\s*17\b/.test(claimText) ||
+    (/\bdavid\b/.test(claimText) &&
+      /\b(confrontation|confront|sling|simple weapons|volunteers to confront)\b/.test(
+        claimText,
+      ));
+  const claimExodusDeliverance =
+    /\bpharaoh\b/.test(claimText) ||
+    /\bexodus\b/.test(claimText) ||
+    /\bmoses\b/.test(claimText) ||
+    /\blet my people go\b/.test(claimText) ||
+    /\blet israel go\b/.test(claimText);
+
+  const sourceExodus = /\bexodus\b/.test(identity);
+  const sourceSamuel17 =
+    /\b1[\s_-]*samuel\b/.test(identity) ||
+    /samuel%2017/.test(identity) ||
+    /\bgoliath\b/.test(identity);
+
+  if (claimDavidGoliath && sourceExodus && !sourceSamuel17) return false;
+  if (claimExodusDeliverance && sourceSamuel17 && !sourceExodus) return false;
+  return true;
+}
+
 export function claimAllowsEvidence(
   claim: string,
   source: AttributableSource,
   listedSources: AttributableSource[] = [],
 ): boolean {
+  if (!biblicalNarrativeAllowsEvidence(claim, source)) return false;
+
   const binding = resolveClaimSourceBinding(claim, listedSources);
 
   if (binding.role === "primary-scripture") {

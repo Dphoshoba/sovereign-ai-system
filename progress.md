@@ -2,12 +2,11 @@
 
 **Worktree:** `C:\Users\David\echoes-visions-preview-security`
 **Branch:** `integrate/production-research-integrity`
-**HEAD:** `d5ed6e983118ebc721441c530bb6b4cc696c57ca` (+ local Mission 006R uncommitted)
-**Updated:** 2026-11-17 (Mission 006R scripture editorial reliability — local fix ready for governed release)
+**Updated:** 2026-11-17 (Mission 006R2 Production release)
 
 ## Operating contract
 
-Mission 005R Production release complete (`dpl_EMYTUsKCeCxUMDsQiXBy7K9A5HxG` @ `5fbdfd05`). Mission 006 Director decision: **REQUEST CHANGES** on `cmwjb1tld000u07jp2rz3ydrm` (preserved in Production; no approve/schedule/publish). Mission 006R repaired bible-stories subject-preserving research + scripture claim auditability locally. No deploy / Production regenerate without separate authorisation. Space discoveries remains ON HOLD.
+Mission 005R Production release complete (`dpl_EMYTUsKCeCxUMDsQiXBy7K9A5HxG` @ `5fbdfd05`). Mission 006R Production release complete (`dpl_HtFNkrbPNrTuzJuuwJPEREHTPDER` @ `3fe423ec` — **rollback baseline**). Mission **006R2** scoped Production release authorised. No Production article mutations; Mission 006 editorial recovery still requires separate authorisation. Space discoveries remains ON HOLD.
 
 ## EV-REG-SPEC-1.1.0 release
 
@@ -113,6 +112,48 @@ Decision board instructs “Correct unverified claims, then run Prepare for Revi
 | Defect B fix | `isScriptureTextualClaim` + generalized primary-scripture claim/source binding + verse locator; glued-heading split so body prose remains auditable; pastoral advice stays authorial |
 | Governance | Compatible with EV-REG-SPEC-1.1.0 primary-source pathway; **no amendment required**; thresholds unchanged; `insufficient_article_evidence` retained |
 | Tests | Focused Mission 006R + Article-3 identity/coverage green; full editorial **108 files / 1,162 tests** pass; `tsc --noEmit` 0; `npm run build` 0 |
-| Production article | Not regenerated; evidence article preserved |
-| Release | **Not deployed** — awaiting Director governed-release authorisation |
-| Commit scope (candidate) | scripture-ref + fallback/collector + claim extractor/attribution + verse locator + mission-006r tests + progress.md; exclude generated artefacts / secrets |
+| Production article | Prior article `cmwjb1tld000u07jp2rz3ydrm` preserved |
+| Release | **Deployed** — `3fe423ec` → `dpl_HtFNkrbPNrTuzJuuwJPEREHTPDER` (Ready); health ok; engine `article-grounded-ev-reg-1` |
+| Commit scope | scripture-ref + fallback/collector + claim extractor/attribution + verse locator + mission-006r tests + progress.md |
+
+## Mission 006 — Autonomous editorial recovery (Production)
+
+| Field | Value |
+|---|---|
+| Authority | Director Mission 006 AUTHORISED (dashboard only; no approve/publish) |
+| Final candidate article | `cmwjn252i000c08jtva3c775m` — Pharaoh's Counterplans: How Bondage Tries to Block Deliverance |
+| Prior trail | `cmwjb1tld000u07jp2rz3ydrm` (REQUEST CHANGES); `cmwjmu0ep000008jtwb586jkp` (first post-006R regen; wrong chapter mix + D&G body) |
+| Status | `review-required` (not approved; not scheduled; not published) |
+| Sources (candidate) | Exodus 5, 8, 10 + John 10 (BibleGateway/BibleHub) — **006R source fix verified** |
+| Audit | recommendation `review-required`; Sources 8; Evidence Records **0**; Facts **0**; consensus/SQ/avg **0** |
+| Prepare | Not available on candidate (current audit already present; list shows Approve not Prepare) |
+| Body defect | Opens as `FACT 1: The David and Goliath account highlights trust in God` despite Exodus topic/sources |
+| Smoking-gun evidence | Consensus group claim `"The David and Goliath account highlights trust in God."` bound to Exodus 5 KJV evidenceText (Moses/Aaron/Pharaoh) |
+| Root cause (single) | `lib/research/bible-extractor.ts` + `lib/research/fact-extractor.ts` `bibleClaims` still hard-map any bible evidence containing Lord/God/Israel/faith/trust into David-and-Goliath claims; 006R did not remove this path |
+| Manual interventions | 0 (no API source injection; no score edits; no DB writes) |
+| Director decision required | **REQUEST CHANGES** — authorise Mission **006R2** to make bible fact extraction subject-preserving (Exodus/Pharaoh-aware; never inject unrelated D&G claims), then re-run dashboard recovery |
+
+### Acceptance snapshot
+- A Source subject preservation (006R): PASS (Exodus 5/8/10 + John 10)
+- B Body free of unrelated biblical story: FAIL (D&G FACT framing)
+- C Scripture claims auditable / evidence traceable: FAIL (Facts 0; Evidence Used [])
+- D Valid EV-REG editorial decision state for human review of Exodus teaching: FAIL
+- E Approve/schedule/publish: Not attempted (boundary held)
+
+## Mission 006R2 — Biblical research integrity (local)
+
+| Field | Value |
+|---|---|
+| Authority | Director **CONDITIONAL APPROVAL** for scoped Production release (2026-11-17) |
+| Root cause | `bibleExtractor` / dead `bibleClaims` mapped Lord/God/Israel/faith/trust → hard-coded David-and-Goliath claims; applications promoted into FACT claims; uncited primary-scripture key defaulted to `1-samuel-17` |
+| Fix A | `bible-extractor.ts` — subject detection (`david-goliath` \| `exodus-deliverance` \| `generic`); Exodus-aware extraction; chapter-qualified claims; `isDavidGoliathNarrativeClaim`; D&G rules only when subject is D&G |
+| Fix B | `fact-extractor.ts` — pass topic + source into extractor; drop pastoral applications from FACT claims; final filter uses topic **and** evidence blob |
+| Fix C | `claim-source-attribution.ts` — `biblicalNarrativeAllowsEvidence` blocks Exodus↔D&G mismatches (incl. Philistine/confrontation); no `1-samuel-17` default key |
+| Fix D | `generate-article/route.ts` — bible topic fidelity instruction + filter D&G FACT blocks using evidence-aware subject + narrative claim detector |
+| Review follow-up | Closed [Review](77d26edd-19aa-4d64-bb08-ef4a76353304) HIGH items: Philistine gate, topic-only filter, residual confrontation leak, chapter provenance |
+| Tests | `tests/editorial/mission-006r2-biblical-research-integrity.test.ts` (acceptance 1–10 + regression cases) |
+| Regression | Focused 006R+006R2 **17/17**; full editorial **109 / 1,172**; `tsc --noEmit` 0; `npm run build` 0 (pre-release re-verify) |
+| Production | No article/audit changes; no regenerate; no Prepare/approve/schedule/publish |
+| Rollback baseline | Prior Ready Production `dpl_HtFNkrbPNrTuzJuuwJPEREHTPDER` @ `3fe423ec` |
+| Commit scope | bible-extractor + fact-extractor + claim-source-attribution + generate-article + mission-006r2 tests + progress.md; **excluded** `scripts/final-exec-*.cjs` |
+| Status | Production release in progress under Director CONDITIONAL APPROVAL |

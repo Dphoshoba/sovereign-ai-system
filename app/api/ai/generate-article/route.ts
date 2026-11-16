@@ -10,6 +10,10 @@ import {
 } from "../../../../lib/research/source-collector";
 import { evidenceRegistry } from "../../../../lib/research/evidence-registry";
 import { factExtractor } from "../../../../lib/research/fact-extractor";
+import {
+  detectBibleSubject,
+  isDavidGoliathNarrativeClaim,
+} from "../../../../lib/research/bible-extractor";
 import { factVerificationEngine } from "../../../../lib/research/fact-verification-engine";
 import { consensusEngine } from "../../../../lib/research/consensus-engine";
 import { recommendationWithEvidenceCompleteness } from "../../../../lib/research/evidence-completeness";
@@ -234,11 +238,28 @@ export async function POST(request: Request) {
         ? "CONSENSUS THEMES:\n\n" + consensusText
         : "No consensus themes available.";
 
-    const publishableFacts = factVerification.verifiedFacts.filter(
-      (fact) =>
+    const evidenceBlob = (evidence.evidence ?? [])
+      .map((record: { extractedText?: string }) => record.extractedText ?? "")
+      .join("\n");
+    const bibleSubject = String(category || "")
+      .toLowerCase()
+      .includes("bible")
+      ? detectBibleSubject(String(topic || ""), evidenceBlob)
+      : "generic";
+    const publishableFacts = factVerification.verifiedFacts.filter((fact) => {
+      const statusOk =
         fact.verificationStatus === "verified" ||
-        fact.verificationStatus === "partially verified",
-    );
+        fact.verificationStatus === "partially verified";
+      if (!statusOk) return false;
+      // Defense in depth: never feed unrelated D&G FACT blocks into non-D&G bible topics.
+      if (
+        bibleSubject !== "david-goliath" &&
+        isDavidGoliathNarrativeClaim(fact.claim)
+      ) {
+        return false;
+      }
+      return true;
+    });
 
     const verifiedFactsText = publishableFacts
       .map((fact, index) => {
@@ -287,7 +308,7 @@ export async function POST(request: Request) {
         "\n\n" +
         "Write a full, useful article of 1200 to 1800 words when evidence allows. If evidence is limited, write as fully as possible without inventing claims.\n\n" +
         "Do not redirect the article back to AI automation unless the category is ai-tools or ai-automation.\n" +
-        "If the category is bible-stories, write a Bible/history article.\n" +
+        "If the category is bible-stories, write a Bible/history article that stays on the requested topic and cited passages. Do not inject an unrelated biblical story (for example David and Goliath) when the topic and facts concern a different passage such as Exodus or Pharaoh.\n" +
         "If the category is motivation, write a motivation article.\n" +
         "If the category is health, write a health article.\n" +
         "If the category is space, write a space article.\n" +
