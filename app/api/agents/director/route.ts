@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { directorAgent } from "../../../../lib/agents/director-agent"
 import { startPersistentScheduler } from "../../../../lib/agents/persistent-scheduler-agent"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   startPersistentScheduler()
 
   try {

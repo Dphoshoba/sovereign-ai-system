@@ -5,8 +5,12 @@ import { reinforcementClusteringAgent } from "../../../../lib/agents/reinforceme
 import { strategicPolicyMutationAgent } from "../../../../lib/agents/strategic-policy-mutation-agent"
 import { strategyEvolutionAgent } from "../../../../lib/agents/strategy-evolution-agent"
 import { metaLearningAgent } from "../../../../lib/agents/meta-learning-agent"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const memories =
       await prisma.videoPerformanceMemory.findMany({

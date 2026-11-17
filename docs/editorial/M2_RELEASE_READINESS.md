@@ -78,6 +78,8 @@
 
 **Audit posture:** Findings are reported; product behaviour was **not** changed in M2-RR to conceal them. M2-P0 correctly locked the research-free **article** packaging path; it did not remediate the broader agent YouTube/media mutation surface.
 
+**Follow-up:** M2-SR1 remediated privileged `/api/agents/*` surfaces (see `docs/editorial/M2_SR1_AGENT_API_SECURITY_REMEDIATION.md`). Production promotion remains **NO-GO** until remaining conditions in Section L are cleared.
+
 ## D. Governance (publishing spine)
 
 | Invariant | Result | Evidence |

@@ -57,8 +57,12 @@ import { recursiveStrategicForesightAgent } from "../../../../lib/agents/recursi
 import { recursiveOSKernelAgent } from "../../../../lib/agents/recursive-os-kernel-agent"
 import { recursiveCivilizationAPIAgent } from "../../../../lib/agents/recursive-civilization-api-agent"
 import { recursiveInstitutionalAgent } from "../../../../lib/agents/recursive-institutional-agent"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await req.json()
     const niche = body.niche || "AI + Faith"
