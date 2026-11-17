@@ -2,19 +2,30 @@
  * Behaviour under test: EV-BIBLE-AUTHORITY-001 Biblical Editorial Evidence Profile
  * under EV-REG-SPEC-1.1.0 (permanent scripture standard).
  * Module: lib/research/biblical-editorial-evidence-profile.ts,
- * versioned-evidence.ts, consensus-engine.ts, primary-source-publication.ts
+ * article-claim-extractor.ts, versioned-evidence.ts, consensus-engine.ts,
+ * primary-source-publication.ts
  * Existing related: mission-006-scripture-primary-source-classification.test.ts
  * User instruction: permanent regression tests for KJV quotes, mismatches,
  * "we must" in Scripture, multi-verse contrasts, pastoral vs fact, dual hosts,
- * SQ, confirmation, and non-Exodus reuse.
+ * SQ, confirmation, and non-Exodus reuse; Mission 006: pastoral applications,
+ * factual assertions disguised as applications, and thematic headings.
  */
 import { describe, expect, it } from "vitest"
 import { EV_REG_SPEC_1_1_0 } from "../../lib/research/audit-specification-compatibility"
 import {
+  extractArticleClaims,
+  isExternallyVerifiableClaim,
+  isScriptureTextualClaim,
+} from "../../lib/research/article-claim-extractor"
+import {
   classifyBiblicalClaimCategory,
   isBiblicalTeachingArticle,
+  isCategoryADirectScriptureClaim,
   isCategoryBInterpretationClaim,
+  isCategoryCExternalFactClaim,
   isExclusivePrimaryEligibleScriptureClaim,
+  isStewardshipPastoralApplication,
+  isThematicEditorialHeading,
   SCRIPTURE_EDITION_AUTHORITY_SCORE,
   SCRIPTURE_KJV_IDENTITY,
 } from "../../lib/research/biblical-editorial-evidence-profile"
@@ -220,6 +231,86 @@ describe("EV-BIBLE-AUTHORITY-001 permanent scripture profile", () => {
       "Archaeological excavations near Pi-Ramesses report a 19th-century BC inscription discovered by researchers."
     expect(classifyBiblicalClaimCategory(claim)).toBe("C")
     expect(isExclusivePrimaryEligibleScriptureClaim(claim)).toBe(false)
+  })
+
+  it("classifies stewardship pastoral applications as Category B, not external facts", () => {
+    const claim =
+      "A customary 10% contribution should therefore not be regarded as the full extent of our responsibility to God."
+    expect(isStewardshipPastoralApplication(claim)).toBe(true)
+    expect(classifyBiblicalClaimCategory(claim)).toBe("B")
+    expect(isCategoryADirectScriptureClaim(claim)).toBe(false)
+    expect(isExternallyVerifiableClaim(claim)).toBe(false)
+    expect(isScriptureTextualClaim(claim)).toBe(false)
+  })
+
+  it("still treats factual assertions disguised as applications as Category C", () => {
+    const claim =
+      "A recent peer-reviewed survey found that 10 percent of households donate weekly."
+    expect(isCategoryCExternalFactClaim(claim)).toBe(true)
+    expect(isStewardshipPastoralApplication(claim)).toBe(false)
+    expect(classifyBiblicalClaimCategory(claim)).toBe("C")
+    expect(isExternallyVerifiableClaim(claim)).toBe(true)
+
+    const framedStat =
+      "Christians today number roughly 2.4 billion, or 31% of the world population."
+    expect(isStewardshipPastoralApplication(framedStat)).toBe(false)
+    expect(isExternallyVerifiableClaim(framedStat)).toBe(true)
+
+    const stewardshipCoveredStat =
+      "In light of this teaching, 70% of American Christians give nothing to charity."
+    expect(isStewardshipPastoralApplication(stewardshipCoveredStat)).toBe(false)
+    expect(isExternallyVerifiableClaim(stewardshipCoveredStat)).toBe(true)
+  })
+
+  it("treats thematic scripture list headings as headings, not factual claims", () => {
+    const heading =
+      "Increased oppression: When obedience meets resistance (Exodus 5:1–9)"
+    expect(isThematicEditorialHeading(heading)).toBe(true)
+    expect(isScriptureTextualClaim(heading)).toBe(false)
+    expect(isExternallyVerifiableClaim(heading)).toBe(false)
+
+    const factualHeading =
+      "Oppression rose 40%: Pharaoh increased the brick quota (Exodus 5:1–9)"
+    expect(isThematicEditorialHeading(factualHeading)).toBe(false)
+    expect(
+      isThematicEditorialHeading(
+        "Pharaoh's census: Egypt counted 600,000 men (Exodus 12:37)",
+      ),
+    ).toBe(false)
+    expect(
+      isThematicEditorialHeading(
+        "Egypt: Pharaoh killed all firstborn Israelites (Exodus 12:29)",
+      ),
+    ).toBe(false)
+
+    const extracted = extractArticleClaims({
+      title: "The Devil's Tactics",
+      excerpt: "Pharaoh's counterplans.",
+      content: `## Body
+
+1. Increased oppression: When obedience meets resistance (Exodus 5:1–9)
+
+In light of this teaching (Romans 12:1–2), our lives themselves become the offering. A customary 10% contribution should therefore not be regarded as the full extent of our responsibility to God.
+
+Moses and Aaron deliver the Lord's command: "Let my people go, that they may hold a feast unto me in the wilderness" (Exodus 5:1).
+`,
+      factualClaimLimit: 36,
+    })
+
+    expect(
+      extracted.claims.some((c) => /Increased oppression/i.test(c.claim)),
+    ).toBe(false)
+    expect(
+      extracted.claims.some((c) => /10%\s+contribution/i.test(c.claim)),
+    ).toBe(false)
+    expect(
+      extracted.authorialAssertions.some((c) =>
+        /10%\s+contribution/i.test(c.claim),
+      ),
+    ).toBe(true)
+    expect(
+      extracted.claims.some((c) => /Let my people go/i.test(c.claim)),
+    ).toBe(true)
   })
 
   it("assigns documented scripture edition authority for source-quality", () => {

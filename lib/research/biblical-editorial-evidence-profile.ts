@@ -46,13 +46,36 @@ const TRANSLATION_RE = /\b(?:KJV|King James(?:\s+Version)?)\b/i
 
 /**
  * Pastoral / interpretive markers evaluated only on authorial commentary
- * (text outside quotation marks).
+ * (text outside quotation marks). Stewardship contribution applications are
+ * handled separately by STEWARDSHIP_APPLICATION_RE so measurable statistics
+ * with "Christians today" framing remain Category C / externally verifiable.
+ * Callers: classifyBiblicalClaimCategory, isStewardshipPastoralApplication,
+ * isExternallyVerifiableClaim. User instruction: distinguish pastoral
+ * application from quotation; apply heading/claim distinction.
  */
 const INTERPRETATION_OUTSIDE_QUOTES_RE =
   /\b(?:christians?\s+today|for\s+believers(?:\s+today)?|practical\s+(?:guidance|application|examples?|steps?)|typolog(?:y|ical)|symboli[sz]es|spiritual(?:ly)?\s+(?:means|represents|signifies)|teaches\s+us\s+that|we\s+(?:should|must|ought)|pastoral|application\s+for|this\s+(?:means|shows\s+that)\s+(?:we|believers|christians)|illustrates?\s+the\s+(?:danger|importance|need)|analogy\s+for)\b/i
 
+/** Stewardship teaching shapes — not empirical survey / population statistics. */
+const STEWARDSHIP_APPLICATION_RE =
+  /\b(?:customary\s+\d+\s*%\s+contribution|full\s+extent\s+of\s+(?:our|the)\s+responsibility|responsibility\s+to\s+(?:god|christ)|should\s+(?:therefore\s+)?not\s+be\s+regarded|in\s+light\s+of\s+this\s+teaching|our\s+lives\s+themselves\s+become\s+the\s+offering)\b/i
+
 const EXTERNAL_FACT_RE =
   /\b(?:archaeolog|carbon[- ]dat|radiocarbon|peer[- ]reviewed|statistic|survey\s+found|percent|percentage|excavation|inscription\s+discovered|scientific\s+study|according\s+to\s+(?:historians?|scientists?|researchers?))\b/i
+
+const BOOK_NAMES_RE =
+  "(?:genesis|exodus|leviticus|numbers|deuteronomy|joshua|judges|ruth|samuel|kings|chronicles|ezra|nehemiah|esther|job|psalms?|proverbs|ecclesiastes|song(?:\\s+of\\s+solomon)?|isaiah|jeremiah|lamentations|ezekiel|daniel|hosea|joel|amos|obadiah|jonah|micah|nahum|habakkuk|zephaniah|haggai|zechariah|malachi|matthew|mark|luke|john|acts|romans|corinthians|galatians|ephesians|philippians|colossians|thessalonians|timothy|titus|philemon|hebrews|james|peter|jude|revelation)"
+
+/**
+ * Thematic section title: short "Label: Theme (Book N:N–N)".
+ * Parenthetical must be scripture reference(s) only — no embedded statistics.
+ */
+const SCRIPTURE_PAREN_RE = `(?:\\(\\s*(?:[1-3]\\s+)?${BOOK_NAMES_RE}\\s+\\d{1,3}(?::\\d{1,3}(?:\\s*[–-]\\s*\\d{1,3})?)?(?:\\s*[,;]\\s*(?:[1-3]\\s+)?${BOOK_NAMES_RE}\\s+\\d{1,3}(?::\\d{1,3}(?:\\s*[–-]\\s*\\d{1,3})?)?)*\\s*\\))`
+
+const THEMATIC_EDITORIAL_HEADING_RE = new RegExp(
+  `^[A-Z0-9][^:,.]{1,50}:\\s+[^()]{2,100}${SCRIPTURE_PAREN_RE}$`,
+  "i",
+)
 
 const DIRECT_NARRATIVE_RE =
   /\b(?:warns|says|said|states|records|describes|answers|orders|accuses|delivers?|tells?|shows?|quotes?|includes|limits|requires?|permits?|replies?|continues)\b/i
@@ -128,7 +151,83 @@ export function hasNamedScriptureTranslation(
 
 export function isCategoryBInterpretationClaim(claim: string): boolean {
   const commentary = claimCommentaryOutsideQuotes(claim)
-  return INTERPRETATION_OUTSIDE_QUOTES_RE.test(commentary)
+  return (
+    INTERPRETATION_OUTSIDE_QUOTES_RE.test(commentary) ||
+    STEWARDSHIP_APPLICATION_RE.test(commentary)
+  )
+}
+
+/**
+ * Stewardship / responsibility pastoral applications (e.g. customary
+ * contribution teaching). These must not be scored as externally verifiable
+ * publisher facts. Survey / archaeology / science language remains Category C.
+ * An unrelated % / percent statistic after removing the customary contribution
+ * phrase keeps the claim externally auditable.
+ */
+export function isStewardshipPastoralApplication(claim: string): boolean {
+  if (isCategoryCExternalFactClaim(claim)) return false
+  const commentary = claimCommentaryOutsideQuotes(claim)
+  if (!STEWARDSHIP_APPLICATION_RE.test(commentary)) return false
+  const withoutCustomary = commentary.replace(
+    /\bcustomary\s+\d+\s*%\s+contribution\b/gi,
+    " ",
+  )
+  if (
+    /\d+(?:\.\d+)?\s*%|\b\d+(?:\.\d+)?\s*percent\b/i.test(withoutCustomary)
+  ) {
+    return false
+  }
+  return true
+}
+
+/** @deprecated Prefer isStewardshipPastoralApplication for verification gates. */
+export function isPastoralApplicationClaim(claim: string): boolean {
+  return isStewardshipPastoralApplication(claim)
+}
+
+/**
+ * Editorial thematic headings (including numbered list titles) that cite a
+ * passage as a section label. Not automatic exemption: headings with quotes,
+ * digits outside the scripture parenthetical, empirical percentages, or
+ * survey/archaeology markers remain scrutinised.
+ */
+export function isThematicEditorialHeading(text: string): boolean {
+  const t = text.replace(/^\d+[.)]\s*/, "").replace(/\s+/g, " ").trim()
+  if (!t || t.length > 160) return false
+  if (/[“"‘'].+[”"'’]/.test(t)) return false
+  // "%" is non-word; do not require a trailing \b (e.g. "40%: …").
+  if (/\d+(?:\.\d+)?\s*%|\b\d+(?:\.\d+)?\s*percent\b/i.test(t)) return false
+  // Digits outside the closing scripture parenthetical imply a factual body.
+  const withoutScriptureParen = t.replace(/\([^)]*\)\s*$/, "")
+  if (/\d/.test(withoutScriptureParen)) return false
+  // Prose attributions and survey/science markers are not section titles.
+  if (
+    /\b(?:according\s+to|survey|study\s+found|archaeolog|peer[- ]reviewed)\b/i.test(
+      t,
+    )
+  ) {
+    return false
+  }
+  const label = t.split(":")[0]?.trim() ?? ""
+  const body = withoutScriptureParen.includes(":")
+    ? withoutScriptureParen.slice(withoutScriptureParen.indexOf(":") + 1).trim()
+    : ""
+  if (
+    /\b(?:is|are|was|were|has|have|warns?|says|said|states|describes?)\b/i.test(
+      label,
+    )
+  ) {
+    return false
+  }
+  // Factual narrative verbs in the theme body keep the line auditable.
+  if (
+    /\b(?:killed|drowned|counted|rose|fell|was|were|is|are|has|have|says|said|states|records|describes)\b/i.test(
+      body,
+    )
+  ) {
+    return false
+  }
+  return THEMATIC_EDITORIAL_HEADING_RE.test(t)
 }
 
 export function isCategoryCExternalFactClaim(claim: string): boolean {
@@ -177,7 +276,11 @@ export function isCategoryADirectScriptureClaim(claim: string): boolean {
 }
 
 export function classifyBiblicalClaimCategory(claim: string): BiblicalClaimCategory {
+  // Stewardship applications are Category B even when they mention a customary
+  // contribution figure; true Category C markers (survey/archaeology/science)
+  // still win via isCategoryCExternalFactClaim.
   if (isCategoryCExternalFactClaim(claim)) return "C"
+  if (isStewardshipPastoralApplication(claim)) return "B"
   if (isCategoryADirectScriptureClaim(claim)) return "A"
   if (hasScriptureCitation(claim) || isCategoryBInterpretationClaim(claim)) return "B"
   return "C"

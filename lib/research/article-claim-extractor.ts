@@ -1,3 +1,7 @@
+import {
+  isStewardshipPastoralApplication,
+  isThematicEditorialHeading,
+} from "./biblical-editorial-evidence-profile";
 import { isChromePassage, isOutlineOrIndexPassage } from "./evidence-chrome";
 import { namedProductFeatures } from "./product-identity";
 
@@ -354,9 +358,16 @@ function isAdviceFraming(sentence: string): boolean {
 
 /**
  * True when the sentence is a checkable description or quotation of a cited
- * biblical passage — not pastoral advice or meta-editorial framing.
+ * biblical passage — not pastoral advice, thematic headings, or meta-editorial
+ * framing. Callers: isExternallyVerifiableClaim, extractArticleClaims.
+ * Existing isScriptureTextualClaim treated thematic "Increased … (Exodus …)"
+ * list titles as textual claims via narrative verbs; pastoral stewardship
+ * sentences with "%" hit FACTUAL_SIGNAL. User instruction: distinguish pastoral
+ * application from quotation; apply heading/claim distinction.
  */
 export function isScriptureTextualClaim(sentence: string): boolean {
+  if (isThematicEditorialHeading(sentence)) return false;
+  if (isStewardshipPastoralApplication(sentence)) return false;
   if (
     !/\b(?:genesis|exodus|leviticus|numbers|deuteronomy|joshua|judges|ruth|samuel|kings|psalms?|proverbs|isaiah|jeremiah|ezekiel|daniel|matthew|mark|luke|john|acts|romans|corinthians|galatians|ephesians|philippians|colossians|thessalonians|timothy|titus|philemon|hebrews|james|peter|jude|revelation)\b/i.test(
       sentence,
@@ -399,6 +410,9 @@ export function isScriptureTextualClaim(sentence: string): boolean {
 export function isExternallyVerifiableClaim(sentence: string): boolean {
   if (isChromePassage(sentence)) return false;
   if (isHardAuthorialFraming(sentence)) return false;
+  if (isThematicEditorialHeading(sentence)) return false;
+  // Stewardship pastoral applications are not externally verifiable publisher facts.
+  if (isStewardshipPastoralApplication(sentence)) return false;
   if (hasPublisherAttribution(sentence)) return true;
   if (isAdviceFraming(sentence)) return false;
   if (isScriptureTextualClaim(sentence)) return true;
@@ -598,6 +612,15 @@ export function extractArticleClaims(input: {
         authorialCount += 1;
         continue;
       }
+      // Numbered thematic section titles (list items) use the same heading
+      // distinction as markdown headings — not scored as factual claims.
+      if (
+        block.blockType === "list" &&
+        isThematicEditorialHeading(block.text)
+      ) {
+        authorialCount += 1;
+        continue;
+      }
 
       const fictionalBlock = fictionalRegion || isFictionalLabel(block.text);
       const sentences = splitBlockSentences(block.text);
@@ -607,6 +630,9 @@ export function extractArticleClaims(input: {
         const sentence = sentences[index] ?? "";
         if (sentence.length > 400) continue;
         if (isChromePassage(sentence)) continue;
+        if (isThematicEditorialHeading(sentence)) {
+          continue;
+        }
         if (isCreatorTemplate(sentence, normalizedArticleText)) continue;
         if (!articleContainsExcerpt(normalizedArticleText, sentence)) continue;
 
