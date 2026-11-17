@@ -1113,7 +1113,11 @@ describe("transitionArticleLifecycle", () => {
     const { store, tx } = createStore(approved);
 
     const result = await updateArticleUnderGovernanceLock(
-      { articleId: approved.id, changes: { title: "Revised title" } },
+      {
+        articleId: approved.id,
+        changes: { title: "Revised title" },
+        actor: "editor@example.com",
+      },
       { prisma: store },
     );
 
@@ -1137,6 +1141,13 @@ describe("transitionArticleLifecycle", () => {
         qualityGrade: null,
         seoScore: null,
         seoGrade: null,
+      }),
+    });
+    expect(tx.articleReviewNote.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        articleId: approved.id,
+        action: "approval-invalidated-by-content-edit",
+        reviewer: "editor@example.com",
       }),
     });
     expect(approved.editorialScore).toBeNull();

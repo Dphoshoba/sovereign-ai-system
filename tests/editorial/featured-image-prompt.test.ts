@@ -1,7 +1,10 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it, vi } from "vitest"
-import { approveFeaturedImagePrompt } from "../../lib/ai/approve-featured-image-prompt"
+import {
+  approveFeaturedImagePrompt,
+  loadFeaturedImagePromptState,
+} from "../../lib/ai/approve-featured-image-prompt"
 import {
   FEATURED_IMAGE_PROMPT_APPROVED_ACTION,
   MAX_FEATURED_IMAGE_PROMPT_LENGTH,
@@ -305,6 +308,70 @@ describe("generateAndPersistFeaturedImage draft gate", () => {
     })
     expect(generateImage).not.toHaveBeenCalled()
     expect(store.update).not.toHaveBeenCalled()
+  })
+})
+
+describe("loadFeaturedImagePromptState eligibility", () => {
+  it("enables prompt approval for an approved article with valid approval metadata and a current audit", async () => {
+    const { article } = withCurrentAudit(baseArticle())
+    const store = createStore(article)
+
+    const result = await loadFeaturedImagePromptState(article.id, {
+      prisma: store,
+    })
+
+    expect(result).toMatchObject({
+      ok: true,
+      articleStatus: "approved",
+      hasCurrentAudit: true,
+      canApprove: true,
+      canGenerate: false,
+    })
+  })
+
+  it("keeps featured-image actions disabled while the article awaits approval", async () => {
+    const { article } = withCurrentAudit(baseArticle())
+    article.status = "review-required"
+    article.approvedAt = null
+    article.approvedBy = null
+    const store = createStore(article)
+
+    const result = await loadFeaturedImagePromptState(article.id, {
+      prisma: store,
+    })
+
+    expect(result).toMatchObject({
+      ok: true,
+      articleStatus: "review-required",
+      canApprove: false,
+      canGenerate: false,
+    })
+  })
+
+  it("enforces server-side eligibility even when a current prompt note exists", async () => {
+    const { article, fingerprint } = withCurrentAudit(baseArticle())
+    article.status = "review-required"
+    article.approvedAt = null
+    article.approvedBy = null
+    article.reviewNotes.push(
+      promptNote({
+        articleId: article.id,
+        fingerprint,
+        prompt: ARTICLE_2_FEATURED_IMAGE_PROMPT,
+      }),
+    )
+    const store = createStore(article)
+
+    const result = await loadFeaturedImagePromptState(article.id, {
+      prisma: store,
+    })
+
+    expect(result).toMatchObject({
+      ok: true,
+      articleStatus: "review-required",
+      canApprove: false,
+      canGenerate: false,
+    })
   })
 })
 

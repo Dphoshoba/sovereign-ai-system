@@ -33,6 +33,19 @@ export function featuredImagePromptStatusLabel(
   return "Missing"
 }
 
+/** Reload keys so eligibility refreshes after article approval/status changes. */
+export function featuredImagePromptLoadDependencies(input: {
+  articleId: string
+  featuredImage: string | null
+  articleStatus?: string | null
+}) {
+  return [
+    input.articleId,
+    input.featuredImage ?? "",
+    input.articleStatus ?? "",
+  ] as const
+}
+
 export function FeaturedImagePromptForm({
   state,
   draftPrompt,
@@ -172,6 +185,7 @@ export function FeaturedImagePromptForm({
 
 export function FeaturedImagePromptPanel({
   articleId,
+  articleStatus = null,
   featuredImage,
   onArticleUpdate,
   generating,
@@ -179,6 +193,7 @@ export function FeaturedImagePromptPanel({
   onGenerate,
 }: {
   articleId: string
+  articleStatus?: string | null
   featuredImage: string | null
   onArticleUpdate?: (article: { featuredImage?: string | null }) => void
   generating: boolean
@@ -191,6 +206,12 @@ export function FeaturedImagePromptPanel({
   const [replace, setReplace] = useState(false)
   const [message, setMessage] = useState("")
   const [saving, setSaving] = useState(false)
+  const [loadArticleId, loadFeaturedImage, loadArticleStatus] =
+    featuredImagePromptLoadDependencies({
+      articleId,
+      featuredImage,
+      articleStatus,
+    })
 
   useEffect(() => {
     let cancelled = false
@@ -199,7 +220,7 @@ export function FeaturedImagePromptPanel({
       setLoading(true)
       try {
         const response = await fetch(
-          `/api/articles/featured-image-prompt?articleId=${encodeURIComponent(articleId)}`,
+          `/api/articles/featured-image-prompt?articleId=${encodeURIComponent(loadArticleId)}`,
         )
         const result = await response.json()
         if (cancelled) return
@@ -224,7 +245,7 @@ export function FeaturedImagePromptPanel({
     return () => {
       cancelled = true
     }
-  }, [articleId, featuredImage])
+  }, [loadArticleId, loadFeaturedImage, loadArticleStatus])
 
   async function handleApprove() {
     setSaving(true)

@@ -416,6 +416,9 @@ export const INVALIDATED_ARTICLE_SCORES = {
   seoGrade: null,
 } as const;
 
+export const APPROVAL_INVALIDATED_BY_CONTENT_EDIT_ACTION =
+  "approval-invalidated-by-content-edit";
+
 function collectEffectiveFieldChanges(
   article: LifecycleArticle,
   changes: Record<string, unknown>,
@@ -434,6 +437,7 @@ export async function updateArticleUnderGovernanceLock(
   input: {
     articleId: string;
     changes: Record<string, unknown>;
+    actor?: string;
     assert?: (article: LifecycleArticle) => ArticleLifecycleFailure | null;
   },
   deps?: { prisma?: unknown },
@@ -476,9 +480,13 @@ export async function updateArticleUnderGovernanceLock(
       };
     }
 
+    const invalidatesApproval =
+      auditedContentChanged &&
+      (article.status === "approved" || article.status === "scheduled");
+
     if (auditedContentChanged) {
       Object.assign(data, INVALIDATED_ARTICLE_SCORES);
-      if (article.status === "approved" || article.status === "scheduled") {
+      if (invalidatesApproval) {
         Object.assign(data, {
           status: "review-required",
           approvedAt: null,
@@ -493,6 +501,26 @@ export async function updateArticleUnderGovernanceLock(
       where: { id: article.id },
       data,
     });
+
+    if (invalidatesApproval) {
+      const changedFields = AUDITED_ARTICLE_FIELDS.filter((field) =>
+        Object.prototype.hasOwnProperty.call(data, field),
+      );
+      await tx.articleReviewNote.create({
+        data: {
+          articleId: article.id,
+          action: APPROVAL_INVALIDATED_BY_CONTENT_EDIT_ACTION,
+          reviewer: input.actor?.trim() || "system",
+          note: JSON.stringify({
+            previousStatus: article.status,
+            changedFields,
+            reason:
+              "Audited content changed after approval; status returned to review-required and approval metadata cleared.",
+          }),
+        },
+      });
+    }
+
     return {
       ok: true,
       article: updated,

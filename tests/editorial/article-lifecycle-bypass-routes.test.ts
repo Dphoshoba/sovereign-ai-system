@@ -116,6 +116,7 @@ describe("C1 article lifecycle bypass protection", () => {
       {
         articleId,
         changes: { title: "Edited title", content: "Edited body" },
+        actor: "admin@example.com",
       },
       { prisma: expect.anything() },
     )

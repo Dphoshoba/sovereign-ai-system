@@ -89,8 +89,9 @@ export async function PATCH(
       if (body[field] !== undefined) changes[field] = body[field] || null;
     }
 
+    // Pass editor actor so approval-invalidation review notes are attributable.
     const result = await updateArticleUnderGovernanceLock(
-      { articleId: id, changes },
+      { articleId: id, changes, actor: auth.actor },
       { prisma },
     );
     if (!result.ok) {

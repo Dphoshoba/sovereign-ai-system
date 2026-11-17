@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
 import {
   FeaturedImagePromptForm,
+  featuredImagePromptLoadDependencies,
   featuredImagePromptStatusLabel,
 } from "../../app/admin/articles/FeaturedImagePromptPanel"
 import { ARTICLE_2_FEATURED_IMAGE_PROMPT } from "./fixtures/article-2-featured-image-prompt"
@@ -146,5 +147,73 @@ describe("FeaturedImagePromptForm", () => {
     expect(html).not.toContain(
       "Generation stays blocked until a current approved prompt exists for this fingerprint.",
     )
+  })
+
+  it("blocks featured-image actions while the article awaits approval", () => {
+    const html = renderToStaticMarkup(
+      createElement(FeaturedImagePromptForm, {
+        state: {
+          ...currentState,
+          articleStatus: "review-required",
+          promptStatus: "missing",
+          current: null,
+          canApprove: false,
+          canGenerate: false,
+        },
+        draftPrompt: "",
+        onDraftPromptChange: vi.fn(),
+        replace: false,
+        onReplaceChange: vi.fn(),
+        saving: false,
+        generating: false,
+        message: "",
+        generationError: "",
+        onApprove: vi.fn(),
+        onGenerate: vi.fn(),
+      }),
+    )
+
+    expect(html).toContain(
+      "Featured-image approval and generation stay blocked until this article is approved.",
+    )
+    expect(html).toContain("disabled=\"\"")
+  })
+
+  it("does not show the article-approval block once the article is approved", () => {
+    const html = renderToStaticMarkup(
+      createElement(FeaturedImagePromptForm, {
+        state: currentState,
+        draftPrompt: ARTICLE_2_FEATURED_IMAGE_PROMPT,
+        onDraftPromptChange: vi.fn(),
+        replace: false,
+        onReplaceChange: vi.fn(),
+        saving: false,
+        generating: false,
+        message: "",
+        generationError: "",
+        onApprove: vi.fn(),
+        onGenerate: vi.fn(),
+      }),
+    )
+
+    expect(html).not.toContain(
+      "Featured-image approval and generation stay blocked until this article is approved.",
+    )
+  })
+
+  it("reloads featured-image eligibility when article status changes after approval", () => {
+    const before = featuredImagePromptLoadDependencies({
+      articleId: "article-1",
+      featuredImage: null,
+      articleStatus: "review-required",
+    })
+    const after = featuredImagePromptLoadDependencies({
+      articleId: "article-1",
+      featuredImage: null,
+      articleStatus: "approved",
+    })
+
+    expect(before).not.toEqual(after)
+    expect(after[2]).toBe("approved")
   })
 })

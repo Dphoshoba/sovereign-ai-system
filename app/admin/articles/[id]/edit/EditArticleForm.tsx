@@ -165,11 +165,19 @@ export function EditArticleForm({
         return
       }
 
+      // Prefer server-persisted approval metadata so FeaturedImagePromptPanel reload keys match DB.
+      const approved = result.article ?? {}
       setArticle({
         ...article,
-        status: "approved",
-        approvedAt: new Date().toISOString(),
-        approvedBy: "admin",
+        status: typeof approved.status === "string" ? approved.status : "approved",
+        approvedAt:
+          typeof approved.approvedAt === "string"
+            ? approved.approvedAt
+            : approved.approvedAt
+              ? new Date(approved.approvedAt).toISOString()
+              : new Date().toISOString(),
+        approvedBy:
+          typeof approved.approvedBy === "string" ? approved.approvedBy : null,
       })
       setApprovalMessage("Article approved for publishing.")
     } catch (err) {
@@ -337,6 +345,7 @@ export function EditArticleForm({
 
         <FeaturedImagePromptPanel
           articleId={article.id}
+          articleStatus={article.status}
           featuredImage={article.featuredImage}
           generating={isGeneratingImage}
           generationError={imageGenerationError}
