@@ -154,6 +154,14 @@ describe("remaining automation route authentication", () => {
     ["discovery queue", "../../app/api/discovery/run-queue/route", "POST", "/api/discovery/run-queue"],
     ["queue generation", "../../app/api/discovery/generate-from-queue/route", "POST", "/api/discovery/generate-from-queue"],
     ["create article", "../../app/api/discovery/create-article/route", "POST", "/api/discovery/create-article"],
+    ["ai autonomous pipeline", "../../app/api/ai/autonomous-pipeline/route", "POST", "/api/ai/autonomous-pipeline"],
+    ["agents autonomous pipeline", "../../app/api/agents/autonomous-pipeline/route", "POST", "/api/agents/autonomous-pipeline"],
+    [
+      "execute autonomous pipeline",
+      "../../app/api/agents/execute-autonomous-pipeline/route",
+      "POST",
+      "/api/agents/execute-autonomous-pipeline",
+    ],
   ])("rejects anonymous %s before any work", async (_name, modulePath, method, path) => {
     const route = await import(modulePath);
     const handler = method === "GET" ? route.GET : route.POST;

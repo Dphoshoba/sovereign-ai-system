@@ -127,20 +127,16 @@ describe("POST /api/articles creation governance", () => {
 describe("POST /api/ai/autonomous-pipeline lifecycle governance", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: "admin-1", email: "admin@example.com", app_metadata: { role: "admin" } } },
+      error: null,
+    });
     articleFindFirst.mockResolvedValue(null);
     openAIResponsesCreate.mockResolvedValue({
       output_text: JSON.stringify({
         title: "Generated package",
         excerpt: "Generated excerpt",
         content: "Generated content",
-        seoTitle: "Generated SEO title",
-        seoDescription: "Generated SEO description",
-        seoKeywords: "generated, governed, article",
-        thumbnailText: "Generated",
-        thumbnailPrompt: "A governed workflow",
-        socialPosts: ["One post"],
-        newsletterSubject: "Generated subject",
-        newsletterBody: "Generated newsletter",
       }),
     });
     articleCreate.mockImplementation(async ({ data }) => ({
@@ -149,10 +145,12 @@ describe("POST /api/ai/autonomous-pipeline lifecycle governance", () => {
     }));
   });
 
-  it.each(["publish", "schedule"])(
-    "routes requested %s mode into human review instead",
+  it.each(["publish", "schedule", "draft"])(
+    "refuses requested %s mode without creating an article",
     async (mode) => {
-      const { POST } = await import("../../app/api/ai/autonomous-pipeline/route");
+      const { POST, AUTONOMOUS_PIPELINE_DISABLED_BODY } = await import(
+        "../../app/api/ai/autonomous-pipeline/route"
+      );
       const response = await POST(
         new Request("http://localhost/api/ai/autonomous-pipeline", {
           method: "POST",
@@ -165,24 +163,10 @@ describe("POST /api/ai/autonomous-pipeline lifecycle governance", () => {
         }),
       );
 
-      expect(response.status).toBe(200);
-      expect(articleCreate).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          status: "review-required",
-          approvedAt: null,
-          approvedBy: null,
-          scheduledFor: null,
-          publishedAt: null,
-        }),
-      });
-      await expect(response.json()).resolves.toMatchObject({
-        ok: true,
-        article: { status: "review-required" },
-        workflow: {
-          status: "review-required",
-          requiresHumanReview: true,
-        },
-      });
+      expect(response.status).toBe(403);
+      await expect(response.json()).resolves.toEqual(AUTONOMOUS_PIPELINE_DISABLED_BODY);
+      expect(articleCreate).not.toHaveBeenCalled();
+      expect(openAIResponsesCreate).not.toHaveBeenCalled();
     },
   );
 });
