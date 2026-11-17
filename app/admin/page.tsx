@@ -54,7 +54,7 @@ export default async function AiCommandCenterPage() {
       </section>
 
       <section style={quickActions}>
-        <ActionButton href="/admin/autonomous-pipeline" label="Run Pipeline" />
+        <ActionButton href="/admin/director-checklist" label="Director Checklist" />
         <ActionButton href="/admin/multi-agent" label="Run Agents" />
         <ActionButton href="/admin/ai-generator" label="Generate Article" />
         <ActionButton href="/ask" label="Ask Knowledge Base" />
@@ -65,9 +65,9 @@ export default async function AiCommandCenterPage() {
       <section style={gridTwo}>
         <Panel title="AI Workflows">
           <CommandCard
-            title="Autonomous Pipeline"
-            description="Generate article, SEO, thumbnail idea, social posts and newsletter copy."
-            href="/admin/autonomous-pipeline"
+            title="Director Checklist"
+            description="Follow generate → audit → approve → featured image → publish → X social using existing workflows."
+            href="/admin/director-checklist"
           />
 
           <CommandCard
@@ -78,7 +78,7 @@ export default async function AiCommandCenterPage() {
 
           <CommandCard
             title="AI Article Generator"
-            description="Create draft or published articles using the Echoes & Visions writing DNA."
+            description="Create research-backed articles for human review using the Echoes & Visions writing DNA."
             href="/admin/ai-generator"
           />
 

@@ -162,6 +162,12 @@ describe("remaining automation route authentication", () => {
       "POST",
       "/api/agents/execute-autonomous-pipeline",
     ],
+    [
+      "director checklist",
+      "../../app/api/articles/director-checklist/route",
+      "GET",
+      "/api/articles/director-checklist?articleId=article-1",
+    ],
   ])("rejects anonymous %s before any work", async (_name, modulePath, method, path) => {
     const route = await import(modulePath);
     const handler = method === "GET" ? route.GET : route.POST;
