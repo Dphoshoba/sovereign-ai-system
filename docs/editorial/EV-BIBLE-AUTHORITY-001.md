@@ -45,7 +45,7 @@ The following are **gaps or open questions**. They are recorded for Director dec
 4. **bibleExtractor generalisation:** Whether narrative heuristics should be replaced or constrained so heuristic claims cannot remain freely `unattributed`.
 5. **Separate theological review gate:** Whether Directors want an additional human “biblical review” transition beyond research audit + editorial approval.
 6. **Multi-source scripture+commentary claims:** Broader rules for explicit multi-source claims beyond the current narrow “According to 1 Samuel 17 … and … BibleProject” pattern.
-7. **Contract registry placement:** Whether EV-BIBLE-AUTHORITY-001 should later join a formal EV-REG registry programme alongside EV-REG-SPEC (still absent as a named artifact in this checkout).
+7. **Contract registry placement:** Whether EV-BIBLE-AUTHORITY-001 should later join a formal EV-REG programme catalogue UI alongside `EV-REG-SPEC-1.1.0` (now present as a provenance reconciliation spec; still **not** a shared runtime registry engine). Deferred biblical decisions in this file remain unchanged.
 
 ## Compliance statement for automation
 
