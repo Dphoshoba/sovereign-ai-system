@@ -1,9 +1,12 @@
 import { canonicalizeSourceUrl } from "./article-audit-fingerprint";
 import { assessPassageSupport } from "./article-claim-extractor";
 import {
+  isExclusivePrimaryEligibleScriptureClaim,
   publishersNamedInClaim,
+  SCRIPTURE_TEXT_IDENTITY,
   type AttributedPublisher,
 } from "./claim-source-attribution";
+import { isScriptureHostUrl } from "./scripture-ref";
 
 const HOST_REGISTRY: Array<{ id: AttributedPublisher; host: RegExp }> = [
   { id: "nist", host: /(^|\.)nist\.gov$/i },
@@ -84,6 +87,9 @@ export function versionedCanonicalIdentity(source: {
 }): string | null {
   const hostname = versionedHostname(source.url);
   if (!hostname) return null;
+  // Bible Gateway, Bible Hub, and peer hosts display the same underlying
+  // edition text — never treat them as independent corroborating identities.
+  if (isScriptureHostUrl(source.url)) return SCRIPTURE_TEXT_IDENTITY;
   const registered = HOST_REGISTRY.find((entry) => entry.host.test(hostname));
   return registered ? `publisher:${registered.id}` : hostname;
 }
@@ -114,6 +120,11 @@ export function versionedPassageSubstantiates(claim: string, passage: string): b
 }
 
 function sourceEligible(claim: string, identity: string): boolean {
+  // Verifiable scripture quotations / narrative claims bind only to scripture
+  // hosts (collapsed to SCRIPTURE_TEXT_IDENTITY), not to secondary commentary.
+  if (isExclusivePrimaryEligibleScriptureClaim(claim)) {
+    return identity === SCRIPTURE_TEXT_IDENTITY;
+  }
   const named = versionedPublishersNamedInClaim(claim);
   if (named.length >= 2) return named.some((id) => identity === `publisher:${id}`);
   if (named.length === 1 && !attributesSharedFact(claim)) {
@@ -124,6 +135,12 @@ function sourceEligible(claim: string, identity: string): boolean {
 
 function exclusivePrimary(claim: string, identities: string[]): boolean {
   if (identities.length !== 1) return false;
+  if (
+    identities[0] === SCRIPTURE_TEXT_IDENTITY &&
+    isExclusivePrimaryEligibleScriptureClaim(claim)
+  ) {
+    return true;
+  }
   if (/\bpower platform\b/i.test(claim) && identities[0] === "publisher:microsoft") return true;
   const named = versionedPublishersNamedInClaim(claim);
   if (named.length === 1 && !attributesSharedFact(claim)) return true;

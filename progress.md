@@ -2,11 +2,11 @@
 
 **Worktree:** `C:\Users\David\echoes-visions-preview-security`
 **Branch:** `integrate/production-research-integrity`
-**Updated:** 2026-11-17 (Mission 006R4 Production release + article completion)
+**Updated:** 2026-11-17 (Mission 006 article ready for Director inspection)
 
 ## Operating contract
 
-Mission **006R4** Production release in progress (rollback baseline `dpl_CPaaai2ez9oxn4VSRXnK1ojCkohC` @ `563dc34f` / prior Ready `dpl_7YV3q6WRoXyvkn3RGNa3zEt9R12z` @ `5587d4c0`). Director authorised commit, deploy, generate, and Prepare. Approve / schedule / publish remain closed. Space discoveries remains ON HOLD.
+Mission **006** article completion delivered. Production on `dpl_CkT2eBF69tqJAzAZfJeNrLEW7HeA` @ `6ef9f3ed` (006R4). Rollback candidate preserved: `dpl_CPaaai2ez9oxn4VSRXnK1ojCkohC` @ `563dc34f`. Approve / schedule / publish remain closed. Space discoveries remains ON HOLD.
 
 ## EV-REG-SPEC-1.1.0 release
 
@@ -293,3 +293,103 @@ Decision board instructs “Correct unverified claims, then run Prepare for Revi
 - 8 Live research five-movement evidence + facts: PASS
 - 9 Live model-generated complete article: FAIL (OpenAI key unavailable)
 - 10 EV-REG thresholds 80/70 unchanged: PASS
+
+## Mission 006 — Complete the Article (Director PROCEED)
+
+| Field | Value |
+|---|---|
+| Authority | Director **PROCEED WITH ARTICLE COMPLETION** — Production AI; commit/deploy 006R4; generate; Prepare; no approve/schedule/publish |
+| Commit | `6ef9f3ed1b89325ac8c3139daee42ea653a35f52` — `fix(editorial): complete multi-section biblical teaching composition` |
+| Production deployment | `dpl_CkT2eBF69tqJAzAZfJeNrLEW7HeA` (Ready) — aliased to www.echoesandvisions.com |
+| Production SHA | `6ef9f3ed1b89325ac8c3139daee42ea653a35f52` |
+| Rollback candidate | `dpl_CPaaai2ez9oxn4VSRXnK1ojCkohC` @ `563dc34f` (preserved) |
+| Article ID | `cmwjwzvj9000007kwv8z5kkyp` |
+| Title (generated) | Pharaoh’s Counteroffers: Don’t Bargain With Bondage |
+| Requested title | The Devil’s Tactics to Hold Us in Bondage — **not used by generator** |
+| Slug | `pharaoh-s-counteroffers-don-t-bargain-with-bondage` |
+| Status | `review-required` |
+| Word count | ~1881 |
+| Edit link | https://www.echoesandvisions.com/admin/articles/cmwjwzvj9000007kwv8z5kkyp/edit |
+| Audit link | https://www.echoesandvisions.com/admin/articles/cmwjwzvj9000007kwv8z5kkyp/audit |
+| Current audit | `cmwjx6bn2000307kzr4x6ksu3` (engine `article-grounded-ev-reg-1`) |
+| Recommendation | `review-required` |
+| Scores | confidence 35 · consensus 85 · SQ 50 · avg verification 32 · authority 50 · trust 65 |
+| Claims | verified 1 · partial/single-publisher 11 · unverified 9 |
+| Prepare | Ran successfully (HTTP 200); status unchanged `review-required` |
+| Five movements | All present (Exodus 5:1–9; 8:25–27; 8:28; 10:8–11; 10:24–26) |
+| Analogy disclaimer | Present (Exodus does not present a formal list of demonic tactics) |
+| Stewardship | Whole-life surrender via Romans 12:1–2; no explicit “not merely 10%” contrast |
+| Approve/schedule/publish | Not attempted |
+| Transient ops note | Brief Prisma `EMAXCONNSESSION` after Prepare; pages recovered without code change |
+| Verdict | **ARTICLE READY FOR DIRECTOR INSPECTION** — not publish-ready under EV-REG |
+
+### Acceptance snapshot
+- A 006R4 Production deploy: PASS
+- B Authenticated AI Generator complete five-movement article: PASS
+- C Prepare for Review + stay `review-required`: PASS
+- D Approve/schedule/publish boundary: HELD
+- E Exact requested title/subtitle: FAIL (generator chose alternate title)
+- F EV-REG publish gate: BLOCKED (SQ 50; avg verification 32; unverified/single-host claims)
+
+## Mission 006 — Editorial Corrections (REQUEST CHANGES)
+
+| Field | Value |
+|---|---|
+| Authority | Director **REQUEST CHANGES** — edit + Prepare; no approve/schedule/publish; no engineering programme |
+| Article ID | `cmwjwzvj9000007kwv8z5kkyp` |
+| Final title | **The Devil's Tactics to Hold Us in Bondage** |
+| Subtitle | Incorporated as lead line + excerpt: *Pharaoh's Counterplans Against Israel's Deliverance and Their Lessons for Christians Today* |
+| Edit link | https://www.echoesandvisions.com/admin/articles/cmwjwzvj9000007kwv8z5kkyp/edit |
+| Audit link | https://www.echoesandvisions.com/admin/articles/cmwjwzvj9000007kwv8z5kkyp/audit |
+| Status | `review-required` |
+| Current audit | `cmwk1k6aw000607l84ateb18m` (`article-grounded-ev-reg-1`) |
+| Recommendation | `review-required` |
+| Scores | confidence **62** · consensus **94** · SQ **50** · avg verification **53** · authority 50 · trust 65 |
+| Claims | verified **0** · single-publisher **12** · unverified **0** |
+| Editorial changes | Title restored; subtitle in intro/excerpt; five Exodus movements + NT retained; fifth-movement stewardship strengthened (whole life/resources; 10% not ceiling; not donate-all-to-org); narrative vs pastoral analogy preserved; claims tightened to KJV quotes / authorial framing |
+| Prepare | Re-run after final save (HTTP 200) |
+| Approve/schedule/publish | Not attempted |
+| Unresolved evidence | SQ 50 (&lt;70); avg verification 53 (&lt;80); 12 single-publisher claims need independent second-publisher corroboration (BibleHub passages largely `no_relevant_passage` for NT/Exodus 5–8) |
+| Verdict | **CORRECTED FOR DIRECTOR REVIEW — EV-REG STILL BLOCKED** |
+
+## Mission 006 — REQUEST CHANGES (verify save + corroboration pass)
+
+| Field | Value |
+|---|---|
+| Production editor verified | Title **The Devil's Tactics to Hold Us in Bondage** + corrected body with real Markdown headings (not earlier Counteroffers draft) |
+| Edit link | https://www.echoesandvisions.com/admin/articles/cmwjwzvj9000007kwv8z5kkyp/edit |
+| Status | `review-required` |
+| Current audit | `cmwk1ufhq000907l8cszfr0ui` |
+| Scores | consensus **100** · SQ **50** · avg verification **53** |
+| Claims | verified **0** · single-publisher **13** · unverified **0** |
+| Corroboration attempt | Exact KJV quotes + BibleGateway/BibleHub Markdown links added; Hub/NT Gateway pages largely returned `no_relevant_passage` in Prepare evidence matching |
+| Unresolved | Independent second-publisher acceptance for scored claims; SQ ≥70 |
+| Approve/schedule/publish | Not attempted |
+
+## Mission 006 — Biblical primary-source verification attempt
+
+| Field | Value |
+|---|---|
+| Authority | Director: KJV primary-source verification; Bible Hub not required; no engineering |
+| Prepare audit | `cmwk5yh4v000307js8midses3` |
+| Reclassify | ok; updated **0** |
+| Confirm API | **422 `not_primary_source`** — claims remain `partially supported` |
+| Classification cause | `exclusivePrimary()` does not treat cited KJV scripture as exclusive primary |
+| Scores | confidence 62 · consensus **100** · SQ **50** · avg verification **53** |
+| Claims | verified 0 · partial/single-publisher **13** · unverified 0 |
+| Status | `review-required` |
+| KJV inspection | Article Exodus / Joshua / 1 Peter quotes match Bible Gateway KJV |
+| Eligible for final approval toward publish? | **No** |
+| Governance change | Not made |
+
+## Mission 006 — Scripture Primary-Source Classification (AUTHORISED)
+
+| Field | Value |
+|---|---|
+| Authority | Director **AUTHORISE** narrowly scoped classification correction; no deploy; no Production evidence mutation; no confirmation until Director reviews |
+| Root cause | `exclusivePrimary()` omitted scripture; Gateway+Hub counted as distinct host identities → `partially supported` / false independence |
+| Fix | `isExclusivePrimaryEligibleScriptureClaim` + `SCRIPTURE_TEXT_IDENTITY` collapse; exclusive primary only for verse+KJV+quote/narrative; pastoral/interpretation excluded |
+| Files | `lib/research/claim-source-attribution.ts`, `lib/research/versioned-evidence.ts`, `tests/editorial/mission-006-scripture-primary-source-classification.test.ts` |
+| Tests | Focused 7/7 PASS; editorial suite **1200/1200** PASS; `npm run build` PASS |
+| Production | **Not deployed**; article `cmwjwzvj9000007kwv8z5kkyp` evidence unchanged |
+| Next | Director review → then deploy + Prepare/reclassify + human confirm |
