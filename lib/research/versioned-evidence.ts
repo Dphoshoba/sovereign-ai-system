@@ -1,12 +1,18 @@
 import { canonicalizeSourceUrl } from "./article-audit-fingerprint";
 import { assessPassageSupport } from "./article-claim-extractor";
 import {
+  categoryAMultiVersePassageSubstantiates,
+  isCategoryADirectScriptureClaim,
+  scriptureAuthorityScoreForUrl,
+  scriptureCanonicalIdentity,
+  SCRIPTURE_KJV_IDENTITY,
+} from "./biblical-editorial-evidence-profile";
+import {
   isExclusivePrimaryEligibleScriptureClaim,
   publishersNamedInClaim,
   SCRIPTURE_TEXT_IDENTITY,
   type AttributedPublisher,
 } from "./claim-source-attribution";
-import { isScriptureHostUrl } from "./scripture-ref";
 
 const HOST_REGISTRY: Array<{ id: AttributedPublisher; host: RegExp }> = [
   { id: "nist", host: /(^|\.)nist\.gov$/i },
@@ -87,9 +93,9 @@ export function versionedCanonicalIdentity(source: {
 }): string | null {
   const hostname = versionedHostname(source.url);
   if (!hostname) return null;
-  // Bible Gateway, Bible Hub, and peer hosts display the same underlying
-  // edition text — never treat them as independent corroborating identities.
-  if (isScriptureHostUrl(source.url)) return SCRIPTURE_TEXT_IDENTITY;
+  // Canonical Scripture identity is edition-based (e.g. scripture:kjv), not hostname.
+  const scriptureIdentity = scriptureCanonicalIdentity(source);
+  if (scriptureIdentity) return scriptureIdentity;
   const registered = HOST_REGISTRY.find((entry) => entry.host.test(hostname));
   return registered ? `publisher:${registered.id}` : hostname;
 }
@@ -116,28 +122,38 @@ export function versionedPassageSubstantiates(claim: string, passage: string): b
   const claimActor = leadingActor(claim);
   const passageActor = leadingActor(passage);
   if (claimActor && passageActor && claimActor !== passageActor) return false;
-  return assessPassageSupport(claim, passage).supported;
+  if (assessPassageSupport(claim, passage).supported) return true;
+  return categoryAMultiVersePassageSubstantiates(claim, passage);
 }
 
-function sourceEligible(claim: string, identity: string): boolean {
-  // Verifiable scripture quotations / narrative claims bind only to scripture
-  // hosts (collapsed to SCRIPTURE_TEXT_IDENTITY), not to secondary commentary.
-  if (isExclusivePrimaryEligibleScriptureClaim(claim)) {
-    return identity === SCRIPTURE_TEXT_IDENTITY;
+function sourceEligible(
+  claim: string,
+  identity: string,
+  passages: VersionedPassage[],
+): boolean {
+  // Category A Scripture claims bind only to the authorised KJV edition identity.
+  if (isCategoryADirectScriptureClaim(claim)) {
+    return identity === SCRIPTURE_KJV_IDENTITY || identity === SCRIPTURE_TEXT_IDENTITY;
   }
   const named = versionedPublishersNamedInClaim(claim);
   if (named.length >= 2) return named.some((id) => identity === `publisher:${id}`);
   if (named.length === 1 && !attributesSharedFact(claim)) {
     return identity === `publisher:${named[0]}`;
   }
+  void passages;
   return true;
 }
 
-function exclusivePrimary(claim: string, identities: string[]): boolean {
+function exclusivePrimary(
+  claim: string,
+  identities: string[],
+  passages: VersionedPassage[],
+): boolean {
   if (identities.length !== 1) return false;
   if (
-    identities[0] === SCRIPTURE_TEXT_IDENTITY &&
-    isExclusivePrimaryEligibleScriptureClaim(claim)
+    (identities[0] === SCRIPTURE_KJV_IDENTITY ||
+      identities[0] === SCRIPTURE_TEXT_IDENTITY) &&
+    isExclusivePrimaryEligibleScriptureClaim(claim, { passages })
   ) {
     return true;
   }
@@ -163,6 +179,8 @@ function exclusivePrimary(claim: string, identities: string[]): boolean {
 }
 
 function hostnameAuthority(url: string): number {
+  const scripture = scriptureAuthorityScoreForUrl(url);
+  if (scripture != null) return scripture;
   const hostname = versionedHostname(url) ?? "";
   if (hostname.endsWith(".gov") || hostname === "nist.gov" || hostname.endsWith(".nist.gov")) {
     return 100;
@@ -188,7 +206,7 @@ export function evaluateVersionedClaim(input: {
   for (const passage of input.passages) {
     if (passage.polarity === "does-not-address" || passage.polarity === "contradicts") continue;
     const identity = versionedCanonicalIdentity(passage);
-    if (!identity || !sourceEligible(input.claim, identity)) continue;
+    if (!identity || !sourceEligible(input.claim, identity, input.passages)) continue;
     if (!versionedPassageSubstantiates(input.claim, passage.passage)) continue;
     substantiating.set(identity, passage.url);
   }
@@ -200,7 +218,8 @@ export function evaluateVersionedClaim(input: {
   if (disputed) evidenceState = "disputed";
   else if (count === 0) evidenceState = "unsupported";
   else if (count >= 2) evidenceState = "independently corroborated";
-  else if (exclusivePrimary(input.claim, identities)) evidenceState = "primary-source supported";
+  else if (exclusivePrimary(input.claim, identities, input.passages))
+    evidenceState = "primary-source supported";
   else evidenceState = "partially supported";
 
   const verificationStatus =

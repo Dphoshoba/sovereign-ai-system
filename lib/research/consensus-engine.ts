@@ -1,3 +1,4 @@
+import { scriptureAuthorityScoreForUrl } from "./biblical-editorial-evidence-profile"
 import { independentDocumentKey } from "./claim-source-attribution"
 import type { VerifiedFact } from "./fact-verification-engine"
 
@@ -327,6 +328,9 @@ function themeBody(theme: string): string {
 }
 
 function authorityScoreForUrl(url: string): number {
+  const scripture = scriptureAuthorityScoreForUrl(url)
+  if (scripture != null) return scripture
+
   const lower = url.toLowerCase()
 
   if (lower.includes(".gov")) return 100

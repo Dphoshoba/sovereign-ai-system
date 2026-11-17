@@ -1,25 +1,22 @@
 import { canonicalizeSourceUrl } from "./article-audit-fingerprint";
 import {
+  isExclusivePrimaryEligibleScriptureClaim as profileExclusivePrimaryEligible,
+  SCRIPTURE_KJV_IDENTITY,
+  SCRIPTURE_TEXT_IDENTITY,
+  type ScripturePassageHint,
+} from "./biblical-editorial-evidence-profile";
+import {
   hasScriptureCitation,
   isScriptureHostUrl,
-  parseScriptureRefs,
   primaryCitationFromClaim,
   scriptureDocumentKey,
   sourceMatchesScriptureRef,
 } from "./scripture-ref";
 
-/** Versioned identity for hosts that display the same underlying Bible text. */
-export const SCRIPTURE_TEXT_IDENTITY = "scripture-text";
-
-const SCRIPTURE_TRANSLATION_RE = /\b(?:KJV|King James(?:\s+Version)?)\b/i;
-
-/**
- * Pastoral, typological, or theological application language. Claims that
- * carry these markers must not inherit exclusive primary-source status even
- * when they cite a verse and translation.
- */
-const SCRIPTURE_INTERPRETATION_RE =
-  /\b(?:christians?\s+today|for\s+believers(?:\s+today)?|practical\s+(?:guidance|application|examples?|steps?)|typolog(?:y|ical)|symboli[sz]es|spiritual(?:ly)?\s+(?:means|represents|signifies)|teaches\s+us\s+that|we\s+(?:should|must|ought)|pastoral|application\s+for|this\s+(?:means|shows\s+that)\s+(?:we|believers|christians))\b/i;
+export {
+  SCRIPTURE_KJV_IDENTITY,
+  SCRIPTURE_TEXT_IDENTITY,
+};
 
 export const ATTRIBUTED_PUBLISHERS = [
   "nist",
@@ -264,29 +261,15 @@ export function isPrimaryScriptureClaim(claim: string): boolean {
 }
 
 /**
- * Strict eligibility for the EV-REG 1.1.0 exclusive primary-source pathway:
- * verse-level citation, named translation (KJV), and a direct quotation or
- * faithful narrative description — not pastoral/theological application.
+ * Strict eligibility for the EV-REG 1.1.0 exclusive primary-source pathway
+ * under EV-BIBLE-AUTHORITY-001 (Category A + translation identification).
  */
-export function isExclusivePrimaryEligibleScriptureClaim(claim: string): boolean {
+export function isExclusivePrimaryEligibleScriptureClaim(
+  claim: string,
+  options?: { passages?: ScripturePassageHint[] },
+): boolean {
   if (namedSecondaryDocuments(claim).length > 0) return false;
-  if (SCRIPTURE_INTERPRETATION_RE.test(claim)) return false;
-  if (!SCRIPTURE_TRANSLATION_RE.test(claim)) return false;
-  const refs = parseScriptureRefs(claim);
-  if (!refs.some((ref) => ref.verseStart != null && Number.isInteger(ref.verseStart))) {
-    return false;
-  }
-  if (
-    /[“"‘'].+[”"'’]/.test(claim) ||
-    /\b(?:warns|says|said|states|records|describes|answers|orders|accuses|delivers?|tells?|shows?|quotes?)\b/i.test(
-      claim,
-    ) ||
-    /\baccording to\b/i.test(claim) ||
-    /\bthe (?:narrative|passage|account|text) in\b/i.test(claim)
-  ) {
-    return true;
-  }
-  return false;
+  return profileExclusivePrimaryEligible(claim, options);
 }
 
 export function namedSecondaryDocuments(claim: string): NamedSecondaryDocument[] {

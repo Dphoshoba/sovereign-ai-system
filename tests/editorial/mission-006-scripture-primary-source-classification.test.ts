@@ -12,8 +12,11 @@ import { describe, expect, it } from "vitest"
 import { EV_REG_SPEC_1_1_0 } from "../../lib/research/audit-specification-compatibility"
 import {
   isExclusivePrimaryEligibleScriptureClaim,
+  SCRIPTURE_KJV_IDENTITY,
   SCRIPTURE_TEXT_IDENTITY,
 } from "../../lib/research/claim-source-attribution"
+
+const SCRIPTURE_IDENTITY = SCRIPTURE_KJV_IDENTITY || SCRIPTURE_TEXT_IDENTITY
 import { evaluateEvReg11PublicationEligibility } from "../../lib/research/primary-source-publication"
 import {
   evaluateVersionedClaim,
@@ -29,12 +32,12 @@ const PASSAGE =
   "And Pharaoh called for Moses and for Aaron, and said, Go ye, sacrifice to your God in the land."
 
 describe("Mission 006 scripture primary-source classification", () => {
-  it("collapses Bible Gateway and Bible Hub to one scripture-text identity", () => {
+  it("collapses Bible Gateway and Bible Hub to one scripture:kjv identity", () => {
     expect(versionedCanonicalIdentity({ url: GATEWAY_EX8 })).toBe(
-      SCRIPTURE_TEXT_IDENTITY,
+      SCRIPTURE_IDENTITY,
     )
     expect(versionedCanonicalIdentity({ url: HUB_EX8 })).toBe(
-      SCRIPTURE_TEXT_IDENTITY,
+      SCRIPTURE_IDENTITY,
     )
   })
 
@@ -46,7 +49,7 @@ describe("Mission 006 scripture primary-source classification", () => {
         { url: GATEWAY_EX8, passage: PASSAGE, polarity: "supports" },
       ],
     })
-    expect(result.identities).toEqual([SCRIPTURE_TEXT_IDENTITY])
+    expect(result.identities).toEqual([SCRIPTURE_IDENTITY])
     expect(result.verificationCount).toBe(1)
     expect(result.evidenceState).toBe("primary-source supported")
     expect(result.verificationMethod).toBe("single-source-supported")
@@ -62,7 +65,7 @@ describe("Mission 006 scripture primary-source classification", () => {
       ],
     })
     expect(result.verificationCount).toBe(1)
-    expect(result.identities).toEqual([SCRIPTURE_TEXT_IDENTITY])
+    expect(result.identities).toEqual([SCRIPTURE_IDENTITY])
     expect(result.evidenceState).toBe("primary-source supported")
   })
 

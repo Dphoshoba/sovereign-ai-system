@@ -82,6 +82,10 @@ Aligned with amendment §3.1:
 2. Authoritative official guidance issued by the body whose guidance the claim states
 3. Cited scripture edition for scripture claims
 
+### Biblical Editorial Evidence Profile (policy extension)
+
+Permanent scripture classification, edition identity, and biblical source-authority scoring for biblical teaching articles are defined in **`docs/governance/EV-BIBLE-AUTHORITY-001.md`** (directive EV-BIBLE-AUTHORITY-001). That profile does **not** amend §11.B numeric thresholds: source quality ≥ 70 remains mandatory; human confirmation remains required for the primary-source pathway; nonbiblical claims retain ordinary EV-REG corroboration rules.
+
 ---
 
 ## Document control
@@ -91,4 +95,5 @@ Aligned with amendment §3.1:
 | Version | EV-REG-SPEC-1.1.0 |
 | Parent | EV-REG-SPEC-1.0.0 |
 | Director decision | Option A with §3.4 redline (2026-11-16) |
+| Biblical profile extension | EV-BIBLE-AUTHORITY-001 |
 | Implementation | Fail-closed publication guards + regression tests required before Production activation |

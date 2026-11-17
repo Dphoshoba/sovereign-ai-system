@@ -393,3 +393,34 @@ Decision board instructs “Correct unverified claims, then run Prepare for Revi
 | Tests | Focused 7/7 PASS; editorial suite **1200/1200** PASS; `npm run build` PASS |
 | Production | **Not deployed**; article `cmwjwzvj9000007kwv8z5kkyp` evidence unchanged |
 | Next | Director review → then deploy + Prepare/reclassify + human confirm |
+
+## Mission 006 — Conditional Production Deployment (AUTHORISED)
+
+| Field | Value |
+|---|---|
+| Authority | Director **Conditional Production Deployment** of `5b5acef7…`; Prepare + reclassify; **no** confirmation / approve / schedule / publish |
+| Pre-checks | SQ gate preserved (≥70); unconfirmed primary blocked; diff scoped to classification + tests + progress |
+| Production deployment | `dpl_SoRzvrbxmXaCNJhDeWPjgzdeymer` (Ready) → www.echoesandvisions.com |
+| Commit | `5b5acef7978fcceac52c10260ac23a6848d5f6d5` |
+| Rollback target | `dpl_CkT2eBF69tqJAzAZfJeNrLEW7HeA` @ `6ef9f3ed` |
+| Health | `versionedEditorialVerifierEnabled=true`, engine `article-grounded-ev-reg-1` |
+| Article | `cmwjwzvj9000007kwv8z5kkyp` — content **not** regenerated |
+| Prepare audit | `cmwkf2zj7000008l5apvj5338` — recommendation `review-required` |
+| Reclassify | ok; updated **0** (Prepare already wrote post-fix states) |
+| Scores | confidence **62** · consensus **100** · SQ **50** · avg verification **53** · authority 50 · trust 65 |
+| Claims | primary-source supported **10** · partially supported **3** · unverified **0** |
+| Confirm UI | **10** enabled “Confirm primary-source evidence” controls — **not executed** |
+| Status | `review-required`; publication still blocked (SQ 50; unconfirmed primary; 3 partial) |
+
+## EV-BIBLE-AUTHORITY-001 — Permanent Biblical Editorial Evidence Profile
+
+| Field | Value |
+|---|---|
+| Authority | Director **FINAL** EV-BIBLE-AUTHORITY-001 — implement permanent profile; **stop before Production deploy** |
+| Policy | `docs/governance/EV-BIBLE-AUTHORITY-001.md` (+ pointer in EV-REG-SPEC-1.1.0) |
+| Module | `lib/research/biblical-editorial-evidence-profile.ts` |
+| Classification | Category A/B/C; quote-aware interpretation; edition identity `scripture:kjv`; multi-verse contrast support |
+| Scoring | Scripture edition host authority **85** (documented; threshold ≥70 unchanged) |
+| Mission 006 residual | Exodus 10:9 “we must”, 10:9/10:11 synthesis, 10:25–26 — fixed in classifier (await deploy + Prepare) |
+| Tests | `ev-bible-authority-001.test.ts` + editorial **1214/1214** PASS; `npm run build` PASS |
+| Production | **Not deployed** — awaiting Director inspection |
