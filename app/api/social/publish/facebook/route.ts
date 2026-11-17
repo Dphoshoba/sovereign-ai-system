@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { requirePublishingEditor } from "../../../../../lib/publishing/require-editor-auth"
+import {
+  canonicalArticleUrl,
+  hasIncorrectArticleLink,
+} from "../../../../../lib/social/x-publish-policy"
 
 export async function POST(req: NextRequest) {
   const auth = await requirePublishingEditor()
@@ -44,6 +48,18 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    if (post.article?.slug && hasIncorrectArticleLink(post.content, post.article.slug)) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "incorrect_article_link",
+          error:
+            "Post content contains a non-canonical article link. Use /blog/{slug} only — never /blog/{category}/{slug}.",
+        },
+        { status: 422 },
+      )
+    }
+
     const integration = await prisma.externalIntegration.findUnique({
       where: { name: "Facebook" },
     })
@@ -74,8 +90,9 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const articleUrl = post.article?.slug && process.env.NEXT_PUBLIC_APP_URL
-      ? `${(process.env.NEXT_PUBLIC_APP_URL).replace(/\/+$/, "")}/blog/ai-tools/${post.article.slug}`
+    // Public article route is /blog/[slug] — never /blog/{category}/{slug}.
+    const articleUrl = post.article?.slug
+      ? canonicalArticleUrl(post.article.slug)
       : null
 
     const body = new URLSearchParams({

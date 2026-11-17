@@ -8,13 +8,29 @@ export const X_WEIGHTED_URL_LENGTH = 23;
 export const X_MAX_WEIGHTED_LENGTH = 280;
 
 export function canonicalArticleUrl(slug: string): string {
-  return `${CANONICAL_ARTICLE_ORIGIN}/blog/${slug}`;
+  const normalised = slug.trim().replace(/^\/+|\/+$/g, "");
+  return `${CANONICAL_ARTICLE_ORIGIN}/blog/${normalised}`;
 }
 
 export function extractHttpUrls(content: string): string[] {
   return [...content.matchAll(/https?:\/\/[^\s<>"']+/gi)].map((match) =>
     match[0].replace(/[),.;!?]+$/g, ""),
   );
+}
+
+/**
+ * True when content contains a /blog/... URL that is not the canonical
+ * public article URL (`/blog/{slug}` with no category segment).
+ */
+export function hasIncorrectArticleLink(content: string, slug: string): boolean {
+  const canonical = canonicalArticleUrl(slug);
+  return extractHttpUrls(content).some((url) => {
+    try {
+      return new URL(url).pathname.startsWith("/blog/") && url !== canonical;
+    } catch {
+      return false;
+    }
+  });
 }
 
 export function xWeightedLength(content: string): number {
@@ -33,14 +49,9 @@ export function checkArticleLink(
   const canonical = canonicalArticleUrl(slug);
   const urls = extractHttpUrls(content);
   const hasCanonical = urls.some((url) => url === canonical);
-  const incorrect = urls.some((url) => {
-    try {
-      return new URL(url).pathname.startsWith("/blog/") && url !== canonical;
-    } catch {
-      return false;
-    }
-  });
-  if (incorrect) return { ok: false, code: "incorrect_article_link" };
+  if (hasIncorrectArticleLink(content, slug)) {
+    return { ok: false, code: "incorrect_article_link" };
+  }
   if (!hasCanonical) return { ok: false, code: "missing_canonical_url" };
   return { ok: true };
 }
