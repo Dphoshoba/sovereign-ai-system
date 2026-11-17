@@ -138,6 +138,7 @@ export function buildDirectorChecklist(
   const xPublished = xPosts.filter((post) => post.status === "published")
   const xApproved = xPosts.filter((post) => post.status === "approved")
   const xReview = xPosts.filter((post) => post.status === "review-required")
+  const xPublishing = xPosts.filter((post) => post.status === "publishing")
 
   const visibility = {
     status: article.status,
@@ -480,6 +481,20 @@ export function buildDirectorChecklist(
           twitterPublishedCount: xPublished.length,
           twitterApprovedCount: xApproved.length,
           twitterReviewCount: xReview.length,
+          socialPostCount: article.socialPosts.length,
+        },
+      }
+    }
+    if (xPublishing.length > 0) {
+      return {
+        id: "social_distribution",
+        label: STEP_LABELS.social_distribution,
+        state: "action_required",
+        detail:
+          "X/Twitter publish claim is in progress. Do not retry automatically; review operational events first.",
+        href: socialHref(),
+        evidence: {
+          twitterPublishingCount: xPublishing.length,
           socialPostCount: article.socialPosts.length,
         },
       }

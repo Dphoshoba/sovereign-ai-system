@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 import { buildDirectorChecklist } from "../../../../lib/publishing/director-checklist"
+import { attachDirectorMonitoring } from "../../../../lib/publishing/director-checklist-monitoring"
+import { loadDirectorOperationalSignals } from "../../../../lib/publishing/director-checklist-signals"
 
 export async function GET(request: Request) {
   const auth = await requireEditorAuth()
@@ -50,10 +52,17 @@ export async function GET(request: Request) {
   }
 
   const checklist = buildDirectorChecklist(article)
+  const signals = await loadDirectorOperationalSignals({
+    articleId: article.id,
+    socialPostIds: article.socialPosts.map((post) => post.id),
+  })
+  const monitoring = attachDirectorMonitoring(checklist, article, signals)
 
   return NextResponse.json({
     ok: true,
     actor: auth.actor,
+    readOnly: true,
     checklist,
+    monitoring,
   })
 }

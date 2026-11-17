@@ -1,34 +1,27 @@
 import Link from "next/link"
 import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { buildDirectorChecklist } from "../../../lib/publishing/director-checklist"
 import {
-  buildDirectorChecklist,
-  type DirectorChecklistStepState,
-} from "../../../lib/publishing/director-checklist"
+  attachDirectorMonitoring,
+  type DirectorMonitoringStatus,
+} from "../../../lib/publishing/director-checklist-monitoring"
+import { loadDirectorOperationalSignals } from "../../../lib/publishing/director-checklist-signals"
 
-function stateColor(state: DirectorChecklistStepState) {
-  switch (state) {
-    case "complete":
+function monitoringColor(status: DirectorMonitoringStatus) {
+  switch (status) {
+    case "Success":
       return "#15803d"
-    case "action_required":
+    case "Pending":
       return "#b45309"
-    case "blocked":
+    case "Failed":
       return "#b91c1c"
-    default:
+    case "Blocked":
+      return "#9f1239"
+    case "Unavailable":
       return "#6b7280"
-  }
-}
-
-function stateLabel(state: DirectorChecklistStepState) {
-  switch (state) {
-    case "complete":
-      return "Complete"
-    case "action_required":
-      return "Action required"
-    case "blocked":
-      return "Blocked"
     default:
-      return "Not started"
+      return "#7c3aed"
   }
 }
 
@@ -61,18 +54,27 @@ export default async function DirectorChecklistPage({
     take: articleId ? 1 : 25,
   })
 
-  const checklists = articles.map((article) => buildDirectorChecklist(article))
+  const views = []
+  for (const article of articles) {
+    const checklist = buildDirectorChecklist(article)
+    const signals = await loadDirectorOperationalSignals({
+      articleId: article.id,
+      socialPostIds: article.socialPosts.map((post) => post.id),
+    })
+    views.push(attachDirectorMonitoring(checklist, article, signals))
+  }
 
   return (
     <main style={{ padding: 40, fontFamily: "Arial, sans-serif" }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div>
           <h1>Director Checklist</h1>
-          <p style={{ maxWidth: 760, color: "var(--muted)", lineHeight: 1.7 }}>
-            One operating path over existing workflows: AI Generator → research
-            audit → human approval → featured image → publish → X social. Status
-            is derived from article, audit, approval, image, and social records
-            only.
+          <p style={{ maxWidth: 780, color: "var(--muted)", lineHeight: 1.7 }}>
+            One operating path with evidence-based monitoring: AI Generator →
+            research → audit → human approval → featured image → publish /
+            scheduler → social. Statuses are Success, Pending, Failed, Blocked,
+            Unavailable, or Unknown — derived only from existing article, audit,
+            approval, image, social, and operational-event records.
           </p>
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
@@ -88,7 +90,7 @@ export default async function DirectorChecklistPage({
         </div>
       </div>
 
-      {checklists.length === 0 ? (
+      {views.length === 0 ? (
         <section style={{ ...cardStyle, marginTop: 28 }}>
           <h2 style={{ marginTop: 0 }}>No articles</h2>
           <p style={{ color: "var(--muted)", lineHeight: 1.7 }}>
@@ -102,8 +104,8 @@ export default async function DirectorChecklistPage({
         </section>
       ) : (
         <section style={{ marginTop: 28, display: "grid", gap: 22 }}>
-          {checklists.map((checklist) => (
-            <article key={checklist.articleId} style={cardStyle}>
+          {views.map((view) => (
+            <article key={view.articleId} style={cardStyle}>
               <div
                 style={{
                   display: "flex",
@@ -113,24 +115,38 @@ export default async function DirectorChecklistPage({
                 }}
               >
                 <div>
-                  <h2 style={{ margin: "0 0 8px" }}>{checklist.title}</h2>
+                  <h2 style={{ margin: "0 0 8px" }}>{view.title}</h2>
                   <p style={{ margin: 0, color: "var(--muted)" }}>
-                    Status: {checklist.articleStatus} · /blog/{checklist.slug}
+                    Status: {view.articleStatus} · /blog/{view.slug}
+                  </p>
+                  <p style={{ margin: "10px 0 0", color: "var(--muted)", fontSize: 14 }}>
+                    Monitoring summary — Success {view.summary.Success}, Pending{" "}
+                    {view.summary.Pending}, Failed {view.summary.Failed}, Blocked{" "}
+                    {view.summary.Blocked}, Unavailable {view.summary.Unavailable},
+                    Unknown {view.summary.Unknown}
                   </p>
                 </div>
-                {checklist.nextAction ? (
-                  <Link href={checklist.nextAction.href} style={buttonStyle}>
-                    Next: {checklist.nextAction.label}
+                {view.nextAction ? (
+                  <Link href={view.nextAction.href} style={buttonStyle}>
+                    Next: {view.nextAction.label} ({view.nextAction.monitoringStatus})
                   </Link>
                 ) : (
                   <span style={{ color: "#15803d", fontWeight: 700 }}>
-                    Checklist complete
+                    Checklist monitored complete
                   </span>
                 )}
               </div>
 
-              <ol style={{ listStyle: "none", padding: 0, margin: "22px 0 0", display: "grid", gap: 12 }}>
-                {checklist.steps.map((step, index) => (
+              <ol
+                style={{
+                  listStyle: "none",
+                  padding: 0,
+                  margin: "22px 0 0",
+                  display: "grid",
+                  gap: 12,
+                }}
+              >
+                {view.steps.map((step, index) => (
                   <li
                     key={step.id}
                     style={{
@@ -147,19 +163,25 @@ export default async function DirectorChecklistPage({
                     </span>
                     <div>
                       <div style={{ fontWeight: 700 }}>{step.label}</div>
-                      <div style={{ color: "var(--muted)", lineHeight: 1.6, marginTop: 4 }}>
-                        {step.detail}
+                      <div
+                        style={{
+                          color: "var(--muted)",
+                          lineHeight: 1.6,
+                          marginTop: 4,
+                        }}
+                      >
+                        {step.monitoringDetail}
                       </div>
                     </div>
                     <div style={{ textAlign: "right" }}>
                       <div
                         style={{
-                          color: stateColor(step.state),
+                          color: monitoringColor(step.monitoringStatus),
                           fontWeight: 700,
                           marginBottom: 8,
                         }}
                       >
-                        {stateLabel(step.state)}
+                        {step.monitoringStatus}
                       </div>
                       <Link href={step.href} style={linkStyle}>
                         Open workflow
