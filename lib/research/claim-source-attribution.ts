@@ -1,5 +1,9 @@
 import { canonicalizeSourceUrl } from "./article-audit-fingerprint";
 
+/** Bound to docs/editorial/EV-BIBLE-AUTHORITY-001.md — attribution rules, not theology certification. */
+export const EV_BIBLE_AUTHORITY_CONTRACT_ID = "EV-BIBLE-AUTHORITY-001" as const;
+export const EV_BIBLE_AUTHORITY_CONTRACT_VERSION = "1.0.0" as const;
+
 export const ATTRIBUTED_PUBLISHERS = [
   "nist",
   "deloitte",

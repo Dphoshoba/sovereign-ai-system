@@ -1,3 +1,8 @@
+/**
+ * David/Goliath narrative heuristic for bible-category fact seeding.
+ * Not a scripture authority registry (see EV-BIBLE-AUTHORITY-001 BA-R7).
+ * Does not assign primary-scripture bindings or publication authority.
+ */
 export type BibleExtractionResult = {
     people: string[]
     places: string[]
