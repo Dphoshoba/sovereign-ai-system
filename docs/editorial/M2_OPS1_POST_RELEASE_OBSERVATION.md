@@ -14,7 +14,7 @@
 | --- | --- |
 | Window start (deploy Ready) | **2026-11-18T09:47:06.833Z** |
 | Window end (72h) | **2026-11-21T09:47:06.833Z** |
-| Persistent mechanism | Cursor `subscribe_timer` one-shot at window end (+ optional interim checks) |
+| Persistent mechanism | Cursor `subscribe_timer` one-shot `m2-ops1-72h-closeout` (`sub_3e7893b1-669f-44ba-acee-7940069dceec`) |
 | Unauthorised rollback | **Forbidden** — escalate only |
 | Production mutate this ops track | **Forbidden** (no redeploy/migrate/env/social/writes) |
 
@@ -35,9 +35,10 @@
 
 | Field | Value |
 | --- | --- |
-| Pushed? | _pending this run_ |
-| Remote tip after push | _pending_ |
-| Production still `6258cada` / `dpl_EnwRCcCgUuH2Jb4SC48MMdc5vdMo`? | _pending verify_ |
+| Pushed? | **YES** — `6258cada..983e6818` → `origin/cursor/autonomous-pipeline-lockdown-1605` |
+| Remote tip after push | `983e6818e6301c9f4647eefabf203d389da26880` |
+| Production still `6258cada` / `dpl_EnwRCcCgUuH2Jb4SC48MMdc5vdMo`? | **YES** — Ready; newest Production deployment unchanged; public health buildTime still `2026-11-18T09:45:18.361Z` |
+| Not pushed to `main` | **Confirmed** |
 
 ---
 
@@ -101,4 +102,4 @@ At/after **2026-11-21T09:47:06.833Z**:
 
 ---
 
-**Final line (setup):** Observation **ACTIVE**. Evidence push pending/recorded above. 72h ends **2026-11-21T09:47:06.833Z**.
+**Final line (setup):** Observation **ACTIVE**. Evidence preserved on release branch `983e6818`. Production unchanged. 72h closeout timer armed; ends **2026-11-21T09:47:06.833Z**.
