@@ -14,7 +14,8 @@
 | --- | --- |
 | Window start (deploy Ready) | **2026-11-18T09:47:06.833Z** |
 | Window end (72h) | **2026-11-21T09:47:06.833Z** |
-| Persistent mechanism | Cursor `subscribe_timer` one-shot `m2-ops1-72h-closeout` (`sub_3e7893b1-669f-44ba-acee-7940069dceec`) |
+| Persistent mechanism | Cursor `subscribe_timer` one-shot `m2-ops1-72h-closeout` (`sub_e9ddcaa2-c6b5-4c6c-985a-e992c50fcf8b`, fires at window end) |
+| Remote evidence tip | `a7cd6600` on `cursor/autonomous-pipeline-lockdown-1605` |
 | Unauthorised rollback | **Forbidden** — escalate only |
 | Production mutate this ops track | **Forbidden** (no redeploy/migrate/env/social/writes) |
 
