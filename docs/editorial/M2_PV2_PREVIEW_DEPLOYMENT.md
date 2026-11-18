@@ -82,3 +82,5 @@ Project has frequent Preview deployments from Git. Pushing this branch before Ga
 | Production | **NO-GO** |
 
 **STOP.** Awaiting Director remediation of Gate C (or written shared-DB acceptance) before any push/Preview.
+
+**Follow-up:** See `docs/editorial/M2_PV2C_PREVIEW_DB_ISOLATION.md` — public Preview Supabase project `emmzoeeaznhpwevqprkn` verified ≠ Production `kqptdgbttfuqkzxzbazw`; Prisma `DATABASE_URL` secret still requires Director attestation before Gate C PASS.
