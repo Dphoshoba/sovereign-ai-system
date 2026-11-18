@@ -130,3 +130,5 @@ Director (or authorised operator) confirms **one** of:
 Public Preview isolation evidence is strong and **reusable for the RC branch without new infra**; full Gate C PASS still requires Prisma `DATABASE_URL` confirmation that this agent cannot obtain via non-secret channels.
 
 **STOP for Director approval / attestation.**
+
+**Update:** FINAL Path A attempt recorded in `docs/editorial/M2_GATEC_PATHA_FINAL.md` — Gate C remains **BLOCKED**; Sensitive Preview `DATABASE_URL` is unreadable via authorised API/CLI; Preview `DIRECT_URL` missing. Path B Preview-only changes prepared (not applied). Director is not asked to attest unread secrets.
