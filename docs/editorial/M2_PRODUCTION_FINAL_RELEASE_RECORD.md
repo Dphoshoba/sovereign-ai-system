@@ -1,11 +1,13 @@
 # M2 Production Final Release Record
 
-**Status:** **PENDING — NOT EXECUTED**  
+**Status:** **PRODUCTION PASS — EXECUTED**  
 **Date prepared:** 2026-11-18  
-**Programme:** M2-PR4/PR5 Production Migration Prep + Final Release Closure  
-**App RC (Preview-certified):** `6258cada83312f409b67044dda79ad177bd0e8ba`  
-**Preview deploy:** `dpl_2qScTYYwxAycMF1c74z6yomcgfgK` (Ready)  
-**Prior cert:** PR3 `6b073f2b`  
+**Date executed:** 2026-11-18  
+**Director authorisation:** **CONDITIONAL GO**  
+**App RC:** `6258cada83312f409b67044dda79ad177bd0e8ba`  
+**Production deploy:** `dpl_EnwRCcCgUuH2Jb4SC48MMdc5vdMo` (Ready · target **production**)  
+**Preview (prior):** `dpl_2qScTYYwxAycMF1c74z6yomcgfgK` @ same SHA  
+**Prep baseline:** `2a815844`  
 **Branch:** `cursor/autonomous-pipeline-lockdown-1605`  
 **Production project:** `kqptdgbttfuqkzxzbazw`  
 **Preview project:** `emmzoeeaznhpwevqprkn`
@@ -14,11 +16,12 @@
 
 | Field | Value |
 | --- | --- |
-| Migration applied to Production? | **NO** |
+| Migration applied to Production? | **YES** — `20261118_add_connectors_and_istest.sql` only |
 | Production env changed? | **NO** |
-| Production deploy/promote? | **NO** |
-| Push / merge / social invoke? | **NO** |
-| Awaiting | **Single Director authorisation** for §9 package |
+| Production deploy/promote? | **YES** — exact SHA `6258cada` |
+| Push / merge? | **NO** (API gitSource deploy) |
+| Live social publish? | **NO** |
+| Verdict | **PRODUCTION PASS** |
 
 ---
 
@@ -26,157 +29,113 @@
 
 | Check | Result |
 | --- | --- |
-| Remote / certified app tip | `6258cada` |
-| Preview deployment | `dpl_2qScTYYwxAycMF1c74z6yomcgfgK` · target **preview** · **Ready** |
-| Local docs tip | `6b073f2b` (+ this record) — docs/proposed only; **not** app RC |
-| Dirty worktree | Present (~unrelated WIP) — **exclude** from release package |
-| App tree mutation this prep | **None** |
-
-**Integrity:** Preview-certified promote SHA remains **`6258cada`**.
+| Deployed SHA | `6258cada83312f409b67044dda79ad177bd0e8ba` |
+| Not HEAD / WIP | **Confirmed** — Vercel `gitSource.sha` pinned; dirty tree excluded |
+| SR1 ancestor | `4ec255b8` ⊂ RC |
+| Aliases after Ready | `www.echoesandvisions.com`, `echoesandvisions.com`, `sovereign-ai-executive.vercel.app`, … |
 
 ---
 
-## 2. Production read-only DB access restored
+## 2. Mandatory preflight (PASS → proceed)
 
-| Item | Result |
+| Check | Result |
 | --- | --- |
-| Working credential source | `C:\Users\David\.config\echoes-visions\production-db.env` (raw `postgresql://…` URL file, not KEY=value) |
-| Project ref confirmed | `kqptdgbttfuqkzxzbazw` |
-| Mode | `BEGIN TRANSACTION READ ONLY` … `ROLLBACK` |
-| Repo `.env` Production URLs | **Stale** — `28P01 password authentication failed` (pooler user). **Action for ops:** refresh repo `.env` `DATABASE_URL`/`DIRECT_URL` from the working production-db secret for local tooling; **do not** change Vercel Production env in this prep. |
-
-### Live Production structure (read-only, 2026-11-18)
-
-| Object | Present? |
-| --- | --- |
-| `Connector` (+ 6 related Connector\* tables) | **0 / 7** |
-| `isTest` on Client\*/Creator\* (6 tables) | **0 / 6** |
-| `public._prisma_migrations` ledger | **Absent** |
-| **Migration required before RC promote?** | **YES** |
+| Additive SQL only | **PASS** (no DROP/TRUNCATE/DELETE) |
+| Script | `docs/security/proposed/20261118_add_connectors_and_istest.sql` |
+| Production credential | `~/.config/echoes-visions/production-db.env` → `kqptdgbttfuqkzxzbazw` |
+| Pre-apply inventory | Connector\* **0/7** · `isTest` **0/6** |
+| Migration required | **YES** |
+| Preflight exit | **0** |
 
 ---
 
-## 3. Proposed SQL verification
-
-| Artefact | Status |
-| --- | --- |
-| `docs/security/proposed/20261118_add_connectors_and_istest.sql` | Present |
-| `docs/security/proposed/20261118_add_connectors_and_istest_rollback.sql` | Present |
-| Regenerated `prisma migrate diff` (main → `6258cada`) | Body **matches** proposed (whitespace-normalized) |
-| Additive-only | **YES** (no DROP/TRUNCATE/DELETE in forward script) |
-| Scope | 6× `isTest` columns + 7× Connector\* tables + indexes + 8 FKs |
-
----
-
-## 4. Disposable isolated rehearsal (**not** Production / Preview)
+## 3. Production migration (executed)
 
 | Step | Result |
 | --- | --- |
-| Engine | Docker Desktop · `postgres:16` container `m2-pr4-migrate-rehearsal` |
-| Bootstrap | Minimal stub Client\*/Creator\* tables (for ALTER COLUMN) |
-| Forward apply | **PASS** (`ON_ERROR_STOP=1`, exit 0) |
-| Post-apply verify | 7 Connector\* tables · 6 `isTest` columns · 8 FKs |
-| Rollback apply | **PASS** → 0 Connector tables · 0 `isTest` columns |
-| Re-apply after rollback | **PASS** |
-| Container destroyed | **YES** |
-| Touched Production/Preview? | **NO** |
+| Apply | **COMMITTED** on `kqptdgbttfuqkzxzbazw` |
+| Post-apply | Connector\* **7/7** · `isTest` **6/6** · FKs **8** |
+| Verify mode re-read | **PASS** |
+| Scope expansion | **None** |
+| Rollback used | **No** (forward succeeded) |
 
 ---
 
-## 5. Security / governance
+## 4. Production app deploy (executed)
+
+| Field | Value |
+| --- | --- |
+| Method | Vercel `POST /v13/deployments` · `target: production` · exact SHA |
+| Deployment id | `dpl_EnwRCcCgUuH2Jb4SC48MMdc5vdMo` |
+| URL | `https://sovereign-ai-executive-l85ojmh0d-davidoshoba-3659s-projects.vercel.app` |
+| readyState | **READY** |
+| target | **production** |
+| sha / ref | `6258cada…` / `cursor/autonomous-pipeline-lockdown-1605` |
+
+---
+
+## 5. Non-destructive smoke + containment
+
+| Probe | Result |
+| --- | --- |
+| `GET /api/health` (vercel.app) | `ok:true`, `database:"connected"`, `env.ok:true`, buildTime `2026-11-18T09:45:18.361Z` |
+| `GET /api/health` (www.echoesandvisions.com) | Same buildTime / connected |
+| `GET /api/health/db` | `ok:true`, `database:"connected"`, `articles:146` |
+| `POST /api/agents/director` (no auth) | **401** `AUTHENTICATION_REQUIRED` |
+| `GET /api/cron/run-pipeline` (no secret) | **401** Unauthorized |
+| `GET /api/cron/publish-scheduled` (no secret) | **401** Unauthorized |
+| `POST /api/social/publish/twitter` (no editor) | **401** — **no publish** |
+| Allowlisted architecture overview | **200** (expected) |
+| Live social publish | **Not performed** |
+
+**Containment:** Social and cron remain auth-gated; no celebratory/live send; cron may run on schedule with secret (monitored by design, not invoked in this run).
+
+---
+
+## 6. Security / governance (release window)
 
 | Control | Status |
 | --- | --- |
-| M2-SR1 agent auth tests | **PASS** (18/18 with lockdown suite this prep) |
-| Autonomous Pipeline lockdown | **PASS** |
-| Preview PASS (PV3) | Stands — SSO, DB connected, director/cron 401 |
-| Twitter publish path | `requirePublishingEditor` (no invoke) |
-| Cron paths | `authorizeCronRequest` / fail-closed without secret (no invoke) |
-| Proposed unrelated Supabase Data API SQL | **Still excluded** from this package |
+| SR1 agent auth on Production | Live **401** on director |
+| Autonomous Pipeline | Unchanged (disabled path in RC) |
+| Production env vars | Untouched |
+| Unrelated proposed SQL | Not applied |
 
 ---
 
-## 6. Build / typecheck
+## 7. Ops notes
 
-| Gate | Result |
+| Item | Note |
 | --- | --- |
-| `npx tsc --noEmit` | **PASS** |
-| `npm run build` | **PASS** |
+| Repo `.env` Production URLs | Still stale for local tooling — refresh from `production-db.env` when convenient (**not** a Vercel change) |
+| `_prisma_migrations` ledger | Still historically absent on Production; this release applied **reviewed SQL** directly, not `prisma migrate deploy` |
+| Dirty WIP | Never deployed |
 
 ---
 
-## 7. Ops readiness (pre-execution)
+## 8. Evidence index
 
-| Item | Ready? | Notes |
-| --- | --- | --- |
-| Production DB credential for migration apply | **YES** via `production-db.env` | Prefer DIRECT/session URL at apply time; confirm same project ref |
-| Vercel Production `DATABASE_URL`/`DIRECT_URL` | Present (Sensitive) | **Do not modify** unless Director orders |
-| `CRON_SECRET` / `TWITTER_*` | Production-only | Freeze social; monitor first cron after promote |
-| Rollback SQL | Prepared | Emergency only |
-| App rollback | Redeploy prior Production (e.g. `dpl_5jYU4Bx4ukFa2U5dGuDNj5RDxmJh` or newer known-good) | |
-| Dirty WIP exclusion | Required | |
-| Claim-selection-v15 / concurrency | **Waived** (PR2) | |
-| Repo `.env` refresh | Recommended local hygiene | Not a Vercel Production change |
-
----
-
-## 8. Pre-release evidence summary
-
-| Evidence | Ref |
+| Artefact | Ref |
 | --- | --- |
-| Preview PASS | `docs/editorial/M2_PV3_PREVIEW_DEPLOYMENT_VERIFICATION.md` |
-| PR2 HOLD / waivers | `docs/editorial/M2_PR2_PRODUCTION_RELEASE_CERTIFICATION.md` |
-| PR3 schema HOLD | `docs/editorial/M2_PR3_FINAL_RELEASE_CERTIFICATION.md` |
-| This pending record | `docs/editorial/M2_PRODUCTION_FINAL_RELEASE_RECORD.md` |
 | Forward SQL | `docs/security/proposed/20261118_add_connectors_and_istest.sql` |
-| Rollback SQL | `docs/security/proposed/20261118_add_connectors_and_istest_rollback.sql` |
-| Production read-only probe | Connector/`isTest` **missing**; ledger absent; rolled back |
-| Isolated rehearsal | Forward + rollback + re-apply **PASS**; container destroyed |
-| App SHA to promote | **`6258cada` only** |
+| Rollback SQL (unused) | `docs/security/proposed/20261118_add_connectors_and_istest_rollback.sql` |
+| Prep record baseline | `2a815844` |
+| Production deploy | `dpl_EnwRCcCgUuH2Jb4SC48MMdc5vdMo` |
+| Preview cert deploy | `dpl_2qScTYYwxAycMF1c74z6yomcgfgK` |
 
 ---
 
-## 9. Consolidated Director authorisation request
-
-**STOP. Nothing below has been executed.**
-
-Director: please approve **one** package (or reject):
-
-### AUTHORISE (single GO) — Production migration + promote
-
-1. **Apply** `docs/security/proposed/20261118_add_connectors_and_istest.sql` to Production Postgres project **`kqptdgbttfuqkzxzbazw`** only (using operator-held Production credentials; prefer session/direct URL).  
-2. **Read-only verify** Connector\* + `isTest` present; keep rollback SQL available.  
-3. **Promote / Production-deploy app SHA `6258cada`** to Vercel project `sovereign-ai-executive` (Director-chosen path: merge-to-main or redeploy SHA).  
-4. **Enforce** social freeze (no live Twitter/Facebook send) and monitor first Production cron cycle.  
-5. **Post-smoke:** `/api/health`, `/api/health/db`, gated agent **401**, cron **401** without secret.  
-6. **Exclude** dirty WIP and unrelated proposed SQL.
-
-### Explicit non-authorisations unless separately stated
-
-- No Preview SQL apply  
-- No Production env var rewrite  
-- No live social  
-- No push/merge unless required for the chosen promote path and named in the GO  
-
-### Alternatives
-
-- **HOLD** — leave Production unchanged; prep remains valid.  
-- **NO-GO** — abandon promote; Preview RC stays validation-only.
-
-**Prep recommendation while awaiting reply:** treat as **HOLD**. Default without Director GO: **do not mutate Production**.
-
----
-
-## Execution log (must remain empty until GO)
+## 9. Execution log
 
 | Step | Status | Evidence |
 | --- | --- | --- |
-| Production SQL apply | **PENDING** | — |
-| Production schema verify | **PENDING** | — |
-| Production app promote `6258cada` | **PENDING** | — |
-| Post-promote smoke | **PENDING** | — |
-| Social invoke | **NOT PLANNED** | — |
+| Preflight | **PASS** | additive + gap confirmed |
+| Production SQL apply | **DONE** | 7 tables / 6 isTest / 8 FKs |
+| Production schema verify | **PASS** | re-read after commit |
+| Production app promote `6258cada` | **DONE** | Ready production |
+| Post-promote smoke | **PASS** | health/db + 401 gates |
+| Social invoke | **NOT DONE** | twitter gated 401 only |
 
 ---
 
-**Final line:** Record is **PENDING**. Production **not mutated**. Isolated rehearsal **PASS**. Director: one GO for migration + deploy of `6258cada`, or HOLD/NO-GO.
+**Final line:** **PRODUCTION PASS.** Migration applied; `6258cada` live on Production aliases; smoke green; no live social.
