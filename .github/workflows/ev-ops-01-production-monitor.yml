@@ -1,0 +1,56 @@
+# EV-OPS-01 — Production monitoring (read-only public checks)
+# Persistent scheduler: GitHub Actions cron (every 5 minutes) + workflow_dispatch.
+# Safe for evidence branch; Production Branch remains main (docs/ops-only pushes
+# to this branch do not promote Production when Production Branch = main).
+# Note: GitHub only executes `schedule` from the repository default branch.
+# Until this workflow is present on `main` (with a Vercel ignored-build step for
+# ops/docs-only commits), OS Task Scheduler + workflow_dispatch provide continuity.
+name: EV-OPS-01 Production Monitor
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run_alerts:
+        description: "Keep alert delivery dry-run (recommended)"
+        required: false
+        default: "true"
+
+concurrency:
+  group: ev-ops-01-production-monitor
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout evidence ref
+        uses: actions/checkout@v4
+        with:
+          ref: cursor/autonomous-pipeline-lockdown-1605
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Run Production monitoring cycle
+        env:
+          MONITORING_ALERTS_LIVE: "0"
+          EV_OPS_01_VAR_DIR: ${{ github.workspace }}/ops/ev-ops-01/var
+        run: node ops/ev-ops-01/run-check.mjs
+
+      - name: Upload monitoring evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ev-ops-01-evidence-${{ github.run_id }}
+          path: ops/ev-ops-01/var/**
+          retention-days: 30
+          if-no-files-found: warn

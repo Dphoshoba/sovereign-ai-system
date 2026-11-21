@@ -1,0 +1,58 @@
+/**
+ * EV-OPS-01 Production monitoring configuration.
+ * Callers: ops/ev-ops-01/run-check.mjs, simulate-alerts.mjs, GitHub Actions workflow.
+ * Existing health endpoints are public read-only; no privileged diagnostics.
+ * User instruction: establish persistent Production monitoring with alerts and evidence.
+ */
+
+export const MONITORING_PROGRAM = "EV-OPS-01"
+
+export const DEFAULT_CONFIG = {
+  baseUrl: "https://www.echoesandvisions.com",
+  expectedDeploymentId: "dpl_EnwRCcCgUuH2Jb4SC48MMdc5vdMo",
+  expectedBuildTime: "2026-11-18T09:45:18.361Z",
+  expectedShaPrefix: "6258cada",
+  intervalMinutes: 5,
+  criticalFailureThreshold: 2,
+  slowResponseThreshold: 3,
+  slowResponseMs: 5000,
+  retentionDays: 30,
+  userAgent: "EchoesVisions-EV-OPS-01-Monitor/1.0",
+  checks: {
+    homepage: { path: "/", method: "GET", expectStatus: [200] },
+    health: { path: "/api/health", method: "GET", expectStatus: [200] },
+    healthDb: { path: "/api/health/db", method: "GET", expectStatus: [200] },
+    directorAuth: {
+      path: "/api/agents/director",
+      method: "POST",
+      expectStatus: [401],
+      body: "{}",
+      headers: { "content-type": "application/json" },
+    },
+    cronPipelineAuth: {
+      path: "/api/cron/run-pipeline",
+      method: "GET",
+      expectStatus: [401],
+    },
+    cronPublishAuth: {
+      path: "/api/cron/publish-scheduled",
+      method: "GET",
+      expectStatus: [401],
+    },
+    socialTwitterAuth: {
+      path: "/api/social/publish/twitter",
+      method: "POST",
+      expectStatus: [401],
+      body: "{}",
+      headers: { "content-type": "application/json" },
+    },
+  },
+}
+
+export function loadConfig(overrides = {}) {
+  return {
+    ...DEFAULT_CONFIG,
+    ...overrides,
+    checks: { ...DEFAULT_CONFIG.checks, ...(overrides.checks || {}) },
+  }
+}
