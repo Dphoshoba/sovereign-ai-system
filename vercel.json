@@ -4,5 +4,6 @@
       "path": "/api/cron/run-pipeline",
       "schedule": "0 0 * * *"
     }
-  ]
+  ],
+  "ignoreCommand": "node scripts/vercel-ignore-build.mjs"
 }
