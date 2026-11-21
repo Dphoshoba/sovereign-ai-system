@@ -13,8 +13,9 @@
 
 | Field | Value |
 | --- | --- |
-| Window start (deploy Ready) | **2026-11-18T09:47:06.833Z** |
-| Window end (72h) | **2026-11-21T09:47:06.833Z** |
+| Window (Australia/Adelaide) | **2026-11-18 20:17 → 2026-11-21 20:17** |
+| Window start (deploy Ready, UTC) | **2026-11-18T09:47:06.833Z** |
+| Window end (72h, UTC) | **2026-11-21T09:47:06.833Z** |
 | Persistent mechanism | Cursor `subscribe_timer` one-shot `m2-ops1-72h-closeout` (`sub_e9ddcaa2-c6b5-4c6c-985a-e992c50fcf8b`) — **fired** |
 | Closeout probe time | **2026-11-21T09:56:27.744Z** (~9m after window end) |
 | Remote evidence tip (pre-closeout) | `c771c935` on `cursor/autonomous-pipeline-lockdown-1605` |
@@ -137,4 +138,83 @@ Escalate to Director if any of:
 
 ---
 
-**Final line:** Observation **CLOSED — 72h COMPLETE (PASS)**. Production unchanged at SHA `6258cada` / dpl `dpl_EnwRCcCgUuH2Jb4SC48MMdc5vdMo`. No incidents; no unauthorised mutate/rollback/social. Coverage honest: T+0 + baseline + closeout only.
+## Phase 6 — Final observation retrieval (post-window)
+
+**Retrieval time:** 2026-11-21 ~21:34 Australia/Adelaide (`2026-11-21T11:04Z`)  
+**Actor:** authorised M2-OPS1 final retrieval (Grok / Cursor agent)  
+**Scope:** read-only verification; no deploy / migrate / config / feature work
+
+### Closeout timer execution status
+
+| Check | Result |
+| --- | --- |
+| Timer id | `m2-ops1-72h-closeout` / `sub_e9ddcaa2-c6b5-4c6c-985a-e992c50fcf8b` |
+| Executed? | **YES** — closeout probes recorded at **2026-11-21T09:56:27.744Z** (~9m after window end) |
+| Evidence commit at fire | `939828d3` (`docs(editorial): close M2-OPS1 72h observation PASS`) |
+| Active subscriptions now | **None** (`list_subscriptions` empty) — consistent with a completed one-shot timer |
+
+### Final retrieval probes
+
+| Probe | Result |
+| --- | --- |
+| `GET /api/health` | **200** `ok:true`, `database:"connected"`, buildTime `2026-11-18T09:45:18.361Z`, `environment:"production"` |
+| `GET /api/health/db` | **200** `ok:true`, `database:"connected"`, `articles:146` |
+| `POST /api/agents/director` (no auth) | **401** |
+| `GET /api/cron/run-pipeline` (no secret) | **401** |
+| `GET /api/cron/publish-scheduled` (no secret) | **401** |
+| `POST /api/social/publish/twitter` (no auth) | **401** — no publish |
+| `POST /api/articles/prepare-for-review` (no auth) | **401** |
+
+### Deploy continuity at retrieval
+
+| Check | Result |
+| --- | --- |
+| `dpl_EnwRCcCgUuH2Jb4SC48MMdc5vdMo` | Ready · target production · still aliased to www / apex / vercel.app |
+| Public homepage `?dpl=` / asset marker | `dpl_EnwRCcCgUuH2Jb4SC48MMdc5vdMo` |
+| Newest Production deployment in list | **Same dpl** (Preview-only deployments after it do not own Production aliases) |
+| App SHA continuity | **Confirmed** via release pin `6258cada83312f409b67044dda79ad177bd0e8ba` ↔ this dpl + unchanged buildTime (CLI inspect meta `githubCommitSha` null on this deployment) |
+| Vercel Production Branch | **`main`** — docs push to evidence branch remains Production-safe |
+
+### Publishing / social activity in window (DB read-only)
+
+| Check | Result |
+| --- | --- |
+| Articles with `publishedAt` inside window | **0** |
+| Articles currently `scheduled` | **0** |
+| `SocialPost` rows created in window | **0** |
+| Social-related `OperationalEvent` rows in window | **0** |
+| Live social invoked by this ops track | **No** |
+
+### Separate operational finding — Pharaoh public URL
+
+| Field | Value |
+| --- | --- |
+| Article ID | `cmwjwzvj9000007kwv8z5kkyp` |
+| Status | `published` (`publishedAt` **2026-11-17T01:37:21.405Z** — before OPS1 window) |
+| Slug / category | `pharaoh-s-counteroffers-don-t-bargain-with-bondage` / `bible-stories` |
+| Incorrect URL (category in path) | `…/blog/bible-stories/pharaoh-s-counteroffers-don-t-bargain-with-bondage` → **HTTP 404** |
+| Canonical URL | `https://www.echoesandvisions.com/blog/pharaoh-s-counteroffers-don-t-bargain-with-bondage` → **HTTP 200** (title present) |
+| Root cause | Public route is `/blog/[slug]` only; category is not a path segment |
+| Code/deploy required? | **No** — URL misuse only; article publication state healthy |
+
+### Monitoring gaps (unchanged; still explicit)
+
+1. No interim probes between OPS1 baseline and timer closeout (~72h gap).  
+2. Coverage remains bookend verification + deploy-identity continuity, not continuous monitoring.  
+3. No fabricated interim observations.
+
+### Incidents / outstanding risks at retrieval
+
+| Item | Outcome |
+| --- | --- |
+| Production health / DB / auth gates | **PASS** |
+| Unauthorised social / cron / director access | **Contained** (401) |
+| Production drift from `6258cada` / `dpl_EnwRCc…` | **None observed** |
+| Pharaoh 404 report | **Resolved as incorrect URL** — not an outage |
+| Outstanding risk | Interim monitoring gap remains historical; no open Production incident |
+
+---
+
+**Final recommendation:** **OPS1 PASS**
+
+**Final line:** Observation **CLOSED — 72h COMPLETE (PASS)**; final retrieval reconfirmed Production at SHA `6258cada` / dpl `dpl_EnwRCcCgUuH2Jb4SC48MMdc5vdMo`. Timer executed. No incidents; social contained; Pharaoh canonical `/blog/{slug}` returns **200**. Coverage honest: T+0 + baseline + closeout + final retrieval only.
