@@ -1,10 +1,13 @@
-# EV-OPS-01 — Production monitoring (read-only public checks)
-# Persistent scheduler: GitHub Actions cron (every 5 minutes) + workflow_dispatch.
-# Safe for evidence branch; Production Branch remains main (docs/ops-only pushes
-# to this branch do not promote Production when Production Branch = main).
-# Note: GitHub only executes `schedule` from the repository default branch.
-# Until this workflow is present on `main` (with a Vercel ignored-build step for
-# ops/docs-only commits), OS Task Scheduler + workflow_dispatch provide continuity.
+# EV-OPS-01/02 — Production monitoring (read-only public checks)
+# Persistent cloud scheduler: GitHub Actions cron every 5 minutes.
+# GitHub executes `schedule` only from the repository default branch (`main`).
+# This workflow intentionally checks out the evidence branch for monitor code so
+# main can host ONLY the workflow file (+ ignore-build helpers) after Director
+# approval — without merging application changes.
+#
+# Live alerts: require repository secrets + MONITORING_ALERT_EMITTER=cloud.
+# Windows host must keep MONITORING_ALERT_EMITTER!=cloud (or unset) so only one
+# runner sends live mail (cross-runner dedupe).
 name: EV-OPS-01 Production Monitor
 
 on:
@@ -13,7 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       dry_run_alerts:
-        description: "Keep alert delivery dry-run (recommended)"
+        description: "Force dry-run alert delivery (true/false)"
         required: false
         default: "true"
 
@@ -30,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout evidence ref
+      - name: Checkout monitor engine (evidence ref)
         uses: actions/checkout@v4
         with:
           ref: cursor/autonomous-pipeline-lockdown-1605
@@ -42,9 +45,21 @@ jobs:
 
       - name: Run Production monitoring cycle
         env:
-          MONITORING_ALERTS_LIVE: "0"
+          MONITORING_RUNNER: cloud
+          # Default emitter=cloud so host cannot also live-send when LIVE secrets exist.
+          MONITORING_ALERT_EMITTER: ${{ secrets.MONITORING_ALERT_EMITTER || 'cloud' }}
+          MONITORING_ALERTS_LIVE: ${{ secrets.MONITORING_ALERTS_LIVE || '0' }}
+          MONITORING_ALERT_TO: ${{ secrets.MONITORING_ALERT_TO }}
+          MONITORING_ALERT_FROM: ${{ secrets.MONITORING_ALERT_FROM }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           EV_OPS_01_VAR_DIR: ${{ github.workspace }}/ops/ev-ops-01/var
-        run: node ops/ev-ops-01/run-check.mjs
+          # workflow_dispatch can force dry-run even if LIVE secret is 1
+          MONITORING_FORCE_DRY_RUN: ${{ github.event.inputs.dry_run_alerts || 'true' }}
+        run: |
+          if [ "${MONITORING_FORCE_DRY_RUN}" = "true" ] && [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            export MONITORING_ALERTS_LIVE=0
+          fi
+          node ops/ev-ops-01/run-check.mjs
 
       - name: Upload monitoring evidence
         if: always()

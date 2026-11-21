@@ -19,6 +19,7 @@ import {
   pruneEvidence,
 } from "./lib/state.mjs"
 import { createNotifier } from "./lib/notify.mjs"
+import { detectRunner, resolveAlertPolicy } from "./lib/alert-policy.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const rootDir = process.env.EV_OPS_01_VAR_DIR || join(__dirname, "var")
@@ -31,9 +32,15 @@ export async function runMonitoringCycle(options = {}) {
   const classification = classifyCycle(cycle, config, state)
   const { file, record } = writeCheckRecord(rootDir, cycle, classification)
   const reconciled = reconcileIncidents(state, classification)
+  const policy = resolveAlertPolicy(process.env)
   const notifier = createNotifier({
     rootDir,
-    dryRun: options.dryRun !== false && process.env.MONITORING_ALERTS_LIVE !== "1",
+    policy,
+    // Host stays evidence/dry-run unless explicitly designated emitter + LIVE.
+    forceDryRun:
+      options.dryRun === true ||
+      (options.dryRun !== false && !policy.liveAllowed),
+    runner: detectRunner(process.env),
   })
 
   const notifications = []
@@ -94,6 +101,9 @@ if (isMain) {
             notifications: result.notifications.map((n) => ({
               kind: n.kind,
               delivery: n.delivery,
+              dryRun: n.dryRun,
+              runner: n.runner,
+              emitter: n.emitter,
             })),
             recordPath: result.recordPath,
           },

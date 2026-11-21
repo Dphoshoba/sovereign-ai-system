@@ -1,41 +1,76 @@
 /**
- * EV-OPS-01 notification adapters (file sink + optional Resend).
- * Callers: run-check.mjs. Existing Resend used by newsletter routes; this module
- * never sends live mail unless MONITORING_ALERTS_LIVE=1 and recipient is set.
- * User instruction: alerts with dedupe + recovery; no unconfirmed test blasts.
+ * EV-OPS-01/02 notification adapters (file sink + optional Resend).
+ * Callers: run-check.mjs. Live mail requires LIVE=1, emitter match, recipient, key.
+ * Never logs API keys or full recipient addresses.
  */
 import { writeFileSync, mkdirSync, existsSync } from "node:fs"
 import { join } from "node:path"
+import {
+  resolveAlertPolicy,
+  shouldEmitLiveNotification,
+} from "./alert-policy.mjs"
+
+function maskEmail(value) {
+  const raw = String(value || "")
+  return raw.replace(
+    /([A-Za-z0-9._%+-])[A-Za-z0-9._%+-]*(@[A-Za-z0-9.-]+)/g,
+    "$1***$2",
+  )
+}
 
 export function createNotifier(options = {}) {
-  const {
-    rootDir,
-    dryRun = true,
-    alertTo = process.env.MONITORING_ALERT_TO || "",
-    from =
-      process.env.MONITORING_ALERT_FROM ||
-      process.env.EMAIL_FROM ||
-      "Echoes & Visions Monitoring <onboarding@resend.dev>",
-    resendApiKey = process.env.RESEND_API_KEY || "",
-    live = process.env.MONITORING_ALERTS_LIVE === "1",
-  } = options
+  const env = options.env || process.env
+  const policy =
+    options.policy ||
+    resolveAlertPolicy({
+      ...env,
+      MONITORING_ALERTS_LIVE:
+        options.live === true
+          ? "1"
+          : options.live === false
+            ? "0"
+            : env.MONITORING_ALERTS_LIVE,
+      MONITORING_ALERT_TO: options.alertTo ?? env.MONITORING_ALERT_TO,
+      MONITORING_ALERT_FROM:
+        options.from ?? env.MONITORING_ALERT_FROM ?? env.EMAIL_FROM,
+      RESEND_API_KEY: options.resendApiKey ?? env.RESEND_API_KEY,
+      MONITORING_ALERT_EMITTER:
+        options.emitter ?? env.MONITORING_ALERT_EMITTER,
+      MONITORING_RUNNER: options.runner ?? env.MONITORING_RUNNER,
+    })
+
+  const rootDir = options.rootDir
+  const forceDryRun = options.dryRun === true || options.forceDryRun === true
+  const alertTo = String(options.alertTo ?? env.MONITORING_ALERT_TO ?? "").trim()
+  const from =
+    String(
+      options.from ??
+        env.MONITORING_ALERT_FROM ??
+        env.EMAIL_FROM ??
+        "Echoes & Visions Monitoring <onboarding@resend.dev>",
+    ).trim()
+  const resendApiKey = String(options.resendApiKey ?? env.RESEND_API_KEY ?? "").trim()
 
   mkdirSync(join(rootDir, "notifications"), { recursive: true })
 
   async function send({ subject, text, kind, incidentId }) {
     const stamp = new Date().toISOString().replace(/[:.]/g, "-")
+    const emitLive = !forceDryRun && shouldEmitLiveNotification(policy)
     const record = {
       timestamp: new Date().toISOString(),
       kind,
       incidentId: incidentId || null,
       subject,
       text,
-      dryRun: dryRun || !live || !alertTo,
+      dryRun: !emitLive,
       recipientConfigured: Boolean(alertTo),
+      recipientMasked: alertTo ? maskEmail(alertTo) : null,
+      runner: policy.runner,
+      emitter: policy.emitter,
       delivery: "file",
     }
 
-    if (!dryRun && live && alertTo && resendApiKey) {
+    if (emitLive && alertTo && resendApiKey) {
       try {
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -48,11 +83,18 @@ export function createNotifier(options = {}) {
             to: [alertTo],
             subject,
             text,
+            tags: [
+              { name: "program", value: "ev-ops-01" },
+              { name: "kind", value: String(kind).slice(0, 40) },
+            ],
           }),
         })
         record.delivery = res.ok ? "resend" : "resend_failed"
         record.httpStatus = res.status
-        if (!res.ok) {
+        if (res.ok) {
+          const body = await res.json().catch(() => ({}))
+          record.providerId = body.id || null
+        } else {
           record.errorSummary = (await res.text()).slice(0, 240)
         }
       } catch (error) {
@@ -67,11 +109,12 @@ export function createNotifier(options = {}) {
   }
 
   return {
+    policy,
     async notifyOpened(incident) {
       return send({
         kind: "incident_opened",
         incidentId: incident.id,
-        subject: `[EV-OPS-01 ${incident.severity.toUpperCase()}] ${incident.code}`,
+        subject: `[EV-OPS ${incident.severity.toUpperCase()}] ${incident.code}`,
         text: [
           `Incident opened: ${incident.code}`,
           `Severity: ${incident.severity}`,
@@ -85,7 +128,7 @@ export function createNotifier(options = {}) {
       return send({
         kind: "incident_resolved",
         incidentId: incident.id,
-        subject: `[EV-OPS-01 RECOVERY] ${incident.code}`,
+        subject: `[EV-OPS RECOVERY] ${incident.code}`,
         text: [
           `Incident resolved: ${incident.code}`,
           `Severity: ${incident.severity}`,
@@ -97,7 +140,7 @@ export function createNotifier(options = {}) {
     async notifyMissingData(summary) {
       return send({
         kind: "warning_missing_data",
-        subject: "[EV-OPS-01 WARNING] missing_monitoring_data",
+        subject: "[EV-OPS WARNING] missing_monitoring_data",
         text: summary,
       })
     },
@@ -107,3 +150,5 @@ export function createNotifier(options = {}) {
 export function latestNotificationExists(rootDir) {
   return existsSync(join(rootDir, "notifications"))
 }
+
+export { maskEmail }

@@ -12,7 +12,11 @@ $script = Join-Path $RepoRoot "ops\ev-ops-01\run-check.mjs"
 $varDir = Join-Path $RepoRoot "ops\ev-ops-01\var"
 New-Item -ItemType Directory -Force -Path $varDir | Out-Null
 
+# Host runner is evidence-only for live mail unless Director sets
+# MONITORING_ALERT_EMITTER=host (cloud is the default EV-OPS-02 live emitter).
 $action = New-ScheduledTaskAction -Execute $node -Argument "`"$script`"" -WorkingDirectory $RepoRoot
+# Environment for the task is inherited from the user session; document expected:
+# MONITORING_RUNNER=host, MONITORING_ALERT_EMITTER=none (or omit).
 # RepetitionDuration must be finite for schtasks; 10 years is effectively persistent.
 $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes 5) -RepetitionDuration (New-TimeSpan -Days 3650)
 $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew
