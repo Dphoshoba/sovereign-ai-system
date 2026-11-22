@@ -9,9 +9,11 @@ export const MONITORING_PROGRAM = "EV-OPS-01"
 
 export const DEFAULT_CONFIG = {
   baseUrl: "https://www.echoesandvisions.com",
-  expectedDeploymentId: "dpl_EnwRCcCgUuH2Jb4SC48MMdc5vdMo",
-  expectedBuildTime: "2026-11-18T09:45:18.361Z",
-  expectedShaPrefix: "6258cada",
+  // LIVE Production pin after EV-EDITORIAL-07 certified deploy (3d5ead0d).
+  expectedDeploymentId: "dpl_5WC3WFxwRXSSMYhZw4ehPTB1LTju",
+  // /api/health no longer exposes buildTime; deployment id is the identity pin.
+  expectedBuildTime: null,
+  expectedShaPrefix: "3d5ead0d",
   intervalMinutes: 5,
   criticalFailureThreshold: 2,
   slowResponseThreshold: 3,
