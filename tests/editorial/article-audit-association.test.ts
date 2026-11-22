@@ -590,4 +590,200 @@ describe("article audit associations", () => {
       ]),
     ).toEqual({ current: null, historical: [historical] });
   });
+
+  describe("timezone-stable naive audit timestamps", () => {
+    const naiveWall = "2026-11-22T06:27:29.386";
+    // Adelaide offset on 2026-11-22 is UTC+10:30 → local 06:27:29.386 == 19:57:29.386Z previous day.
+    const adelaideAssociationIso = "2026-11-21T19:57:29.386Z";
+    const utcAssociationIso = "2026-11-22T06:27:29.386Z";
+
+    it("accepts the same Adelaide-written association under UTC and Adelaide runtimes", () => {
+      const audit = {
+        id: "audit-adelaide-writer",
+        articleId: article.id,
+        createdAt: naiveWall,
+      };
+      const note = {
+        action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+        note: JSON.stringify({
+          algorithm: "sha256",
+          auditId: audit.id,
+          contentFingerprint: fingerprint,
+          createdAt: adelaideAssociationIso,
+          engineRevision: CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
+          version: 2,
+        }),
+      };
+
+      const underStringRuntime = partitionAssociatedArticleAudits(
+        article,
+        sources,
+        [audit],
+        [note],
+      );
+      expect(underStringRuntime.current?.id).toBe(audit.id);
+
+      // Simulate UTC host reading the same naive digits into a Date (node-pg local=UTC).
+      const utcHostDate = new Date(`${naiveWall}Z`);
+      const underUtcDateRuntime = partitionAssociatedArticleAudits(
+        article,
+        sources,
+        [{ ...audit, createdAt: utcHostDate }],
+        [note],
+      );
+      expect(underUtcDateRuntime.current?.id).toBe(audit.id);
+
+      // Simulate Adelaide host reading naive digits into a local Date.
+      const adelaideHostDate = new Date(2026, 10, 22, 6, 27, 29, 386);
+      const underAdelaideDateRuntime = partitionAssociatedArticleAudits(
+        article,
+        sources,
+        [{ ...audit, createdAt: adelaideHostDate }],
+        [note],
+      );
+      expect(underAdelaideDateRuntime.current?.id).toBe(audit.id);
+    });
+
+    it("accepts a UTC-written association for the same naive wall clock", () => {
+      const audit = {
+        id: "audit-utc-writer",
+        articleId: article.id,
+        createdAt: naiveWall,
+      };
+      const note = {
+        action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+        note: JSON.stringify({
+          algorithm: "sha256",
+          auditId: audit.id,
+          contentFingerprint: fingerprint,
+          createdAt: utcAssociationIso,
+          engineRevision: CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
+          version: 2,
+        }),
+      };
+
+      expect(
+        partitionAssociatedArticleAudits(article, sources, [audit], [note])
+          .current?.id,
+      ).toBe(audit.id);
+      expect(
+        partitionAssociatedArticleAudits(
+          article,
+          sources,
+          [{ ...audit, createdAt: new Date(`${naiveWall}Z`) }],
+          [note],
+        ).current?.id,
+      ).toBe(audit.id);
+    });
+
+    it("rejects mismatched association timestamps for the same audit id and fingerprint", () => {
+      const audit = {
+        id: "audit-mismatch-ts",
+        articleId: article.id,
+        createdAt: naiveWall,
+      };
+      const note = {
+        action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+        note: JSON.stringify({
+          algorithm: "sha256",
+          auditId: audit.id,
+          contentFingerprint: fingerprint,
+          createdAt: "2026-11-22T00:00:00.000Z",
+          engineRevision: CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
+          version: 2,
+        }),
+      };
+
+      expect(
+        partitionAssociatedArticleAudits(article, sources, [audit], [note]),
+      ).toEqual({ current: null, historical: [audit] });
+    });
+
+    it("rejects mismatched fingerprints even when timestamps dual-zone match", () => {
+      const audit = {
+        id: "audit-mismatch-fp",
+        articleId: article.id,
+        createdAt: naiveWall,
+      };
+      const note = {
+        action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+        note: JSON.stringify({
+          algorithm: "sha256",
+          auditId: audit.id,
+          contentFingerprint: "0".repeat(64),
+          createdAt: adelaideAssociationIso,
+          engineRevision: CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
+          version: 2,
+        }),
+      };
+
+      expect(
+        partitionAssociatedArticleAudits(article, sources, [audit], [note]),
+      ).toEqual({ current: null, historical: [audit] });
+    });
+
+    it("rejects stale engine revisions even when timestamps dual-zone match", () => {
+      const audit = {
+        id: "audit-stale-engine",
+        articleId: article.id,
+        createdAt: naiveWall,
+      };
+      expect(isCurrentResearchAuditEngineRevision("article-grounded-v11")).toBe(
+        false,
+      );
+      const note = {
+        action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+        note: JSON.stringify({
+          algorithm: "sha256",
+          auditId: audit.id,
+          contentFingerprint: fingerprint,
+          createdAt: adelaideAssociationIso,
+          engineRevision: "article-grounded-v11",
+          version: 2,
+        }),
+      };
+
+      expect(
+        partitionAssociatedArticleAudits(article, sources, [audit], [note]),
+      ).toEqual({ current: null, historical: [audit] });
+    });
+
+    it("rejects malformed association timestamps", () => {
+      const audit = {
+        id: "audit-bad-ts",
+        articleId: article.id,
+        createdAt: naiveWall,
+      };
+      const note = {
+        action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+        note: JSON.stringify({
+          algorithm: "sha256",
+          auditId: audit.id,
+          contentFingerprint: fingerprint,
+          createdAt: "2026-11-22T06:27:29.386",
+          engineRevision: CURRENT_RESEARCH_AUDIT_ENGINE_REVISION,
+          version: 2,
+        }),
+      };
+
+      expect(parseArticleAuditAssociation(note)).toBeNull();
+      expect(
+        partitionAssociatedArticleAudits(article, sources, [audit], [note]),
+      ).toEqual({ current: null, historical: [audit] });
+    });
+
+    it("keeps absolute Date equality working across hosts", () => {
+      const createdAt = new Date("2026-09-15T00:00:00.000Z");
+      const audit = {
+        id: "audit-absolute",
+        articleId: article.id,
+        createdAt,
+      };
+      expect(
+        partitionAssociatedArticleAudits(article, sources, [audit], [
+          associationNote(audit.id, fingerprint, createdAt),
+        ]).current?.id,
+      ).toBe(audit.id);
+    });
+  });
 });
