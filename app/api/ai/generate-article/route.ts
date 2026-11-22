@@ -27,6 +27,10 @@ import { generateAndPersistFeaturedImage } from "../../../../lib/ai/persist-feat
 import { articleQualityScorer } from "../../../../lib/editorial/article-quality-scorer";
 import { seoScorer } from "../../../../lib/editorial/seo-scorer";
 import { lockArticleForGovernance } from "../../../../lib/publishing/article-lifecycle";
+import {
+  runEditorialStages,
+  type EditorialStageRunnerStore,
+} from "../../../../lib/publishing/editorial-stage-runner";
 import { computeArticleAuditFingerprint } from "../../../../lib/research/article-audit-fingerprint";
 import {
   RESEARCH_AUDIT_FINGERPRINT_ACTION,
@@ -149,6 +153,7 @@ export async function POST(request: Request) {
 
     const topic = body.topic || "AI automation for creators";
     const category = body.category || "ai-automation";
+    const directorPrepare = body.directorPrepare === true;
     const manualSources: SourceRecord[] = Array.isArray(body.manualSources)
       ? body.manualSources
       : [];
@@ -767,7 +772,8 @@ export async function POST(request: Request) {
           title,
           slug,
           category,
-          status: "review-required",
+          // Director prepare defers audit + review-required to the P0 stage runner.
+          status: directorPrepare ? "draft" : "review-required",
           approvedAt: null,
           approvedBy: null,
           excerpt: cleanedExcerpt,
@@ -790,40 +796,6 @@ export async function POST(request: Request) {
 
       await lockArticleForGovernance(tx, createdArticle.id);
 
-      const audit = await tx.articleResearchAudit.create({
-        data: {
-          articleId: createdArticle.id,
-          sourceCount: sourceCollection.sourceCount,
-          averageAuthorityScore: sourceCollection.averageAuthorityScore,
-          averageTrustScore: sourceCollection.averageTrustScore,
-          researchConfidence: sourceCollection.researchConfidence,
-          evidenceCount: groundedEvidence.length,
-          factCount: groundedFacts.length,
-          verifiedCount: groundedVerified,
-          partiallyVerifiedCount: groundedPartial,
-          unverifiedCount: groundedUnverified,
-          averageVerificationScore: groundedAvg,
-          consensusScore: groundedConsensusScore,
-          sourceQualityScore: groundedSourceQuality,
-          publicationRecommendation: groundedRecommendation,
-          sources: sourceCollection.collectedSources,
-          evidence: groundedEvidence,
-          facts: groundedFacts,
-          consensus: {
-            groups: consensus.consensusGroups,
-            notScoredClaims: articleGrounding?.extraction.notScoredClaims ?? [],
-            articleGrounded: true,
-            engineRevision: revisionWrittenByEditorialPrepare(),
-          },
-          ...(versionedEnabled && articleGrounding?.specificationVersion
-            ? {
-                specificationVersion: articleGrounding.specificationVersion,
-                disputes: articleGrounding.disputes ?? [],
-              }
-            : {}),
-        },
-      });
-
       const sourceMutation = await applyArticleSourceMutationInTransaction(
         tx as never,
         {
@@ -844,40 +816,120 @@ export async function POST(request: Request) {
         throw new Error(sourceMutation.error);
       }
 
-      if (groundedFacts.length > 0) {
-        await tx.researchFact.createMany({
-          data: groundedFacts.map((fact) => ({
+      // Legacy generate path: persist research audit with the article.
+      // Director prepare path: leave audit to runEditorialStages / prepareArticleForReview.
+      if (!directorPrepare) {
+        const audit = await tx.articleResearchAudit.create({
+          data: {
             articleId: createdArticle.id,
-            claim: fact.claim || "",
-            verificationStatus: fact.verificationStatus || "unverified",
-            confidence: fact.confidence || null,
-            supportingSources: fact.supportingSources || [],
-            category,
-          })),
+            sourceCount: sourceCollection.sourceCount,
+            averageAuthorityScore: sourceCollection.averageAuthorityScore,
+            averageTrustScore: sourceCollection.averageTrustScore,
+            researchConfidence: sourceCollection.researchConfidence,
+            evidenceCount: groundedEvidence.length,
+            factCount: groundedFacts.length,
+            verifiedCount: groundedVerified,
+            partiallyVerifiedCount: groundedPartial,
+            unverifiedCount: groundedUnverified,
+            averageVerificationScore: groundedAvg,
+            consensusScore: groundedConsensusScore,
+            sourceQualityScore: groundedSourceQuality,
+            publicationRecommendation: groundedRecommendation,
+            sources: sourceCollection.collectedSources,
+            evidence: groundedEvidence,
+            facts: groundedFacts,
+            consensus: {
+              groups: consensus.consensusGroups,
+              notScoredClaims:
+                articleGrounding?.extraction.notScoredClaims ?? [],
+              articleGrounded: true,
+              engineRevision: revisionWrittenByEditorialPrepare(),
+            },
+            ...(versionedEnabled && articleGrounding?.specificationVersion
+              ? {
+                  specificationVersion: articleGrounding.specificationVersion,
+                  disputes: articleGrounding.disputes ?? [],
+                }
+              : {}),
+          },
+        });
+
+        if (groundedFacts.length > 0) {
+          await tx.researchFact.createMany({
+            data: groundedFacts.map((fact) => ({
+              articleId: createdArticle.id,
+              claim: fact.claim || "",
+              verificationStatus: fact.verificationStatus || "unverified",
+              confidence: fact.confidence || null,
+              supportingSources: fact.supportingSources || [],
+              category,
+            })),
+          });
+        }
+
+        const contentFingerprint = computeArticleAuditFingerprint(
+          createdArticle,
+          (sourceCollection.collectedSources || [])
+            .map((source) => source.url)
+            .filter((url): url is string => Boolean(url)),
+        );
+        await tx.articleReviewNote.create({
+          data: {
+            articleId: createdArticle.id,
+            reviewer: "system",
+            action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
+            note: serializeArticleAuditAssociation({
+              auditId: audit.id,
+              contentFingerprint,
+              createdAt: audit.createdAt,
+            }),
+          },
         });
       }
 
-      const contentFingerprint = computeArticleAuditFingerprint(
-        createdArticle,
-        (sourceCollection.collectedSources || [])
-          .map((source) => source.url)
-          .filter((url): url is string => Boolean(url)),
-      );
-      await tx.articleReviewNote.create({
-        data: {
-          articleId: createdArticle.id,
-          reviewer: "system",
-          action: RESEARCH_AUDIT_FINGERPRINT_ACTION,
-          note: serializeArticleAuditAssociation({
-            auditId: audit.id,
-            contentFingerprint,
-            createdAt: audit.createdAt,
-          }),
-        },
-      });
-
       return createdArticle;
     }, { timeout: 10_000 });
+
+    if (directorPrepare) {
+      const actor =
+        auth.via === "editor" && "actor" in auth && auth.actor
+          ? auth.actor
+          : "system";
+      const runner = await runEditorialStages(
+        {
+          actor,
+          articleId: article.id,
+        },
+        { prisma: prisma as unknown as EditorialStageRunnerStore },
+      );
+
+      const status =
+        runner.ok === false
+          ? runner.code === "not_found"
+            ? 404
+            : runner.code === "invalid_status" ||
+                runner.code === "immutable_lifecycle"
+              ? 409
+              : runner.code === "missing_content"
+                ? 400
+                : runner.code === "prepare_failed"
+                  ? 422
+                  : 400
+          : 200;
+
+      return NextResponse.json(
+        {
+          ...runner,
+          directorPrepare: true,
+          generation: {
+            articleId: article.id,
+            title: article.title,
+            statusBeforeRunner: article.status,
+          },
+        },
+        { status },
+      );
+    }
 
     let updatedArticle = article;
 

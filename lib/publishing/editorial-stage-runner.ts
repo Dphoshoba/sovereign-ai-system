@@ -601,6 +601,9 @@ export async function runEditorialStages(
     }
   }
 
+  // Publication readiness remains enforced by existing publication guards at
+  // approve/schedule/publish time. Preparation success stops at human review
+  // even when the audit is not yet publish-ready (Director must still review).
   const researchBlock = preparedAuditRow
     ? researchPublicationBlockReason(preparedAuditRow)
     : prepareResult.audit.publicationRecommendation ===
@@ -609,37 +612,18 @@ export async function runEditorialStages(
       ? null
       : "Current research audit is not publish-ready."
 
-  // Threshold constants remain authoritative; prepareArticleForReview already
-  // applied publicationGate including source-quality before recommending publish-ready.
   void PUBLISH_READY_SOURCE_QUALITY_SCORE
 
-  if (researchBlock) {
-    const holdReason = `HOLD: audit completed but not publish-ready. ${researchBlock}`
-    await writeHoldNote(store, article.id, input.actor, holdReason)
-    stages.push({
-      id: "human_review_boundary",
-      status: "hold",
-      detail: holdReason,
-    })
-    return {
-      ok: true,
-      outcome: "hold",
-      articleId: article.id,
-      status: afterStatus,
-      stages,
-      holdReason,
-      audit: prepareResult.audit,
-      articleUnchanged: false,
-      alreadyApplied: false,
-      sideEffects: FORBIDDEN_SIDE_EFFECTS,
-    }
-  }
+  const readinessNote = researchBlock
+    ? ` Audit is not yet publish-ready (${researchBlock}). Director review still required; publication guards remain in force.`
+    : ""
 
   stages.push({
     id: "human_review_boundary",
     status: "ready",
     detail:
-      "Stopped at review-required. Awaiting Director approval. No schedule/publish/social performed.",
+      "Stopped at review-required. Awaiting Director approval. No schedule/publish/social performed." +
+      readinessNote,
   })
 
   return {

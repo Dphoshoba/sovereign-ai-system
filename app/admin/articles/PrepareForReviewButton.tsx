@@ -2,6 +2,11 @@
 
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import {
+  canRetryDirectorPrepare,
+  describeDirectorPrepareOutcome,
+  directorPrepareReviewPath,
+} from "../../../lib/publishing/director-prepare-presentation"
 
 export function PrepareForReviewButton({
   articleId,
@@ -11,16 +16,22 @@ export function PrepareForReviewButton({
   onPrepared?: (result: {
     article?: { status?: unknown } | null
     audit?: { specificationVersion?: string | null } | null
+    outcome?: string
   }) => void
 }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
+  const [holdReason, setHoldReason] = useState<string | null>(null)
+  const [canRetry, setCanRetry] = useState(false)
 
-  async function prepareForReview() {
+  async function runPrepare() {
     setLoading(true)
+    setMessage(null)
+    setHoldReason(null)
 
     try {
-      const response = await fetch("/api/articles/prepare-for-review", {
+      const response = await fetch("/api/articles/editorial-stage-runner", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -30,12 +41,35 @@ export function PrepareForReviewButton({
 
       const result = await response.json()
 
-      if (!response.ok || result.ok === false) {
-        alert(result.error || "Prepare for review failed")
+      setCanRetry(canRetryDirectorPrepare(result))
+      setHoldReason(
+        typeof result.holdReason === "string" ? result.holdReason : null,
+      )
+      setMessage(
+        result.error ||
+          describeDirectorPrepareOutcome(result.outcome) ||
+          "Prepare finished.",
+      )
+
+      if (
+        result.ok &&
+        (result.outcome === "ready_for_human_review" ||
+          result.outcome === "already_applied")
+      ) {
+        onPrepared?.({
+          article: { status: result.status },
+          audit: result.audit ?? null,
+          outcome: result.outcome,
+        })
+        router.push(directorPrepareReviewPath(articleId))
+        router.refresh()
         return
       }
 
-      onPrepared?.(result)
+      if (result.ok === false && !canRetryDirectorPrepare(result)) {
+        return
+      }
+
       router.refresh()
     } finally {
       setLoading(false)
@@ -43,9 +77,24 @@ export function PrepareForReviewButton({
   }
 
   return (
-    <button onClick={prepareForReview} disabled={loading} style={buttonStyle}>
-      {loading ? "Preparing..." : "Prepare for Review"}
-    </button>
+    <div style={{ display: "grid", gap: 8 }}>
+      <button onClick={runPrepare} disabled={loading} style={buttonStyle}>
+        {loading ? "Preparing…" : "Prepare for Director Review"}
+      </button>
+      {message && (
+        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5 }}>{message}</p>
+      )}
+      {holdReason && (
+        <p style={{ margin: 0, fontSize: 13, color: "#9f1239" }}>
+          HOLD: {holdReason}
+        </p>
+      )}
+      {canRetry && (
+        <button onClick={runPrepare} disabled={loading} style={retryStyle}>
+          Retry preparation
+        </button>
+      )}
+    </div>
   )
 }
 
@@ -57,4 +106,9 @@ const buttonStyle: React.CSSProperties = {
   color: "var(--button-foreground)",
   fontWeight: "bold",
   cursor: "pointer",
+}
+
+const retryStyle: React.CSSProperties = {
+  ...buttonStyle,
+  background: "#b45309",
 }
