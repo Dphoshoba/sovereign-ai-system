@@ -36,6 +36,14 @@ function authorityScoreForUrl(url: string): number {
   if (lower.includes(".gov") || lower.includes("nist.gov")) return 100;
   if (lower.includes(".edu")) return 95;
   if (lower.includes("pwc.com") || lower.includes("deloitte.com")) return 80;
+  if (
+    lower.includes("openai.com") ||
+    lower.includes("biblegateway.com") ||
+    lower.includes("biblehub.com") ||
+    lower.includes("poynter.org")
+  ) {
+    return 80;
+  }
   return 50;
 }
 

@@ -1,0 +1,54 @@
+{
+  "applyReport": [
+    {
+      "key": "A",
+      "id": "cmwretawd000008jmpj176ufm",
+      "ok": true,
+      "error": null,
+      "contentChars": 4727,
+      "sources": 2
+    },
+    {
+      "key": "B",
+      "id": "cmwreucq1000908jmmm53chtu",
+      "ok": true,
+      "error": null,
+      "contentChars": 4255,
+      "sources": 3
+    },
+    {
+      "key": "C",
+      "id": "cmwrevh7j000i08jmldtvmtxx",
+      "ok": true,
+      "error": null,
+      "contentChars": 6881,
+      "sources": 4
+    }
+  ],
+  "before": {
+    "A": {
+      "consensus": 50,
+      "sourceQuality": 50,
+      "recommendation": "review-required",
+      "v": 0,
+      "p": 4,
+      "u": 0
+    },
+    "B": {
+      "consensus": 68,
+      "sourceQuality": 75,
+      "recommendation": "review-required",
+      "v": 0,
+      "p": 4,
+      "u": 1
+    },
+    "C": {
+      "consensus": 50,
+      "sourceQuality": 50,
+      "recommendation": "review-required",
+      "v": 0,
+      "p": 2,
+      "u": 0
+    }
+  }
+}

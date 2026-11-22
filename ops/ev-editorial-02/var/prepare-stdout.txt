@@ -1,0 +1,287 @@
+{"event":"research-source-acquisition","sources":[{"sourceId":"philippians-4-esv-bible-gateway","hostname":"www.biblegateway.com","documentType":"html","category":"accepted","httpStatusCategory":"ok","bytesReceived":211495,"extractedCharacterCount":3547,"acceptedPassageCount":2,"rejectionReason":""},{"sourceId":"philippians-4-esv-bible-hub","hostname":"biblehub.com","documentType":"html","category":"accepted","httpStatusCategory":"ok","bytesReceived":12004,"extractedCharacterCount":2490,"acceptedPassageCount":2,"rejectionReason":""}]}
+Consensus Groups: [
+  {
+    theme: 'Faith and Courage',
+    sourceCount: 2,
+    facts: [
+      'According to Philippians 4 (ESV) Bible Gateway, "Rejoice in the Lord always; again I will say, rejoice."',
+      'According to Philippians 4 (ESV) Bible Hub, "And the peace of God, which surpasses all understanding, will guard your hearts and your minds in Christ Jesus."'
+    ]
+  },
+  {
+    theme: 'Content Production',
+    sourceCount: 2,
+    facts: [
+      'According to Philippians 4 (ESV) Bible Gateway, "Not that I am speaking of being in need, for I have learned, in whatever situation I am, to be content."',
+      'According to Philippians 4 (ESV) Bible Hub, "Not that I am speaking of being in need, for I have learned, in whatever situation I am, to be content."'
+    ]
+  }
+]
+{"event":"research-source-acquisition","sources":[{"sourceId":"nist-ai-rmf-1-0-pdf","hostname":"nvlpubs.nist.gov","documentType":"pdf","category":"accepted","httpStatusCategory":"ok","bytesReceived":1946127,"extractedCharacterCount":104555,"acceptedPassageCount":4,"rejectionReason":"","pagesParsed":48,"pagesScanned":48,"textLimitReached":false,"parseDurationCategory":"fast"},{"sourceId":"openai-usage-policies","hostname":"openai.com","documentType":"html","category":"accepted","httpStatusCategory":"ok","bytesReceived":385211,"extractedCharacterCount":25419,"acceptedPassageCount":3,"rejectionReason":""},{"sourceId":"ifcn-code-of-principles-commitments","hostname":"ifcncodeofprinciples.poynter.org","documentType":"html","category":"accepted","httpStatusCategory":"ok","bytesReceived":19443,"extractedCharacterCount":8881,"acceptedPassageCount":1,"rejectionReason":""}]}
+Consensus Groups: [
+  {
+    theme: 'Leadership',
+    sourceCount: 1,
+    facts: [
+      'According to NIST, the AI Risk Management Framework is intended for voluntary use and to improve the ability to incorporate trustworthiness considerations into the design, development, use, and evaluation of AI products, services, and systems.'
+    ]
+  },
+  {
+    theme: 'General Findings',
+    sourceCount: 2,
+    facts: [
+      'According to the IFCN Code of Principles, signatories want their readers to be able to verify findings themselves and provide all sources in enough detail that readers can replicate their work.',
+      'According to OpenAI usage policies, people may not use its services for attempts to infringe on intellectual property rights of others.'
+    ]
+  },
+  {
+    theme: 'Automation',
+    sourceCount: 1,
+    facts: [
+      'According to NIST, AI risk management should be integrated into broader enterprise risk processes.'
+    ]
+  },
+  {
+    theme: 'Ethics and Responsibility',
+    sourceCount: 1,
+    facts: [
+      'According to OpenAI usage policies, responsible use is a shared priority, and those policies are no substitute for legal requirements, professional duties, or ethical obligations that should influence how people use AI.'
+    ]
+  }
+]
+{"event":"research-source-acquisition","sources":[{"sourceId":"colossians-3-esv-bible-gateway","hostname":"www.biblegateway.com","documentType":"html","category":"accepted","httpStatusCategory":"ok","bytesReceived":188164,"extractedCharacterCount":386,"acceptedPassageCount":1,"rejectionReason":""},{"sourceId":"colossians-3-esv-bible-hub","hostname":"biblehub.com","documentType":"html","category":"accepted","httpStatusCategory":"ok","bytesReceived":11998,"extractedCharacterCount":2507,"acceptedPassageCount":1,"rejectionReason":""},{"sourceId":"1-thessalonians-4-esv-bible-gateway","hostname":"www.biblegateway.com","documentType":"html","category":"accepted","httpStatusCategory":"ok","bytesReceived":189210,"extractedCharacterCount":615,"acceptedPassageCount":1,"rejectionReason":""},{"sourceId":"1-thessalonians-4-esv-bible-hub","hostname":"biblehub.com","documentType":"html","category":"accepted","httpStatusCategory":"ok","bytesReceived":10558,"extractedCharacterCount":2109,"acceptedPassageCount":1,"rejectionReason":""}]}
+Consensus Groups: [
+  {
+    theme: 'Faith and Courage',
+    sourceCount: 2,
+    facts: [
+      'According to Colossians 3 (ESV) Bible Gateway, "Whatever you do, work heartily, as for the Lord and not for men, knowing that from the Lord you will receive the inheritance as your reward.',
+      'According to Colossians 3 (ESV) Bible Hub, "Whatever you do, work heartily, as for the Lord and not for men, knowing that from the Lord you will receive the inheritance as your reward.'
+    ]
+  },
+  {
+    theme: 'General Findings',
+    sourceCount: 2,
+    facts: [
+      'According to 1 Thessalonians 4 (ESV) Bible Gateway, "aspire to live quietly, and to mind your own affairs, and to work with your hands, as we instructed you, so that you may walk properly before outsiders and be dependent on no one."',
+      'According to 1 Thessalonians 4 (ESV) Bible Hub, "aspire to live quietly, and to mind your own affairs, and to work with your hands, as we instructed you, so that you may walk properly before outsiders and be dependent on no one."'
+    ]
+  }
+]
+{
+  "ok": true,
+  "generatedAt": "2026-11-22T06:19:12.729Z",
+  "results": [
+    {
+      "articleId": "cmwretawd000008jmpj176ufm",
+      "ok": true,
+      "durationMs": 1775,
+      "article": {
+        "id": "cmwretawd000008jmpj176ufm",
+        "status": "review-required",
+        "editorialScore": 70,
+        "editorialGrade": "review",
+        "qualityScore": 80,
+        "qualityGrade": "good",
+        "seoScore": 100,
+        "seoGrade": "excellent"
+      },
+      "audit": {
+        "id": "cmwrg583t47b344fb8476d0f2",
+        "createdAt": "2026-11-21T19:49:10.779Z",
+        "contentFingerprint": "80e8a6a1926daea16b443ab4ec65eef19ad1c6595634c1d3f729f735bbf6c2dd",
+        "engineRevision": "article-grounded-v14",
+        "sourceCount": 2,
+        "evidenceCount": 4,
+        "factCount": 4,
+        "verifiedCount": 0,
+        "partiallyVerifiedCount": 4,
+        "unverifiedCount": 0,
+        "consensusScore": 95,
+        "publicationRecommendation": "publish-ready",
+        "sourceCoverage": 100,
+        "listedSourceAvailability": 100,
+        "acceptedEvidenceCoverage": 100,
+        "unavailableSourceCount": 0,
+        "notScoredClaims": []
+      },
+      "sourceDiagnostics": [
+        {
+          "sourceId": "philippians-4-esv-bible-gateway",
+          "hostname": "www.biblegateway.com",
+          "documentType": "html",
+          "category": "accepted",
+          "httpStatusCategory": "ok",
+          "bytesReceived": 211495,
+          "extractedCharacterCount": 3547,
+          "acceptedPassageCount": 2,
+          "rejectionReason": ""
+        },
+        {
+          "sourceId": "philippians-4-esv-bible-hub",
+          "hostname": "biblehub.com",
+          "documentType": "html",
+          "category": "accepted",
+          "httpStatusCategory": "ok",
+          "bytesReceived": 12004,
+          "extractedCharacterCount": 2490,
+          "acceptedPassageCount": 2,
+          "rejectionReason": ""
+        }
+      ]
+    },
+    {
+      "articleId": "cmwreucq1000908jmmm53chtu",
+      "ok": true,
+      "durationMs": 1968,
+      "article": {
+        "id": "cmwreucq1000908jmmm53chtu",
+        "status": "review-required",
+        "editorialScore": 75,
+        "editorialGrade": "review",
+        "qualityScore": 80,
+        "qualityGrade": "good",
+        "seoScore": 100,
+        "seoGrade": "excellent"
+      },
+      "audit": {
+        "id": "cmwrg59mn97a50a49bd73100f",
+        "createdAt": "2026-11-21T19:49:12.752Z",
+        "contentFingerprint": "879b55f7786a42abe8113945843196ab30e41249414d1764e3d4e4b918c5534c",
+        "engineRevision": "article-grounded-v14",
+        "sourceCount": 3,
+        "evidenceCount": 8,
+        "factCount": 5,
+        "verifiedCount": 2,
+        "partiallyVerifiedCount": 3,
+        "unverifiedCount": 0,
+        "consensusScore": 84,
+        "publicationRecommendation": "publish-ready",
+        "sourceCoverage": 100,
+        "listedSourceAvailability": 100,
+        "acceptedEvidenceCoverage": 100,
+        "unavailableSourceCount": 0,
+        "notScoredClaims": []
+      },
+      "sourceDiagnostics": [
+        {
+          "sourceId": "nist-ai-rmf-1-0-pdf",
+          "hostname": "nvlpubs.nist.gov",
+          "documentType": "pdf",
+          "category": "accepted",
+          "httpStatusCategory": "ok",
+          "bytesReceived": 1946127,
+          "extractedCharacterCount": 104555,
+          "acceptedPassageCount": 4,
+          "rejectionReason": "",
+          "pagesParsed": 48,
+          "pagesScanned": 48,
+          "textLimitReached": false,
+          "parseDurationCategory": "fast"
+        },
+        {
+          "sourceId": "openai-usage-policies",
+          "hostname": "openai.com",
+          "documentType": "html",
+          "category": "accepted",
+          "httpStatusCategory": "ok",
+          "bytesReceived": 385211,
+          "extractedCharacterCount": 25419,
+          "acceptedPassageCount": 3,
+          "rejectionReason": ""
+        },
+        {
+          "sourceId": "ifcn-code-of-principles-commitments",
+          "hostname": "ifcncodeofprinciples.poynter.org",
+          "documentType": "html",
+          "category": "accepted",
+          "httpStatusCategory": "ok",
+          "bytesReceived": 19443,
+          "extractedCharacterCount": 8881,
+          "acceptedPassageCount": 1,
+          "rejectionReason": ""
+        }
+      ]
+    },
+    {
+      "articleId": "cmwrevh7j000i08jmldtvmtxx",
+      "ok": true,
+      "durationMs": 1271,
+      "article": {
+        "id": "cmwrevh7j000i08jmldtvmtxx",
+        "status": "review-required",
+        "editorialScore": 85,
+        "editorialGrade": "approval-candidate",
+        "qualityScore": 80,
+        "qualityGrade": "good",
+        "seoScore": 100,
+        "seoGrade": "excellent"
+      },
+      "audit": {
+        "id": "cmwrg5amnf07318efa2adacdb",
+        "createdAt": "2026-11-21T19:49:14.046Z",
+        "contentFingerprint": "c4d83c3ca745cc8e5ef0f6c2dc3353ffe16efde1a7b2aaae2c95dc8a8f6ff4e5",
+        "engineRevision": "article-grounded-v14",
+        "sourceCount": 4,
+        "evidenceCount": 4,
+        "factCount": 4,
+        "verifiedCount": 0,
+        "partiallyVerifiedCount": 4,
+        "unverifiedCount": 0,
+        "consensusScore": 95,
+        "publicationRecommendation": "publish-ready",
+        "sourceCoverage": 100,
+        "listedSourceAvailability": 100,
+        "acceptedEvidenceCoverage": 100,
+        "unavailableSourceCount": 0,
+        "notScoredClaims": []
+      },
+      "sourceDiagnostics": [
+        {
+          "sourceId": "colossians-3-esv-bible-gateway",
+          "hostname": "www.biblegateway.com",
+          "documentType": "html",
+          "category": "accepted",
+          "httpStatusCategory": "ok",
+          "bytesReceived": 188164,
+          "extractedCharacterCount": 386,
+          "acceptedPassageCount": 1,
+          "rejectionReason": ""
+        },
+        {
+          "sourceId": "colossians-3-esv-bible-hub",
+          "hostname": "biblehub.com",
+          "documentType": "html",
+          "category": "accepted",
+          "httpStatusCategory": "ok",
+          "bytesReceived": 11998,
+          "extractedCharacterCount": 2507,
+          "acceptedPassageCount": 1,
+          "rejectionReason": ""
+        },
+        {
+          "sourceId": "1-thessalonians-4-esv-bible-gateway",
+          "hostname": "www.biblegateway.com",
+          "documentType": "html",
+          "category": "accepted",
+          "httpStatusCategory": "ok",
+          "bytesReceived": 189210,
+          "extractedCharacterCount": 615,
+          "acceptedPassageCount": 1,
+          "rejectionReason": ""
+        },
+        {
+          "sourceId": "1-thessalonians-4-esv-bible-hub",
+          "hostname": "biblehub.com",
+          "documentType": "html",
+          "category": "accepted",
+          "httpStatusCategory": "ok",
+          "bytesReceived": 10558,
+          "extractedCharacterCount": 2109,
+          "acceptedPassageCount": 1,
+          "rejectionReason": ""
+        }
+      ]
+    }
+  ]
+}

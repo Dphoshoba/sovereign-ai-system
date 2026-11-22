@@ -41,6 +41,10 @@ export function scoreAuthority(url: string): number {
   if (lower.includes("hbr.org")) return 75
   if (lower.includes("technologyreview.com")) return 75
   if (lower.includes("forbes.com")) return 70
+  // Primary biblical text hosts used for verse corroboration
+  if (lower.includes("biblegateway.com")) return 80
+  if (lower.includes("biblehub.com")) return 80
+  if (lower.includes("poynter.org")) return 80
 
   return 50
 }

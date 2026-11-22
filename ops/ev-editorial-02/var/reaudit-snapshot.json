@@ -1,0 +1,195 @@
+{
+  "ok": true,
+  "generatedAt": "2026-11-22T06:19:12.980Z",
+  "allReviewRequired": true,
+  "allUnpublished": true,
+  "gatePassCount": 3,
+  "articles": [
+    {
+      "key": "A",
+      "id": "cmwretawd000008jmpj176ufm",
+      "title": "When Peace Guards Your Mind: Philippians 4:4-9 for Anxious Days",
+      "status": "review-required",
+      "publishedAt": null,
+      "scheduledFor": null,
+      "approvedAt": null,
+      "scores": {
+        "editorialScore": 70,
+        "editorialGrade": "review",
+        "qualityScore": 80,
+        "seoScore": 100
+      },
+      "sources": [
+        {
+          "articleId": "cmwretawd000008jmpj176ufm",
+          "title": "Philippians 4 (ESV) Bible Gateway",
+          "url": "https://www.biblegateway.com/passage/?search=Philippians%204&version=ESV",
+          "authorityScore": 80
+        },
+        {
+          "articleId": "cmwretawd000008jmpj176ufm",
+          "title": "Philippians 4 (ESV) Bible Hub",
+          "url": "https://biblehub.com/esv/philippians/4.htm",
+          "authorityScore": 80
+        }
+      ],
+      "before": {
+        "consensus": 50,
+        "sourceQuality": 50,
+        "recommendation": "review-required",
+        "v": 0,
+        "p": 4,
+        "u": 0
+      },
+      "after": {
+        "auditId": "cmwrg583t47b344fb8476d0f2",
+        "createdAt": "2026-11-22T06:19:10.779",
+        "recommendation": "publish-ready",
+        "consensusScore": 95,
+        "sourceQualityScore": 80,
+        "verifiedCount": 0,
+        "partiallyVerifiedCount": 4,
+        "unverifiedCount": 0,
+        "factCount": 4,
+        "sourceCount": 2,
+        "evidenceCount": 4
+      },
+      "gatePass": true,
+      "delta": {
+        "consensus": 45,
+        "sourceQuality": 30,
+        "verified": 0
+      }
+    },
+    {
+      "key": "B",
+      "id": "cmwreucq1000908jmmm53chtu",
+      "title": "Fact-Check Your AI Draft Before You Publish",
+      "status": "review-required",
+      "publishedAt": null,
+      "scheduledFor": null,
+      "approvedAt": null,
+      "scores": {
+        "editorialScore": 75,
+        "editorialGrade": "review",
+        "qualityScore": 80,
+        "seoScore": 100
+      },
+      "sources": [
+        {
+          "articleId": "cmwreucq1000908jmmm53chtu",
+          "title": "NIST AI RMF 1.0 PDF",
+          "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+          "authorityScore": 100
+        },
+        {
+          "articleId": "cmwreucq1000908jmmm53chtu",
+          "title": "OpenAI Usage policies",
+          "url": "https://openai.com/policies/usage-policies",
+          "authorityScore": 85
+        },
+        {
+          "articleId": "cmwreucq1000908jmmm53chtu",
+          "title": "IFCN Code of Principles commitments",
+          "url": "https://ifcncodeofprinciples.poynter.org/know-more/the-commitments-of-the-code-of-principles",
+          "authorityScore": 85
+        }
+      ],
+      "before": {
+        "consensus": 68,
+        "sourceQuality": 75,
+        "recommendation": "review-required",
+        "v": 0,
+        "p": 4,
+        "u": 1
+      },
+      "after": {
+        "auditId": "cmwrg59mn97a50a49bd73100f",
+        "createdAt": "2026-11-22T06:19:12.752",
+        "recommendation": "publish-ready",
+        "consensusScore": 84,
+        "sourceQualityScore": 90,
+        "verifiedCount": 2,
+        "partiallyVerifiedCount": 3,
+        "unverifiedCount": 0,
+        "factCount": 5,
+        "sourceCount": 3,
+        "evidenceCount": 8
+      },
+      "gatePass": true,
+      "delta": {
+        "consensus": 16,
+        "sourceQuality": 15,
+        "verified": 2
+      }
+    },
+    {
+      "key": "C",
+      "id": "cmwrevh7j000i08jmldtvmtxx",
+      "title": "Faithful in Ordinary Work: Purpose When Your Role Feels Small",
+      "status": "review-required",
+      "publishedAt": null,
+      "scheduledFor": null,
+      "approvedAt": null,
+      "scores": {
+        "editorialScore": 85,
+        "editorialGrade": "approval-candidate",
+        "qualityScore": 80,
+        "seoScore": 100
+      },
+      "sources": [
+        {
+          "articleId": "cmwrevh7j000i08jmldtvmtxx",
+          "title": "Colossians 3 (ESV) Bible Gateway",
+          "url": "https://www.biblegateway.com/passage/?search=Colossians%203%3A23-24&version=ESV",
+          "authorityScore": 80
+        },
+        {
+          "articleId": "cmwrevh7j000i08jmldtvmtxx",
+          "title": "Colossians 3 (ESV) Bible Hub",
+          "url": "https://biblehub.com/esv/colossians/3.htm",
+          "authorityScore": 80
+        },
+        {
+          "articleId": "cmwrevh7j000i08jmldtvmtxx",
+          "title": "1 Thessalonians 4 (ESV) Bible Gateway",
+          "url": "https://www.biblegateway.com/passage/?search=1%20Thessalonians%204%3A11-12&version=ESV",
+          "authorityScore": 80
+        },
+        {
+          "articleId": "cmwrevh7j000i08jmldtvmtxx",
+          "title": "1 Thessalonians 4 (ESV) Bible Hub",
+          "url": "https://biblehub.com/esv/1_thessalonians/4.htm",
+          "authorityScore": 80
+        }
+      ],
+      "before": {
+        "consensus": 50,
+        "sourceQuality": 50,
+        "recommendation": "review-required",
+        "v": 0,
+        "p": 2,
+        "u": 0
+      },
+      "after": {
+        "auditId": "cmwrg5amnf07318efa2adacdb",
+        "createdAt": "2026-11-22T06:19:14.046",
+        "recommendation": "publish-ready",
+        "consensusScore": 95,
+        "sourceQualityScore": 80,
+        "verifiedCount": 0,
+        "partiallyVerifiedCount": 4,
+        "unverifiedCount": 0,
+        "factCount": 4,
+        "sourceCount": 4,
+        "evidenceCount": 4
+      },
+      "gatePass": true,
+      "delta": {
+        "consensus": 45,
+        "sourceQuality": 30,
+        "verified": 0
+      }
+    }
+  ]
+}

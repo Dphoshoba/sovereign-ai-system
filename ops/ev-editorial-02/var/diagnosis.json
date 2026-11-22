@@ -1,0 +1,789 @@
+{
+  "ok": true,
+  "generatedAt": "2026-11-22T06:13:18.820Z",
+  "classificationRule": "verified iff supporting corroboration keys >= 2 OR (keys >= 1 AND supporting URL matches /\\.gov|nist\\.gov/i); else 1 key => partially verified; 0 => unverified",
+  "diagnosisSummary": {
+    "structural": "Single-host / single-corroboration-key support cannot reach verified unless the supporting URL is government (.gov / nist.gov). This is encoded in groundedFactVerification, not a random defect.",
+    "articleA": "Scripture claims match Bible Gateway but remain partially verified because verificationCount=1 and source is not government. Source quality averages authority of accepted URLs; single BG host yields low group source quality.",
+    "articleB": "OpenAI/IFCN single-source matches are correctly partial. NIST HTML overview extracts only a short teaser (~195 chars) so claim-relevant passages are rejected (extraction failure), leaving NIST unverified despite being the government path that could unlock verified status.",
+    "articleC": "Same structural single-source scripture partial pattern as A; interpretive/devotional sentences are authorial and not scored as factual claims."
+  },
+  "fetchProbes": [
+    {
+      "url": "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf",
+      "status": "success",
+      "kind": "pdf",
+      "chars": 104649,
+      "category": "accepted",
+      "preview": "NIST AI 100-1 Artificial Intelligence Risk Management Framework (AI RMF 1.0) NIST AI 100-1 Artificial Intelligence Risk Management Framework (AI RMF 1.0) This publication is available free of charge from: https://doi.org"
+    },
+    {
+      "url": "https://www.nist.gov/itl/ai-risk-management-framework",
+      "status": "success",
+      "kind": "html",
+      "chars": 195,
+      "category": "accepted",
+      "preview": "NIST Risk Management Framework Aims to Improve Trustworthiness of Artificial Intelligence New guidance seeks to cultivate trust in AI technologies and promote AI innovation while mitigating risk."
+    },
+    {
+      "url": "https://www.biblegateway.com/passage/?search=Philippians%204&version=ESV",
+      "status": "success",
+      "kind": "html",
+      "chars": 3547,
+      "category": "accepted",
+      "preview": "4 Therefore, my brothers,[a] whom I love and (A)long for, (B)my joy and (C)crown, (D)stand firm thus in the Lord, my beloved. 2 I entreat Euodia and I entreat Syntyche to (E)agree in the Lord. 3 Yes, I ask you also, true"
+    },
+    {
+      "url": "https://www.biblegateway.com/passage/?search=Philippians%204&version=KJV",
+      "status": "success",
+      "kind": "html",
+      "chars": 2645,
+      "category": "accepted",
+      "preview": "4 Therefore, my brethren dearly beloved and longed for, my joy and crown, so stand fast in the Lord, my dearly beloved. 2 I beseech Euodias, and beseech Syntyche, that they be of the same mind in the Lord. 3 And I intrea"
+    },
+    {
+      "url": "https://biblehub.com/esv/philippians/4.htm",
+      "status": "success",
+      "kind": "html",
+      "chars": 2490,
+      "category": "accepted",
+      "preview": "1Therefore, my brothers,a whom I love and long for, my joy and crown, stand firm thus in the Lord, my beloved. 2I entreat Euodia and I entreat Syntyche to agree in the Lord. 3Yes, I ask you also, true companion,b help th"
+    },
+    {
+      "url": "https://www.biblegateway.com/passage/?search=Colossians%203%3A23-24&version=ESV",
+      "status": "success",
+      "kind": "html",
+      "chars": 386,
+      "category": "accepted",
+      "preview": "Colossians 3:23-24 English Standard Version 23 (A)Whatever you do, work heartily, (B)as for the Lord and not for men, 24 knowing that from the Lord (C)you will receive the inheritance as your reward. (D)You are serving t"
+    },
+    {
+      "url": "https://biblehub.com/esv/colossians/3.htm",
+      "status": "success",
+      "kind": "html",
+      "chars": 2507,
+      "category": "accepted",
+      "preview": "1If then you have been raised with Christ, seek the things that are above, where Christ is, seated at the right hand of God. 2Set your minds on things that are above, not on things that are on earth. 3For you have died, "
+    }
+  ],
+  "articles": [
+    {
+      "key": "A",
+      "id": "cmwretawd000008jmpj176ufm",
+      "title": "When Peace Guards Your Mind: Philippians 4:4-9 for Anxious Days",
+      "status": "review-required",
+      "latestPersistedAudit": {
+        "id": "cmwrfmocj122d957f64ea5202",
+        "createdAt": "2026-11-22T06:04:45.382",
+        "publicationRecommendation": "review-required",
+        "consensusScore": 50,
+        "sourceQualityScore": 50,
+        "verifiedCount": 0,
+        "partiallyVerifiedCount": 4,
+        "unverifiedCount": 0,
+        "factCount": 4,
+        "sourceCount": 1,
+        "evidenceCount": 5
+      },
+      "sourceRows": [
+        {
+          "title": "Philippians 4 (ESV) — Bible Gateway",
+          "url": "https://www.biblegateway.com/passage/?search=Philippians%204&version=ESV",
+          "authorityScore": 95
+        }
+      ],
+      "claimCount": 4,
+      "claimBindings": [
+        {
+          "claim": "According to Philippians 4 (ESV), \"Rejoice in the Lord always; again I will say, rejoice.",
+          "binding": {
+            "role": "unattributed",
+            "exclusiveUrl": "https://www.biblegateway.com/passage?search=Philippians+4&version=ESV",
+            "exclusiveDocumentKey": "listed-source",
+            "isMultiSource": false
+          },
+          "allows": [
+            {
+              "title": "Philippians 4 (ESV) — Bible Gateway",
+              "url": "https://www.biblegateway.com/passage/?search=Philippians%204&version=ESV",
+              "allows": true,
+              "key": "https://www.biblegateway.com/passage?search=Philippians+4&version=ESV"
+            }
+          ]
+        },
+        {
+          "claim": "According to Philippians 4 (ESV), the peace of God which surpasses all understanding will guard your hearts and your minds in Christ Jesus.",
+          "binding": {
+            "role": "unattributed",
+            "exclusiveUrl": "https://www.biblegateway.com/passage?search=Philippians+4&version=ESV",
+            "exclusiveDocumentKey": "listed-source",
+            "isMultiSource": false
+          },
+          "allows": [
+            {
+              "title": "Philippians 4 (ESV) — Bible Gateway",
+              "url": "https://www.biblegateway.com/passage/?search=Philippians%204&version=ESV",
+              "allows": true,
+              "key": "https://www.biblegateway.com/passage?search=Philippians+4&version=ESV"
+            }
+          ]
+        },
+        {
+          "claim": "According to Philippians 4 (ESV), \"Not that I am speaking of being in need, for I have learned in whatever situation I am to be content.\"",
+          "binding": {
+            "role": "unattributed",
+            "exclusiveUrl": "https://www.biblegateway.com/passage?search=Philippians+4&version=ESV",
+            "exclusiveDocumentKey": "listed-source",
+            "isMultiSource": false
+          },
+          "allows": [
+            {
+              "title": "Philippians 4 (ESV) — Bible Gateway",
+              "url": "https://www.biblegateway.com/passage/?search=Philippians%204&version=ESV",
+              "allows": true,
+              "key": "https://www.biblegateway.com/passage?search=Philippians+4&version=ESV"
+            }
+          ]
+        },
+        {
+          "claim": "According to Philippians 4 (ESV), \"And my God will supply every need of yours according to his riches in glory in Christ Jesus.\"",
+          "binding": {
+            "role": "unattributed",
+            "exclusiveUrl": "https://www.biblegateway.com/passage?search=Philippians+4&version=ESV",
+            "exclusiveDocumentKey": "listed-source",
+            "isMultiSource": false
+          },
+          "allows": [
+            {
+              "title": "Philippians 4 (ESV) — Bible Gateway",
+              "url": "https://www.biblegateway.com/passage/?search=Philippians%204&version=ESV",
+              "allows": true,
+              "key": "https://www.biblegateway.com/passage?search=Philippians+4&version=ESV"
+            }
+          ]
+        }
+      ],
+      "acquisition": [
+        {
+          "sourceId": "philippians-4-esv-bible-gateway",
+          "hostname": "www.biblegateway.com",
+          "httpStatusCategory": "ok",
+          "bytesReceived": 211495,
+          "documentType": "html",
+          "category": "accepted",
+          "extractedCharacterCount": 3547,
+          "acceptedPassageCount": 5,
+          "rejectionReason": ""
+        }
+      ],
+      "evidenceCount": 5,
+      "facts": [
+        {
+          "claim": "According to Philippians 4 (ESV), \"Rejoice in the Lord always; again I will say, rejoice.",
+          "verificationStatus": "partially verified",
+          "verificationCount": 1,
+          "verificationMethod": "single-source-supported",
+          "verificationScore": 53,
+          "supportingSources": [
+            {
+              "sourceTitle": "Philippians 4 ESV - Therefore, my brothers, whom I love and - Bible Gateway",
+              "sourceUrl": "https://www.biblegateway.com/passage/?search=Philippians%204&version=ESV",
+              "evidenceId": "philippians-4-(esv)-—-bible-gateway-chunk-1"
+            },
+            {
+              "sourceTitle": "Philippians 4 ESV - Therefore, my brothers, whom I love and - Bible Gateway",
+              "sourceUrl": "https://www.biblegateway.com/passage/?search=Philippians%204&version=ESV",
+              "evidenceId": "philippians-4-(esv)-—-bible-gateway-chunk-4"
+            }
+          ],
+          "sourceUrl": "https://www.biblegateway.com/passage/?search=Philippians%204&version=ESV",
+          "hasGovSupporting": false
+        },
+        {
+          "claim": "According to Philippians 4 (ESV), the peace of God which surpasses all understanding will guard your hearts and your minds in Christ Jesus.",
+          "verificationStatus": "partially verified",
+          "verificationCount": 1,
+          "verificationMethod": "single-source-supported",
+          "verificationScore": 53,
+          "supportingSources": [
+            {
+              "sourceTitle": "Philippians 4 ESV - Therefore, my brothers, whom I love and - Bible Gateway",
+              "sourceUrl": "https://www.biblegateway.com/passage/?search=Philippians%204&version=ESV",
+              "evidenceId": "philippians-4-(esv)-—-bible-gateway-chunk-2"
+            },
+            {
+              "sourceTitle": "Philippians 4 ESV - Therefore, my brothers, whom I love and - Bible Gateway",
+              "sourceUrl": "https://www.biblegateway.com/passage/?search=Philippians%204&version=ESV",
+              "evidenceId": "philippians-4-(esv)-—-bible-gateway-chunk-5"
+            }
+          ],
+          "sourceUrl": "https://www.biblegateway.com/passage/?search=Philippians%204&version=ESV",
+          "hasGovSupporting": false
+        },
+        {
+          "claim": "According to Philippians 4 (ESV), \"Not that I am speaking of being in need, for I have learned in whatever situation I am to be content.\"",
+          "verificationStatus": "partially verified",
+          "verificationCount": 1,
+          "verificationMethod": "single-source-supported",
+          "verificationScore": 53,
+          "supportingSources": [
+            {
+              "sourceTitle": "Philippians 4 ESV - Therefore, my brothers, whom I love and - Bible Gateway",
+              "sourceUrl": "https://www.biblegateway.com/passage/?search=Philippians%204&version=ESV",
+              "evidenceId": "philippians-4-(esv)-—-bible-gateway-chunk-3"
+            }
+          ],
+          "sourceUrl": "https://www.biblegateway.com/passage/?search=Philippians%204&version=ESV",
+          "hasGovSupporting": false
+        },
+        {
+          "claim": "According to Philippians 4 (ESV), \"And my God will supply every need of yours according to his riches in glory in Christ Jesus.\"",
+          "verificationStatus": "partially verified",
+          "verificationCount": 1,
+          "verificationMethod": "single-source-supported",
+          "verificationScore": 53,
+          "supportingSources": [
+            {
+              "sourceTitle": "Philippians 4 ESV - Therefore, my brothers, whom I love and - Bible Gateway",
+              "sourceUrl": "https://www.biblegateway.com/passage/?search=Philippians%204&version=ESV",
+              "evidenceId": "philippians-4-(esv)-—-bible-gateway-chunk-4"
+            },
+            {
+              "sourceTitle": "Philippians 4 ESV - Therefore, my brothers, whom I love and - Bible Gateway",
+              "sourceUrl": "https://www.biblegateway.com/passage/?search=Philippians%204&version=ESV",
+              "evidenceId": "philippians-4-(esv)-—-bible-gateway-chunk-5"
+            }
+          ],
+          "sourceUrl": "https://www.biblegateway.com/passage/?search=Philippians%204&version=ESV",
+          "hasGovSupporting": false
+        }
+      ],
+      "liveVerification": {
+        "verifiedCount": 0,
+        "partiallyVerifiedCount": 4,
+        "unverifiedCount": 0,
+        "averageVerificationScore": 53
+      },
+      "liveConsensus": {
+        "consensusScore": 50,
+        "sourceQualityScore": 50,
+        "publicationRecommendation": "review-required",
+        "groups": [
+          {
+            "theme": "Faith and Courage",
+            "sourceCount": 1,
+            "sourceQualityScore": 50,
+            "factCount": 3
+          },
+          {
+            "theme": "Content Production",
+            "sourceCount": 1,
+            "sourceQualityScore": 50,
+            "factCount": 1
+          }
+        ]
+      }
+    },
+    {
+      "key": "B",
+      "id": "cmwreucq1000908jmmm53chtu",
+      "title": "Fact-Check Your AI Draft Before You Publish",
+      "status": "review-required",
+      "latestPersistedAudit": {
+        "id": "cmwrflh2n43351497dedc5a85",
+        "createdAt": "2026-11-22T06:03:49.345",
+        "publicationRecommendation": "review-required",
+        "consensusScore": 68,
+        "sourceQualityScore": 75,
+        "verifiedCount": 0,
+        "partiallyVerifiedCount": 4,
+        "unverifiedCount": 1,
+        "factCount": 5,
+        "sourceCount": 2,
+        "evidenceCount": 6
+      },
+      "sourceRows": [
+        {
+          "title": "NIST AI Risk Management Framework overview",
+          "url": "https://www.nist.gov/itl/ai-risk-management-framework",
+          "authorityScore": 95
+        },
+        {
+          "title": "OpenAI Usage policies",
+          "url": "https://openai.com/policies/usage-policies",
+          "authorityScore": 85
+        },
+        {
+          "title": "IFCN Code of Principles commitments",
+          "url": "https://ifcncodeofprinciples.poynter.org/know-more/the-commitments-of-the-code-of-principles",
+          "authorityScore": 90
+        }
+      ],
+      "claimCount": 5,
+      "claimBindings": [
+        {
+          "claim": "According to OpenAI usage policies, responsible use is a shared priority, and those policies are no substitute for legal requirements, professional duties, or e",
+          "binding": {
+            "role": "unattributed",
+            "exclusiveUrl": "https://openai.com/policies/usage-policies",
+            "exclusiveDocumentKey": "listed-source",
+            "isMultiSource": false
+          },
+          "allows": [
+            {
+              "title": "NIST AI Risk Management Framework overview",
+              "url": "https://www.nist.gov/itl/ai-risk-management-framework",
+              "allows": false,
+              "key": "https://openai.com/policies/usage-policies"
+            },
+            {
+              "title": "OpenAI Usage policies",
+              "url": "https://openai.com/policies/usage-policies",
+              "allows": true,
+              "key": "https://openai.com/policies/usage-policies"
+            },
+            {
+              "title": "IFCN Code of Principles commitments",
+              "url": "https://ifcncodeofprinciples.poynter.org/know-more/the-commitments-of-the-code-of-principles",
+              "allows": false,
+              "key": "https://openai.com/policies/usage-policies"
+            }
+          ]
+        },
+        {
+          "claim": "According to the IFCN Code of Principles, signatories want their readers to be able to verify findings themselves and provide all sources in enough detail that ",
+          "binding": {
+            "role": "unattributed",
+            "exclusiveUrl": "https://ifcncodeofprinciples.poynter.org/know-more/the-commitments-of-the-code-of-principles",
+            "exclusiveDocumentKey": "listed-source",
+            "isMultiSource": false
+          },
+          "allows": [
+            {
+              "title": "NIST AI Risk Management Framework overview",
+              "url": "https://www.nist.gov/itl/ai-risk-management-framework",
+              "allows": false,
+              "key": "https://ifcncodeofprinciples.poynter.org/know-more/the-commitments-of-the-code-of-principles"
+            },
+            {
+              "title": "OpenAI Usage policies",
+              "url": "https://openai.com/policies/usage-policies",
+              "allows": false,
+              "key": "https://ifcncodeofprinciples.poynter.org/know-more/the-commitments-of-the-code-of-principles"
+            },
+            {
+              "title": "IFCN Code of Principles commitments",
+              "url": "https://ifcncodeofprinciples.poynter.org/know-more/the-commitments-of-the-code-of-principles",
+              "allows": true,
+              "key": "https://ifcncodeofprinciples.poynter.org/know-more/the-commitments-of-the-code-of-principles"
+            }
+          ]
+        },
+        {
+          "claim": "According to OpenAI usage policies, people may not use its services for attempts to infringe on intellectual property rights of others.",
+          "binding": {
+            "role": "unattributed",
+            "exclusiveUrl": "https://openai.com/policies/usage-policies",
+            "exclusiveDocumentKey": "listed-source",
+            "isMultiSource": false
+          },
+          "allows": [
+            {
+              "title": "NIST AI Risk Management Framework overview",
+              "url": "https://www.nist.gov/itl/ai-risk-management-framework",
+              "allows": false,
+              "key": "https://openai.com/policies/usage-policies"
+            },
+            {
+              "title": "OpenAI Usage policies",
+              "url": "https://openai.com/policies/usage-policies",
+              "allows": true,
+              "key": "https://openai.com/policies/usage-policies"
+            },
+            {
+              "title": "IFCN Code of Principles commitments",
+              "url": "https://ifcncodeofprinciples.poynter.org/know-more/the-commitments-of-the-code-of-principles",
+              "allows": false,
+              "key": "https://openai.com/policies/usage-policies"
+            }
+          ]
+        },
+        {
+          "claim": "According to the same policies, users may not build or offer AI tools that provide others with tailored advice that requires a license, without appropriate invo",
+          "binding": {
+            "role": "unattributed",
+            "exclusiveUrl": null,
+            "exclusiveDocumentKey": "unresolved-attribution",
+            "isMultiSource": false
+          },
+          "allows": [
+            {
+              "title": "NIST AI Risk Management Framework overview",
+              "url": "https://www.nist.gov/itl/ai-risk-management-framework",
+              "allows": false,
+              "key": "www.nist.gov"
+            },
+            {
+              "title": "OpenAI Usage policies",
+              "url": "https://openai.com/policies/usage-policies",
+              "allows": false,
+              "key": "openai.com"
+            },
+            {
+              "title": "IFCN Code of Principles commitments",
+              "url": "https://ifcncodeofprinciples.poynter.org/know-more/the-commitments-of-the-code-of-principles",
+              "allows": false,
+              "key": "ifcncodeofprinciples.poynter.org"
+            }
+          ]
+        },
+        {
+          "claim": "According to OpenAI, it builds age-appropriate safeguards designed to reduce exposure to content that may be harmful or developmentally inappropriate.",
+          "binding": {
+            "role": "unattributed",
+            "exclusiveUrl": "https://openai.com/policies/usage-policies",
+            "exclusiveDocumentKey": "listed-source",
+            "isMultiSource": false
+          },
+          "allows": [
+            {
+              "title": "NIST AI Risk Management Framework overview",
+              "url": "https://www.nist.gov/itl/ai-risk-management-framework",
+              "allows": false,
+              "key": "https://openai.com/policies/usage-policies"
+            },
+            {
+              "title": "OpenAI Usage policies",
+              "url": "https://openai.com/policies/usage-policies",
+              "allows": true,
+              "key": "https://openai.com/policies/usage-policies"
+            },
+            {
+              "title": "IFCN Code of Principles commitments",
+              "url": "https://ifcncodeofprinciples.poynter.org/know-more/the-commitments-of-the-code-of-principles",
+              "allows": false,
+              "key": "https://openai.com/policies/usage-policies"
+            }
+          ]
+        }
+      ],
+      "acquisition": [
+        {
+          "sourceId": "nist-ai-risk-management-framework-overview",
+          "hostname": "www.nist.gov",
+          "httpStatusCategory": "ok",
+          "bytesReceived": 92850,
+          "documentType": "html",
+          "category": "no_relevant_passage",
+          "extractedCharacterCount": 195,
+          "acceptedPassageCount": 0,
+          "rejectionReason": "Source text was reachable but not relevant to the audited claims."
+        },
+        {
+          "sourceId": "openai-usage-policies",
+          "hostname": "openai.com",
+          "httpStatusCategory": "ok",
+          "bytesReceived": 385211,
+          "documentType": "html",
+          "category": "accepted",
+          "extractedCharacterCount": 25419,
+          "acceptedPassageCount": 5,
+          "rejectionReason": ""
+        },
+        {
+          "sourceId": "ifcn-code-of-principles-commitments",
+          "hostname": "ifcncodeofprinciples.poynter.org",
+          "httpStatusCategory": "ok",
+          "bytesReceived": 19443,
+          "documentType": "html",
+          "category": "accepted",
+          "extractedCharacterCount": 8881,
+          "acceptedPassageCount": 1,
+          "rejectionReason": ""
+        }
+      ],
+      "evidenceCount": 6,
+      "facts": [
+        {
+          "claim": "According to OpenAI usage policies, responsible use is a shared priority, and those policies are no substitute for legal requirements, professional duties, or e",
+          "verificationStatus": "partially verified",
+          "verificationCount": 1,
+          "verificationMethod": "single-source-supported",
+          "verificationScore": 53,
+          "supportingSources": [
+            {
+              "sourceTitle": "Usage policies | OpenAI",
+              "sourceUrl": "https://openai.com/policies/usage-policies",
+              "evidenceId": "openai-usage-policies-chunk-2"
+            }
+          ],
+          "sourceUrl": "https://openai.com/policies/usage-policies",
+          "hasGovSupporting": false
+        },
+        {
+          "claim": "According to the IFCN Code of Principles, signatories want their readers to be able to verify findings themselves and provide all sources in enough detail that ",
+          "verificationStatus": "partially verified",
+          "verificationCount": 1,
+          "verificationMethod": "single-source-supported",
+          "verificationScore": 53,
+          "supportingSources": [
+            {
+              "sourceTitle": "IFCN Code of Principles commitments",
+              "sourceUrl": "https://ifcncodeofprinciples.poynter.org/know-more/the-commitments-of-the-code-of-principles",
+              "evidenceId": "ifcn-code-of-principles-commitments-chunk-5"
+            }
+          ],
+          "sourceUrl": "https://ifcncodeofprinciples.poynter.org/know-more/the-commitments-of-the-code-of-principles",
+          "hasGovSupporting": false
+        },
+        {
+          "claim": "According to OpenAI usage policies, people may not use its services for attempts to infringe on intellectual property rights of others.",
+          "verificationStatus": "partially verified",
+          "verificationCount": 1,
+          "verificationMethod": "single-source-supported",
+          "verificationScore": 53,
+          "supportingSources": [
+            {
+              "sourceTitle": "Usage policies | OpenAI",
+              "sourceUrl": "https://openai.com/policies/usage-policies",
+              "evidenceId": "openai-usage-policies-chunk-4"
+            },
+            {
+              "sourceTitle": "Usage policies | OpenAI",
+              "sourceUrl": "https://openai.com/policies/usage-policies",
+              "evidenceId": "openai-usage-policies-chunk-6"
+            }
+          ],
+          "sourceUrl": "https://openai.com/policies/usage-policies",
+          "hasGovSupporting": false
+        },
+        {
+          "claim": "According to the same policies, users may not build or offer AI tools that provide others with tailored advice that requires a license, without appropriate invo",
+          "verificationStatus": "unverified",
+          "verificationCount": 0,
+          "verificationMethod": "single-source-supported",
+          "verificationScore": 0,
+          "supportingSources": [],
+          "sourceUrl": "",
+          "hasGovSupporting": false
+        },
+        {
+          "claim": "According to OpenAI, it builds age-appropriate safeguards designed to reduce exposure to content that may be harmful or developmentally inappropriate.",
+          "verificationStatus": "partially verified",
+          "verificationCount": 1,
+          "verificationMethod": "single-source-supported",
+          "verificationScore": 53,
+          "supportingSources": [
+            {
+              "sourceTitle": "Usage policies | OpenAI",
+              "sourceUrl": "https://openai.com/policies/usage-policies",
+              "evidenceId": "openai-usage-policies-chunk-14"
+            },
+            {
+              "sourceTitle": "Usage policies | OpenAI",
+              "sourceUrl": "https://openai.com/policies/usage-policies",
+              "evidenceId": "openai-usage-policies-chunk-17"
+            }
+          ],
+          "sourceUrl": "https://openai.com/policies/usage-policies",
+          "hasGovSupporting": false
+        }
+      ],
+      "liveVerification": {
+        "verifiedCount": 0,
+        "partiallyVerifiedCount": 4,
+        "unverifiedCount": 1,
+        "averageVerificationScore": 53
+      },
+      "liveConsensus": {
+        "consensusScore": 68,
+        "sourceQualityScore": 75,
+        "publicationRecommendation": "review-required",
+        "groups": [
+          {
+            "theme": "Ethics and Responsibility",
+            "sourceCount": 1,
+            "sourceQualityScore": 80,
+            "factCount": 1
+          },
+          {
+            "theme": "General Findings",
+            "sourceCount": 2,
+            "sourceQualityScore": 65,
+            "factCount": 3
+          },
+          {
+            "theme": "Content Production",
+            "sourceCount": 1,
+            "sourceQualityScore": 80,
+            "factCount": 1
+          }
+        ]
+      }
+    },
+    {
+      "key": "C",
+      "id": "cmwrevh7j000i08jmldtvmtxx",
+      "title": "Faithful in Ordinary Work: Purpose When Your Role Feels Small",
+      "status": "review-required",
+      "latestPersistedAudit": {
+        "id": "cmwrflhqt3e7a66e12431d70f",
+        "createdAt": "2026-11-22T06:03:50.142",
+        "publicationRecommendation": "review-required",
+        "consensusScore": 50,
+        "sourceQualityScore": 50,
+        "verifiedCount": 0,
+        "partiallyVerifiedCount": 2,
+        "unverifiedCount": 0,
+        "factCount": 2,
+        "sourceCount": 2,
+        "evidenceCount": 2
+      },
+      "sourceRows": [
+        {
+          "title": "Colossians 3:23-24 (ESV) — Bible Gateway",
+          "url": "https://www.biblegateway.com/passage/?search=Colossians%203%3A23-24&version=ESV",
+          "authorityScore": 95
+        },
+        {
+          "title": "1 Thessalonians 4:11-12 (ESV) — Bible Gateway",
+          "url": "https://www.biblegateway.com/passage/?search=1%20Thessalonians%204%3A11-12&version=ESV",
+          "authorityScore": 95
+        }
+      ],
+      "claimCount": 2,
+      "claimBindings": [
+        {
+          "claim": "According to Colossians 3:23-24 (ESV), Paul writes: \"Whatever you do, work heartily, as for the Lord and not for men, knowing that from the Lord you will receiv",
+          "binding": {
+            "role": "unattributed",
+            "exclusiveUrl": "https://www.biblegateway.com/passage?search=Colossians+3%3A23-24&version=ESV",
+            "exclusiveDocumentKey": "listed-source",
+            "isMultiSource": false
+          },
+          "allows": [
+            {
+              "title": "Colossians 3:23-24 (ESV) — Bible Gateway",
+              "url": "https://www.biblegateway.com/passage/?search=Colossians%203%3A23-24&version=ESV",
+              "allows": true,
+              "key": "https://www.biblegateway.com/passage?search=Colossians+3%3A23-24&version=ESV"
+            },
+            {
+              "title": "1 Thessalonians 4:11-12 (ESV) — Bible Gateway",
+              "url": "https://www.biblegateway.com/passage/?search=1%20Thessalonians%204%3A11-12&version=ESV",
+              "allows": false,
+              "key": "https://www.biblegateway.com/passage?search=Colossians+3%3A23-24&version=ESV"
+            }
+          ]
+        },
+        {
+          "claim": "According to 1 Thessalonians 4:11-12 (ESV), believers are told to \"aspire to live quietly, and to mind your own affairs, and to work with your hands, as we inst",
+          "binding": {
+            "role": "unattributed",
+            "exclusiveUrl": "https://www.biblegateway.com/passage?search=1+Thessalonians+4%3A11-12&version=ESV",
+            "exclusiveDocumentKey": "listed-source",
+            "isMultiSource": false
+          },
+          "allows": [
+            {
+              "title": "Colossians 3:23-24 (ESV) — Bible Gateway",
+              "url": "https://www.biblegateway.com/passage/?search=Colossians%203%3A23-24&version=ESV",
+              "allows": false,
+              "key": "https://www.biblegateway.com/passage?search=1+Thessalonians+4%3A11-12&version=ESV"
+            },
+            {
+              "title": "1 Thessalonians 4:11-12 (ESV) — Bible Gateway",
+              "url": "https://www.biblegateway.com/passage/?search=1%20Thessalonians%204%3A11-12&version=ESV",
+              "allows": true,
+              "key": "https://www.biblegateway.com/passage?search=1+Thessalonians+4%3A11-12&version=ESV"
+            }
+          ]
+        }
+      ],
+      "acquisition": [
+        {
+          "sourceId": "colossians-3-23-24-esv-bible-gateway",
+          "hostname": "www.biblegateway.com",
+          "httpStatusCategory": "ok",
+          "bytesReceived": 188164,
+          "documentType": "html",
+          "category": "accepted",
+          "extractedCharacterCount": 386,
+          "acceptedPassageCount": 1,
+          "rejectionReason": ""
+        },
+        {
+          "sourceId": "1-thessalonians-4-11-12-esv-bible-gateway",
+          "hostname": "www.biblegateway.com",
+          "httpStatusCategory": "ok",
+          "bytesReceived": 189210,
+          "documentType": "html",
+          "category": "accepted",
+          "extractedCharacterCount": 615,
+          "acceptedPassageCount": 1,
+          "rejectionReason": ""
+        }
+      ],
+      "evidenceCount": 2,
+      "facts": [
+        {
+          "claim": "According to Colossians 3:23-24 (ESV), Paul writes: \"Whatever you do, work heartily, as for the Lord and not for men, knowing that from the Lord you will receiv",
+          "verificationStatus": "partially verified",
+          "verificationCount": 1,
+          "verificationMethod": "single-source-supported",
+          "verificationScore": 53,
+          "supportingSources": [
+            {
+              "sourceTitle": "Colossians 3:23-24 ESV - Whatever you do, work heartily, as for - Bible Gateway",
+              "sourceUrl": "https://www.biblegateway.com/passage/?search=Colossians%203%3A23-24&version=ESV",
+              "evidenceId": "colossians-3:23-24-(esv)-—-bible-gateway-chunk-1"
+            }
+          ],
+          "sourceUrl": "https://www.biblegateway.com/passage/?search=Colossians%203%3A23-24&version=ESV",
+          "hasGovSupporting": false
+        },
+        {
+          "claim": "According to 1 Thessalonians 4:11-12 (ESV), believers are told to \"aspire to live quietly, and to mind your own affairs, and to work with your hands, as we inst",
+          "verificationStatus": "partially verified",
+          "verificationCount": 1,
+          "verificationMethod": "single-source-supported",
+          "verificationScore": 53,
+          "supportingSources": [
+            {
+              "sourceTitle": "1 Thessalonians 4:11-12 ESV - and to aspire to live quietly, and to - Bible Gateway",
+              "sourceUrl": "https://www.biblegateway.com/passage/?search=1%20Thessalonians%204%3A11-12&version=ESV",
+              "evidenceId": "1-thessalonians-4:11-12-(esv)-—-bible-gateway-chunk-1"
+            }
+          ],
+          "sourceUrl": "https://www.biblegateway.com/passage/?search=1%20Thessalonians%204%3A11-12&version=ESV",
+          "hasGovSupporting": false
+        }
+      ],
+      "liveVerification": {
+        "verifiedCount": 0,
+        "partiallyVerifiedCount": 2,
+        "unverifiedCount": 0,
+        "averageVerificationScore": 53
+      },
+      "liveConsensus": {
+        "consensusScore": 50,
+        "sourceQualityScore": 50,
+        "publicationRecommendation": "review-required",
+        "groups": [
+          {
+            "theme": "Faith and Courage",
+            "sourceCount": 1,
+            "sourceQualityScore": 50,
+            "factCount": 1
+          },
+          {
+            "theme": "General Findings",
+            "sourceCount": 1,
+            "sourceQualityScore": 50,
+            "factCount": 1
+          }
+        ]
+      }
+    }
+  ]
+}

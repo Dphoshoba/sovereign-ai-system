@@ -339,7 +339,10 @@ function authorityScoreForUrl(url: string): number {
     lower.includes("adobe.com") ||
     lower.includes("salesforce.com") ||
     lower.includes("ibm.com") ||
-    lower.includes("aws.amazon.com")
+    lower.includes("aws.amazon.com") ||
+    lower.includes("biblegateway.com") ||
+    lower.includes("biblehub.com") ||
+    lower.includes("poynter.org")
   ) {
     return 80
   }
