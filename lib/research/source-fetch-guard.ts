@@ -10,8 +10,8 @@ export const RESEARCH_FETCH_TIMEOUT_MS = 20_000;
 export const RESEARCH_PDF_PARSE_TIMEOUT_MS = 12_000;
 export const RESEARCH_FETCH_MAX_BYTES = 4_194_304;
 export const RESEARCH_FETCH_MAX_REDIRECTS = 3;
-/** One bounded retry for transient upstream throttling (429/503). */
-export const RESEARCH_FETCH_MAX_TRANSIENT_RETRIES = 1;
+/** Bounded retries for transient upstream throttling (429/503). EV-EDITORIAL-07-P1. */
+export const RESEARCH_FETCH_MAX_TRANSIENT_RETRIES = 2;
 export const RESEARCH_FETCH_MAX_RETRY_AFTER_MS = 2_000;
 export const RESEARCH_FETCH_DEFAULT_RETRY_AFTER_MS = 250;
 export const RESEARCH_PDF_MAX_SCAN_PAGES = 80;

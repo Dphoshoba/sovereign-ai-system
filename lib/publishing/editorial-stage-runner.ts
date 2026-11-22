@@ -17,6 +17,10 @@ import {
   PUBLISH_READY_SOURCE_QUALITY_SCORE,
 } from "../research/consensus-engine"
 import { researchPublicationBlockReason } from "./publication-guard"
+import {
+  buildEvidenceHoldReason,
+  isTransientEvidenceFailure,
+} from "../research/evidence-recovery"
 
 export const EDITORIAL_STAGE_HOLD_ACTION = "editorial-stage-hold" as const
 
@@ -107,9 +111,6 @@ const FORBIDDEN_SIDE_EFFECTS: EditorialStageSideEffects = {
 const PREPARABLE = new Set(["draft", "review", "review-required"])
 const IMMUTABLE = new Set(["approved", "scheduled", "published", "archived"])
 
-const TRANSIENT_ERROR_PATTERN =
-  /fetch failed|econnreset|etimedout|socket hang up|network|temporar|timeout|503|502|429/i
-
 export type EditorialStageRunnerArticle = {
   id: string
   title: string
@@ -180,13 +181,10 @@ function hasSubstantialContent(content: string | null | undefined) {
 
 function isTransientPrepareFailure(result: PrepareForReviewResult | { message: string }) {
   if ("ok" in result && result.ok === false) {
-    if (result.code === "audit_failure") {
-      return TRANSIENT_ERROR_PATTERN.test(result.error)
-    }
-    return false
+    return isTransientEvidenceFailure(result.error, result.code)
   }
   if ("message" in result) {
-    return TRANSIENT_ERROR_PATTERN.test(result.message)
+    return isTransientEvidenceFailure(result.message)
   }
   return false
 }
@@ -442,7 +440,7 @@ export async function runEditorialStages(
       break
     } catch (error) {
       lastError = error instanceof Error ? error.message : String(error)
-      if (TRANSIENT_ERROR_PATTERN.test(lastError) && attempt < maxAttempts) {
+      if (isTransientEvidenceFailure(lastError) && attempt < maxAttempts) {
         await sleep(50 * attempt)
         continue
       }
@@ -520,7 +518,10 @@ export async function runEditorialStages(
       "insufficient_article_evidence",
     ])
     if (holdCodes.has(prepareResult.code)) {
-      const holdReason = `HOLD: ${prepareResult.error}`
+      const holdReason = buildEvidenceHoldReason({
+        code: prepareResult.code,
+        error: prepareResult.error,
+      })
       await writeHoldNote(store, article.id, input.actor, holdReason)
       stages.push({
         id: "research_audit",

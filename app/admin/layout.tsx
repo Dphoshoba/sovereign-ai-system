@@ -46,6 +46,8 @@ export default async function AdminLayout({
         <nav style={navStyle}>
           <Link href="/admin" style={linkStyle}>Dashboard</Link>
           <Link href="/admin/articles" style={linkStyle}>Articles</Link>
+          <Link href="/admin/director-board" style={linkStyle}>Decision Board</Link>
+          <Link href="/admin/director-checklist" style={linkStyle}>Checklist</Link>
           <Link href="/admin/ai-generator" style={linkStyle}>AI Generator</Link>
           <Link href="/admin/content-strategy" style={linkStyle}>Strategy</Link>
           <Link href="/admin/calendar" style={linkStyle}>Calendar</Link>

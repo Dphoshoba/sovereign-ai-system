@@ -181,15 +181,24 @@ export async function persistFeaturedImageBytes(input: {
   }
 
   const upload = input.upload ?? uploadFeaturedImageBytes
+  const maxAttempts = 3
 
-  try {
-    const imageUrl = await upload({
-      bytes: input.bytes,
-      objectPath,
-      mimeType: validated.mimeType,
-    })
-    return { ok: true, imageUrl, objectPath }
-  } catch {
-    return { ok: false, error: "Image upload failed" }
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const imageUrl = await upload({
+        bytes: input.bytes,
+        objectPath,
+        mimeType: validated.mimeType,
+      })
+      return { ok: true, imageUrl, objectPath }
+    } catch {
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, 50 * attempt))
+        continue
+      }
+    }
   }
+
+  // Keep a generic client-facing error; do not leak storage internals.
+  return { ok: false, error: "Image upload failed" }
 }
