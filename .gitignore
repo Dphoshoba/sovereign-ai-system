@@ -62,3 +62,7 @@ twitter-search.txt
 # EV-OPS-01 monitoring runtime evidence (local)
 ops/ev-ops-01/var/
 
+
+# EV-EDITORIAL-01 runtime
+ops/ev-editorial-01/var/
+
