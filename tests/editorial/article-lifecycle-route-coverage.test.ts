@@ -134,15 +134,34 @@ describe("governed article lifecycle routes", () => {
     await expectStructuredRejection(response);
   });
 
-  it("rejects stale automatic scheduling without writes", async () => {
+  it("rejects legacy automatic scheduling without writes", async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: {
+          id: "editor-1",
+          email: "editor@example.com",
+          app_metadata: { role: "editor" },
+        },
+      },
+      error: null,
+    });
     const { POST } = await import("../../app/api/pipeline/auto-schedule/route");
+    const { LEGACY_AUTO_SCHEDULE_DISABLED_BODY } = await import(
+      "../../lib/publishing/legacy-auto-schedule"
+    );
     const response = await POST(
       new NextRequest("http://localhost/api/pipeline/auto-schedule", {
         method: "POST",
         body: JSON.stringify({ articleId: article.id }),
       }),
     );
-    await expectStructuredRejection(response);
+    expect(response.status).toBe(410);
+    await expect(response.json()).resolves.toEqual(
+      LEGACY_AUTO_SCHEDULE_DISABLED_BODY,
+    );
+    expect(transitionArticleLifecycle).not.toHaveBeenCalled();
+    expect(newsletterUpdateMany).not.toHaveBeenCalled();
+    expect(socialUpdateMany).not.toHaveBeenCalled();
   });
 
   it("rejects stale immediate package publication without writes", async () => {
