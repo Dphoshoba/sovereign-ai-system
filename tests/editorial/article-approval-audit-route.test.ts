@@ -138,6 +138,57 @@ describe("POST /api/articles/approve audit currency", () => {
       expect.objectContaining({ prisma: expect.anything() }),
     );
   });
+
+  it("requires an authenticated editor or admin before approval", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: null }, error: null });
+
+    const { POST } = await import("../../app/api/articles/approve/route");
+    const response = await POST(
+      new NextRequest("http://localhost/api/articles/approve", {
+        method: "POST",
+        body: JSON.stringify({ articleId: article.id }),
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(body).toMatchObject({
+      ok: false,
+      code: "AUTHENTICATION_REQUIRED",
+      articleUnchanged: true,
+    });
+    expect(transitionArticleLifecycle).not.toHaveBeenCalled();
+  });
+
+  it("rejects authenticated non-editor accounts before approval", async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: {
+          id: "reader-1",
+          email: "reader@example.com",
+          app_metadata: { role: "viewer" },
+        },
+      },
+      error: null,
+    });
+
+    const { POST } = await import("../../app/api/articles/approve/route");
+    const response = await POST(
+      new NextRequest("http://localhost/api/articles/approve", {
+        method: "POST",
+        body: JSON.stringify({ articleId: article.id }),
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body).toMatchObject({
+      ok: false,
+      code: "FORBIDDEN",
+      articleUnchanged: true,
+    });
+    expect(transitionArticleLifecycle).not.toHaveBeenCalled();
+  });
 });
 
 describe("PATCH /api/articles/[id] audit currency", () => {
