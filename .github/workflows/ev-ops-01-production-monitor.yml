@@ -16,9 +16,13 @@ on:
   workflow_dispatch:
     inputs:
       dry_run_alerts:
-        description: "Force dry-run alert delivery (true/false)"
+        description: "Force dry-run alert delivery for monitor cycle (true/false)"
         required: false
         default: "true"
+      mode:
+        description: "monitor (default health cycle) or controlled_test (one labelled email via Actions secrets)"
+        required: false
+        default: "monitor"
 
 concurrency:
   group: ev-ops-01-production-monitor
@@ -43,17 +47,29 @@ jobs:
         with:
           node-version: "24"
 
-      - name: Run Production monitoring cycle
+      - name: Controlled test email (Actions secrets only)
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'controlled_test' }}
         env:
           MONITORING_RUNNER: cloud
-          # Default emitter=cloud so host cannot also live-send when LIVE secrets exist.
+          MONITORING_ALERT_EMITTER: ${{ secrets.MONITORING_ALERT_EMITTER }}
+          MONITORING_ALERTS_LIVE: "0"
+          MONITORING_ALERT_TO: ${{ secrets.MONITORING_ALERT_TO }}
+          MONITORING_ALERT_FROM: ${{ secrets.MONITORING_ALERT_FROM }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EV_OPS_01_VAR_DIR: ${{ github.workspace }}/ops/ev-ops-01/var
+          GITHUB_ACTIONS: "true"
+        run: node ops/ev-ops-01/send-controlled-test.mjs
+
+      - name: Run Production monitoring cycle
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.mode != 'controlled_test' }}
+        env:
+          MONITORING_RUNNER: cloud
           MONITORING_ALERT_EMITTER: ${{ secrets.MONITORING_ALERT_EMITTER || 'cloud' }}
           MONITORING_ALERTS_LIVE: ${{ secrets.MONITORING_ALERTS_LIVE || '0' }}
           MONITORING_ALERT_TO: ${{ secrets.MONITORING_ALERT_TO }}
           MONITORING_ALERT_FROM: ${{ secrets.MONITORING_ALERT_FROM }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           EV_OPS_01_VAR_DIR: ${{ github.workspace }}/ops/ev-ops-01/var
-          # workflow_dispatch can force dry-run even if LIVE secret is 1
           MONITORING_FORCE_DRY_RUN: ${{ github.event.inputs.dry_run_alerts || 'true' }}
         run: |
           if [ "${MONITORING_FORCE_DRY_RUN}" = "true" ] && [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
