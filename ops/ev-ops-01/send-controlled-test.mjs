@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * EV-OPS-02 controlled test notification (one labelled email).
- * Uses verified sender monitor@alerts.davidictoptech.com.
- * Does not mutate Production.
+ * In GitHub Actions: uses only process.env secrets (never local .env).
+ * Locally: may fall back to .env for operator diagnostics only.
  */
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
@@ -11,6 +11,7 @@ import { createNotifier } from "./lib/notify.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = join(__dirname, "..", "..")
+const inGitHubActions = process.env.GITHUB_ACTIONS === "true"
 
 function loadDotEnv(path) {
   if (!existsSync(path)) return {}
@@ -39,29 +40,36 @@ function mask(value) {
   )
 }
 
-const fileEnv = loadDotEnv(join(repoRoot, ".env"))
+// Critical: never merge local .env over GitHub Actions secrets.
+const fileEnv = inGitHubActions ? {} : loadDotEnv(join(repoRoot, ".env"))
 const env = { ...fileEnv, ...process.env }
-const to = String(process.env.MONITORING_ALERT_TO || "davidoshoba@gmail.com").trim()
-const from =
-  String(
-    process.env.MONITORING_ALERT_FROM ||
-      "Echoes & Visions Monitoring <monitor@alerts.davidictoptech.com>",
-  ).trim()
+
+const to = String(env.MONITORING_ALERT_TO || "").trim()
+const from = String(env.MONITORING_ALERT_FROM || "").trim()
 const key = String(env.RESEND_API_KEY || "").trim()
 
-if (!key) {
-  console.log(JSON.stringify({ ok: false, error: "resend_key_missing" }))
+if (!to || !from || !key) {
+  console.log(
+    JSON.stringify({
+      ok: false,
+      error: "missing_required_env",
+      hasTo: Boolean(to),
+      hasFrom: Boolean(from),
+      hasKey: Boolean(key),
+      source: inGitHubActions ? "github_actions_env" : "local_or_env",
+    }),
+  )
   process.exit(1)
 }
 
-const rootDir = join(__dirname, "var")
+const rootDir = process.env.EV_OPS_01_VAR_DIR || join(__dirname, "var")
 mkdirSync(join(rootDir, "notifications"), { recursive: true })
 
 const notifier = createNotifier({
   rootDir,
   live: true,
-  emitter: "host",
-  runner: "host",
+  emitter: "cloud",
+  runner: "cloud",
   alertTo: to,
   from,
   resendApiKey: key,
@@ -73,9 +81,15 @@ const opened = await notifier.notifyOpened({
   code: "ev_ops_02_controlled_test",
   severity: "warning",
   summary:
-    "CONTROLLED TEST ONLY — EV-OPS-02 monitoring notification verification. Not a Production incident. Sender: monitor@alerts.davidictoptech.com",
+    "CONTROLLED TEST ONLY — EV-OPS-02 monitoring notification verification via GitHub Actions secrets. Not a Production incident.",
   startedAt: new Date().toISOString(),
-  evidence: [{ checkId: "controlled_test", pass: true, note: "director_authorised" }],
+  evidence: [
+    {
+      checkId: "controlled_test",
+      pass: true,
+      note: "director_authorised_gha_secret",
+    },
+  ],
 })
 
 const hostSuppressed = createNotifier({
@@ -121,6 +135,7 @@ if (opened.providerId && key) {
 
 const report = {
   ok: opened.delivery === "resend" && !opened.dryRun && hostAttempt.dryRun === true,
+  source: inGitHubActions ? "github_actions_secrets" : "local",
   recipientMasked: mask(to),
   senderMasked: mask(from),
   liveTest: {
