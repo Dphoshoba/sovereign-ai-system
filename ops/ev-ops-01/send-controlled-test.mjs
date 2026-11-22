@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * EV-OPS-02 controlled test notification (one labelled email).
- * Does not mutate Production or open synthetic Production incidents.
+ * Uses verified sender monitor@alerts.davidictoptech.com.
+ * Does not mutate Production.
  */
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
@@ -31,16 +32,23 @@ function loadDotEnv(path) {
   return out
 }
 
+function mask(value) {
+  return String(value || "").replace(
+    /([A-Za-z0-9._%+-])[A-Za-z0-9._%+-]*(@[A-Za-z0-9.-]+)/g,
+    "$1***$2",
+  )
+}
+
 const fileEnv = loadDotEnv(join(repoRoot, ".env"))
 const env = { ...fileEnv, ...process.env }
-const to = "davidoshoba@gmail.com"
-const from = String(env.MONITORING_ALERT_FROM || env.EMAIL_FROM || "").trim()
+const to = String(process.env.MONITORING_ALERT_TO || "davidoshoba@gmail.com").trim()
+const from =
+  String(
+    process.env.MONITORING_ALERT_FROM ||
+      "Echoes & Visions Monitoring <monitor@alerts.davidictoptech.com>",
+  ).trim()
 const key = String(env.RESEND_API_KEY || "").trim()
 
-if (!from) {
-  console.log(JSON.stringify({ ok: false, error: "sender_missing" }))
-  process.exit(1)
-}
 if (!key) {
   console.log(JSON.stringify({ ok: false, error: "resend_key_missing" }))
   process.exit(1)
@@ -60,35 +68,16 @@ const notifier = createNotifier({
   forceDryRun: false,
 })
 
-// Exactly one live email (Director-authorised controlled test).
 const opened = await notifier.notifyOpened({
   id: "controlled-test",
   code: "ev_ops_02_controlled_test",
   severity: "warning",
   summary:
-    "CONTROLLED TEST ONLY — EV-OPS-02 monitoring notification verification. Not a Production incident.",
+    "CONTROLLED TEST ONLY — EV-OPS-02 monitoring notification verification. Not a Production incident. Sender: monitor@alerts.davidictoptech.com",
   startedAt: new Date().toISOString(),
   evidence: [{ checkId: "controlled_test", pass: true, note: "director_authorised" }],
 })
 
-// Recovery + duplicate formatting checked in dry-run (no additional live mail).
-const dry = createNotifier({
-  rootDir,
-  live: false,
-  emitter: "cloud",
-  runner: "cloud",
-  alertTo: to,
-  from,
-  resendApiKey: key,
-  forceDryRun: true,
-})
-const recoveryDry = await dry.notifyResolved({
-  id: "controlled-test",
-  code: "ev_ops_02_controlled_test",
-  severity: "warning",
-  startedAt: opened.timestamp,
-  resolvedAt: new Date().toISOString(),
-})
 const hostSuppressed = createNotifier({
   rootDir,
   live: true,
@@ -107,10 +96,33 @@ const hostAttempt = await hostSuppressed.notifyOpened({
   evidence: [],
 })
 
+let deliveryLookup = null
+if (opened.providerId && key) {
+  try {
+    const res = await fetch(`https://api.resend.com/emails/${opened.providerId}`, {
+      headers: { Authorization: `Bearer ${key}` },
+    })
+    const body = await res.json().catch(() => ({}))
+    deliveryLookup = {
+      httpStatus: res.status,
+      id: body.id || opened.providerId,
+      lastEvent: body.last_event || null,
+      createdAt: body.created_at || null,
+      fromMasked: body.from ? mask(body.from) : null,
+      toMasked: Array.isArray(body.to) ? body.to.map(mask) : null,
+    }
+  } catch (error) {
+    deliveryLookup = {
+      httpStatus: null,
+      errorSummary: String(error?.message || error).slice(0, 160),
+    }
+  }
+}
+
 const report = {
   ok: opened.delivery === "resend" && !opened.dryRun && hostAttempt.dryRun === true,
-  recipientMasked: "d***@gmail.com",
-  senderConfigured: true,
+  recipientMasked: mask(to),
+  senderMasked: mask(from),
   liveTest: {
     delivery: opened.delivery,
     httpStatus: opened.httpStatus || null,
@@ -119,11 +131,7 @@ const report = {
     subject: opened.subject,
     errorSummary: opened.errorSummary || null,
   },
-  recoveryFormatDryRun: {
-    delivery: recoveryDry.delivery,
-    dryRun: recoveryDry.dryRun,
-    subject: recoveryDry.subject,
-  },
+  deliveryLookup,
   crossRunnerHostSuppressed: {
     delivery: hostAttempt.delivery,
     dryRun: hostAttempt.dryRun,

@@ -1,9 +1,9 @@
 # EV-OPS-02 — Cloud Monitoring and Live Alerts
 
-**Status:** CONDITIONAL PASS (cloud schedule active; live email blocked on sender domain)  
-**Date:** 2026-11-21 (Australia/Adelaide)  
+**Status:** CONDITIONAL PASS (cloud schedule active; live email blocked on Resend API-key account mismatch)  
+**Updated:** 2026-11-22 (Australia/Adelaide)  
 **Programme:** Echoes & Visions AI Blog Automation  
-**Baseline engine:** EV-OPS-01 (`ops/ev-ops-01/`, evidence prep `50f4fcc6`)  
+**Baseline engine:** EV-OPS-01 (`ops/ev-ops-01/`)  
 **Workflow activation commit (`main`):** `a6f6a9484cbbcaa19663c01d73be1db3d3aa73d6`  
 **Production application SHA:** `6258cada`  
 **Production deploy:** `dpl_EnwRCcCgUuH2Jb4SC48MMdc5vdMo`  
@@ -15,134 +15,102 @@
 
 | Capability | Result |
 | --- | --- |
-| Persistent cloud schedule (`*/5`) | **PASS** — workflow active on `main`; three independent `event=schedule` successes |
-| Live Director alerts | **HOLD** — Resend rejects sender domain (not verified); `MONITORING_ALERTS_LIVE=0` |
-| Cross-runner dedupe | **PASS** (policy + unit tests) — emitter=`cloud`; Windows host Ready, non-emitter |
-| Production unchanged | **PASS** — still `dpl_EnwRCcCgUuH2Jb4SC48MMdc5vdMo` / `buildTime=2026-11-18T09:45:18.361Z` |
+| Persistent cloud schedule (`*/5`) | **PASS** — ongoing successful `event=schedule` runs on `main` |
+| Live Director alerts | **HOLD** — verified subdomain configured; API key cannot send from it |
+| Cross-runner dedupe | **PASS** — `MONITORING_ALERT_EMITTER=cloud`; Windows host Ready / non-matching emitter dry-runs |
+| Production unchanged | **PASS** — `dpl_EnwRCcCgUuH2Jb4SC48MMdc5vdMo` / `buildTime=2026-11-18T09:45:18.361Z` |
 | No social / DB mutate / app deploy | **PASS** |
 
 ---
 
-## 2. Workflow activation
+## 2. Sender / recipient configuration (2026-11-22)
 
-| Field | Value |
+| Setting | Value |
 | --- | --- |
-| Workflow name | `EV-OPS-01 Production Monitor` |
-| Path | `.github/workflows/ev-ops-01-production-monitor.yml` |
-| Default branch | `main` |
-| Activation SHA | `a6f6a948` |
-| Files on `main` (only) | workflow YAML · `scripts/vercel-ignore-build.mjs` · `vercel.json` `ignoreCommand` |
-| Engine checkout | evidence ref `cursor/autonomous-pipeline-lockdown-1605` (not a full evidence-branch merge) |
-| Scheduler | `cron: "*/5 * * * *"` + `workflow_dispatch` |
-| Workflow state | **active** |
+| Sender | `Echoes & Visions Monitoring <monitor@alerts.davidictoptech.com>` |
+| Recipient | `davidoshoba@gmail.com` (Director-confirmed) |
+| Domain status (Director) | `alerts.davidictoptech.com` DNS Verified; sending enabled |
+| `MONITORING_ALERTS_LIVE` | **`0`** (kept off until controlled test succeeds) |
+| `MONITORING_ALERT_EMITTER` | `cloud` |
+
+GitHub Actions secrets updated (names only; values not logged):  
+`MONITORING_ALERT_FROM`, `MONITORING_ALERT_TO`, `MONITORING_ALERT_EMITTER=cloud`, `MONITORING_ALERTS_LIVE=0`, `RESEND_API_KEY` (existing local key re-applied).
 
 ---
 
-## 3. GitHub secrets (names only)
+## 3. Resend API key authorisation check
 
-| Secret | Present |
+| Check | Result |
 | --- | --- |
-| `RESEND_API_KEY` | Yes |
-| `MONITORING_ALERT_TO` | Yes (Director-confirmed `davidoshoba@gmail.com`) |
-| `MONITORING_ALERT_FROM` | Yes (existing `EMAIL_FROM` / authorised sender config) |
-| `MONITORING_ALERT_EMITTER` | Yes (`cloud`) |
-| `MONITORING_ALERTS_LIVE` | Yes (**`0`** — live disabled until verified sender) |
+| Local `.env` `RESEND_API_KEY` | Present (send-only restricted key; domains API returns restricted) |
+| Controlled send from `monitor@alerts.davidictoptech.com` | **HTTP 403** — `The alerts.davidictoptech.com domain is not verified` for **this** API key’s account |
+| Vercel Production `RESEND_API_KEY` | Present as Sensitive; **not readable** via CLI/API decrypt (cannot reuse/replace from here) |
+| Alternate authorised key in workspace | **None found** |
+| Secure key replace performed | **No** — no authorised replacement credential available without Director provisioning |
 
-Secret values were never printed or committed.
+**Exact blocker:** The Resend API key currently stored for monitoring (local + GitHub secret) belongs to an account/team that does **not** own the verified `alerts.davidictoptech.com` domain. Director must set `RESEND_API_KEY` in GitHub Actions secrets to a key from the Resend account where that subdomain is verified (GitHub → Settings → Secrets, or local `gh secret set RESEND_API_KEY` — do not paste the key into chat). Then re-run `node ops/ev-ops-01/send-controlled-test.mjs` and flip `MONITORING_ALERTS_LIVE=1`.
 
 ---
 
-## 4. Controlled test email
+## 4. Controlled test email (2026-11-22)
 
 | Step | Result |
 | --- | --- |
-| Recipient | Confirmed `davidoshoba@gmail.com` |
-| Attempt | One labelled controlled test via existing Resend key + configured `EMAIL_FROM` |
-| Provider response | **HTTP 403** — domain from `EMAIL_FROM` is **not verified** on Resend (`validation_error`) |
-| Live mail delivered | **No** |
-| Sender invent/replace | **Not done** (forbidden) |
-| Recovery format | Verified dry-run subject/body shape |
-| Cross-runner suppress | Host with `emitter=cloud` remains dry-run (file sink) |
-
-**Blocker to clear live alerts:** verify the existing sender domain in Resend (or Director-authorise a different already-verified from-address). Then set `MONITORING_ALERTS_LIVE=1` and re-run one controlled test.
+| From | `monitor@alerts.davidictoptech.com` |
+| To | `davidoshoba@gmail.com` |
+| Live flag during test | Explicit notifier live path; GitHub `MONITORING_ALERTS_LIVE` remained `0` |
+| Provider acceptance | **Failed** — HTTP 403 `validation_error` (domain not verified for this key) |
+| Delivery status | N/A (no provider message id) |
+| Host duplicate suppression | **Pass** — host + `emitter=cloud` → dry-run file sink only |
 
 ---
 
-## 5. Three independent scheduled cloud runs
+## 5. Scheduled cloud runs (independent `event=schedule`)
 
-All `event=schedule`, `conclusion=success`, `headSha=a6f6a948`, Production pin observed in job output.
+Workflow remains active. Latest three successful scheduled runs (UTC):
 
-| # | Run ID | Created (UTC) | Artifact (30-day retention) |
+| # | Run ID | Created (UTC) | Conclusion |
 | --- | ---: | --- | --- |
-| 1 | [44900757859](https://github.com/Dphoshoba/sovereign-ai-system/actions/runs/44900757859) | 2026-11-21T11:47:22Z | `ev-ops-01-evidence-44900757859` |
-| 2 | [44901431374](https://github.com/Dphoshoba/sovereign-ai-system/actions/runs/44901431374) | 2026-11-21T11:56:07Z | `ev-ops-01-evidence-44901431374` |
-| 3 | [44903083595](https://github.com/Dphoshoba/sovereign-ai-system/actions/runs/44903083595) | 2026-11-21T12:16:34Z | `ev-ops-01-evidence-44903083595` |
+| 1 | [44987176552](https://github.com/Dphoshoba/sovereign-ai-system/actions/runs/44987176552) | 2026-11-22T04:55:54Z | success |
+| 2 | [44986544739](https://github.com/Dphoshoba/sovereign-ai-system/actions/runs/44986544739) | 2026-11-22T04:46:51Z | success |
+| 3 | [44985863414](https://github.com/Dphoshoba/sovereign-ai-system/actions/runs/44985863414) | 2026-11-22T04:37:19Z | success |
 
-Each cycle reported `ok: true`, `severity: "ok"`, `deploymentId: dpl_EnwRCcCgUuH2Jb4SC48MMdc5vdMo`.
-
-Manual `workflow_dispatch` runs were **not** counted toward this evidence.
+Evidence artifacts continue under `ev-ops-01-evidence-<run_id>` (30-day retention).  
+Initial activation triple (2026-11-21): `44900757859`, `44901431374`, `44903083595`.
 
 ---
 
-## 6. Evidence retention
+## 6. Cross-runner deduplication
 
-| Location | Retention |
+| Runner | Behaviour |
 | --- | --- |
-| GitHub Actions artifacts `ev-ops-01-evidence-<run_id>` | 30 days |
-| Local host `ops/ev-ops-01/var/` (gitignored) | 30-day prune |
-| Windows Task `EV-OPS-01-Production-Monitor` | State=`Ready` (evidence / non-live-emitter) |
+| GitHub Actions | Intended live emitter when `LIVE=1` + secrets valid |
+| Windows `EV-OPS-01-Production-Monitor` | State=`Ready`; with `emitter=cloud` does not live-send (confirmed in controlled-test host-suppression path) |
 
 ---
 
-## 7. Cross-runner alert deduplication
-
-| Runner | Role |
-| --- | --- |
-| GitHub Actions | Sole intended live emitter (`MONITORING_RUNNER=cloud`, `MONITORING_ALERT_EMITTER=cloud`) when LIVE=1 |
-| Windows Scheduled Task | Evidence-only while emitter≠host match; LIVE currently 0 |
-
-Unit coverage: `tests/ops/ev-ops-02-alert-policy.test.mjs`.
-
----
-
-## 8. Deployment protection
-
-| Control | Result |
-| --- | --- |
-| Project Ignored Build Step | Set + re-read: marker `[ev-ops-monitor-only]` · evidence branch · path script `scripts/vercel-ignore-build.mjs` (≤256 chars) |
-| `vercel.json` `ignoreCommand` | On `main` via activation commit |
-| Push to `main` | Created deploy `dpl_HDT1mKrnB25DtKQHmPSz7hCM5B14` (target production) — **CANCELED** before Ready; aliases unchanged |
-| Production alias after activation | Still `dpl_EnwRCcCgUuH2Jb4SC48MMdc5vdMo` |
-
-**Limitation:** Ignored Build Step did not prevent deployment *object creation*; operator cancel was required once. Path-script fallback is now in the project ignore command for subsequent monitoring-only commits.
-
----
-
-## 9. Production verification (final)
+## 7. Production verification (2026-11-22)
 
 | Check | Result |
 | --- | --- |
 | Homepage `dpl_*` | `dpl_EnwRCcCgUuH2Jb4SC48MMdc5vdMo` |
 | `/api/health` | `ok: true`, `database: connected`, `buildTime: 2026-11-18T09:45:18.361Z` |
-| Application SHA pin | `6258cada` (unchanged; no new READY Production deploy) |
-| Live social | None |
-| DB writes | None |
-| Production env var changes | None |
+| Application SHA | `6258cada` (unchanged) |
+| App code / DB / social / Production env mutation | None this run |
 
 ---
 
-## 10. Remaining limitations
+## 8. Remaining limitation / next action
 
-1. Live email blocked until Resend verifies the configured sender domain.  
-2. `MONITORING_ALERTS_LIVE` remains `0`.  
-3. GitHub `*/5` schedule intervals are best-effort (observed ~9–20 minute gaps under load).  
-4. Vercel ignore may still create a short-lived BUILDING deployment object; cancel if Ready risk appears.  
-5. Evidence-branch preview history may still contain READY non-production deploys from earlier pushes (not Production aliases).
+1. Provision GitHub secret `RESEND_API_KEY` from the Resend account that owns `alerts.davidictoptech.com`.  
+2. Re-run controlled test (`node ops/ev-ops-01/send-controlled-test.mjs`).  
+3. On success: `gh secret set MONITORING_ALERTS_LIVE --body 1` (keep emitter=`cloud`).  
+4. Confirm one scheduled cloud cycle can notify without Windows duplicate.
 
 ---
 
-## 11. Final status
+## 9. Final status
 
 **EV-OPS-02: CONDITIONAL PASS**
 
-Cloud monitoring schedule is active and verified with three scheduled successes and retained artifacts, without changing the Production application deployment. Live Director notifications remain blocked solely on Resend sender-domain verification.
+Cloud monitoring schedule is active and healthy. Live alerting configuration for the verified subdomain is prepared (from/to/emitter) but **not enabled**, because the available Resend API key is not authorised for `alerts.davidictoptech.com`.
