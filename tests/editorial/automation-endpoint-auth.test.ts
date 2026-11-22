@@ -205,23 +205,23 @@ describe("automation endpoint editor authentication", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it("schedules for an editor without using the production origin", async () => {
+  it("rejects legacy auto-schedule for editors without lifecycle writes", async () => {
     session({ id: "editor-1", email: "editor@example.com" });
     const { POST } = await import("../../app/api/pipeline/auto-schedule/route");
+    const { LEGACY_AUTO_SCHEDULE_DISABLED_BODY } = await import(
+      "../../lib/publishing/legacy-auto-schedule"
+    );
     const response = await POST(
       editorRequest("/api/pipeline/auto-schedule", { articleId: "article-1" }),
     );
 
-    expect(response.status).toBe(200);
-    expect(transitionArticleLifecycle).toHaveBeenCalledWith(
-      expect.objectContaining({
-        articleId: "article-1",
-        transition: "schedule",
-      }),
-      expect.anything(),
+    expect(response.status).toBe(410);
+    await expect(response.json()).resolves.toEqual(
+      LEGACY_AUTO_SCHEDULE_DISABLED_BODY,
     );
-    expect(newsletterUpdateMany).toHaveBeenCalled();
-    expect(socialUpdateMany).toHaveBeenCalled();
+    expect(transitionArticleLifecycle).not.toHaveBeenCalled();
+    expect(newsletterUpdateMany).not.toHaveBeenCalled();
+    expect(socialUpdateMany).not.toHaveBeenCalled();
   });
 
   it("publishes due articles for an editor operations request", async () => {
@@ -256,7 +256,7 @@ describe("automation endpoint editor authentication", () => {
     );
   });
 
-  it("forwards the editor session from pipeline to same-origin auto-schedule", async () => {
+  it("packages via pipeline without calling legacy auto-schedule", async () => {
     session({ id: "editor-1", email: "editor@example.com" });
     vi.mocked(fetch).mockImplementation(async (url: string | URL | Request) => {
       const href = String(url);
@@ -272,12 +272,6 @@ describe("automation endpoint editor authentication", () => {
       if (href.endsWith("/api/articles/generate-package")) {
         return Response.json({ ok: true });
       }
-      if (href.endsWith("/api/pipeline/auto-schedule")) {
-        return Response.json({
-          ok: true,
-          scheduledFor: "2026-09-27T00:00:00.000Z",
-        });
-      }
       return Response.json({ ok: false }, { status: 500 });
     });
 
@@ -287,6 +281,8 @@ describe("automation endpoint editor authentication", () => {
 
     expect(response.status).toBe(200);
     expect(body.articleId).toBe("draft-1");
+    expect(body.scheduledFor).toBeNull();
+    expect(body.legacyAutoScheduleSkipped).toBe(true);
     const calls = vi.mocked(fetch).mock.calls.map(([url, init]) => ({
       url: String(url),
       cookie: new Headers(init?.headers).get("cookie"),
@@ -295,19 +291,18 @@ describe("automation endpoint editor authentication", () => {
       `${TRUSTED_LOCAL_ORIGIN}/api/workers/weekly-planner`,
       `${TRUSTED_LOCAL_ORIGIN}/api/articles/generate`,
       `${TRUSTED_LOCAL_ORIGIN}/api/articles/generate-package`,
-      `${TRUSTED_LOCAL_ORIGIN}/api/pipeline/auto-schedule`,
     ]);
     expect(
       calls.every(
         (call) =>
           !call.url.includes(PRODUCTION_ORIGIN) &&
-          !call.url.includes(PREVIEW_ORIGIN),
+          !call.url.includes(PREVIEW_ORIGIN) &&
+          !call.url.endsWith("/api/pipeline/auto-schedule"),
       ),
     ).toBe(true);
-    expect(
-      calls.find((call) => call.url.endsWith("/api/pipeline/auto-schedule"))
-        ?.cookie,
-    ).toBe("sb-preview-auth-token=editor-session");
+    expect(calls.every((call) => call.cookie === "sb-preview-auth-token=editor-session")).toBe(
+      true,
+    );
   });
 
   it("ignores host headers and the public app URL when forwarding the editor session", async () => {
