@@ -1578,4 +1578,86 @@ describe("transitionArticleLifecycle", () => {
     expect(awaitingReview.publishedAt).toBeNull();
     expect(tx.publishingQueue.update).not.toHaveBeenCalled();
   });
+
+  it("blocks approve when the body contains internal editorial commentary", async () => {
+    const leakyContent =
+      "See [NIST](https://www.nist.gov/artificial-intelligence).\n\n## Unresolved concerns\n\nDirector-only notes.";
+    const leakyArticle = {
+      ...baseArticle,
+      content: leakyContent,
+      status: "review-required",
+      reviewNotes: [
+        {
+          action: "research-audit-fingerprint",
+          note: serializeArticleAuditAssociation({
+            auditId: "audit-current",
+            contentFingerprint: computeArticleAuditFingerprint(
+              { ...baseArticle, content: leakyContent },
+              ["https://www.nist.gov/artificial-intelligence"],
+            ),
+            createdAt: auditCreatedAt,
+          }),
+        },
+      ],
+    };
+    const { store, tx } = createStore(leakyArticle);
+
+    const result = await transitionArticleLifecycle(
+      {
+        articleId: leakyArticle.id,
+        transition: "approve",
+        actor: "editor@example.com",
+      },
+      { prisma: store },
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: "public_body_leak",
+      articleUnchanged: true,
+    });
+    expect(leakyArticle.status).toBe("review-required");
+    expect(tx.article.update).not.toHaveBeenCalled();
+  });
+
+  it("blocks publish when the body contains internal editorial commentary", async () => {
+    const leakyContent =
+      "See [NIST](https://www.nist.gov/artificial-intelligence).\n\n## Approval recommendation\n\nRecommend: publish-ready";
+    const approved = {
+      ...approvedArticle({
+        consensusScore: 80,
+        sourceQualityScore: 70,
+        publicationRecommendation: "publish-ready",
+      }),
+      content: leakyContent,
+      reviewNotes: [
+        {
+          action: "research-audit-fingerprint",
+          note: serializeArticleAuditAssociation({
+            auditId: "audit-current",
+            contentFingerprint: computeArticleAuditFingerprint(
+              { ...baseArticle, content: leakyContent },
+              ["https://www.nist.gov/artificial-intelligence"],
+            ),
+            createdAt: auditCreatedAt,
+          }),
+        },
+      ],
+    };
+    const { store, tx } = createStore(approved);
+
+    const result = await transitionArticleLifecycle(
+      { articleId: approved.id, transition: "publish" },
+      { prisma: store },
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: "public_body_leak",
+      articleUnchanged: true,
+    });
+    expect(approved.status).toBe("approved");
+    expect(approved.publishedAt).toBeNull();
+    expect(tx.article.update).not.toHaveBeenCalled();
+  });
 });
