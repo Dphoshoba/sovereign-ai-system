@@ -1,18 +1,19 @@
 # EV-OPS-01/02 — Production monitoring (read-only public checks)
-# Persistent cloud scheduler: GitHub Actions cron every 5 minutes.
+# Persistent cloud scheduler: GitHub Actions cron once per hour.
 # GitHub executes `schedule` only from the repository default branch (`main`).
-# This workflow intentionally checks out the evidence branch for monitor code so
+# This workflow intentionally checks out the monitor engine branch so
 # main can host ONLY the workflow file (+ ignore-build helpers) after Director
 # approval — without merging application changes.
 #
 # Live alerts: require repository secrets + MONITORING_ALERT_EMITTER=cloud.
-# Windows host must keep MONITORING_ALERT_EMITTER!=cloud (or unset) so only one
-# runner sends live mail (cross-runner dedupe).
+# Windows host task EV-OPS-01-Production-Monitor must remain Disabled so only
+# the cloud runner sends live mail (cross-runner dedupe).
 name: EV-OPS-01 Production Monitor
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    # Once per hour (UTC). Replaces prior */5 schedule (EVS-24).
+    - cron: "0 * * * *"
   workflow_dispatch:
     inputs:
       dry_run_alerts:
@@ -37,15 +38,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout monitor engine (evidence ref)
+      - name: Checkout monitor engine
         uses: actions/checkout@v4
         with:
-          ref: cursor/autonomous-pipeline-lockdown-1605
+          ref: cursor/ev-ops-01-monitoring-repair-c170
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "24"
+
+      - name: Restore monitor incident state
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.mode != 'controlled_test' }}
+        uses: actions/cache@v4
+        with:
+          path: ops/ev-ops-01/var/state.json
+          key: ev-ops-01-state-${{ github.run_id }}
+          restore-keys: |
+            ev-ops-01-state-
 
       - name: Controlled test email (Actions secrets only)
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'controlled_test' }}
