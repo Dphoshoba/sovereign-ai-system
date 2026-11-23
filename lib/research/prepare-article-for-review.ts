@@ -1,4 +1,5 @@
 import { articleQualityScorer } from "../editorial/article-quality-scorer";
+import { publicBodyLeakBlockReason } from "../editorial/public-body-safeguard";
 import { calculateEditorialQualityScore } from "../editorial/quality-score";
 import { seoScorer } from "../editorial/seo-scorer";
 import {
@@ -60,7 +61,8 @@ export type PrepareForReviewErrorCode =
   | "insufficient_article_evidence"
   | "audit_failure"
   | "duplicate_audit"
-  | "invalid_status";
+  | "invalid_status"
+  | "public_body_leak";
 
 export type PrepareForReviewSuccess = {
   ok: true;
@@ -330,6 +332,16 @@ export async function prepareArticleForReview(
       code: "invalid_status",
       error:
         "Only draft or review articles can be prepared. Approved, scheduled, and published articles are left unchanged.",
+      articleUnchanged: true,
+    };
+  }
+
+  const publicBodyLeak = publicBodyLeakBlockReason(article.content);
+  if (publicBodyLeak) {
+    return {
+      ok: false,
+      code: "public_body_leak",
+      error: publicBodyLeak,
       articleUnchanged: true,
     };
   }
