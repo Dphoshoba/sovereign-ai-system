@@ -144,6 +144,23 @@ export function createNotifier(options = {}) {
         text: summary,
       })
     },
+    async notifyDailySummary(payload) {
+      const lines = [
+        "EV-OPS-01 daily operational summary",
+        `Day (${payload.timezone || "Australia/Adelaide"}): ${payload.dayKey}`,
+        `Overall: ${payload.ok ? "PASS" : "FAIL"}`,
+        `Severity: ${payload.severity}`,
+        `Deployment: ${payload.deploymentId || "unknown"}`,
+        `Open incidents: ${(payload.openIncidentCodes || []).join(", ") || "none"}`,
+        `Consecutive OK cycles: ${payload.consecutiveOk ?? 0}`,
+        `Cycle at (UTC): ${payload.timestamp}`,
+      ]
+      return send({
+        kind: "daily_operational_summary",
+        subject: `[EV-OPS DAILY] ${payload.ok ? "healthy" : "attention"} ${payload.dayKey}`,
+        text: lines.join("\n"),
+      })
+    },
   }
 }
 

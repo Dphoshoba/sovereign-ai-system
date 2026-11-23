@@ -100,15 +100,18 @@ export async function runChecks(config) {
   const database =
     health?.json?.database ?? healthDb?.json?.database ?? null
 
+  // Deployment id is the primary Production pin. A missing observation fails
+  // closed so we do not silently accept an unreadable identity swap.
   const deploymentOk =
-    observedDeploymentId == null ||
+    observedDeploymentId != null &&
     observedDeploymentId === config.expectedDeploymentId
-  // When expectedBuildTime is unset, deployment id alone pins identity.
+  // Build-time is optional on current Production (/api/health dropped it).
+  // When expectedBuildTime is unset, ignore observed buildTime entirely.
+  // When set, require an exact match (missing observed fails — no weakening).
   const buildTimeOk =
     config.expectedBuildTime == null
       ? true
-      : observedBuildTime == null ||
-        observedBuildTime === config.expectedBuildTime
+      : observedBuildTime === config.expectedBuildTime
 
   // Health semantics (non-weakening): both endpoints must succeed with ok:true.
   // Legacy shape required database==="connected" on the payloads.

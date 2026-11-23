@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
  * EV-OPS-01 Production monitoring cycle entrypoint.
- * Callers: Windows Scheduled Task, GitHub Actions, local verification.
+ * Callers: Windows Scheduled Task (legacy/disabled), GitHub Actions, local verification.
  * Existing public health endpoints only; no Production mutate.
- * User instruction: persistent 5-minute Production monitoring with evidence + alerts.
+ * User instruction: hourly Production monitoring with evidence + alerts.
  */
 import { fileURLToPath } from "node:url"
 import { dirname, join } from "node:path"
@@ -17,6 +17,7 @@ import {
   writeCheckRecord,
   reconcileIncidents,
   pruneEvidence,
+  calendarDayKey,
 } from "./lib/state.mjs"
 import { createNotifier } from "./lib/notify.mjs"
 import { detectRunner, resolveAlertPolicy } from "./lib/alert-policy.mjs"
@@ -45,6 +46,8 @@ export async function runMonitoringCycle(options = {}) {
 
   const notifications = []
   for (const opened of reconciled.opened) {
+    // Dedupe: never re-notify an incident that already has a live/file open receipt.
+    if ((opened.notifyCount || 0) >= 1) continue
     if (opened.severity === "critical" || opened.severity === "warning") {
       const n = await notifier.notifyOpened(opened)
       notifications.push(n)
@@ -53,8 +56,35 @@ export async function runMonitoringCycle(options = {}) {
     }
   }
   for (const resolved of reconciled.resolved) {
+    // Recovery notification once per cleared incident.
+    if (resolved.recoveryNotified) continue
     const n = await notifier.notifyResolved(resolved)
     notifications.push(n)
+    resolved.recoveryNotified = true
+  }
+
+  // Once per Adelaide calendar day when prior state exists (cloud cache / host disk).
+  // Requires lastCycleAt so a cold runner without restored state cannot spam hourly.
+  const dayKey = calendarDayKey(config.dailySummaryTimezone || "Australia/Adelaide")
+  let lastDailySummaryDay = state.lastDailySummaryDay || null
+  if (
+    state.lastCycleAt &&
+    lastDailySummaryDay !== dayKey
+  ) {
+    const summary = await notifier.notifyDailySummary({
+      timezone: config.dailySummaryTimezone || "Australia/Adelaide",
+      dayKey,
+      ok: classification.overallPass,
+      severity: classification.severity,
+      deploymentId: cycle.deploymentId,
+      openIncidentCodes: Object.values(reconciled.openIncidents).map((i) => i.code),
+      consecutiveOk: classification.overallPass
+        ? (state.consecutiveOk || 0) + 1
+        : 0,
+      timestamp: cycle.timestamp,
+    })
+    notifications.push(summary)
+    lastDailySummaryDay = dayKey
   }
 
   const removed = pruneEvidence(rootDir, config.retentionDays)
@@ -67,6 +97,7 @@ export async function runMonitoringCycle(options = {}) {
       ? (state.consecutiveOk || 0) + 1
       : 0,
     lastDeploymentId: cycle.deploymentId,
+    lastDailySummaryDay,
   }
   saveState(rootDir, nextState)
 

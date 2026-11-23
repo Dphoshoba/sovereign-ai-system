@@ -9,16 +9,19 @@ export const MONITORING_PROGRAM = "EV-OPS-01"
 
 export const DEFAULT_CONFIG = {
   baseUrl: "https://www.echoesandvisions.com",
-  // LIVE Production pin after EV-EDITORIAL-07 certified deploy (3d5ead0d).
-  expectedDeploymentId: "dpl_5WC3WFxwRXSSMYhZw4ehPTB1LTju",
-  // /api/health no longer exposes buildTime; deployment id is the identity pin.
+  // Certified Production pin (Director EVS-24): commit 918b8447 / dpl_CMPj7w7…
+  expectedDeploymentId: "dpl_CMPj7w7zqJw2L8bXD1W7E6fPEHfa",
+  // /api/health no longer exposes buildTime; deployment id alone pins identity.
+  // When non-null, observed buildTime must match exactly (missing observed fails).
   expectedBuildTime: null,
-  expectedShaPrefix: "3d5ead0d",
-  intervalMinutes: 5,
+  expectedShaPrefix: "918b8447",
+  intervalMinutes: 60,
   criticalFailureThreshold: 2,
   slowResponseThreshold: 3,
   slowResponseMs: 5000,
   retentionDays: 30,
+  // Adelaide calendar day key for once-daily operational summary.
+  dailySummaryTimezone: "Australia/Adelaide",
   userAgent: "EchoesVisions-EV-OPS-01-Monitor/1.0",
   checks: {
     homepage: { path: "/", method: "GET", expectStatus: [200] },
