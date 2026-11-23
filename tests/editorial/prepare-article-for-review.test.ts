@@ -939,4 +939,31 @@ describe("prepareArticleForReview", () => {
     expect(result.ok).toBe(true)
     expect(createdAudits).toHaveLength(1)
   })
+
+  it("blocks Prepare for Review when the body contains internal editorial commentary", async () => {
+    const article = baseArticle({
+      content: `${GROUNDED_ARTICLE_CLAIM}
+
+## Unresolved concerns
+
+Fingerprint and Director notes must stay internal.
+
+See [NIST AI](https://www.nist.gov/artificial-intelligence).`,
+    })
+    const { store, articleUpdates, createdAudits } = createStore(article)
+    const result = await prepareArticleForReview(article.id, {
+      prisma: store,
+      collectEvidence: async () =>
+        usefulEvidence("https://www.nist.gov/artificial-intelligence"),
+    })
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: "public_body_leak",
+      articleUnchanged: true,
+    })
+    expect(result.ok === false && result.error).toContain("Unresolved concerns")
+    expect(articleUpdates).toHaveLength(0)
+    expect(createdAudits).toHaveLength(0)
+  })
 })

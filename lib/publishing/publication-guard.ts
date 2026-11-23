@@ -1,3 +1,4 @@
+import { publicBodyLeakBlockReason } from "../editorial/public-body-safeguard"
 import {
   PUBLISH_READY_CONSENSUS_SCORE,
   PUBLISH_READY_RECOMMENDATION,
@@ -47,6 +48,16 @@ export function researchPublicationBlockReason(
   if (consensusReady && qualityReady && recommendationReady) return null
 
   return "Current research audit is not publish-ready."
+}
+
+/**
+ * Blocks schedule/publish (and approve) when the article body still contains
+ * internal editorial / audit commentary. Existing published rows are not rewritten.
+ */
+export function publicBodyPublicationBlockReason(
+  content: string | null | undefined,
+): string | null {
+  return publicBodyLeakBlockReason(content)
 }
 
 export function publicationGuard(

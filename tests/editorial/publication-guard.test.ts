@@ -4,6 +4,7 @@ import { computeArticleAuditFingerprint } from "../../lib/research/article-audit
 import { serializeArticleAuditAssociation } from "../../lib/research/article-audit-association"
 import {
   publicationGuard,
+  publicBodyPublicationBlockReason,
   researchPublicationBlockReason,
 } from "../../lib/publishing/publication-guard"
 
@@ -102,6 +103,19 @@ describe("research publication eligibility", () => {
         publicationRecommendation: "publish-ready",
       }),
     ).toContain("not publish-ready")
+  })
+
+  it("blocks public-body leaks while allowing legitimate uncertainty phrasing", () => {
+    expect(
+      publicBodyPublicationBlockReason(
+        "Scholars debate the evidence.\n\n## Unresolved concerns\n\nInternal only.",
+      ),
+    ).toContain("Unresolved concerns")
+    expect(
+      publicBodyPublicationBlockReason(
+        "Scholars debate the evidence and some findings remain uncertain.",
+      ),
+    ).toBeNull()
   })
 
   it("blocks the lifecycle transition for a non-publishable approved article", async () => {

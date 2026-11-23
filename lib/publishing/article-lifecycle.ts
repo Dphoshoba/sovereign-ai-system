@@ -1,5 +1,6 @@
 import {
   publicationGuard,
+  publicBodyPublicationBlockReason,
   researchPublicationBlockReason,
 } from "./publication-guard";
 import { resolveArticleAuditState } from "../research/current-article-audit";
@@ -121,6 +122,7 @@ export type ArticleLifecycleFailure = {
     | "missing_audit"
     | "stale_audit"
     | "research_not_publishable"
+    | "public_body_leak"
     | "not_due"
     | "published_immutable";
   error: string;
@@ -289,6 +291,11 @@ export async function transitionArticleLifecycle(
         );
       }
 
+      const approveBodyLeak = publicBodyPublicationBlockReason(article.content);
+      if (approveBodyLeak) {
+        return failure("public_body_leak", approveBodyLeak);
+      }
+
       const updated = await tx.article.update({
         where: { id: article.id },
         data: {
@@ -324,6 +331,11 @@ export async function transitionArticleLifecycle(
       const researchBlock = researchPublicationBlockReason(currentAudit);
       if (researchBlock) {
         return failure("research_not_publishable", researchBlock);
+      }
+
+      const publishBodyLeak = publicBodyPublicationBlockReason(article.content);
+      if (publishBodyLeak) {
+        return failure("public_body_leak", publishBodyLeak);
       }
     }
 
