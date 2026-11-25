@@ -1,22 +1,16 @@
 /**
  * Behaviour under test: Mission 006 scripture exclusive-primary classification
- * under EV-REG-SPEC-1.1.0 (Director authorisation — classification only).
- * Module: lib/research/versioned-evidence.ts + claim-source-attribution.ts
- * Existing related: ev-reg-1.1.0-primary-source-publication.test.ts,
- * mission-006r-scripture-reliability.test.ts
- * User instruction: classify accurately cited KJV quote/narrative claims as
- * primary-source supported for the human confirmation pathway; exclude
- * pastoral/interpretation; collapse dual Bible hosts; no auto-confirm.
+ * under EV-REG-SPEC-1.1.0 / EV-BIBLE-AUTHORITY-001 v1.1.0 (ESV exclusive FINAL).
  */
 import { describe, expect, it } from "vitest"
 import { EV_REG_SPEC_1_1_0 } from "../../lib/research/audit-specification-compatibility"
 import {
   isExclusivePrimaryEligibleScriptureClaim,
-  SCRIPTURE_KJV_IDENTITY,
+  SCRIPTURE_ESV_IDENTITY,
   SCRIPTURE_TEXT_IDENTITY,
 } from "../../lib/research/claim-source-attribution"
 
-const SCRIPTURE_IDENTITY = SCRIPTURE_KJV_IDENTITY || SCRIPTURE_TEXT_IDENTITY
+const SCRIPTURE_IDENTITY = SCRIPTURE_ESV_IDENTITY || SCRIPTURE_TEXT_IDENTITY
 import { evaluateEvReg11PublicationEligibility } from "../../lib/research/primary-source-publication"
 import {
   evaluateVersionedClaim,
@@ -24,15 +18,15 @@ import {
 } from "../../lib/research/versioned-evidence"
 
 const GATEWAY_EX8 =
-  "https://www.biblegateway.com/passage/?search=Exodus%208%3A25&version=KJV"
-const HUB_EX8 = "https://biblehub.com/exodus/8.htm"
+  "https://www.biblegateway.com/passage/?search=Exodus%208%3A25&version=ESV"
+const HUB_EX8 = "https://biblehub.com/esv/exodus/8.htm"
 const QUOTE =
-  'In Exodus 8:25 (KJV), Pharaoh says, "Go ye, sacrifice to your God in the land."'
+  'In Exodus 8:25 (ESV), Pharaoh says, "Go, sacrifice to your God within the land."'
 const PASSAGE =
-  "And Pharaoh called for Moses and for Aaron, and said, Go ye, sacrifice to your God in the land."
+  "Then Pharaoh called Moses and Aaron and said, Go, sacrifice to your God within the land."
 
 describe("Mission 006 scripture primary-source classification", () => {
-  it("collapses Bible Gateway and Bible Hub to one scripture:kjv identity", () => {
+  it("collapses Bible Gateway and Bible Hub to one scripture:esv identity", () => {
     expect(versionedCanonicalIdentity({ url: GATEWAY_EX8 })).toBe(
       SCRIPTURE_IDENTITY,
     )
@@ -41,7 +35,7 @@ describe("Mission 006 scripture primary-source classification", () => {
     )
   })
 
-  it("classifies an accurately cited KJV quotation as primary-source supported", () => {
+  it("classifies an accurately cited ESV quotation as primary-source supported", () => {
     expect(isExclusivePrimaryEligibleScriptureClaim(QUOTE)).toBe(true)
     const result = evaluateVersionedClaim({
       claim: QUOTE,
@@ -71,7 +65,7 @@ describe("Mission 006 scripture primary-source classification", () => {
 
   it("keeps pastoral / theological application out of exclusive primary status", () => {
     const pastoral =
-      "Exodus 8:25 (KJV) teaches us that Christians today should compromise with worldly pressure."
+      "Exodus 8:25 (ESV) teaches us that Christians today should compromise with worldly pressure."
     expect(isExclusivePrimaryEligibleScriptureClaim(pastoral)).toBe(false)
     const result = evaluateVersionedClaim({
       claim: pastoral,
@@ -84,7 +78,7 @@ describe("Mission 006 scripture primary-source classification", () => {
 
   it("rejects mismatched verse evidence as unsupported", () => {
     const mismatched =
-      "And Moses said, We will go with our young and with our old, with our sons and with our daughters."
+      "Moses said, We will go with our young and our old. We will go with our sons and daughters."
     const result = evaluateVersionedClaim({
       claim: QUOTE,
       passages: [
@@ -122,7 +116,7 @@ describe("Mission 006 scripture primary-source classification", () => {
           supportingSources: [
             {
               sourceUrl: GATEWAY_EX8,
-              sourceTitle: "BibleGateway Exodus 8 (KJV)",
+              sourceTitle: "BibleGateway Exodus 8 (ESV)",
               evidenceId: "e1",
             },
           ],
@@ -133,15 +127,15 @@ describe("Mission 006 scripture primary-source classification", () => {
     expect(eligibility.recommendation).not.toBe("publish-ready")
   })
 
-  it("requires verse-level citation and named translation before exclusive primary", () => {
+  it("requires verse-level citation and named authorised translation before exclusive primary", () => {
     expect(
       isExclusivePrimaryEligibleScriptureClaim(
-        "In Exodus 8, Pharaoh says, Go ye, sacrifice to your God in the land.",
+        "In Exodus 8, Pharaoh says, Go, sacrifice to your God within the land.",
       ),
     ).toBe(false)
     expect(
       isExclusivePrimaryEligibleScriptureClaim(
-        'In Exodus 8:25, Pharaoh says, "Go ye, sacrifice to your God in the land."',
+        'In Exodus 8:25, Pharaoh says, "Go, sacrifice to your God within the land."',
       ),
     ).toBe(false)
   })

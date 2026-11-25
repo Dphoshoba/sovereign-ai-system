@@ -1,14 +1,25 @@
 # EV-BIBLE-AUTHORITY-001 — Biblical Editorial Evidence Profile
 
-**Status:** Permanent editorial governance policy (Director directive)  
+**Status:** Permanent editorial governance policy (Director EV-BIBLE-AUTHORITY-FINAL)  
+**Contract version:** `1.1.0`  
 **Classification:** Explicit policy extension under EV-REG-SPEC-1.1.0  
-**Directive ID:** EV-BIBLE-AUTHORITY-001  
+**Directive ID:** `EV-BIBLE-AUTHORITY-001`  
 **Parent contracts:** `docs/governance/EV-REG-SPEC-1.1.0.md`, `docs/governance/EV-REG-SPEC-1.0.0.md`  
-**Does not supersede:** EV-REG-SPEC-1.0.0 or 1.1.0 publication thresholds; extends scripture primary-source treatment only  
-**Linked from:** `docs/governance/EV-REG-SPEC-1.1.0.md`, `progress.md`  
-**User instruction (verbatim excerpt):** "Document the biblical evidence profile as an explicit policy extension, with its version and compatibility recorded." / "The Bible shall be recognised as the primary and authoritative scriptural source for every biblical article"  
-**Compatibility:** Applies to versioned audits with `specificationVersion = EV-REG-SPEC-1.1.0`. Does not rewrite 1.0.0 bytes. Does not lower publication thresholds (source quality ≥ 70; human confirmation for primary-source pathway; no auto-approve / auto-publish).  
-**Production baseline at adoption:** `5b5acef7978fcceac52c10260ac23a6848d5f6d5` (pre-implementation pin; implementing commit recorded in `progress.md`)
+**Does not supersede:** EV-REG-SPEC publication thresholds; extends scripture primary-source treatment only  
+**certifiesTheology:** `false` (L4 AI instrument never certifies theology)
+
+---
+
+## Permanent authority hierarchy
+
+| Level | Authority | Role |
+| --- | --- | --- |
+| **L1** | Scripture (authorised edition text) | Sole primary textual authority for Category A claims |
+| **L2** | Director pastoral judgement | Human confirmation, pastoral approve, interpretive boundary |
+| **L3** | Supplementary (commentary, secondary guides) | Optional context only — **zero supplementary is OK** |
+| **L4** | AI instrument | Assistive extraction/matching only · `certifiesTheology: false` |
+
+Single authentic Scripture witness of the authorised edition is **sufficient**. Supplementary sources are never required. Scripture mirrors must not inflate independence.
 
 ---
 
@@ -31,7 +42,7 @@ These categories must never be confused. Scripture establishes what Scripture sa
 The profile applies automatically when an article is **biblical teaching**, detected by explicit editorial signals (not by Mission ID or a hard-coded passage list):
 
 - Article `category` in the biblical teaching set (for example `bible-stories`, `bible-study`, `sermon`, `devotional`, `christian-teaching`), **or**
-- Research sources include `sourceType = scripture-reference`, **or**
+- Research sources include `sourceType = scripture-reference` / `primary-scripture`, **or**
 - Article content contains identifiable book/chapter/verse citations used as teaching evidence.
 
 Nonbiblical research governance is unchanged.
@@ -40,14 +51,15 @@ Nonbiblical research governance is unchanged.
 
 ## 3. Canonical Scripture evidence identity
 
-Hosts that display the same underlying biblical edition (Bible Gateway, Bible Hub, and peer scripture hosts) collapse to one canonical identity keyed by **translation**, for example `scripture:kjv`.
+Hosts that display the same underlying biblical edition (Bible Gateway, Bible Hub, and peer scripture hosts) collapse to one canonical identity keyed by **translation**, for example `scripture:esv`.
 
 - They are access points to the text, not independent publishers of that text.  
-- Two websites showing the same translation must not create artificial independent corroboration.  
+- Two websites showing the same translation must not create artificial independent corroboration (**no mirror inflate**).  
 - A failed secondary website fetch must not invalidate an otherwise verified quotation.  
 - Provenance (retrieval URL, passage reference, translation) remains recorded on evidence rows.
 
-Default translation for Echoes & Visions biblical articles: **King James Version (KJV)**, unless the Director authorises another translation. Other translations use distinct identities (`scripture:<edition>`) and are not assumed identical to KJV wording.
+**Authorised translation (Director FINAL):** English Standard Version (**ESV**).  
+Exclusive primary-source pathway binds to identity `scripture:esv`. Other translations use distinct identities (`scripture:<edition>`) and are not assumed identical to ESV wording. KJV remains detectable as `scripture:kjv` but is **not** the authorised exclusive pathway.
 
 ---
 
@@ -57,15 +69,15 @@ Default translation for Echoes & Visions biblical articles: **King James Version
 
 Direct quotations, explicit narrative events, statements attributed to biblical speakers, and faithful descriptions of what a cited passage expressly says — including multi-verse comparisons that only restate an explicit textual contrast.
 
-**Evidence rule:** One authenticated textual witness of the identified translation is sufficient. Eligible claims may receive `primary-source supported` under EV-REG 1.1.0 when passage evidence substantiates them. Human primary-source confirmation remains required before the primary-source publication pathway.
+**Evidence rule:** One authenticated textual witness of the authorised ESV edition is sufficient. Eligible claims may receive `primary-source supported` under EV-REG 1.1.0 when passage evidence substantiates them. Human primary-source confirmation (L2) remains required before the primary-source publication pathway.
 
-Requirements: identifiable book, chapter, verse (or verse range), and translation (named in the claim **or** on the substantiating scripture edition source).
+Requirements: identifiable book, chapter, verse (or verse range), and translation (named in the claim **or** on the substantiating authorised scripture edition source).
 
 ### Category B — Biblical interpretation and pastoral teaching
 
 Analogies, typological applications, “Christians today” lessons, and theological assertions not expressly stated as quotation or narrative fact.
 
-**Evidence rule:** Evaluated for faithfulness and clarity. Must **not** automatically inherit primary-source status or be presented as explicit statements of Scripture.
+**Evidence rule:** Evaluated for faithfulness and clarity under L2 Director pastoral authority. Must **not** automatically inherit primary-source status or be presented as explicit statements of Scripture.
 
 ### Category C — External factual claims
 
@@ -85,9 +97,9 @@ Archaeology, non-passage historical dates, science, modern statistics, contempor
 
 ---
 
-## 6. Human authority
+## 6. Human authority (L2)
 
-The platform may identify references, retrieve authorised text, check quotation accuracy, classify Category A/B/C, and prepare audits. It must not impersonate the Director, fabricate confirmation, bypass gates, or publish without authorised human approval. Authenticated human primary-source confirmation retains identity, timestamp, rationale, and supporting URL.
+The platform (L4) may identify references, retrieve authorised text, check quotation accuracy, classify Category A/B/C, and prepare audits. It must not impersonate the Director, fabricate confirmation, bypass gates, or publish without authorised human approval. Authenticated human primary-source confirmation retains identity, timestamp, rationale, and supporting URL.
 
 ---
 
@@ -95,11 +107,11 @@ The platform may identify references, retrieve authorised text, check quotation 
 
 1. Identify biblical teaching classification  
 2. Extract quoted/referenced passages  
-3. Verify against identified translation  
+3. Verify against authorised ESV edition  
 4. Classify Category A / B / C  
-5. Assess with the correct evidence-quality rules  
+5. Assess with the correct evidence-quality rules (single authentic Scripture sufficient)  
 6. Prepare transparent editorial audit  
-7. Human review / confirmation / approval  
+7. Human review / confirmation / approval (L2)  
 8. Publication only when all governance conditions hold  
 
 ---
@@ -109,6 +121,9 @@ The platform may identify references, retrieve authorised text, check quotation 
 | Field | Value |
 |---|---|
 | Directive | EV-BIBLE-AUTHORITY-001 |
+| Version | 1.1.0 |
 | Profile module | `lib/research/biblical-editorial-evidence-profile.ts` |
+| Authorised edition | ESV (`scripture:esv`) |
+| certifiesTheology | false |
 | EV-REG compatibility | EV-REG-SPEC-1.1.0 extension; thresholds unchanged |
 | Activation | Implementing release after Director inspection and authorised Production deploy |

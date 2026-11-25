@@ -63,7 +63,7 @@ export const MISSION_006_TEACHING_BRIEF =
   "The Devil's Tactics to Hold Us in Bondage. " +
   "Five movements: Pharaoh increases Israel's suffering; worship within Egypt; " +
   "departure but not very far; leave children behind; leave livestock behind. " +
-  "Distinguish biblical narrative from theological interpretation. Use KJV. " +
+  "Distinguish biblical narrative from theological interpretation. Use ESV. " +
   "Do not claim Exodus explicitly labels these as five satanic tactics.";
 
 const EXODUS_MOVEMENTS: TeachingMovement[] = [

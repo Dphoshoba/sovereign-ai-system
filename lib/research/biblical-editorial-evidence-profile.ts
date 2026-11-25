@@ -17,12 +17,39 @@ import {
 } from "./scripture-ref"
 
 export const EV_BIBLE_AUTHORITY_001 = "EV-BIBLE-AUTHORITY-001" as const
+export const EV_BIBLE_AUTHORITY_CONTRACT_VERSION = "1.1.0" as const
 
-/** Canonical identity for KJV edition text (hosts collapse here). */
+/**
+ * Permanent authority hierarchy (EV-BIBLE-AUTHORITY-FINAL).
+ * L1 Scripture · L2 Director pastoral · L3 supplementary · L4 AI instrument.
+ * Automation never certifies theology.
+ */
+export const BA_AUTHORITY_HIERARCHY = [
+  "L1_SCRIPTURE",
+  "L2_DIRECTOR_PASTORAL",
+  "L3_SUPPLEMENTARY",
+  "L4_AI_INSTRUMENT",
+] as const
+
+export type BaAuthorityLevel = (typeof BA_AUTHORITY_HIERARCHY)[number]
+
+/** Authorised Echoes & Visions scripture edition (Director FINAL). */
+export const AUTHORISED_SCRIPTURE_EDITION = "esv" as const
+
+/** Canonical identity for authorised ESV edition text (Gateway↔Hub mirrors collapse here). */
+export const SCRIPTURE_ESV_IDENTITY = "scripture:esv" as const
+
+/** Canonical identity for KJV edition text (distinct from authorised ESV). */
 export const SCRIPTURE_KJV_IDENTITY = "scripture:kjv" as const
 
-/** @deprecated Alias retained for callers; equals SCRIPTURE_KJV_IDENTITY. */
-export const SCRIPTURE_TEXT_IDENTITY = SCRIPTURE_KJV_IDENTITY
+/**
+ * Authorised exclusive-primary scripture identity.
+ * @deprecated Prefer SCRIPTURE_ESV_IDENTITY; retained as alias for callers.
+ */
+export const SCRIPTURE_TEXT_IDENTITY = SCRIPTURE_ESV_IDENTITY
+
+/** Automation never certifies theology (L4 instrument bound). */
+export const BA_CERTIFIES_THEOLOGY = false as const
 
 /** Documented authority for scripture-edition access hosts (not a hard-coded pass). */
 export const SCRIPTURE_EDITION_AUTHORITY_SCORE = 85
@@ -44,7 +71,12 @@ export type ScripturePassageHint = {
   passage?: string
 }
 
-const TRANSLATION_RE = /\b(?:KJV|King James(?:\s+Version)?)\b/i
+const AUTHORISED_TRANSLATION_RE =
+  /\b(?:ESV|English\s+Standard\s+Version)\b/i
+
+/** Any named scripture translation token (authorised or other). */
+const TRANSLATION_RE =
+  /\b(?:ESV|English\s+Standard\s+Version|KJV|King James(?:\s+Version)?)\b/i
 
 /**
  * Pastoral / interpretive markers evaluated only on authorial commentary
@@ -113,7 +145,14 @@ export function isBiblicalTeachingArticle(input: {
 function normalizeEditionId(raw: string): string {
   const id = raw.replace(/_/g, "").toLowerCase()
   if (id === "kjv" || id === "kingjames" || id === "kingjamesversion") return "kjv"
+  if (id === "esv" || id === "englishstandard" || id === "englishstandardversion") {
+    return "esv"
+  }
   return id
+}
+
+export function isAuthorisedScriptureIdentity(identity: string | null | undefined): boolean {
+  return identity === SCRIPTURE_ESV_IDENTITY || identity === SCRIPTURE_TEXT_IDENTITY
 }
 
 export function scriptureEditionFromSource(source: {
@@ -139,10 +178,14 @@ export function scriptureEditionFromSource(source: {
   if (namedEdition?.[1]) {
     return normalizeEditionId(namedEdition[1])
   }
+  if (AUTHORISED_TRANSLATION_RE.test(blob)) return AUTHORISED_SCRIPTURE_EDITION
   if (TRANSLATION_RE.test(blob) || /kingjamesbibleonline/i.test(blob)) return "kjv"
-  // Bible Hub / Blue Letter Bible chapter pages without an edition token default to KJV.
+  // Bible Hub / Blue Letter Bible chapter pages without an edition token are
+  // treated as KJV witnesses — not the authorised ESV exclusive pathway.
   if (/biblehub\.com|blueletterbible\.org/i.test(source.url)) return "kjv"
-  return "kjv"
+  // Bible Gateway without an explicit version defaults to the authorised edition.
+  if (/biblegateway\.com/i.test(source.url)) return AUTHORISED_SCRIPTURE_EDITION
+  return AUTHORISED_SCRIPTURE_EDITION
 }
 
 export function scriptureCanonicalIdentity(source: {
@@ -210,9 +253,16 @@ export function hasNamedScriptureTranslation(
   claim: string,
   passages?: ScripturePassageHint[],
 ): boolean {
-  if (TRANSLATION_RE.test(claim)) return true
+  // Exclusive-primary eligibility requires the authorised ESV edition.
+  if (AUTHORISED_TRANSLATION_RE.test(claim)) return true
+  // Non-authorised translation named in claim alone is insufficient.
+  if (TRANSLATION_RE.test(claim) && !AUTHORISED_TRANSLATION_RE.test(claim)) {
+    return false
+  }
   if (!passages?.length) return false
-  return passages.some((p) => scriptureEditionFromSource(p) === "kjv")
+  return passages.some(
+    (p) => scriptureEditionFromSource(p) === AUTHORISED_SCRIPTURE_EDITION,
+  )
 }
 
 export function isCategoryBInterpretationClaim(claim: string): boolean {

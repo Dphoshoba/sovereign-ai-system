@@ -2,10 +2,11 @@ import { canonicalizeSourceUrl } from "./article-audit-fingerprint";
 import { assessPassageSupport } from "./article-claim-extractor";
 import {
   categoryAMultiVersePassageSubstantiates,
+  isAuthorisedScriptureIdentity,
   isCategoryADirectScriptureClaim,
   scriptureAuthorityScoreForUrl,
   scriptureCanonicalIdentity,
-  SCRIPTURE_KJV_IDENTITY,
+  SCRIPTURE_ESV_IDENTITY,
 } from "./biblical-editorial-evidence-profile";
 import {
   isExclusivePrimaryEligibleScriptureClaim,
@@ -93,7 +94,7 @@ export function versionedCanonicalIdentity(source: {
 }): string | null {
   const hostname = versionedHostname(source.url);
   if (!hostname) return null;
-  // Canonical Scripture identity is edition-based (e.g. scripture:kjv), not hostname.
+  // Canonical Scripture identity is edition-based (e.g. scripture:esv), not hostname.
   const scriptureIdentity = scriptureCanonicalIdentity(source);
   if (scriptureIdentity) return scriptureIdentity;
   const registered = HOST_REGISTRY.find((entry) => entry.host.test(hostname));
@@ -131,9 +132,13 @@ function sourceEligible(
   identity: string,
   passages: VersionedPassage[],
 ): boolean {
-  // Category A Scripture claims bind only to the authorised KJV edition identity.
+  // Category A Scripture claims bind only to the authorised ESV edition identity.
   if (isCategoryADirectScriptureClaim(claim)) {
-    return identity === SCRIPTURE_KJV_IDENTITY || identity === SCRIPTURE_TEXT_IDENTITY;
+    return (
+      isAuthorisedScriptureIdentity(identity) ||
+      identity === SCRIPTURE_ESV_IDENTITY ||
+      identity === SCRIPTURE_TEXT_IDENTITY
+    );
   }
   const named = versionedPublishersNamedInClaim(claim);
   if (named.length >= 2) return named.some((id) => identity === `publisher:${id}`);
@@ -151,8 +156,7 @@ function exclusivePrimary(
 ): boolean {
   if (identities.length !== 1) return false;
   if (
-    (identities[0] === SCRIPTURE_KJV_IDENTITY ||
-      identities[0] === SCRIPTURE_TEXT_IDENTITY) &&
+    isAuthorisedScriptureIdentity(identities[0]) &&
     isExclusivePrimaryEligibleScriptureClaim(claim, { passages })
   ) {
     return true;

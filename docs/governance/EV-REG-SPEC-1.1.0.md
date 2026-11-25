@@ -84,7 +84,7 @@ Aligned with amendment §3.1:
 
 ### Biblical Editorial Evidence Profile (policy extension)
 
-Permanent scripture classification, edition identity, and biblical source-authority scoring for biblical teaching articles are defined in **`docs/governance/EV-BIBLE-AUTHORITY-001.md`** (directive EV-BIBLE-AUTHORITY-001). That profile does **not** amend §11.B numeric thresholds: source quality ≥ 70 remains mandatory; human confirmation remains required for the primary-source pathway; nonbiblical claims retain ordinary EV-REG corroboration rules.
+Permanent scripture classification, edition identity, and biblical source-authority scoring for biblical teaching articles are defined in **`docs/governance/EV-BIBLE-AUTHORITY-001.md`** (directive EV-BIBLE-AUTHORITY-001 **v1.1.0**). Hierarchy: Scripture L1 · Director pastoral L2 · supplementary L3 (optional; zero OK) · AI instrument L4 (`certifiesTheology: false`). Authorised edition: **ESV** (`scripture:esv`). Single authentic Scripture witness is sufficient; Gateway↔Hub mirrors of the same edition must not inflate independence. That profile does **not** amend §11.B numeric thresholds: source quality ≥ 70 remains mandatory; human confirmation (§9) remains required for the primary-source pathway; nonbiblical claims retain ordinary EV-REG corroboration rules.
 
 ---
 

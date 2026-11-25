@@ -158,12 +158,13 @@ export function bibleGatewayPassageUrl(ref: ScriptureRef): string {
             : ""
         }`
       : `${ref.bookDisplay} ${ref.chapter}`;
-  return `https://www.biblegateway.com/passage/?search=${encodeURIComponent(passage)}&version=KJV`;
+  return `https://www.biblegateway.com/passage/?search=${encodeURIComponent(passage)}&version=ESV`;
 }
 
 export function bibleHubChapterUrl(ref: ScriptureRef): string {
   const bookPath = ref.book.replace(/-/g, "_");
-  return `https://biblehub.com/${bookPath}/${ref.chapter}.htm`;
+  // Prefer explicit ESV Hub path so edition identity is not ambiguous.
+  return `https://biblehub.com/esv/${bookPath}/${ref.chapter}.htm`;
 }
 
 /**

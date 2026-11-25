@@ -2,6 +2,7 @@ import { canonicalizeSourceUrl } from "./article-audit-fingerprint";
 import {
   isExclusivePrimaryEligibleScriptureClaim as profileExclusivePrimaryEligible,
   scriptureCorroborationIdentity,
+  SCRIPTURE_ESV_IDENTITY,
   SCRIPTURE_KJV_IDENTITY,
   SCRIPTURE_TEXT_IDENTITY,
   type ScripturePassageHint,
@@ -15,6 +16,7 @@ import {
 } from "./scripture-ref";
 
 export {
+  SCRIPTURE_ESV_IDENTITY,
   SCRIPTURE_KJV_IDENTITY,
   SCRIPTURE_TEXT_IDENTITY,
 };
@@ -213,7 +215,7 @@ const TRACKING_QUERY_KEYS = new Set(["fbclid", "gclid", "mc_cid", "mc_eid"]);
 
 export function independentDocumentKey(url: string): string {
   // Scripture mirrors collapse by edition+chapter (Gateway↔Hub same passage).
-  // Distinct chapters remain independent so multi-passage KJV verification still works.
+  // Distinct chapters remain independent so multi-passage ESV verification still works.
   const scriptureIdentity = scriptureCorroborationIdentity({ url });
   if (scriptureIdentity) return scriptureIdentity;
 

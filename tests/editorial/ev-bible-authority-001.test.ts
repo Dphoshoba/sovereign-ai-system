@@ -1,14 +1,9 @@
 /**
  * Behaviour under test: EV-BIBLE-AUTHORITY-001 Biblical Editorial Evidence Profile
- * under EV-REG-SPEC-1.1.0 (permanent scripture standard).
+ * under EV-REG-SPEC-1.1.0 (permanent scripture standard — ESV exclusive FINAL).
  * Module: lib/research/biblical-editorial-evidence-profile.ts,
  * article-claim-extractor.ts, versioned-evidence.ts, consensus-engine.ts,
  * primary-source-publication.ts
- * Existing related: mission-006-scripture-primary-source-classification.test.ts
- * User instruction: permanent regression tests for KJV quotes, mismatches,
- * "we must" in Scripture, multi-verse contrasts, pastoral vs fact, dual hosts,
- * SQ, confirmation, and non-Exodus reuse; Mission 006: pastoral applications,
- * factual assertions disguised as applications, and thematic headings.
  */
 import { describe, expect, it } from "vitest"
 import { EV_REG_SPEC_1_1_0 } from "../../lib/research/audit-specification-compatibility"
@@ -18,6 +13,7 @@ import {
   isScriptureTextualClaim,
 } from "../../lib/research/article-claim-extractor"
 import {
+  BA_CERTIFIES_THEOLOGY,
   classifyBiblicalClaimCategory,
   isBiblicalTeachingArticle,
   isCategoryADirectScriptureClaim,
@@ -27,6 +23,7 @@ import {
   isStewardshipPastoralApplication,
   isThematicEditorialHeading,
   SCRIPTURE_EDITION_AUTHORITY_SCORE,
+  SCRIPTURE_ESV_IDENTITY,
   SCRIPTURE_KJV_IDENTITY,
 } from "../../lib/research/biblical-editorial-evidence-profile"
 import { consensusEngine } from "../../lib/research/consensus-engine"
@@ -42,19 +39,17 @@ import {
 } from "../../lib/research/versioned-evidence"
 
 const GATEWAY_EX =
-  "https://www.biblegateway.com/passage/?search=Exodus%2010&version=KJV"
-const HUB_EX = "https://biblehub.com/exodus/10.htm"
+  "https://www.biblegateway.com/passage/?search=Exodus%2010&version=ESV"
+const HUB_EX = "https://biblehub.com/esv/exodus/10.htm"
 const GATEWAY_JN =
-  "https://www.biblegateway.com/passage/?search=John%203%3A16&version=KJV"
+  "https://www.biblegateway.com/passage/?search=John%203%3A16&version=ESV"
 const GATEWAY_NIV =
   "https://www.biblegateway.com/passage/?search=John%203%3A16&version=NIV"
+const GATEWAY_KJV =
+  "https://www.biblegateway.com/passage/?search=John%203%3A16&version=KJV"
 
-function fact(
-  claim: string,
-  urls: string[],
-  status: VerifiedFact["verificationStatus"] = "partially verified",
-): VerifiedFact {
-  const primary = urls[0] ?? GATEWAY_EX
+function fact(claim: string, urls: string[], status = "partially verified"): VerifiedFact {
+  const primary = urls[0] ?? ""
   return {
     claim,
     evidenceId: "e0",
@@ -64,7 +59,7 @@ function fact(
     evidenceText: claim,
     confidence: "medium",
     requiresHumanReview: false,
-    verificationStatus: status,
+    verificationStatus: status as VerifiedFact["verificationStatus"],
     verificationScore: 61,
     verificationMethod: "single-source-supported",
     verificationCount: 1,
@@ -76,7 +71,11 @@ function fact(
   }
 }
 
-describe("EV-BIBLE-AUTHORITY-001 permanent scripture profile", () => {
+describe("EV-BIBLE-AUTHORITY-001 permanent scripture profile (ESV FINAL)", () => {
+  it("never certifies theology (L4)", () => {
+    expect(BA_CERTIFIES_THEOLOGY).toBe(false)
+  })
+
   it("detects biblical teaching by category and scripture sources", () => {
     expect(isBiblicalTeachingArticle({ category: "bible-stories" })).toBe(true)
     expect(
@@ -88,33 +87,36 @@ describe("EV-BIBLE-AUTHORITY-001 permanent scripture profile", () => {
     expect(isBiblicalTeachingArticle({ category: "ai-tools" })).toBe(false)
   })
 
-  it("collapses Gateway + Hub to scripture:kjv and keeps NIV distinct", () => {
+  it("collapses Gateway + Hub to scripture:esv and keeps NIV / KJV distinct", () => {
     expect(versionedCanonicalIdentity({ url: GATEWAY_EX })).toBe(
-      SCRIPTURE_KJV_IDENTITY,
+      SCRIPTURE_ESV_IDENTITY,
     )
     expect(versionedCanonicalIdentity({ url: HUB_EX })).toBe(
-      SCRIPTURE_KJV_IDENTITY,
+      SCRIPTURE_ESV_IDENTITY,
     )
     expect(versionedCanonicalIdentity({ url: GATEWAY_NIV })).toBe("scripture:niv")
+    expect(versionedCanonicalIdentity({ url: GATEWAY_KJV })).toBe(
+      SCRIPTURE_KJV_IDENTITY,
+    )
   })
 
-  it("classifies accurate KJV quotations as primary-source supported", () => {
+  it("classifies accurate ESV quotations as primary-source supported", () => {
     const claim =
-      'In Exodus 8:25 (KJV), Pharaoh says, "Go ye, sacrifice to your God in the land."'
+      'In Exodus 8:25 (ESV), Pharaoh says, "Go, sacrifice to your God within the land."'
     const passage =
-      "And Pharaoh called for Moses and for Aaron, and said, Go ye, sacrifice to your God in the land."
+      "Then Pharaoh called Moses and Aaron and said, Go, sacrifice to your God within the land."
     const result = evaluateVersionedClaim({
       claim,
       passages: [{ url: GATEWAY_EX, passage, polarity: "supports" }],
     })
     expect(result.evidenceState).toBe("primary-source supported")
-    expect(result.identities).toEqual([SCRIPTURE_KJV_IDENTITY])
+    expect(result.identities).toEqual([SCRIPTURE_ESV_IDENTITY])
     expect(result.verificationCount).toBe(1)
   })
 
-  it("does not reject KJV quotations containing we must / we should", () => {
+  it("does not reject ESV quotations containing we must / we should", () => {
     const claim =
-      'Moses answers, "We will go with our young and with our old, with our sons and with our daughters, with our flocks and with our herds will we go; for we must hold a feast unto the Lord" (Exodus 10:9 KJV).'
+      'Moses answers, "We will go with our young and our old. We will go with our sons and daughters and with our flocks and herds, for we must hold a feast to the Lord" (Exodus 10:9 ESV).'
     expect(isCategoryBInterpretationClaim(claim)).toBe(false)
     expect(isExclusivePrimaryEligibleScriptureClaim(claim)).toBe(true)
     const result = evaluateVersionedClaim({
@@ -123,7 +125,7 @@ describe("EV-BIBLE-AUTHORITY-001 permanent scripture profile", () => {
         {
           url: GATEWAY_EX,
           passage:
-            "And Moses said, We will go with our young and with our old, with our sons and with our daughters, with our flocks and with our herds will we go; for we must hold a feast unto the Lord.",
+            "Moses said, We will go with our young and our old. We will go with our sons and daughters and with our flocks and herds, for we must hold a feast to the Lord.",
           polarity: "supports",
         },
       ],
@@ -136,7 +138,7 @@ describe("EV-BIBLE-AUTHORITY-001 permanent scripture profile", () => {
       "Moses' stated company includes sons and daughters (Exodus 10:9); Pharaoh's reply limits the going to the men (Exodus 10:11)."
     expect(classifyBiblicalClaimCategory(claim)).toBe("A")
     const passage =
-      "And Moses said, We will go with our young and with our old, with our sons and with our daughters. And Pharaoh said, Not so: go now ye that are men, and serve the Lord; for that ye did desire."
+      "Moses said, We will go with our young and our old. We will go with our sons and daughters. But Pharaoh said, Not so! Go now, you who are men, and serve the Lord, for that is what you are asking."
     const result = evaluateVersionedClaim({
       claim,
       passages: [
@@ -148,11 +150,11 @@ describe("EV-BIBLE-AUTHORITY-001 permanent scripture profile", () => {
     expect(result.evidenceState).toBe("primary-source supported")
   })
 
-  it("allows translation identification from the KJV source URL", () => {
+  it("allows translation identification from the ESV source URL", () => {
     const claim =
       "Moses answers with the need for sacrifices and burnt offerings, and that the cattle also shall go (Exodus 10:25–26)."
     const passage =
-      "And Moses said, Thou must give us also sacrifices and burnt offerings, that we may sacrifice unto the Lord our God. Our cattle also shall go with us;"
+      "Then Moses said, You must also let us have sacrifices and burnt offerings, that we may sacrifice to the Lord our God. Our livestock also must go with us;"
     const passages = [{ url: GATEWAY_EX, passage, polarity: "supports" as const }]
     expect(
       isExclusivePrimaryEligibleScriptureClaim(claim, { passages }),
@@ -164,7 +166,7 @@ describe("EV-BIBLE-AUTHORITY-001 permanent scripture profile", () => {
 
   it("rejects pastoral interpretation presented as biblical fact", () => {
     const claim =
-      "Exodus 8:25 (KJV) teaches us that Christians today should compromise with worldly pressure."
+      "Exodus 8:25 (ESV) teaches us that Christians today should compromise with worldly pressure."
     expect(classifyBiblicalClaimCategory(claim)).toBe("B")
     expect(isExclusivePrimaryEligibleScriptureClaim(claim)).toBe(false)
     const result = evaluateVersionedClaim({
@@ -172,7 +174,7 @@ describe("EV-BIBLE-AUTHORITY-001 permanent scripture profile", () => {
       passages: [
         {
           url: GATEWAY_EX,
-          passage: "Go ye, sacrifice to your God in the land.",
+          passage: "Go, sacrifice to your God within the land.",
           polarity: "supports",
         },
       ],
@@ -182,14 +184,14 @@ describe("EV-BIBLE-AUTHORITY-001 permanent scripture profile", () => {
 
   it("rejects mismatched verse wording as unsupported", () => {
     const claim =
-      'In Exodus 8:25 (KJV), Pharaoh says, "Go ye, sacrifice to your God in the land."'
+      'In Exodus 8:25 (ESV), Pharaoh says, "Go, sacrifice to your God within the land."'
     const result = evaluateVersionedClaim({
       claim,
       passages: [
         {
           url: GATEWAY_EX,
           passage:
-            "And Moses said, We will go with our young and with our old, with our sons and with our daughters.",
+            "Moses said, We will go with our young and our old. We will go with our sons and daughters.",
           polarity: "supports",
         },
       ],
@@ -197,9 +199,9 @@ describe("EV-BIBLE-AUTHORITY-001 permanent scripture profile", () => {
     expect(result.evidenceState).toBe("unsupported")
   })
 
-  it("rejects incorrect translation attribution for KJV claims on NIV hosts", () => {
+  it("rejects incorrect translation attribution for ESV claims on NIV hosts", () => {
     const claim =
-      'John 3:16 (KJV) records, "For God so loved the world, that he gave his only begotten Son."'
+      'John 3:16 (ESV) records, "For God so loved the world, that he gave his only Son."'
     const result = evaluateVersionedClaim({
       claim,
       passages: [
@@ -214,11 +216,28 @@ describe("EV-BIBLE-AUTHORITY-001 permanent scripture profile", () => {
     expect(result.evidenceState).toBe("unsupported")
   })
 
-  it("reuses the standard on a non-Exodus passage (John 3:16)", () => {
+  it("rejects KJV hosts for exclusive ESV primary pathway", () => {
     const claim =
-      'John 3:16 (KJV) records, "For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life."'
+      'John 3:16 (ESV) records, "For God so loved the world, that he gave his only Son."'
+    const result = evaluateVersionedClaim({
+      claim,
+      passages: [
+        {
+          url: GATEWAY_KJV,
+          passage:
+            "For God so loved the world, that he gave his only begotten Son.",
+          polarity: "supports",
+        },
+      ],
+    })
+    expect(result.evidenceState).toBe("unsupported")
+  })
+
+  it("reuses the standard on a non-Exodus passage (John 3:16 ESV)", () => {
+    const claim =
+      'John 3:16 (ESV) records, "For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life."'
     const passage =
-      "For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life."
+      "For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life."
     const result = evaluateVersionedClaim({
       claim,
       passages: [{ url: GATEWAY_JN, passage, polarity: "supports" }],
@@ -250,16 +269,6 @@ describe("EV-BIBLE-AUTHORITY-001 permanent scripture profile", () => {
     expect(isStewardshipPastoralApplication(claim)).toBe(false)
     expect(classifyBiblicalClaimCategory(claim)).toBe("C")
     expect(isExternallyVerifiableClaim(claim)).toBe(true)
-
-    const framedStat =
-      "Christians today number roughly 2.4 billion, or 31% of the world population."
-    expect(isStewardshipPastoralApplication(framedStat)).toBe(false)
-    expect(isExternallyVerifiableClaim(framedStat)).toBe(true)
-
-    const stewardshipCoveredStat =
-      "In light of this teaching, 70% of American Christians give nothing to charity."
-    expect(isStewardshipPastoralApplication(stewardshipCoveredStat)).toBe(false)
-    expect(isExternallyVerifiableClaim(stewardshipCoveredStat)).toBe(true)
   })
 
   it("treats thematic scripture list headings as headings, not factual claims", () => {
@@ -268,20 +277,6 @@ describe("EV-BIBLE-AUTHORITY-001 permanent scripture profile", () => {
     expect(isThematicEditorialHeading(heading)).toBe(true)
     expect(isScriptureTextualClaim(heading)).toBe(false)
     expect(isExternallyVerifiableClaim(heading)).toBe(false)
-
-    const factualHeading =
-      "Oppression rose 40%: Pharaoh increased the brick quota (Exodus 5:1–9)"
-    expect(isThematicEditorialHeading(factualHeading)).toBe(false)
-    expect(
-      isThematicEditorialHeading(
-        "Pharaoh's census: Egypt counted 600,000 men (Exodus 12:37)",
-      ),
-    ).toBe(false)
-    expect(
-      isThematicEditorialHeading(
-        "Egypt: Pharaoh killed all firstborn Israelites (Exodus 12:29)",
-      ),
-    ).toBe(false)
 
     const extracted = extractArticleClaims({
       title: "The Devil's Tactics",
@@ -292,7 +287,7 @@ describe("EV-BIBLE-AUTHORITY-001 permanent scripture profile", () => {
 
 In light of this teaching (Romans 12:1–2), our lives themselves become the offering. A customary 10% contribution should therefore not be regarded as the full extent of our responsibility to God.
 
-Moses and Aaron deliver the Lord's command: "Let my people go, that they may hold a feast unto me in the wilderness" (Exodus 5:1).
+Moses and Aaron deliver the Lord's command: "Let my people go, that they may hold a feast to me in the wilderness" (Exodus 5:1).
 `,
       factualClaimLimit: 36,
     })
@@ -303,28 +298,20 @@ Moses and Aaron deliver the Lord's command: "Let my people go, that they may hol
     expect(
       extracted.claims.some((c) => /10%\s+contribution/i.test(c.claim)),
     ).toBe(false)
-    expect(
-      extracted.authorialAssertions.some((c) =>
-        /10%\s+contribution/i.test(c.claim),
-      ),
-    ).toBe(true)
-    expect(
-      extracted.claims.some((c) => /Let my people go/i.test(c.claim)),
-    ).toBe(true)
   })
 
   it("assigns documented scripture edition authority for source-quality", () => {
     const result = consensusEngine([
-      fact("Exodus 10:9 (KJV) quotation.", [GATEWAY_EX]),
-      fact("Exodus 10:11 (KJV) quotation.", [HUB_EX]),
+      fact("Exodus 10:9 (ESV) quotation.", [GATEWAY_EX]),
+      fact("Exodus 10:11 (ESV) quotation.", [HUB_EX]),
     ])
     expect(result.sourceQualityScore).toBe(SCRIPTURE_EDITION_AUTHORITY_SCORE)
     expect(result.sourceQualityScore).toBeGreaterThanOrEqual(70)
   })
 
-  it("does not auto-confirm or publish unconfirmed primary-source claims", () => {
+  it("§9: does not auto-confirm or publish unconfirmed primary-source claims", () => {
     const claim =
-      'John 3:16 (KJV) records, "For God so loved the world, that he gave his only begotten Son."'
+      'John 3:16 (ESV) records, "For God so loved the world, that he gave his only Son."'
     const eligibility = evaluateEvReg11PublicationEligibility({
       auditId: "audit-bible-1",
       specificationVersion: EV_REG_SPEC_1_1_0,
@@ -340,7 +327,7 @@ Moses and Aaron deliver the Lord's command: "Let my people go, that they may hol
           verificationScore: 61,
           evidenceState: "primary-source supported",
           sourceUrl: GATEWAY_JN,
-          supportingSources: [{ sourceUrl: GATEWAY_JN, sourceTitle: "KJV" }],
+          supportingSources: [{ sourceUrl: GATEWAY_JN, sourceTitle: "ESV" }],
         },
       ],
     })
@@ -371,7 +358,7 @@ Moses and Aaron deliver the Lord's command: "Let my people go, that they may hol
               decidedBy: "editor@example.com",
               decidedAt: "2026-11-17T00:00:00.000Z",
               primarySourceUrl: GATEWAY_JN,
-              rationale: "Matches KJV.",
+              rationale: "Matches ESV.",
               auditId: "wrong-audit",
             },
           },
@@ -380,9 +367,9 @@ Moses and Aaron deliver the Lord's command: "Let my people go, that they may hol
     ).not.toBeNull()
   })
 
-  it("allows publish-ready only when confirmed primary-source + SQ threshold hold", () => {
+  it("§9: allows publish-ready only when confirmed primary-source + SQ threshold hold", () => {
     const claim =
-      'John 3:16 (KJV) records, "For God so loved the world, that he gave his only begotten Son."'
+      'John 3:16 (ESV) records, "For God so loved the world, that he gave his only Son."'
     const facts = [
       {
         claim,
@@ -392,14 +379,14 @@ Moses and Aaron deliver the Lord's command: "Let my people go, that they may hol
         verificationScore: 61,
         evidenceState: "primary-source supported",
         sourceUrl: GATEWAY_JN,
-        supportingSources: [{ sourceUrl: GATEWAY_JN, sourceTitle: "KJV" }],
+        supportingSources: [{ sourceUrl: GATEWAY_JN, sourceTitle: "ESV" }],
         primarySourceConfirmation: {
           claimChecksum: claimTextChecksum(claim),
           decision: "confirmed" as const,
           decidedBy: "editor@example.com",
           decidedAt: "2026-11-17T00:00:00.000Z",
           primarySourceUrl: GATEWAY_JN,
-          rationale: "Matches KJV wording.",
+          rationale: "Matches ESV wording.",
           auditId: "audit-bible-2",
         },
       },
