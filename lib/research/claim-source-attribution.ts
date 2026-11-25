@@ -253,10 +253,11 @@ export function isPrimaryScriptureClaim(claim: string): boolean {
     return true;
   }
   // Direct quotation or narrative description bound to an explicit citation.
+  // Verb set aligned with Category A narrative markers (not 1 Samuel–only).
   if (!hasScriptureCitation(claim)) return false;
   if (
     /[“"‘'].+[”"'’]/.test(claim) ||
-    /\b(warns|says|said|states|records|describes|answers|orders|accuses|delivers?)\b/i.test(
+    /\b(warns|says|said|states|records|describes|answers|orders|accuses|delivers?|tells?|shows?|quotes?|includes|meets|kept|led|appeared|put)\b/i.test(
       claim,
     )
   ) {

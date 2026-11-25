@@ -148,7 +148,7 @@ describe("EV-ENG-01 P2 quote-span-first passage support", () => {
 });
 
 describe("EV-ENG-01 P3 dynamic biblical authority binding", () => {
-  it("binds Colossians / Genesis / Mark citation forms beyond 1 Samuel 17", () => {
+  it("binds Colossians / Genesis / Mark / Zechariah forms beyond 1 Samuel 17", () => {
     const listed = [
       {
         url: GW_COL,
@@ -162,6 +162,10 @@ describe("EV-ENG-01 P3 dynamic biblical authority binding", () => {
         url: "https://www.biblegateway.com/passage/?search=Mark%206%3A3&version=ESV",
         title: "Mark 6:3 (ESV) Bible Gateway",
       },
+      {
+        url: "https://www.biblegateway.com/passage/?search=Zechariah%204%3A10&version=ESV",
+        title: "Zechariah 4:10 (ESV) Bible Gateway",
+      },
     ];
     const col =
       "“Whatever you do, work heartily, as for the Lord and not for men” (Colossians 3:23-24, ESV).";
@@ -169,10 +173,13 @@ describe("EV-ENG-01 P3 dynamic biblical authority binding", () => {
       "“The Lord God took the man and put him in the garden of Eden to work it and keep it” (Genesis 2:15, ESV).";
     const mark =
       "Even the Lord Jesus was known in His hometown as “the carpenter” (Mark 6:3, ESV).";
+    const zech =
+      "“For whoever has despised the day of small things shall rejoice” (Zechariah 4:10, ESV).";
 
     expect(isPrimaryScriptureClaim(col)).toBe(true);
     expect(isPrimaryScriptureClaim(gen)).toBe(true);
     expect(isPrimaryScriptureClaim(mark)).toBe(true);
+    expect(isPrimaryScriptureClaim(zech)).toBe(true);
     expect(
       isPrimaryScriptureClaim("According to 1 Samuel 17, David kept sheep."),
     ).toBe(true);
@@ -186,12 +193,30 @@ describe("EV-ENG-01 P3 dynamic biblical authority binding", () => {
     expect(resolveClaimSourceBinding(mark, listed).role).toBe(
       "primary-scripture",
     );
+    expect(resolveClaimSourceBinding(zech, listed).role).toBe(
+      "primary-scripture",
+    );
     expect(resolveClaimSourceBinding(col, listed).exclusiveDocumentKey).toBe(
       "colossians-3",
     );
     expect(resolveClaimSourceBinding(gen, listed).exclusiveDocumentKey).toBe(
       "genesis-2",
     );
+    expect(resolveClaimSourceBinding(zech, listed).exclusiveDocumentKey).toBe(
+      "zechariah-4",
+    );
+
+    const paraphrase =
+      "He tells Saul he has kept sheep, and that the Lord delivered him from lion and bear (1 Samuel 17:34–37, ESV).";
+    expect(isPrimaryScriptureClaim(paraphrase)).toBe(true);
+    expect(
+      resolveClaimSourceBinding(paraphrase, [
+        {
+          url: "https://www.biblegateway.com/passage/?search=1%20Samuel%2017%3A34-37&version=ESV",
+          title: "1 Samuel 17:34-37 (ESV)",
+        },
+      ]).role,
+    ).toBe("primary-scripture");
   });
 });
 
