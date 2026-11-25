@@ -848,6 +848,84 @@ function requiredOverlapCount(tokenCount: number): number {
   return Math.min(Math.max(3, Math.ceil(tokenCount * 0.35)), tokenCount);
 }
 
+/** Normalize curly quotes / ellipsis so quote spans tokenize stably. */
+export function normalizeQuoteOrthography(value: string): string {
+  return value
+    .replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '"')
+    .replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'")
+    .replace(/\u2026|\.\.\./g, " ");
+}
+
+/**
+ * Extract typographic or straight quoted spans for quote-span-first matching.
+ * Pastoral preambles outside quotes are ignored when a usable span exists.
+ */
+export function extractQuotedSpans(claim: string): string[] {
+  const normalized = normalizeQuoteOrthography(claim);
+  const spans: string[] = [];
+  for (const match of normalized.matchAll(/"([^"\n]{2,})"|'([^'\n]{2,})'/g)) {
+    const span = (match[1] ?? match[2] ?? "").trim();
+    if (span.length >= 2) spans.push(span);
+  }
+  return spans;
+}
+
+function assessOverlapAgainstPassage(
+  target: string,
+  passage: string,
+): PassageSupportAssessment {
+  const empty = (
+    failureReason: PassageSupportFailureReason,
+    details: Partial<PassageSupportAssessment> = {},
+  ): PassageSupportAssessment => ({
+    supported: false,
+    overlapCount: 0,
+    requiredOverlap: 0,
+    actionTokenMatches: [],
+    missingActionTokens: [],
+    failureReason,
+    ...details,
+  });
+
+  const normalizedTarget = normalizeQuoteOrthography(target);
+  const normalizedPassage = normalizeQuoteOrthography(passage);
+  const { claimTokens, overlap } = uniqueContentOverlap(
+    normalizedTarget,
+    normalizedPassage,
+  );
+  if (claimTokens.length === 0) return empty("no-claim-tokens");
+  const requiredOverlap = requiredOverlapCount(claimTokens.length);
+  const passageTokens = new Set(significantTokens(normalizedPassage));
+  const actionTokens = [...new Set(eventActionTokens(normalizedTarget))];
+  const actionTokenMatches = actionTokens.filter((token) =>
+    passageTokens.has(token),
+  );
+  const missingActionTokens = actionTokens.filter(
+    (token) => !passageTokens.has(token),
+  );
+  const measured = {
+    overlapCount: overlap.length,
+    requiredOverlap,
+    actionTokenMatches,
+    missingActionTokens,
+  };
+
+  if (overlap.length < requiredOverlap) {
+    return empty("insufficient-overlap", measured);
+  }
+  if (
+    actionTokens.length >= 2 &&
+    actionTokenMatches.length < Math.min(2, actionTokens.length)
+  ) {
+    return empty("insufficient-action-tokens", measured);
+  }
+  return {
+    supported: true,
+    failureReason: "supported",
+    ...measured,
+  };
+}
+
 export function assessPassageSupport(
   claim: string,
   passage: string,
@@ -877,34 +955,28 @@ export function assessPassageSupport(
     return empty("missing-percentage");
   }
 
-  const { claimTokens, overlap } = uniqueContentOverlap(claim, passage);
-  if (claimTokens.length === 0) return empty("no-claim-tokens");
-  const requiredOverlap = requiredOverlapCount(claimTokens.length);
-  const passageTokens = new Set(significantTokens(passage));
-  const actionTokens = [...new Set(eventActionTokens(claim))];
-  const actionTokenMatches = actionTokens.filter((token) => passageTokens.has(token));
-  const missingActionTokens = actionTokens.filter((token) => !passageTokens.has(token));
-  const measured = {
-    overlapCount: overlap.length,
-    requiredOverlap,
-    actionTokenMatches,
-    missingActionTokens,
-  };
+  // Quote-span-first: prefer quoted ESV/scripture spans over pastoral wrappers.
+  const quotes = extractQuotedSpans(claim);
+  let bestFailure: PassageSupportAssessment | null = null;
+  for (const span of quotes) {
+    const assessment = assessOverlapAgainstPassage(span, passage);
+    if (assessment.supported) return assessment;
+    if (
+      !bestFailure ||
+      assessment.overlapCount > bestFailure.overlapCount ||
+      (assessment.overlapCount === bestFailure.overlapCount &&
+        assessment.requiredOverlap < bestFailure.requiredOverlap)
+    ) {
+      bestFailure = assessment;
+    }
+  }
 
-  if (overlap.length < requiredOverlap) {
-    return empty("insufficient-overlap", measured);
-  }
-  if (
-    actionTokens.length >= 2 &&
-    actionTokenMatches.length < Math.min(2, actionTokens.length)
-  ) {
-    return empty("insufficient-action-tokens", measured);
-  }
-  return {
-    supported: true,
-    failureReason: "supported",
-    ...measured,
-  };
+  const full = assessOverlapAgainstPassage(claim, passage);
+  if (full.supported) return full;
+  // Prefer the strongest quote-span failure diagnostic when quotes existed.
+  return bestFailure && quotes.length > 0 && bestFailure.overlapCount >= full.overlapCount
+    ? bestFailure
+    : full;
 }
 
 export function passageSupportsClaim(
