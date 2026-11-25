@@ -1,0 +1,155 @@
+{
+  "baselineCommit": "918b8447",
+  "modeA": {
+    "consensusScore": 96,
+    "sourceQualityScore": 85,
+    "publicationRecommendation": "review-required",
+    "verifiedFacts": 0,
+    "partiallyVerifiedFacts": 4,
+    "groups": [
+      {
+        "theme": "Faith and Courage",
+        "sourceCount": 2,
+        "sourceQualityScore": 85,
+        "factCount": 2
+      },
+      {
+        "theme": "General Findings",
+        "sourceCount": 2,
+        "sourceQualityScore": 85,
+        "factCount": 2
+      }
+    ],
+    "keys": {
+      "gwIndependent": "https://biblegateway.com/passage?search=Colossians+3%3A23-24&version=ESV",
+      "hubIndependent": "https://biblehub.com/esv/colossians/3.htm",
+      "gwIdentity": "scripture:esv",
+      "hubIdentity": "scripture:kjv",
+      "gwCorroboration": "https://www.biblegateway.com/passage?search=Colossians+3%3A23-24&version=ESV",
+      "hubCorroboration": "https://www.biblegateway.com/passage?search=Colossians+3%3A23-24&version=ESV",
+      "distinctIndependent": true
+    }
+  },
+  "modeB": {
+    "supportLong": {
+      "supported": false,
+      "overlapCount": 11,
+      "requiredOverlap": 17,
+      "actionTokenMatches": [
+        "lord",
+        "whatever",
+        "work",
+        "heartily",
+        "men",
+        "knowing",
+        "receive",
+        "inheritance",
+        "reward",
+        "serving",
+        "christ"
+      ],
+      "missingActionTokens": [
+        "paul",
+        "speaks",
+        "inside",
+        "household",
+        "instructions",
+        "addressing",
+        "bondservants",
+        "masters",
+        "obey",
+        "everything",
+        "those",
+        "who",
+        "earthly",
+        "way",
+        "eye",
+        "service",
+        "people",
+        "pleasers",
+        "sincerity",
+        "heart",
+        "fearing",
+        "wrongdoer",
+        "paid",
+        "back",
+        "wrong",
+        "done",
+        "there",
+        "partiality",
+        "treat",
+        "justly",
+        "fairly",
+        "master",
+        "heaven",
+        "colossians",
+        "esv"
+      ],
+      "failureReason": "insufficient-overlap"
+    },
+    "supportShort": {
+      "supported": true,
+      "failureReason": "supported",
+      "overlapCount": 11,
+      "requiredOverlap": 5,
+      "actionTokenMatches": [
+        "whatever",
+        "work",
+        "heartily",
+        "lord",
+        "men",
+        "knowing",
+        "receive",
+        "inheritance",
+        "reward",
+        "serving",
+        "christ"
+      ],
+      "missingActionTokens": [
+        "colossians",
+        "esv"
+      ]
+    },
+    "supportMark": {
+      "supported": false,
+      "overlapCount": 2,
+      "requiredOverlap": 4,
+      "actionTokenMatches": [
+        "his",
+        "carpenter"
+      ],
+      "missingActionTokens": [
+        "even",
+        "lord",
+        "jesus",
+        "known",
+        "hometown",
+        "mark",
+        "esv"
+      ],
+      "failureReason": "insufficient-overlap"
+    },
+    "supportChrome": {
+      "supported": false,
+      "overlapCount": 0,
+      "requiredOverlap": 0,
+      "actionTokenMatches": [],
+      "missingActionTokens": [],
+      "failureReason": "chrome"
+    },
+    "freshConsensus": {
+      "consensusScore": 0,
+      "sourceQualityScore": 0,
+      "publicationRecommendation": "review-required",
+      "unverifiedFacts": 9
+    },
+    "bindingShort": {
+      "role": "primary-scripture",
+      "exclusiveUrl": "https://www.biblegateway.com/passage?search=Colossians+3%3A23-24&version=ESV",
+      "exclusiveDocumentKey": "colossians-3",
+      "isMultiSource": false
+    },
+    "isPrimaryShort": true,
+    "isPrimarySamuel": true
+  }
+}
