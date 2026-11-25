@@ -331,8 +331,8 @@ function themeBody(theme: string): string {
 }
 
 function authorityScoreForUrl(url: string): number {
-  // independentDocumentKey may return scripture:<edition> identities.
-  if (/^scripture:[a-z0-9_+-]+$/i.test(url)) {
+  // independentDocumentKey may return scripture:<edition>[:chapter] identities.
+  if (/^scripture:/i.test(url)) {
     return SCRIPTURE_EDITION_AUTHORITY_SCORE
   }
   const scripture = scriptureAuthorityScoreForUrl(url)

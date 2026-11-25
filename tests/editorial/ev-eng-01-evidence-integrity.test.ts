@@ -53,17 +53,24 @@ function fact(
 }
 
 describe("EV-ENG-01 P1 scripture mirror collapse", () => {
-  it("collapses Gateway + Hub ESV URLs to scripture:esv", () => {
+  it("collapses Gateway + Hub same-passage ESV URLs; keeps chapters distinct", () => {
     expect(scriptureCanonicalIdentity({ url: GW_COL })).toBe("scripture:esv");
     expect(scriptureCanonicalIdentity({ url: HUB_COL })).toBe("scripture:esv");
-    expect(independentDocumentKey(GW_COL)).toBe("scripture:esv");
-    expect(independentDocumentKey(HUB_COL)).toBe("scripture:esv");
+    expect(independentDocumentKey(GW_COL)).toBe(
+      "scripture:esv:colossians-3",
+    );
+    expect(independentDocumentKey(HUB_COL)).toBe(
+      "scripture:esv:colossians-3",
+    );
+    expect(independentDocumentKey(GW_COL)).not.toBe(
+      independentDocumentKey(GW_THESS),
+    );
     expect(
       evidenceCorroborationKey("Colossians 3:23-24 (ESV)", { url: GW_COL }),
-    ).toBe("scripture:esv");
+    ).toBe("scripture:esv:colossians-3");
     expect(
       evidenceCorroborationKey("Colossians 3:23-24 (ESV)", { url: HUB_COL }),
-    ).toBe("scripture:esv");
+    ).toBe("scripture:esv:colossians-3");
   });
 
   it("Mode A: Hub+Gateway pairs no longer inflate sourceCount to 2", () => {

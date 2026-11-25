@@ -1,7 +1,7 @@
 import { canonicalizeSourceUrl } from "./article-audit-fingerprint";
 import {
   isExclusivePrimaryEligibleScriptureClaim as profileExclusivePrimaryEligible,
-  scriptureCanonicalIdentity,
+  scriptureCorroborationIdentity,
   SCRIPTURE_KJV_IDENTITY,
   SCRIPTURE_TEXT_IDENTITY,
   type ScripturePassageHint,
@@ -212,8 +212,9 @@ export function canonicalSourceUrl(url: string): string {
 const TRACKING_QUERY_KEYS = new Set(["fbclid", "gclid", "mc_cid", "mc_eid"]);
 
 export function independentDocumentKey(url: string): string {
-  // Scripture edition hosts collapse to one translation identity (EV-BIBLE-AUTHORITY-001).
-  const scriptureIdentity = scriptureCanonicalIdentity({ url });
+  // Scripture mirrors collapse by edition+chapter (Gateway↔Hub same passage).
+  // Distinct chapters remain independent so multi-passage KJV verification still works.
+  const scriptureIdentity = scriptureCorroborationIdentity({ url });
   if (scriptureIdentity) return scriptureIdentity;
 
   const canonical = canonicalSourceUrl(url);
@@ -660,7 +661,7 @@ export function evidenceCorroborationKey(
     }
   }
 
-  const scriptureIdentity = scriptureCanonicalIdentity(source);
+  const scriptureIdentity = scriptureCorroborationIdentity(source);
   if (scriptureIdentity) {
     return scriptureIdentity;
   }

@@ -11,7 +11,9 @@
 import {
   hasScriptureCitation,
   isScriptureHostUrl,
+  normalizeBookAlias,
   parseScriptureRefs,
+  scriptureDocumentKey,
 } from "./scripture-ref"
 
 export const EV_BIBLE_AUTHORITY_001 = "EV-BIBLE-AUTHORITY-001" as const
@@ -150,6 +152,53 @@ export function scriptureCanonicalIdentity(source: {
   const edition = scriptureEditionFromSource(source)
   if (!edition) return null
   return `scripture:${edition}`
+}
+
+/**
+ * Passage-aware scripture corroboration identity.
+ * Collapses Gateway↔Hub mirrors of the same edition+chapter, while keeping
+ * distinct chapters (e.g. Exodus 5 vs Exodus 8) independent for verification.
+ */
+export function scriptureCorroborationIdentity(source: {
+  url: string
+  title?: string | null
+}): string | null {
+  const edition = scriptureEditionFromSource(source)
+  if (!edition) return null
+  const chapterKey = scriptureChapterKeyFromSource(source)
+  if (chapterKey) return `scripture:${edition}:${chapterKey}`
+  return `scripture:${edition}`
+}
+
+export function scriptureChapterKeyFromSource(source: {
+  url: string
+  title?: string | null
+}): string | null {
+  if (!isScriptureHostUrl(source.url)) return null
+  let decoded = source.url
+  try {
+    decoded = decodeURIComponent(source.url)
+  } catch {
+    decoded = source.url
+  }
+  // Bible Hub with optional edition segment: /esv/colossians/3.htm or /colossians/3.htm
+  const hub = decoded.match(
+    /biblehub\.com\/(?:[a-z0-9_+-]+\/)?([a-z0-9_]+)\/(\d+)\.htm/i,
+  )
+  if (hub) {
+    const book = normalizeBookAlias(hub[1].replace(/_/g, " "))
+    if (book) return `${book.slug}-${Number(hub[2])}`
+  }
+  const gateway = decoded.match(/[?&]search=([^&]+)/i)
+  if (gateway) {
+    const refs = parseScriptureRefs(gateway[1].replace(/\+/g, " "))
+    if (refs[0]) return scriptureDocumentKey(refs[0])
+  }
+  const refs = parseScriptureRefs(
+    `${source.title ?? ""} ${decoded.replace(/[_+%/]/g, " ")}`,
+  )
+  if (refs[0]) return scriptureDocumentKey(refs[0])
+  return null
 }
 
 export function scriptureAuthorityScoreForUrl(url: string): number | null {
