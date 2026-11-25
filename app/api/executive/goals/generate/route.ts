@@ -13,8 +13,12 @@ import {
 } from "@/lib/executive/quarterly-goals"
 import { buildStrategicPlan } from "@/lib/executive/strategic-plan"
 import { buildExecutiveWeeklyReview } from "@/lib/executive/weekly-review"
+import { requireEditorAuth } from "../../../../../lib/publishing/require-editor-auth"
 
 export async function POST() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const cutoff = getMonthlyReviewDateCutoff()
 

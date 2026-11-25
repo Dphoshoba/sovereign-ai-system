@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireEditorAuth } from "../../../../../lib/publishing/require-editor-auth"
 
 function getNextRunDate(frequency: string) {
   const now = new Date()
@@ -57,6 +58,9 @@ function mapOperationToJobType(operationType: string) {
 }
 
 export async function POST() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const now = new Date()
 

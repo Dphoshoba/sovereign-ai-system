@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getOpenAI } from "@/lib/ai/openai"
 import { writeFile } from "fs/promises"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 import path from "path"
 
 function safeFileName(value: string) {
@@ -13,6 +14,9 @@ function safeFileName(value: string) {
 }
 
 export async function POST(req: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const { youtubePostId } = await req.json()
 

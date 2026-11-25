@@ -1,15 +1,50 @@
 import { NextRequest, NextResponse } from "next/server"
+import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
+import {
+  trustedInternalUrl,
+  trustedOriginUnavailableResponse,
+} from "../../../lib/publishing/trusted-internal-origin"
+import { LEGACY_AUTO_SCHEDULE_DISABLED_BODY } from "../../../lib/publishing/legacy-auto-schedule"
 
+function editorSessionHeaders(request: NextRequest) {
+  const headers = new Headers()
+  const raw = request.headers.get("cookie")
+  if (!raw) return headers
+
+  const session = raw
+    .split(";")
+    .map((part) => part.trim())
+    .filter((part) => {
+      const name = part.split("=")[0] ?? ""
+      return name.startsWith("sb-") && name.includes("auth-token")
+    })
+
+  if (session.length > 0) headers.set("cookie", session.join("; "))
+  return headers
+}
+
+/**
+ * Legacy packaging pipeline. EV-EDITORIAL-07-P0 hard-gates automatic scheduling:
+ * plan/generate/package may still run for editor sessions, but auto-schedule is never called.
+ * Prefer POST /api/articles/editorial-stage-runner for draft→research→review-required.
+ */
 export async function POST(req: NextRequest) {
-  try {
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      "http://localhost:3000"
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
 
-    // Step 1
-    const planner = await fetch(
-      `${baseUrl}/api/workers/weekly-planner`
-    )
+  const plannerUrl = trustedInternalUrl("/api/workers/weekly-planner")
+  const generateUrl = trustedInternalUrl("/api/articles/generate")
+  const packageUrl = trustedInternalUrl("/api/articles/generate-package")
+  if (!plannerUrl || !generateUrl || !packageUrl) {
+    return trustedOriginUnavailableResponse()
+  }
+
+  try {
+    const sessionHeaders = editorSessionHeaders(req)
+
+    const planner = await fetch(plannerUrl, {
+      headers: sessionHeaders,
+    })
 
     const plannerJson = await planner.json()
 
@@ -19,92 +54,57 @@ export async function POST(req: NextRequest) {
 
     const draft = plannerJson.draft
 
-    // Step 2
-    const articleResponse = await fetch(
-      `${baseUrl}/api/articles/generate`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          articleId: draft.id,
-        }),
-      }
-    )
+    const generateHeaders = new Headers(sessionHeaders)
+    generateHeaders.set("Content-Type", "application/json")
 
-    const articleJson =
-      await articleResponse.json()
+    const articleResponse = await fetch(generateUrl, {
+      method: "POST",
+      headers: generateHeaders,
+      body: JSON.stringify({
+        articleId: draft.id,
+      }),
+    })
+
+    const articleJson = await articleResponse.json()
 
     if (!articleJson.ok) {
       throw new Error("Article generation failed")
     }
 
-    // Step 3
-    const packageResponse = await fetch(
-      `${baseUrl}/api/articles/generate-package`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          articleId: draft.id,
-        }),
-      }
-    )
+    const packageResponse = await fetch(packageUrl, {
+      method: "POST",
+      headers: generateHeaders,
+      body: JSON.stringify({
+        articleId: draft.id,
+      }),
+    })
 
-    const packageJson =
-      await packageResponse.json()
+    const packageJson = await packageResponse.json()
 
     if (!packageJson.ok) {
       throw new Error("Package generation failed")
     }
 
-    const scheduleResponse =
-      await fetch(
-        `${baseUrl}/api/pipeline/auto-schedule`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            articleId: draft.id,
-          }),
-        }
-      )
-
-    const scheduleJson =
-      await scheduleResponse.json()
-
-    if (!scheduleJson.ok) {
-      throw new Error(
-        "Auto scheduling failed"
-      )
-    }
-
+    // EV-EDITORIAL-07-P0: do not call /api/pipeline/auto-schedule.
     return NextResponse.json({
       ok: true,
       articleId: draft.id,
       title: draft.title,
       category: draft.category,
-      scheduledFor:
-        scheduleJson.scheduledFor,
+      scheduledFor: null,
+      legacyAutoScheduleSkipped: true,
+      legacyAutoSchedule: LEGACY_AUTO_SCHEDULE_DISABLED_BODY,
       message:
-        "Pipeline completed and scheduled successfully",
+        "Pipeline packaging completed without scheduling. Director approval and governed schedule are required.",
     })
   } catch (error) {
     return NextResponse.json(
       {
         ok: false,
         error:
-          error instanceof Error
-            ? error.message
-            : "Pipeline failed",
+          error instanceof Error ? error.message : "Pipeline failed",
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

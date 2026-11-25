@@ -1,0 +1,66 @@
+import type { CreatorWorkspace } from "./types"
+
+export function getMockCreatorWorkspace(): CreatorWorkspace {
+  return {
+    id: "womanhood",
+    name: "Creator Workspace",
+    relatedMissionId: "womanhood",
+    relatedMissionName: "Research Mission 001 — Womanhood",
+    progress: 48,
+    confidence: "high",
+    nextSuggestedOutput: "book-outline",
+    contentStatus: "Preview ready",
+    creatorProjects: [
+      {
+        id: "book-outline",
+        title: "Book Outline",
+        summary: "Structure a long-form book from the womanhood mission.",
+        status: "ready",
+        itemCount: 1,
+      },
+      {
+        id: "course-outline",
+        title: "Course Outline",
+        summary: "Turn the research into a teachable multi-module course.",
+        status: "draft",
+        itemCount: 1,
+      },
+      {
+        id: "youtube-series",
+        title: "YouTube Series",
+        summary: "Package the mission into a sequenced video series.",
+        status: "draft",
+        itemCount: 1,
+      },
+      {
+        id: "article-ideas",
+        title: "Article Ideas",
+        summary: "Shape mission notes into article-ready angles.",
+        status: "in-progress",
+        itemCount: 6,
+      },
+    ],
+    bookOutlines: ["Foundational thesis", "Chapter architecture", "Key arguments"],
+    courseOutlines: ["Module flow", "Teaching objectives", "Exercises"],
+    youtubeSeries: ["Series premise", "Episode sequence", "Call to action"],
+    articleIdeas: [
+      "Understanding Women Through Every Season",
+      "The Biology of Bonding",
+      "Hormones and Human Connection",
+      "Puberty and Identity Formation",
+      "The Psychology of Motherhood",
+      "What Science and Scripture Reveal About Women",
+    ],
+    readOnly: true,
+    previewOnly: true,
+    noAuth: true,
+    noSessions: true,
+    noJwt: true,
+    noDatabase: true,
+    noExecution: true,
+    noPublishing: true,
+    noOpenAI: true,
+    noGraphWrites: true,
+    noSocialPosting: true,
+  }
+}

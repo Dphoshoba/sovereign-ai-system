@@ -281,11 +281,13 @@ export async function buildRevenueIntelligence(options?: {
   const [memory, invoiceRows, proposalRows] = await Promise.all([
     options?.memory ?? buildBusinessMemory({ snapshot }),
     prisma.clientInvoice.findMany({
+      where: { isTest: false },
       orderBy: { createdAt: "desc" },
       take: QUERY_LIMIT,
       select: { clientId: true, amountAud: true, status: true },
     }),
     prisma.creatorProposal.findMany({
+      where: { isTest: false },
       orderBy: { createdAt: "desc" },
       take: QUERY_LIMIT,
       select: { status: true, estimatedValue: true },

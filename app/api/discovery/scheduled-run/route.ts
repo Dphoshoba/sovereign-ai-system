@@ -1,20 +1,29 @@
 import { NextResponse } from "next/server"
+import {
+  authorizeEditorOrCron,
+  privilegedSameOriginHeaders,
+} from "../../../../lib/publishing/require-editor-auth"
+import {
+  trustedInternalUrl,
+  trustedOriginUnavailableResponse,
+} from "../../../../lib/publishing/trusted-internal-origin"
 
-export async function POST() {
+export async function POST(request: Request) {
+  const auth = await authorizeEditorOrCron(request)
+  if (!auth.ok) return auth.response
+
+  const target = trustedInternalUrl("/api/discovery/run-autonomous")
+  if (!target) return trustedOriginUnavailableResponse()
+
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/discovery/run-autonomous`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          saveLimit: 10,
-          generateLimit: 3,
-        }),
-      }
-    )
+    const response = await fetch(target, {
+      method: "POST",
+      headers: privilegedSameOriginHeaders(request),
+      body: JSON.stringify({
+        saveLimit: 10,
+        generateLimit: 3,
+      }),
+    })
 
     const result = await response.json()
 

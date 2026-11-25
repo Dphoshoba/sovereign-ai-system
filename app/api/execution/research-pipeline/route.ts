@@ -19,12 +19,16 @@ import {
   phase1Rules,
   researchPipelineArchitecture,
 } from "../../../../lib/research/pipeline-registry"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 function escapeYaml(value: string) {
   return `"${value.replace(/"/g, '\\"')}"`
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   return NextResponse.json({
     ok: true,
     architecture: researchPipelineArchitecture,
@@ -32,6 +36,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await req.json()
 

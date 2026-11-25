@@ -4,8 +4,12 @@ import {
   generateDailyBriefing,
   getBriefingDateForToday,
 } from "@/lib/executive/daily-briefing"
+import { requireEditorAuth } from "../../../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const briefings = await prisma.executiveBriefing.findMany({
       orderBy: {
@@ -33,6 +37,9 @@ export async function GET() {
 }
 
 export async function POST() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const briefing = await generateDailyBriefing()
     const briefingDate = getBriefingDateForToday()

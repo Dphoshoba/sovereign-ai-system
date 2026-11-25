@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server"
 
 import { orchestrateContentCampaign } from "../../../../lib/content/content-orchestrator"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const result = orchestrateContentCampaign()
 
   return NextResponse.json({

@@ -54,8 +54,12 @@ import { recursiveCivilizationForecastingAgent } from "../../../../lib/agents/re
 import { recursiveScenarioSimulationAgent } from "../../../../lib/agents/recursive-scenario-simulation-agent"
 import { recursiveTrajectoryEvaluationAgent } from "../../../../lib/agents/recursive-trajectory-evaluation-agent"
 import { recursiveStrategicForesightAgent } from "../../../../lib/agents/recursive-strategic-foresight-agent"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await req.json()
     const niche = body.niche || "AI + Faith"

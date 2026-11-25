@@ -2,10 +2,12 @@ import { Prisma } from "@prisma/client"
 import { NextResponse } from "next/server"
 import { Resend } from "resend"
 import { prisma } from "@/lib/prisma"
-
-const resend = new Resend(process.env.RESEND_API_KEY)
+import { requirePublishingEditor } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(request: Request) {
+  const auth = await requirePublishingEditor()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
 
@@ -34,12 +36,15 @@ export async function POST(request: Request) {
       )
     }
 
-    if (!process.env.RESEND_API_KEY) {
+    const apiKey = process.env.RESEND_API_KEY
+    if (!apiKey) {
       return NextResponse.json(
         { ok: false, error: "RESEND_API_KEY is missing" },
         { status: 500 }
       )
     }
+
+    const resend = new Resend(apiKey)
 
     const from = process.env.EMAIL_FROM || "Echoes & Visions <onboarding@resend.dev>"
 

@@ -1,13 +1,25 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import {
+  captureEmail,
+  captureText,
+  payloadWithinLimit,
+  publicCaptureAllowed,
+} from "../../../../lib/security/public-capture"
 
 export async function POST(req: Request) {
+  if (!payloadWithinLimit(req) || !(await publicCaptureAllowed("lead-magnet-subscribe", req))) {
+    return NextResponse.json({ ok: false, error: "Too many requests" }, { status: 429 })
+  }
+
   try {
-    const { email, leadMagnetId, source } = await req.json()
+    const body = await req.json()
+    const email = captureEmail(body?.email)
+    const leadMagnetId = captureText(body?.leadMagnetId, 80)
 
     if (!email || !leadMagnetId) {
       return NextResponse.json(
-        { ok: false, error: "Missing email or leadMagnetId" },
+        { ok: false, error: "A valid email and lead magnet are required" },
         { status: 400 }
       )
     }
@@ -23,45 +35,31 @@ export async function POST(req: Request) {
       )
     }
 
-    const subscriber = await prisma.subscriber.upsert({
+    await prisma.subscriber.upsert({
       where: { email },
       update: {
         status: "active",
-        source: source || "lead-magnet",
+        source: captureText(body?.source, 80) || "lead-magnet",
       },
       create: {
         email,
         status: "active",
-        source: source || "lead-magnet",
+        source: captureText(body?.source, 80) || "lead-magnet",
       },
     })
 
-    const updatedLeadMagnet = await prisma.leadMagnet.update({
+    await prisma.leadMagnet.update({
       where: { id: leadMagnetId },
       data: {
-        downloads: {
-          increment: 1,
-        },
-        subscribers: {
-          increment: 1,
-        },
+        downloads: { increment: 1 },
+        subscribers: { increment: 1 },
       },
     })
 
-    return NextResponse.json({
-      ok: true,
-      subscriber,
-      leadMagnet: updatedLeadMagnet,
-    })
-  } catch (error) {
+    return NextResponse.json({ ok: true })
+  } catch {
     return NextResponse.json(
-      {
-        ok: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Lead magnet subscription failed",
-      },
+      { ok: false, error: "Lead magnet subscription failed" },
       { status: 500 }
     )
   }

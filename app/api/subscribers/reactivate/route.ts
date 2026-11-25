@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requirePublishingEditor } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(req: NextRequest) {
+  const auth = await requirePublishingEditor()
+  if (!auth.ok) return auth.response
+
   try {
     const { subscriberId } = await req.json()
 
-    if (!subscriberId) {
+    if (typeof subscriberId !== "string" || !subscriberId.trim()) {
       return NextResponse.json(
         {
           ok: false,

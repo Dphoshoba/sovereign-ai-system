@@ -8,6 +8,7 @@ import {
   type ReviewDecisionAction,
 } from "../../../../lib/ontology/review-decision-pipeline"
 import type { IngestionReviewQueueItem } from "../../../../lib/ontology/ingestion-review-queue"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 const exampleReviewItem: IngestionReviewQueueItem = {
   id: "review:phase-4e-slice-3:possible-duplicate",
@@ -46,6 +47,9 @@ const exampleReviewItem: IngestionReviewQueueItem = {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const decision = buildReviewDecision({
     packageId: "preview-execution-authorization-request",
     reviewItem: exampleReviewItem,
@@ -72,6 +76,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
 
@@ -91,7 +98,7 @@ export async function POST(request: Request) {
       packageId: body.packageId ?? null,
       reviewItem: body.reviewItem ?? exampleReviewItem,
       decision: (body.decision ?? "REQUEST_MORE_INFORMATION") as ReviewDecisionAction,
-      actorId: body.actorId ?? null,
+      actorId: auth.actor,
       organizationId: body.organizationId ?? null,
       workspaceId: body.workspaceId ?? null,
       notes: body.notes ?? null,

@@ -1,6 +1,8 @@
 import { Prisma } from "@prisma/client"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireEditorAuth, privilegedSameOriginHeaders } from "../../../../../lib/publishing/require-editor-auth"
+import { trustedInternalUrl } from "../../../../../lib/publishing/trusted-internal-origin"
 
 async function logActivity({
   type,
@@ -26,36 +28,33 @@ async function logActivity({
   })
 }
 
-async function runJob(job: any) {
+async function runJob(job: { type: string }, request: NextRequest) {
   if (job.type === "publish-scheduled") {
-    const now = new Date()
-
-    const result = await prisma.article.updateMany({
-      where: {
-        status: "scheduled",
-        scheduledFor: {
-          lte: now,
-        },
-      },
-      data: {
-        status: "published",
-        publishedAt: now,
-      },
+    const { publishDueArticles } = await import(
+      "../../../../../lib/publishing/publish-due-articles"
+    )
+    const result = await publishDueArticles({
+      source: "ai-job",
     })
 
     return {
       message: "Scheduled publishing checked",
-      published: result.count,
+      published: result.published,
+      skipped: result.skipped,
+      failed: result.failed,
     }
   }
 
   if (job.type === "run-discovery-cycle" || job.type === "run_discovery_cycle") {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/discovery/scheduled-run`,
-      {
-        method: "POST",
-      }
-    )
+    const discoveryUrl = trustedInternalUrl("/api/discovery/scheduled-run")
+    if (!discoveryUrl) {
+      throw new Error("Trusted internal origin is unavailable.")
+    }
+
+    const response = await fetch(discoveryUrl, {
+      method: "POST",
+      headers: privilegedSameOriginHeaders(request),
+    })
 
     const result = await response.json()
 
@@ -77,7 +76,10 @@ async function runJob(job: any) {
   }
 }
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const now = new Date()
 
@@ -125,7 +127,7 @@ export async function POST() {
     })
 
     try {
-      const result = await runJob(job)
+      const result = await runJob(job, request)
 
       const completed = await prisma.aiJob.update({
         where: { id: job.id },

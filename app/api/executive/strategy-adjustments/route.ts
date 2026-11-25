@@ -10,6 +10,7 @@ import {
   EXECUTIVE_LIST_LIMITS,
   summarizeStatusCounts,
 } from "@/lib/executive/list-limits"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 const ADJUSTMENT_STATUSES = [
   "proposed",
@@ -57,6 +58,9 @@ function serializeAdjustment(record: {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const [records, statusGroups, generated] = await Promise.all([
       prisma.strategyAdjustment.findMany({
@@ -99,6 +103,9 @@ export async function GET() {
 }
 
 export async function POST() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const result = await buildStrategyAdjustments()
 
@@ -162,6 +169,9 @@ export async function POST() {
 }
 
 export async function PATCH(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
     const id = typeof body?.id === "string" ? body.id.trim() : ""

@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 import { contentFetcher } from "../../../../lib/research/content-fetcher"
 import { evidenceChunker } from "../../../../lib/research/evidence-chunker"
 import { chunkRanker } from "../../../../lib/research/chunk-ranker"
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const body = await req.json()
 
   const topic =

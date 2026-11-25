@@ -1,5 +1,6 @@
 import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { formatAdelaideDisplay } from "../../../lib/publishing/adelaide-time"
 
 export default async function ScheduledPage() {
   await connection()
@@ -31,7 +32,7 @@ export default async function ScheduledPage() {
             <p>
               <strong>Scheduled For:</strong>{" "}
               {article.scheduledFor
-                ? new Date(article.scheduledFor).toLocaleString()
+                ? formatAdelaideDisplay(article.scheduledFor)
                 : "Not scheduled"}
             </p>
 

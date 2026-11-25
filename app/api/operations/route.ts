@@ -1,10 +1,35 @@
 import { NextRequest, NextResponse } from "next/server"
 import { GET as runWeeklyPlanner } from "../workers/weekly-planner/route"
-import { GET as runPublishScheduled } from "../workers/publish-scheduled/route"
+import { publishDueArticles } from "../../../lib/publishing/publish-due-articles"
 import { POST as createSnapshot } from "../reports/snapshot/route"
 import { GET as runIntelligence } from "../reports/executive-intelligence/route"
+import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
+import {
+  trustedInternalUrl,
+  trustedOriginUnavailableResponse,
+} from "../../../lib/publishing/trusted-internal-origin"
+
+function editorSessionHeaders(request: NextRequest) {
+  const headers = new Headers()
+  const raw = request.headers.get("cookie")
+  if (!raw) return headers
+
+  const session = raw
+    .split(";")
+    .map((part) => part.trim())
+    .filter((part) => {
+      const name = part.split("=")[0] ?? ""
+      return name.startsWith("sb-") && name.includes("auth-token")
+    })
+
+  if (session.length > 0) headers.set("cookie", session.join("; "))
+  return headers
+}
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const { action } = await req.json()
 
@@ -20,12 +45,16 @@ export async function POST(req: NextRequest) {
       }
 
       case "publish-scheduled": {
-        const response = await runPublishScheduled()
-        const result = await response.json()
+        const result = await publishDueArticles({
+          source: "operations",
+        })
         return NextResponse.json({
           ok: true,
           message: "Publish scheduled worker completed.",
-          ...result,
+          invocationId: result.invocationId,
+          published: result.published,
+          skipped: result.skipped,
+          failed: result.failed,
         })
       }
 
@@ -50,8 +79,12 @@ export async function POST(req: NextRequest) {
       }
 
       case "pipeline": {
-        await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/pipeline`, {
+        const pipelineUrl = trustedInternalUrl("/api/pipeline")
+        if (!pipelineUrl) return trustedOriginUnavailableResponse()
+
+        await fetch(pipelineUrl, {
           method: "POST",
+          headers: editorSessionHeaders(req),
         })
         return NextResponse.json({
           ok: true,

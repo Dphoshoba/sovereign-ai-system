@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { reinforcementAgent } from "../../../../lib/agents/reinforcement-agent"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await req.json()
 

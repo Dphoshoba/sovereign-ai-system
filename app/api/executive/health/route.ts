@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server"
 import { buildExecutiveSystemHealth } from "@/lib/executive/system-health"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const health = await buildExecutiveSystemHealth()
     const ok = Object.values(health).every((module) => module.ok)

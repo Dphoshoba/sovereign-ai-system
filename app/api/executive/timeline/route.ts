@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server"
 import { buildExecutiveTimeline } from "@/lib/executive/timeline"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export const dynamic = "force-dynamic"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const items = await buildExecutiveTimeline()
 

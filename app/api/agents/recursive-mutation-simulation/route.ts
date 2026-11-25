@@ -30,8 +30,12 @@ import { dynamicSafeguardEvolutionAgent } from "../../../../lib/agents/dynamic-s
 import { dynamicSelfHealingEvolutionAgent } from "../../../../lib/agents/dynamic-self-healing-evolution-agent"
 import { recursiveStabilityOptimizationAgent } from "../../../../lib/agents/recursive-stability-optimization-agent"
 import { recursiveMutationSimulationAgent } from "../../../../lib/agents/recursive-mutation-simulation-agent"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await req.json()
     const niche = body.niche || "AI + Faith"

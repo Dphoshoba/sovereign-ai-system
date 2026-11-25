@@ -1,32 +1,11 @@
+import { getGammaStage5SmokeRoutes } from "../src/lib/gamma-2/stage-5-surface-registry";
+
 const BASE_URL = (process.env.BASE_URL || "http://localhost:3000").replace(
   /\/+$/,
   ""
 )
 
-const ROUTES: { group: string; path: string }[] = [
-  { group: "public", path: "/api/health" },
-  { group: "executive", path: "/api/executive/health" },
-  { group: "executive", path: "/api/executive/runtime" },
-  { group: "executive", path: "/api/executive/command-center" },
-  { group: "executive", path: "/api/executive/boardroom" },
-  { group: "executive", path: "/api/executive/forecast" },
-  { group: "executive", path: "/api/executive/strategic-plan" },
-  { group: "executive", path: "/api/executive/goals" },
-  { group: "executive", path: "/api/executive/knowledge-graph" },
-  { group: "executive", path: "/api/executive/simulations" },
-  { group: "executive", path: "/api/executive/scenarios" },
-  { group: "admin", path: "/admin/runtime" },
-  { group: "admin", path: "/admin/command-center" },
-  { group: "admin", path: "/admin/operations" },
-  { group: "admin", path: "/admin/boardroom" },
-  { group: "admin", path: "/admin/strategic-plan" },
-  { group: "admin", path: "/admin/goals" },
-  { group: "admin", path: "/admin/knowledge-graph" },
-  { group: "admin", path: "/admin/simulations" },
-  { group: "admin", path: "/admin/scenarios" },
-  { group: "admin", path: "/admin/revenue" },
-  { group: "admin", path: "/admin/delivery" },
-]
+const ROUTES: { group: string; path: string }[] = getGammaStage5SmokeRoutes()
 
 type RouteResult = {
   group: string

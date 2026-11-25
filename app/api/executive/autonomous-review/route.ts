@@ -5,10 +5,14 @@ import {
   generateQuarterlyExecutiveReview,
   isExecutiveReviewPeriod,
 } from "@/lib/executive/autonomous-review"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export const dynamic = "force-dynamic"
 
 export async function GET(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const { searchParams } = new URL(request.url)
     const period = searchParams.get("period") ?? "weekly"

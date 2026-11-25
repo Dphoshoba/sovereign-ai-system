@@ -2,6 +2,7 @@ import fs from "fs"
 import path from "path"
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 function splitIntoLines(text: string) {
   return text
@@ -48,6 +49,9 @@ function formatTime(seconds: number) {
 }
 
 export async function POST(req: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const { youtubePostId } = await req.json()
 

@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireEditorAuth()
+    if (!auth.ok) return auth.response
+
     const {
       title,
       category,
@@ -31,6 +35,10 @@ export async function POST(req: NextRequest) {
           "A planned article generated from the Echoes & Visions content planning system.",
         content: "",
         status: "draft",
+        approvedAt: null,
+        approvedBy: null,
+        scheduledFor: null,
+        publishedAt: null,
       },
     })
 

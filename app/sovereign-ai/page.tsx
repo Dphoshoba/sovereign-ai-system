@@ -5,31 +5,30 @@ import NewsletterForm from "@/components/public/NewsletterForm"
 export const metadata: Metadata = {
   title: "Sovereign AI | Echoes & Visions",
   description:
-    "Build governed AI systems with memory, governance, and intelligent execution without chaos.",
+    "Build AI systems that remember, reason, and execute under your governance—not the other way around.",
 }
 
 const framework = [
   {
     title: "Capture",
-    text: "Collect ideas, audience signals, content, workflows, questions, documents, and operational inputs.",
+    text: "Capture everything that matters—from ideas and documents to customer conversations and operational events.",
   },
   {
     title: "Memory",
-    text: "Turn scattered information into governed knowledge, semantic memory, source-of-truth systems, and relationship intelligence.",
+    text: "Convert information into governed organisational knowledge that persists across people, projects, and AI agents.",
   },
   {
     title: "Execution",
-    text: "Activate workflows, publishing systems, agents, automations, newsletters, lead magnets, and strategic operations.",
+    text: "Trigger intelligent workflows, publishing, automation, and decision support while keeping humans in control.",
   },
 ]
 
 const problems = [
-  "Too many AI tools with no clear system",
-  "No memory across workflows",
-  "No approval gates or governance",
-  "Disconnected publishing and audience data",
-  "AI output without strategic accountability",
-  "Creators and ministries drowning in automation noise",
+  "AI conversations disappear instead of becoming organisational knowledge.",
+  "Every new tool creates another silo.",
+  "Important decisions aren't governed or auditable.",
+  "Content, CRM, email, and AI work independently instead of together.",
+  "Automation scales activity, but not accountability.",
 ]
 
 export default function SovereignAIPage() {
@@ -68,9 +67,7 @@ export default function SovereignAIPage() {
           </h1>
 
           <p className="mt-6 max-w-3xl text-lg leading-8 text-white/70">
-            Build AI systems with memory, governance, and intelligent execution
-            without chaos. Sovereign AI helps creators, ministries, founders, and
-            organizations move from scattered tools to governed intelligence.
+            Build AI systems that remember, reason, and execute under your governance—not the other way around.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-4">
@@ -155,7 +152,62 @@ export default function SovereignAIPage() {
         </div>
       </section>
 
-      <section id="download" className="border-y border-white/10 bg-white/[0.03]">
+      <section className="mx-auto max-w-7xl px-6 py-24">
+        <p className="mb-4 text-sm uppercase tracking-[0.3em] text-white/40">
+          Who It&apos;s For
+        </p>
+
+        <h2 className="text-4xl font-bold md:text-5xl">Built for</h2>
+
+        <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[
+            "Creators scaling content with AI",
+            "Ministries managing teaching, outreach, and knowledge",
+            "Founders building AI-native businesses",
+            "Teams replacing scattered AI tools with governed systems",
+            "Organisations requiring auditability and human oversight",
+          ].map((audience) => (
+            <div
+              key={audience}
+              className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 text-white/75"
+            >
+              {audience}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="border-y border-white/10 bg-white/[0.03]">
+        <div className="mx-auto max-w-7xl px-6 py-20">
+          <p className="mb-4 text-sm uppercase tracking-[0.3em] text-white/40">
+            Proof
+          </p>
+
+          <h2 className="text-4xl font-bold md:text-5xl">
+            Built on a production-ready foundation
+          </h2>
+
+          <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[
+              "19 production modules",
+              "378 automated tests",
+              "Governance-first architecture",
+              "Human approval workflows",
+              "Persistent memory",
+              "Intelligent execution engine",
+            ].map((stat) => (
+              <div
+                key={stat}
+                className="rounded-3xl border border-white/10 bg-black/30 p-6 text-white/75"
+              >
+                {stat}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="download" className="bg-white/[0.03]">
         <div className="mx-auto grid max-w-7xl gap-10 px-6 py-20 lg:grid-cols-2 lg:items-center">
           <div>
             <p className="mb-4 text-sm uppercase tracking-[0.3em] text-white/40">
@@ -167,9 +219,7 @@ export default function SovereignAIPage() {
             </h2>
 
             <p className="mt-5 leading-8 text-white/70">
-              A practical governance framework for creators, ministries, founders,
-              and organizations who want to use AI with clarity, boundaries,
-              memory discipline, and human accountability.
+              Start governing your AI before it governs your business. Define trusted sources, approval boundaries, memory rules, and execution policies with a practical framework you can adapt to your organisation.
             </p>
           </div>
 
@@ -202,8 +252,8 @@ export default function SovereignAIPage() {
           </h2>
 
           <p className="mt-3 text-black/70">
-            Get practical AI systems, creator strategy, ministry intelligence,
-            governance frameworks, and future-ready operating systems.
+            Build AI your future self can trust.
+            Join founders, creators, and organisations building governed intelligence instead of unmanaged automation.
           </p>
 
           <NewsletterForm />

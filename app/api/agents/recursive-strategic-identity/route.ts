@@ -14,8 +14,12 @@ import { recursiveAlignmentAgent } from "../../../../lib/agents/recursive-alignm
 import { recursiveConsciousnessAgent } from "../../../../lib/agents/recursive-consciousness-agent"
 import { recursivePurposeAgent } from "../../../../lib/agents/recursive-purpose-agent"
 import { recursiveStrategicIdentityAgent } from "../../../../lib/agents/recursive-strategic-identity-agent"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await req.json()
 

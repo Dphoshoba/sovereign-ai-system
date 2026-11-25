@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 import {
   sourceCollector,
   type SourceRecord,
@@ -9,9 +10,14 @@ import { evidenceRegistry } from "../../../../lib/research/evidence-registry"
 import { factExtractor } from "../../../../lib/research/fact-extractor"
 import { factVerificationEngine } from "../../../../lib/research/fact-verification-engine"
 import { consensusEngine } from "../../../../lib/research/consensus-engine"
+import { recommendationWithEvidenceCompleteness } from "../../../../lib/research/evidence-completeness"
 import { publicationGate } from "../../../../lib/research/publication-gate"
+import { legacyResearchPublicationEnvelope } from "../../../../lib/research/legacy-publication-isolation"
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const body = await req.json()
 
   const topic =
@@ -44,16 +50,24 @@ export async function POST(req: NextRequest) {
   const consensus = consensusEngine(
     factVerification.verifiedFacts
   )
+  const publicationRecommendation = recommendationWithEvidenceCompleteness(
+    consensus.publicationRecommendation,
+    factVerification.verifiedFacts,
+  )
+  const governedConsensus = {
+    ...consensus,
+    publicationRecommendation,
+  }
 
-  const result = publicationGate(consensus)
+  const result = publicationGate(governedConsensus)
 
-  return NextResponse.json({
+  return NextResponse.json(legacyResearchPublicationEnvelope({
     ok: true,
     sourceCollection,
     evidence,
     factExtraction,
     factVerification,
-    consensus,
+    consensus: governedConsensus,
     result,
-  })
+  }))
 }
