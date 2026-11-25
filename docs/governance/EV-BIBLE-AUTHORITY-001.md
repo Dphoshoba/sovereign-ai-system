@@ -1,7 +1,7 @@
 # EV-BIBLE-AUTHORITY-001 — Biblical Editorial Evidence Profile
 
 **Status:** Permanent editorial governance policy (Director EV-BIBLE-AUTHORITY-FINAL)  
-**Contract version:** `1.1.0`  
+**Contract version:** `1.1.1`  
 **Classification:** Explicit policy extension under EV-REG-SPEC-1.1.0  
 **Directive ID:** `EV-BIBLE-AUTHORITY-001`  
 **Parent contracts:** `docs/governance/EV-REG-SPEC-1.1.0.md`, `docs/governance/EV-REG-SPEC-1.0.0.md`  
@@ -75,9 +75,11 @@ Requirements: identifiable book, chapter, verse (or verse range), and translatio
 
 ### Category B — Biblical interpretation and pastoral teaching
 
-Analogies, typological applications, “Christians today” lessons, and theological assertions not expressly stated as quotation or narrative fact.
+Analogies, typological applications, “Christians today” lessons, pastoral paraphrases, and theological assertions not expressly stated as quotation or narrative fact.
 
-**Evidence rule:** Evaluated for faithfulness and clarity under L2 Director pastoral authority. Must **not** automatically inherit primary-source status or be presented as explicit statements of Scripture.
+**Evidence rule:** Evaluated for faithfulness and clarity under L2 Director pastoral authority. Must **not** automatically inherit primary-source status or be presented as explicit statements of Scripture. Must **not** be force-rewritten into Category A quotes solely to unlock publish.
+
+**Publication eligibility (L2 pathway):** When a biblical teaching article has a current EV-REG-SPEC-1.1.0 audit with source quality ≥ 70, zero unverified claims, and scored facts that are Category B `partially supported` pastoral/interpretive claims, **documented Director/editor article approval (L2)** satisfies human publication eligibility for those claims. This does **not** fabricate scores, invent `publish-ready` recommendations, invent primary-source confirmation, or waive Category A §9 confirmation / Category C corroboration.
 
 ### Category C — External factual claims
 
@@ -121,8 +123,8 @@ The platform (L4) may identify references, retrieve authorised text, check quota
 | Field | Value |
 |---|---|
 | Directive | EV-BIBLE-AUTHORITY-001 |
-| Version | 1.1.0 |
-| Profile module | `lib/research/biblical-editorial-evidence-profile.ts` |
+| Version | 1.1.1 |
+| Profile module | `lib/research/biblical-editorial-evidence-profile.ts` · `lib/research/biblical-pastoral-publication.ts` |
 | Authorised edition | ESV (`scripture:esv`) |
 | certifiesTheology | false |
 | EV-REG compatibility | EV-REG-SPEC-1.1.0 extension; thresholds unchanged |

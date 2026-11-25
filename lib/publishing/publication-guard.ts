@@ -6,6 +6,10 @@ import {
 } from "../research/consensus-engine"
 import { qualifyingPublicationSourceIdentity } from "../research/claim-source-attribution"
 import {
+  evaluateBiblicalPastoralPublicationEligibility,
+  type BiblicalPastoralPublicationContext,
+} from "../research/biblical-pastoral-publication"
+import {
   evaluateEvReg11PublicationEligibility,
   isEvReg110Audit,
 } from "../research/primary-source-publication"
@@ -103,6 +107,7 @@ function storedVerificationProblem(
 
 export function researchPublicationBlockReason(
   audit: ResearchPublishabilityAudit | null | undefined,
+  pastoralContext?: BiblicalPastoralPublicationContext,
 ): string | null {
   if (!audit) {
     return "A current publish-ready research audit is required before scheduling or publication."
@@ -113,6 +118,16 @@ export function researchPublicationBlockReason(
 
   // EV-REG-SPEC-1.1.0: pathway eligibility with Director §3.4 redline.
   if (isEvReg110Audit(audit.specificationVersion)) {
+    // BA-001 Category B: documented L2 pastoral article approval may satisfy
+    // biblical publication eligibility without inventing publish-ready scores.
+    if (pastoralContext) {
+      const pastoral = evaluateBiblicalPastoralPublicationEligibility({
+        audit,
+        context: pastoralContext,
+      })
+      if (pastoral.ready) return null
+    }
+
     if (audit.publicationRecommendation !== PUBLISH_READY_RECOMMENDATION) {
       return "Current research audit is not publish-ready."
     }
