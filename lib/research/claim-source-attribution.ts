@@ -1,6 +1,7 @@
 import { canonicalizeSourceUrl } from "./article-audit-fingerprint";
 import {
   isExclusivePrimaryEligibleScriptureClaim as profileExclusivePrimaryEligible,
+  scriptureCanonicalIdentity,
   SCRIPTURE_KJV_IDENTITY,
   SCRIPTURE_TEXT_IDENTITY,
   type ScripturePassageHint,
@@ -211,6 +212,10 @@ export function canonicalSourceUrl(url: string): string {
 const TRACKING_QUERY_KEYS = new Set(["fbclid", "gclid", "mc_cid", "mc_eid"]);
 
 export function independentDocumentKey(url: string): string {
+  // Scripture edition hosts collapse to one translation identity (EV-BIBLE-AUTHORITY-001).
+  const scriptureIdentity = scriptureCanonicalIdentity({ url });
+  if (scriptureIdentity) return scriptureIdentity;
+
   const canonical = canonicalSourceUrl(url);
   try {
     const parsed = new URL(canonical);
@@ -652,6 +657,11 @@ export function evidenceCorroborationKey(
     if (matched.length > 0) {
       return `publisher:${matched[0]}`;
     }
+  }
+
+  const scriptureIdentity = scriptureCanonicalIdentity(source);
+  if (scriptureIdentity) {
+    return scriptureIdentity;
   }
 
   const binding = resolveClaimSourceBinding(claim, listedSources);

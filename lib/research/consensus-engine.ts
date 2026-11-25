@@ -1,4 +1,7 @@
-import { scriptureAuthorityScoreForUrl } from "./biblical-editorial-evidence-profile"
+import {
+  SCRIPTURE_EDITION_AUTHORITY_SCORE,
+  scriptureAuthorityScoreForUrl,
+} from "./biblical-editorial-evidence-profile"
 import { independentDocumentKey } from "./claim-source-attribution"
 import type { VerifiedFact } from "./fact-verification-engine"
 
@@ -328,6 +331,10 @@ function themeBody(theme: string): string {
 }
 
 function authorityScoreForUrl(url: string): number {
+  // independentDocumentKey may return scripture:<edition> identities.
+  if (/^scripture:[a-z0-9_+-]+$/i.test(url)) {
+    return SCRIPTURE_EDITION_AUTHORITY_SCORE
+  }
   const scripture = scriptureAuthorityScoreForUrl(url)
   if (scripture != null) return scripture
 

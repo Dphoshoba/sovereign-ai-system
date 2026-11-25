@@ -108,6 +108,12 @@ export function isBiblicalTeachingArticle(input: {
   return false
 }
 
+function normalizeEditionId(raw: string): string {
+  const id = raw.replace(/_/g, "").toLowerCase()
+  if (id === "kjv" || id === "kingjames" || id === "kingjamesversion") return "kjv"
+  return id
+}
+
 export function scriptureEditionFromSource(source: {
   url: string
   title?: string | null
@@ -116,12 +122,23 @@ export function scriptureEditionFromSource(source: {
   const blob = `${source.url} ${source.title ?? ""}`
   const version = blob.match(/[?&]version=([A-Za-z0-9_+-]+)/i)
   if (version?.[1]) {
-    const id = version[1].replace(/_/g, "").toLowerCase()
-    if (id === "kjv" || id === "kingjames" || id === "kingjamesversion") return "kjv"
-    return id
+    return normalizeEditionId(version[1])
+  }
+  // Bible Hub edition path: /esv/colossians/3.htm, /kjv/..., etc.
+  const hubEdition = source.url.match(
+    /biblehub\.com\/([a-z0-9_+-]+)\/[a-z0-9_]+\/\d+\.htm/i,
+  )
+  if (hubEdition?.[1]) {
+    return normalizeEditionId(hubEdition[1])
+  }
+  const namedEdition = blob.match(
+    /\b(ESV|NIV|NASB|NKJV|NLT|CSB|RSV|NRSV|WEB|ASV)\b/i,
+  )
+  if (namedEdition?.[1]) {
+    return normalizeEditionId(namedEdition[1])
   }
   if (TRANSLATION_RE.test(blob) || /kingjamesbibleonline/i.test(blob)) return "kjv"
-  // Bible Hub / Blue Letter Bible chapter pages used on the KJV editorial pathway.
+  // Bible Hub / Blue Letter Bible chapter pages without an edition token default to KJV.
   if (/biblehub\.com|blueletterbible\.org/i.test(source.url)) return "kjv"
   return "kjv"
 }
