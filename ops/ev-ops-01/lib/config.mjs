@@ -9,13 +9,13 @@ export const MONITORING_PROGRAM = "EV-OPS-01"
 
 export const DEFAULT_CONFIG = {
   baseUrl: "https://www.echoesandvisions.com",
-  // LIVE Production pin after EV-SEC-03R Option A same-commit credential cutover (918b8447).
-  // Certified Production pin (Director EVS-24): commit 918b8447 / dpl_CMPj7w7…
-  expectedDeploymentId: "dpl_A7PJH95J33TLYrWEd22GkBq8m8Qa",
+  // LIVE Production pin after EV-ENG-01-FINAL RC promote (798261ca).
+  // Rollback Ready pin retained: dpl_A7PJH95J33TLYrWEd22GkBq8m8Qa @ 918b8447.
+  expectedDeploymentId: "dpl_Hd4M93qVEEerSknDEFVqcykYo8x5",
   // /api/health no longer exposes buildTime; deployment id alone pins identity.
   // When non-null, observed buildTime must match exactly (missing observed fails).
   expectedBuildTime: null,
-  expectedShaPrefix: "918b8447",
+  expectedShaPrefix: "798261ca",
   intervalMinutes: 60,
   criticalFailureThreshold: 2,
   slowResponseThreshold: 3,
