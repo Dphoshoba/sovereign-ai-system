@@ -53,3 +53,14 @@ These principles are part of the architecture itself, not merely implementation 
 ## Editorial and production operations
 
 Before article selection, evidence review, editorial rewrites, production article changes, Vercel releases, or cron operations, read `.agents/skills/echoes-visions-editorial-operations/SKILL.md`. That file is a workflow and safety contract. It does not authorise writes, audits, publishing, or deployments.
+
+### Two-intervention ops model (EV-OPS-AUTONOMY-FINAL)
+
+Permanent operating model for Echoes & Visions content activation:
+
+1. **Engineering intervention** — Narrow governed code/contract fix when a demonstrated eligibility inconsistency blocks authorised ops (compose over modify; no score fabrication; no silent guard bypass; no threshold weaken). Targeted Preview → conditional Prod only when an app change is required.
+2. **Ops intervention** — Governed article path only: save → audit → L2 pastoral/editorial approve → image → publish → verify → social/X. Director authority remains L2. Ordinary Work and other articles stay untouched unless separately authorised.
+
+Biblical publication eligibility: `docs/governance/EV-BIBLE-AUTHORITY-001.md` (L1 Scripture · L2 Director pastoral · L3 supplementary optional · L4 AI `certifiesTheology:false`). Category B pastoral paraphrase is satisfied by **documented L2 article approval**, not by forcing quote rewrite or inventing primary-source confirmation. Category A exclusive-primary still requires §9 confirm.
+
+**Featured-image retention (permanent §8 requirements 1–6):** When the Director accepts an exact image, retain bytes — do not regenerate. Host once to authorised `article-images` storage, attach via `featuredImage` URL only, preserve content fingerprint, verify SHA-256 integrity + association, and use generate-path only as fallback when no accepted image exists. Stop with the exact limitation if host+attach is impossible with existing capabilities. Authoritative prose: `docs/governance/EV-PERMANENT-OPERATING-PRINCIPLES.md` §8 (branch `cursor/permanent-operating-principles-24e2` until merged).

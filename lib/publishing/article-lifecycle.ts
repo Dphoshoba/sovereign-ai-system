@@ -338,11 +338,23 @@ export async function transitionArticleLifecycle(
       const association = article.reviewNotes
         .map(parseArticleAuditAssociation)
         .find((row) => row && row.auditId === currentAudit.id);
-      const researchBlock = researchPublicationBlockReason({
-        ...currentAudit,
-        engineRevision:
-          currentAudit.engineRevision ?? association?.engineRevision,
-      });
+      const researchBlock = researchPublicationBlockReason(
+        {
+          ...currentAudit,
+          engineRevision:
+            currentAudit.engineRevision ?? association?.engineRevision,
+        },
+        {
+          articleStatus: article.status,
+          approvedAt: article.approvedAt,
+          approvedBy: article.approvedBy,
+          category: article.category,
+          content: article.content,
+          sourceTypes: article.researchSources?.map(
+            (source: { sourceType?: string | null }) => source.sourceType,
+          ),
+        },
+      );
       if (researchBlock) {
         return failure("research_not_publishable", researchBlock);
       }
