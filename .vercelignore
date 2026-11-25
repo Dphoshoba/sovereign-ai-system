@@ -5,7 +5,9 @@ node_modules
 coverage
 ops
 review-artifacts
-local
+# Keep local/video (render-engine-agent stub). Scratch logs only:
+local/*.log
+local/**/*.log
 credentials
 *.log
 build-*.txt
