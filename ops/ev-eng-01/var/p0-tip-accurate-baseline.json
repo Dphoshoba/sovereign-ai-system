@@ -1,0 +1,19 @@
+{
+  "note": "Tip-accurate P0 on 918b8447 (Director ACK 2026-11-25 ~16:55 Adelaide)",
+  "modeA": {
+    "inflationReproduced": true,
+    "sourceCountPerMirrorGroup": 2,
+    "consensusScore": 96,
+    "sourceQualityScore": 85,
+    "publicationRecommendation": "review-required",
+    "falsePublishReadyOnTip": false,
+    "reason": "Tip consensus requires avgVerification>=80 and singleSourceFacts===0; historical stale publish-ready not reproduced on certified tip"
+  },
+  "modeB": {
+    "reproduced": true,
+    "colLongInsufficientOverlap": true,
+    "markCarpenterInsufficientOverlap": true,
+    "chromeRejected": true,
+    "freshNineUnverified": true
+  }
+}
