@@ -1,7 +1,7 @@
-﻿# EV-OPS-01 — Register a persistent Windows Scheduled Task (every 5 minutes).
-# Callers: operator host used for Production monitoring continuity.
-# Existing: none. Does not modify Production application or Vercel config.
-# User instruction: persistent scheduler independent of Cursor/Grok sessions.
+﻿# EV-OPS-01 — Register a Windows Scheduled Task (LEGACY — prefer cloud hourly).
+# EVS-24: GitHub Actions on main is the sole Production monitor (hourly).
+# Prefer ops/ev-ops-01/disable-windows-task.ps1 so this host does not duplicate.
+# Does not modify Production application or Vercel config.
 param(
   [string]$TaskName = "EV-OPS-01-Production-Monitor",
   [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path

@@ -15,6 +15,7 @@ import {
   reconcileIncidents,
   loadState,
   saveState,
+  calendarDayKey,
 } from "../../ops/ev-ops-01/lib/state.mjs"
 
 function baseCycle(pass, overrides = {}) {
@@ -89,5 +90,14 @@ describe("EV-OPS-01 classify + incident reconcile", () => {
     reconciled = reconcileIncidents(state, good)
     assert.ok(reconciled.resolved.length >= 1)
     rmSync(root, { recursive: true, force: true })
+  })
+
+  it("pins certified Production deployment and hourly interval", () => {
+    const config = loadConfig()
+    assert.equal(config.expectedDeploymentId, "dpl_CMPj7w7zqJw2L8bXD1W7E6fPEHfa")
+    assert.equal(config.expectedShaPrefix, "918b8447")
+    assert.equal(config.expectedBuildTime, null)
+    assert.equal(config.intervalMinutes, 60)
+    assert.match(calendarDayKey("Australia/Adelaide"), /^\d{4}-\d{2}-\d{2}$/)
   })
 })

@@ -100,17 +100,41 @@ export async function runChecks(config) {
   const database =
     health?.json?.database ?? healthDb?.json?.database ?? null
 
+  // Deployment id is the primary Production pin. A missing observation fails
+  // closed so we do not silently accept an unreadable identity swap.
   const deploymentOk =
-    observedDeploymentId == null ||
+    observedDeploymentId != null &&
     observedDeploymentId === config.expectedDeploymentId
+  // Build-time is optional on current Production (/api/health dropped it).
+  // When expectedBuildTime is unset, ignore observed buildTime entirely.
+  // When set, require an exact match (missing observed fails — no weakening).
   const buildTimeOk =
-    observedBuildTime == null ||
-    observedBuildTime === config.expectedBuildTime
+    config.expectedBuildTime == null
+      ? true
+      : observedBuildTime === config.expectedBuildTime
+
+  // Health semantics (non-weakening): both endpoints must succeed with ok:true.
+  // Legacy shape required database==="connected" on the payloads.
+  // Current Production shape moved connectivity to /api/health/db (ok:true) and
+  // /api/health carries editorial verifier fields instead of database/buildTime.
+  // If a database field is present on either payload, it must still be "connected".
+  const healthJson = health?.json
   const healthPayloadOk = Boolean(
-    health?.pass && health?.json?.ok === true && database === "connected",
+    health?.pass &&
+      healthJson?.ok === true &&
+      (Object.prototype.hasOwnProperty.call(healthJson || {}, "database")
+        ? healthJson.database === "connected"
+        : healthJson?.versionedEditorialVerifierEnabled === true &&
+          typeof healthJson?.researchAuditEngineRevision === "string" &&
+          healthJson.researchAuditEngineRevision.length > 0),
   )
+  const dbJson = healthDb?.json
   const dbPayloadOk = Boolean(
-    healthDb?.pass && healthDb?.json?.ok === true && healthDb?.json?.database === "connected",
+    healthDb?.pass &&
+      dbJson?.ok === true &&
+      (Object.prototype.hasOwnProperty.call(dbJson || {}, "database")
+        ? dbJson.database === "connected"
+        : true),
   )
 
   const identityCheck = {

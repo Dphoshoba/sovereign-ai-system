@@ -22,9 +22,20 @@ export function loadState(rootDir) {
       openIncidents: {},
       lastCycleAt: null,
       consecutiveOk: 0,
+      lastDailySummaryDay: null,
     }
   }
   return JSON.parse(readFileSync(path, "utf8"))
+}
+
+/** Adelaide (or configured TZ) calendar day key YYYY-MM-DD for daily summary dedupe. */
+export function calendarDayKey(timezone = "Australia/Adelaide", when = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(when)
 }
 
 export function saveState(rootDir, state) {

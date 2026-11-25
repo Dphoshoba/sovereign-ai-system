@@ -9,14 +9,20 @@ export const MONITORING_PROGRAM = "EV-OPS-01"
 
 export const DEFAULT_CONFIG = {
   baseUrl: "https://www.echoesandvisions.com",
-  expectedDeploymentId: "dpl_EnwRCcCgUuH2Jb4SC48MMdc5vdMo",
-  expectedBuildTime: "2026-11-18T09:45:18.361Z",
-  expectedShaPrefix: "6258cada",
-  intervalMinutes: 5,
+  // LIVE Production pin after EV-BIBLE-AUTHORITY-FINAL promote (42e4829c).
+  // Prior Ready pin retained for rollback: dpl_Hd4M93qVEEerSknDEFVqcykYo8x5 @ 798261ca.
+  expectedDeploymentId: "dpl_8mQDrYr1HHS4iv4dgTj8iY8UQpqk",
+  // /api/health no longer exposes buildTime; deployment id alone pins identity.
+  // When non-null, observed buildTime must match exactly (missing observed fails).
+  expectedBuildTime: null,
+  expectedShaPrefix: "42e4829c",
+  intervalMinutes: 60,
   criticalFailureThreshold: 2,
   slowResponseThreshold: 3,
   slowResponseMs: 5000,
   retentionDays: 30,
+  // Adelaide calendar day key for once-daily operational summary.
+  dailySummaryTimezone: "Australia/Adelaide",
   userAgent: "EchoesVisions-EV-OPS-01-Monitor/1.0",
   checks: {
     homepage: { path: "/", method: "GET", expectStatus: [200] },
