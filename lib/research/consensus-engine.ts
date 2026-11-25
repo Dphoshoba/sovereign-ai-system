@@ -575,15 +575,6 @@ export function consensusEngine(facts: VerifiedFact[]): ConsensusResult {
         ? "review-required"
         : "blocked"
 
- console.log(
-  "Consensus Groups:",
-  consensusGroups.map(group => ({
-    theme: group.theme,
-    sourceCount: group.sourceCount,
-    facts: group.facts.map(f => f.claim)
-  }))
-)
-
   return {
     totalFacts,
     verifiedFacts,
