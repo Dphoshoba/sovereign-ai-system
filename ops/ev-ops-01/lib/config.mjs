@@ -9,13 +9,13 @@ export const MONITORING_PROGRAM = "EV-OPS-01"
 
 export const DEFAULT_CONFIG = {
   baseUrl: "https://www.echoesandvisions.com",
-  // LIVE Production pin after EV-ENG-01-FINAL RC promote (798261ca).
-  // Rollback Ready pin retained: dpl_A7PJH95J33TLYrWEd22GkBq8m8Qa @ 918b8447.
-  expectedDeploymentId: "dpl_Hd4M93qVEEerSknDEFVqcykYo8x5",
+  // LIVE Production pin after EV-BIBLE-AUTHORITY-FINAL promote (42e4829c).
+  // Prior Ready pin retained for rollback: dpl_Hd4M93qVEEerSknDEFVqcykYo8x5 @ 798261ca.
+  expectedDeploymentId: "dpl_8mQDrYr1HHS4iv4dgTj8iY8UQpqk",
   // /api/health no longer exposes buildTime; deployment id alone pins identity.
   // When non-null, observed buildTime must match exactly (missing observed fails).
   expectedBuildTime: null,
-  expectedShaPrefix: "798261ca",
+  expectedShaPrefix: "42e4829c",
   intervalMinutes: 60,
   criticalFailureThreshold: 2,
   slowResponseThreshold: 3,
