@@ -12,8 +12,13 @@ const SUBSCRIBED_BODY = {
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+/** Consent marker recorded on subscribe (act of submitting the form). */
+export const NEWSLETTER_CONSENT_VERSION = "ev-newsletter-consent-v1"
+
 function subscriptionSource(value: unknown) {
-  return typeof value === "string" && value.trim() ? value.trim() : "newsletter"
+  const base =
+    typeof value === "string" && value.trim() ? value.trim() : "newsletter"
+  return `${base}|consent:${NEWSLETTER_CONSENT_VERSION}`
 }
 
 export async function POST(req: NextRequest) {

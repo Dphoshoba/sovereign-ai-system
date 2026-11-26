@@ -1,112 +1,41 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { requirePublishingEditor } from "../../../../lib/publishing/require-editor-auth"
-import { Resend } from "resend"
+import { sendApprovedNewsletter } from "../../../../lib/newsletter/send-newsletter"
+import { getAppUrl } from "../../../../src/lib/site-config"
+import type { NewsletterSendStore } from "../../../../lib/newsletter/send-newsletter"
 
 export async function POST(req: NextRequest) {
   const auth = await requirePublishingEditor()
   if (!auth.ok) return auth.response
 
   try {
-    const { newsletterId } = await req.json()
-
-    if (!newsletterId) {
+    const body = await req.json()
+    const newsletterId = body?.newsletterId
+    if (!newsletterId || typeof newsletterId !== "string") {
       return NextResponse.json(
         { ok: false, error: "Missing newsletterId" },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
-    const apiKey = process.env.RESEND_API_KEY
-    if (!apiKey) {
-      return NextResponse.json(
-        { ok: false, error: "Missing RESEND_API_KEY" },
-        { status: 500 }
-      )
-    }
+    const mode =
+      body?.mode === "single-recipient-test" ? "single-recipient-test" : "list"
 
-    const newsletter = await prisma.newsletter.findUnique({
-      where: {
-        id: newsletterId,
-      },
+    const result = await sendApprovedNewsletter({
+      newsletterId,
+      actor: auth.actor,
+      origin: getAppUrl(),
+      store: prisma as unknown as NewsletterSendStore,
+      mode,
+      testRecipient:
+        typeof body?.testRecipient === "string"
+          ? body.testRecipient
+          : undefined,
+      confirmSingleRecipientTest: body?.confirmSingleRecipientTest === true,
     })
 
-    if (!newsletter) {
-      return NextResponse.json(
-        { ok: false, error: "Newsletter not found" },
-        { status: 404 }
-      )
-    }
-
-    if (newsletter.status === "sent") {
-      return NextResponse.json(
-        { ok: false, error: "This newsletter has already been sent." },
-        { status: 400 }
-      )
-    }
-
-    if (newsletter.status !== "approved") {
-      return NextResponse.json(
-        { ok: false, error: "Newsletter must be approved first" },
-        { status: 403 }
-      )
-    }
-
-    const subscribers = await prisma.subscriber.findMany({
-      where: {
-        status: "active",
-      },
-    })
-
-    if (subscribers.length === 0) {
-      return NextResponse.json(
-        { ok: false, error: "No active subscribers found" },
-        { status: 400 }
-      )
-    }
-
-    const from =
-      process.env.NEWSLETTER_FROM ||
-      "Echoes & Visions <newsletter@yourdomain.com>"
-
-    const resend = new Resend(apiKey)
-
-    const sent = await Promise.all(
-      subscribers.map((subscriber) =>
-        resend.emails.send({
-          from,
-          to: subscriber.email,
-          subject: newsletter.subject,
-          html: `
-            <div style="font-family: Arial, sans-serif; line-height: 1.7; color: #111827; max-width: 680px; margin: 0 auto;">
-              <p style="color:#6b7280;">${newsletter.previewText || ""}</p>
-              ${newsletter.content}
-              <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
-              <p style="font-size:13px;color:#6b7280;">
-                You are receiving this because you subscribed to Echoes & Visions.
-              </p>
-            </div>
-          `,
-        })
-      )
-    )
-
-    const updated = await prisma.newsletter.update({
-      where: {
-        id: newsletter.id,
-      },
-      data: {
-        status: "sent",
-        sentAt: new Date(),
-      },
-    })
-
-    return NextResponse.json({
-      ok: true,
-      sent: subscribers.length,
-      results: sent,
-      newsletter: updated,
-    })
+    return NextResponse.json(result.body, { status: result.status })
   } catch (error) {
     console.error("Newsletter send failed:", error)
 
@@ -115,7 +44,7 @@ export async function POST(req: NextRequest) {
         ok: false,
         error: error instanceof Error ? error.message : "Send failed",
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

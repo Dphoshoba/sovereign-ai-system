@@ -157,7 +157,7 @@ describe("publishDueArticles", () => {
       where: { id: "due-1" },
       data: expect.objectContaining({ status: "published" }),
     })
-    expect(afterPublish).toHaveBeenCalledWith("due-1")
+    expect(afterPublish).toHaveBeenCalledWith("due-1", expect.anything())
   })
 
   it("skips future articles because they are not selected", async () => {

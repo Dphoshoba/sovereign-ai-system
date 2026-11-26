@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
+/** Retained for compatibility; always uses the singular governed send path. */
 export function SendNewsletterButton({
   newsletterId,
 }: {
@@ -12,13 +13,19 @@ export function SendNewsletterButton({
   const [loading, setLoading] = useState(false)
 
   async function sendNewsletter() {
-    if (!confirm("Send this newsletter to all active subscribers?")) return
+    if (
+      !confirm(
+        "Send this newsletter to all active subscribers via the governed singular path?",
+      )
+    ) {
+      return
+    }
 
     setLoading(true)
 
-    const response = await fetch("/api/newsletters/send", {
+    const response = await fetch("/api/newsletter/send", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "content-type": "application/json" },
       body: JSON.stringify({ newsletterId }),
     })
 
