@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { autoGenerateSocialPosts } from "../social/auto-generate-social";
 import { generateNewsletterForArticle } from "../newsletter/generate-newsletter";
+import { sendAuthorisedNewsletterAfterScheduledPublish } from "../newsletter/after-scheduled-publish-newsletter";
+import type { NewsletterSendStore } from "../newsletter/send-newsletter";
 import { publishAuthorisedXAfterScheduledPublish } from "../social/after-scheduled-publish-x";
 import { publishAuthorisedLinkedInAfterScheduledPublish } from "../social/after-scheduled-publish-linkedin";
 import {
@@ -74,8 +76,21 @@ export type PublishDueArticlesStore = ArticleLifecycleStore & {
       }>
     >;
   };
+  newsletter: {
+    findMany: (args: {
+      where: { articleId: string };
+    }) => Promise<
+      Array<{
+        id: string;
+        articleId: string;
+        status: string;
+        subject: string;
+      }>
+    >;
+  };
 } & TwitterPublishStore &
-  LinkedInPublishStore;
+  LinkedInPublishStore &
+  NewsletterSendStore;
 
 export type PublishDueArticlesResult = {
   ok: true;
@@ -92,6 +107,7 @@ export type PublishDueArticlesResult = {
   failedItems: { id: string; category: string }[];
   xOutcomes?: { id: string; outcome: string; detail?: string }[];
   linkedinOutcomes?: { id: string; outcome: string; detail?: string }[];
+  newsletterOutcomes?: { id: string; outcome: string; detail?: string }[];
 };
 
 async function defaultAfterPublish(
@@ -102,13 +118,19 @@ async function defaultAfterPublish(
   detail?: string;
   linkedinOutcome?: string;
   linkedinDetail?: string;
+  newsletterOutcome?: string;
+  newsletterDetail?: string;
 }> {
   const article = await store.article.findUnique({
     where: { id: articleId },
     include: { reviewNotes: true },
   });
   if (!article) {
-    return { xOutcome: "article_missing", linkedinOutcome: "article_missing" };
+    return {
+      xOutcome: "article_missing",
+      linkedinOutcome: "article_missing",
+      newsletterOutcome: "article_missing",
+    };
   }
 
   const { resolveAuthorisedChannels, channelAuthorised } = await import(
@@ -127,20 +149,28 @@ async function defaultAfterPublish(
     await autoGenerateSocialPosts(articleId);
   }
 
-  // Newsletter draft generation only — never auto-send from the scheduler.
-  await generateNewsletterForArticle(articleId);
+  // Draft generation only when newsletter send is not authorised.
+  // When authorised, reuse the exact I2-approved newsletter — never regenerate.
+  if (!channelAuthorised(authorised.scope, "newsletter")) {
+    await generateNewsletterForArticle(articleId);
+  }
 
   const socialPosts = await store.socialPost.findMany({
     where: { articleId },
   });
+  const newsletters = await store.newsletter.findMany({
+    where: { articleId },
+  });
 
-  // Preview / non-prod safety: never live-post social from Preview.
+  // Preview / non-prod safety: never live-post social or send lists from Preview.
   if (process.env.VERCEL_ENV === "preview") {
     return {
       xOutcome: "skipped_preview",
       detail: "Preview environment does not publish live social posts.",
       linkedinOutcome: "skipped_preview",
       linkedinDetail: "Preview environment does not publish live social posts.",
+      newsletterOutcome: "skipped_preview",
+      newsletterDetail: "Preview environment does not send live newsletter lists.",
     };
   }
 
@@ -200,7 +230,39 @@ async function defaultAfterPublish(
     linkedinDetail = error instanceof Error ? error.message : "unknown";
   }
 
-  return { xOutcome, detail, linkedinOutcome, linkedinDetail };
+  let newsletterOutcome = "skipped";
+  let newsletterDetail: string | undefined;
+  try {
+    const nlResult = await sendAuthorisedNewsletterAfterScheduledPublish({
+      article,
+      newsletters,
+      store,
+      actor: "scheduler:publish-due-articles",
+    });
+
+    if (nlResult.ok && nlResult.skipped) {
+      newsletterOutcome = "skipped";
+      newsletterDetail = nlResult.reason;
+    } else if (nlResult.ok) {
+      newsletterOutcome = "sent";
+      newsletterDetail = `newsletterId=${nlResult.newsletterId}`;
+    } else {
+      newsletterOutcome = nlResult.code;
+      newsletterDetail = nlResult.reason;
+    }
+  } catch (error) {
+    newsletterOutcome = "newsletter_side_effect_error";
+    newsletterDetail = error instanceof Error ? error.message : "unknown";
+  }
+
+  return {
+    xOutcome,
+    detail,
+    linkedinOutcome,
+    linkedinDetail,
+    newsletterOutcome,
+    newsletterDetail,
+  };
 }
 
 export async function publishDueArticles(
@@ -219,6 +281,8 @@ export async function publishDueArticles(
           detail?: string;
           linkedinOutcome?: string;
           linkedinDetail?: string;
+          newsletterOutcome?: string;
+          newsletterDetail?: string;
         }
     >;
   } = {},
@@ -250,6 +314,8 @@ export async function publishDueArticles(
   const failedItems: { id: string; category: string }[] = [];
   const xOutcomes: { id: string; outcome: string; detail?: string }[] = [];
   const linkedinOutcomes: { id: string; outcome: string; detail?: string }[] =
+    [];
+  const newsletterOutcomes: { id: string; outcome: string; detail?: string }[] =
     [];
 
   for (const article of eligibleArticles) {
@@ -294,6 +360,13 @@ export async function publishDueArticles(
             detail: side.linkedinDetail,
           });
         }
+        if (typeof side.newsletterOutcome === "string") {
+          newsletterOutcomes.push({
+            id: article.id,
+            outcome: side.newsletterOutcome,
+            detail: side.newsletterDetail,
+          });
+        }
       }
     } catch {
       publishedIds.push(article.id);
@@ -317,6 +390,7 @@ export async function publishDueArticles(
     failedItems,
     xOutcomes,
     linkedinOutcomes,
+    newsletterOutcomes,
   };
 
   console.info(
@@ -335,6 +409,7 @@ export async function publishDueArticles(
       failedItems,
       xOutcomes,
       linkedinOutcomes,
+      newsletterOutcomes,
     }),
   );
 
