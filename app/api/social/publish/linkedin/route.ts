@@ -5,7 +5,10 @@ import {
   channelAuthorised,
   resolveAuthorisedChannels,
 } from "../../../../../lib/publishing/distribution-scope"
-import { publishApprovedLinkedInPost } from "../../../../../lib/social/linkedin-publish"
+import {
+  publishApprovedLinkedInPost,
+  type LinkedInPublishStore,
+} from "../../../../../lib/social/linkedin-publish"
 
 export async function POST(req: NextRequest) {
   const auth = await requirePublishingEditor()
