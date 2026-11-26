@@ -39,6 +39,15 @@ export type LinkedInPublishResult = {
   body: LinkedInPublishBody
 }
 
+export type LinkedInPublishedRow = {
+  id: string
+  platform: string
+  content: string
+  status: string
+  externalId: string | null
+  articleId: string | null
+}
+
 export type LinkedInPublishStore = {
   socialPost: {
     findUnique: (args: {
@@ -48,7 +57,7 @@ export type LinkedInPublishStore = {
     update: (args: {
       where: { id: string }
       data: Record<string, unknown>
-    }) => Promise<LinkedInPostRecord>
+    }) => Promise<LinkedInPublishedRow>
   }
   externalIntegration: {
     findUnique: (args: {
