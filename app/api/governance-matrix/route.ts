@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getOpenAI } from "@/lib/ai/openai"
 import { DAVID_WRITING_DNA } from "@/lib/ai/writing-dna"
+import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
 
 const starterPolicies = [
   {
@@ -35,6 +36,9 @@ const starterPolicies = [
 ]
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     let policies = await prisma.governancePolicy.findMany({
       orderBy: { createdAt: "asc" },
@@ -83,6 +87,9 @@ export async function GET() {
 }
 
 export async function POST() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const [
       initiatives,

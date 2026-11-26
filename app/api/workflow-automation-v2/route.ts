@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
+
+export const dynamic = "force-dynamic"
 
 const defaultRules = [
   {
@@ -67,6 +70,9 @@ const defaultRules = [
 ]
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     let rules = await prisma.workflowAutomationRule.findMany({
       orderBy: { createdAt: "asc" },

@@ -1,0 +1,32 @@
+# Keep Vercel uploads under the file-count limit (OmniRoute submodule alone is 150k+ files).
+OmniRoute
+node_modules
+.next
+coverage
+ops
+review-artifacts
+# Keep local/video (render-engine-agent stub). Scratch logs only:
+local/*.log
+local/**/*.log
+credentials
+*.log
+build-*.txt
+build-*.log
+test-*.txt
+test-output.txt
+test_results.txt
+.next-start*.log
+next-start-*.log
+monthly-report.pdf
+proposal.pdf
+progress.md
+TODO.md
+PHASE_XII_*
+SOVEREIGN_SYSTEM_AUDIT.md
+IMPLEMENTATION_GUIDE.md
+ENGINEERING_OPERATING_SYSTEM.md
+debug-violations.js
+verify-vector.mjs
+test-builds-37-40.ps1
+test-socialposts.js
+-Uri

@@ -2,12 +2,27 @@ import Link from "next/link"
 import { connection } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { ArticleReviewActions } from "./ArticleReviewActions"
+import { PrepareForReviewButton } from "./PrepareForReviewButton"
+import { PublishPackageButton } from "./PublishPackageButton"
 import { ScheduleArticleButton } from "./ScheduleArticleButton"
 import { ArticleActions } from "@/components/articles/ArticleActions"
+import { formatAdelaideDisplay } from "../../../lib/publishing/adelaide-time"
+import {
+  canShowImmediatePublishAction,
+  canShowPrepareForReviewAction,
+  canShowScheduleAction,
+  publicationReadinessMessage,
+} from "../../../lib/publishing/article-action-visibility"
+import { resolveArticleAuditState } from "../../../lib/research/current-article-audit"
+import { canShowApprovalActions } from "./ArticleAuditPanel"
 
 const STATUS_FILTERS = [
   { key: "all", label: "All", status: null },
-  { key: "review-required", label: "Pending Review", status: "review-required" },
+  {
+    key: "review-required",
+    label: "Pending Review",
+    status: "review-required",
+  },
   { key: "approved", label: "Approved", status: "approved" },
   { key: "scheduled", label: "Scheduled", status: "scheduled" },
   { key: "rejected", label: "Rejected", status: "rejected" },
@@ -57,8 +72,9 @@ export default async function AdminArticlesPage({
     include: {
       researchAudits: {
         orderBy: { createdAt: "desc" },
-        take: 1,
       },
+      researchSources: true,
+      reviewNotes: true,
     },
     orderBy: { createdAt: "desc" },
   })
@@ -77,7 +93,7 @@ export default async function AdminArticlesPage({
   }
 
   const countForFilter = (status: string | null) =>
-    status === null ? total : countByStatus.get(status) ?? 0
+    status === null ? total : (countByStatus.get(status) ?? 0)
 
   return (
     <main style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
@@ -141,7 +157,17 @@ export default async function AdminArticlesPage({
           </p>
         ) : (
           articles.map((article) => {
-            const audit = article.researchAudits?.[0]
+            const { currentAudit: audit, historicalAudits } =
+              resolveArticleAuditState(article)
+            const hasCurrentAudit = Boolean(audit)
+            const hasFeaturedImage = Boolean(article.featuredImage?.trim())
+            const readinessMessage = publicationReadinessMessage({
+              status: article.status,
+              hasCurrentAudit,
+              approvedAt: article.approvedAt,
+              approvedBy: article.approvedBy,
+              hasFeaturedImage,
+            })
 
             return (
               <div key={article.id} style={cardStyle}>
@@ -156,8 +182,9 @@ export default async function AdminArticlesPage({
                   <strong>Status:</strong> {article.status}
                 </p>
 
-                {audit && (
+                {audit ? (
                   <div
+                    data-audit-state="current"
                     style={{
                       marginTop: "12px",
                       padding: "12px",
@@ -166,6 +193,9 @@ export default async function AdminArticlesPage({
                       fontSize: "14px",
                     }}
                   >
+                    <div>
+                      <strong>Audit State:</strong> Current
+                    </div>
                     <div>
                       <strong>Research Confidence:</strong>{" "}
                       {audit.researchConfidence}
@@ -184,12 +214,17 @@ export default async function AdminArticlesPage({
                       <strong>Sources:</strong> {audit.sourceCount}
                     </div>
                   </div>
-                )}
+                ) : historicalAudits.length > 0 ? (
+                  <div data-audit-state="historical" style={staleAuditStyle}>
+                    <strong>Audit State:</strong> Historical / stale (
+                    {historicalAudits.length})
+                  </div>
+                ) : null}
 
                 {article.scheduledFor && (
                   <p>
                     <strong>Scheduled For:</strong>{" "}
-                    {new Date(article.scheduledFor).toLocaleString()}
+                    {formatAdelaideDisplay(article.scheduledFor)}
                   </p>
                 )}
 
@@ -197,15 +232,19 @@ export default async function AdminArticlesPage({
                   style={{
                     marginTop: "8px",
                     fontWeight: "bold",
-                    color:
-                      (article.editorialScore ?? 0) >= 80
+                    color: !audit
+                      ? "#666"
+                      : (article.editorialScore ?? 0) >= 80
                         ? "#15803d"
                         : (article.editorialScore ?? 0) >= 60
                           ? "#d97706"
                           : "#b91c1c",
                   }}
                 >
-                  Editorial Score: {article.editorialScore ?? "Not scored"}
+                  Editorial Score:{" "}
+                  {audit
+                    ? (article.editorialScore ?? "Not scored")
+                    : "Not current"}
                 </div>
                 <div
                   style={{
@@ -218,25 +257,27 @@ export default async function AdminArticlesPage({
                   <div style={metricBoxStyle}>
                     <strong>Quality Score:</strong>
                     <br />
-                    {article.qualityScore ?? "Not scored"}
+                    {audit
+                      ? (article.qualityScore ?? "Not scored")
+                      : "Not current"}
                   </div>
 
                   <div style={metricBoxStyle}>
-                  <strong>SEO Score:</strong>
-                 <br />
-                  {article.seoScore ?? "Not scored"}
-                </div>
-
-                <div style={metricBoxStyle}>
-                  <strong>SEO Grade:</strong>
-                  <br />
-                  {article.seoGrade ?? "-"}
-                </div>
+                    <strong>SEO Score:</strong>
+                    <br />
+                    {audit ? (article.seoScore ?? "Not scored") : "Not current"}
+                  </div>
 
                   <div style={metricBoxStyle}>
                     <strong>SEO Grade:</strong>
                     <br />
-                    {article.seoGrade ?? "-"}
+                    {audit ? (article.seoGrade ?? "-") : "Not current"}
+                  </div>
+
+                  <div style={metricBoxStyle}>
+                    <strong>SEO Grade:</strong>
+                    <br />
+                    {audit ? (article.seoGrade ?? "-") : "Not current"}
                   </div>
                 </div>
                 <div
@@ -244,16 +285,19 @@ export default async function AdminArticlesPage({
                     display: "inline-block",
                     padding: "6px 12px",
                     borderRadius: "999px",
-                    background: gradeColor(article.editorialGrade),
+                    background: audit
+                      ? gradeColor(article.editorialGrade)
+                      : "#666",
                     color: "var(--button-foreground)",
                     fontWeight: "bold",
                     marginTop: "8px",
                   }}
                 >
-                  {gradeLabel(article.editorialGrade)}
+                  {audit ? gradeLabel(article.editorialGrade) : "Not current"}
                 </div>
 
-                {Array.isArray(article.editorialWarnings) &&
+                {audit &&
+                  Array.isArray(article.editorialWarnings) &&
                   article.editorialWarnings.length > 0 && (
                     <div>
                       <strong>Editorial Warnings:</strong>
@@ -295,13 +339,43 @@ export default async function AdminArticlesPage({
                     Audit
                   </Link>
 
-                  {article.status === "review-required" && (
+                  {canShowPrepareForReviewAction({
+                    status: article.status,
+                    hasCurrentAudit,
+                    currentAuditSpecificationVersion:
+                      audit?.specificationVersion ?? null,
+                  }) && <PrepareForReviewButton articleId={article.id} />}
+
+                  {canShowApprovalActions(article.status, hasCurrentAudit) && (
                     <ArticleReviewActions articleId={article.id} />
                   )}
 
-                  {article.status === "approved" && (
-                    <ScheduleArticleButton articleId={article.id} />
-                  )}
+                  {canShowImmediatePublishAction({
+                    status: article.status,
+                    hasCurrentAudit,
+                    approvedAt: article.approvedAt,
+                    approvedBy: article.approvedBy,
+                    hasFeaturedImage,
+                  }) && <PublishPackageButton articleId={article.id} />}
+
+                  {canShowScheduleAction({
+                    status: article.status,
+                    hasCurrentAudit,
+                  }) && <ScheduleArticleButton articleId={article.id} />}
+
+                  {readinessMessage ? (
+                    <p
+                      role="status"
+                      style={{
+                        width: "100%",
+                        fontSize: "14px",
+                        color: "#92400e",
+                        margin: "0",
+                      }}
+                    >
+                      {readinessMessage}
+                    </p>
+                  ) : null}
 
                   <ArticleActions
                     articleId={article.id}
@@ -360,5 +434,14 @@ const metricBoxStyle: React.CSSProperties = {
   borderRadius: "8px",
   background: "#f8f9fa",
   border: "1px solid var(--border)",
+  fontSize: "14px",
+}
+
+const staleAuditStyle: React.CSSProperties = {
+  marginTop: "12px",
+  padding: "12px",
+  background: "#fff7ed",
+  border: "1px solid #fdba74",
+  borderRadius: "8px",
   fontSize: "14px",
 }

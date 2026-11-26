@@ -26,8 +26,12 @@ import { recursiveMetaAdaptationAgent } from "../../../../lib/agents/recursive-m
 import { recursiveEvolutionArbitrationAgent } from "../../../../lib/agents/recursive-evolution-arbitration-agent"
 import { recursiveGovernanceOptimizationAgent } from "../../../../lib/agents/recursive-governance-optimization-agent"
 import { adaptiveConstitutionalEvolutionAgent } from "../../../../lib/agents/adaptive-constitutional-evolution-agent"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await req.json()
     const niche = body.niche || "AI + Faith"

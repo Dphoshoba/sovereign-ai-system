@@ -41,6 +41,28 @@ export const ENV_SPECS: EnvVarSpec[] = [
     description: "Supabase anonymous key for client-side auth.",
   },
   {
+    key: "SUPABASE_SERVICE_ROLE_KEY",
+    required: true,
+    productionOnly: true,
+    group: "authentication",
+    description:
+      "Server-only Supabase service-role key for article image storage. Never expose to the browser or NEXT_PUBLIC variables.",
+  },
+  {
+    key: "ARTICLE_IMAGES_BUCKET",
+    required: false,
+    group: "application",
+    description:
+      "Supabase Storage bucket for generated article images (default: article-images).",
+  },
+  {
+    key: "CRON_SECRET",
+    required: false,
+    group: "application",
+    description:
+      "Server-only bearer token for scheduled publication triggers. Never expose to the browser or NEXT_PUBLIC variables.",
+  },
+  {
     key: "OPENAI_API_KEY",
     required: false,
     group: "openai",
@@ -50,7 +72,8 @@ export const ENV_SPECS: EnvVarSpec[] = [
     key: "RESEND_API_KEY",
     required: false,
     group: "email",
-    description: "Resend API key for newsletter and transactional email.",
+    description:
+      "Resend API key for transactional/non-newsletter email. Not used as a newsletter fallback.",
   },
   {
     key: "EMAIL_FROM",
@@ -59,10 +82,32 @@ export const ENV_SPECS: EnvVarSpec[] = [
     description: "Default from address for transactional email.",
   },
   {
+    key: "NEWSLETTER_RESEND_API_KEY",
+    required: false,
+    group: "email",
+    description:
+      "Resend API key dedicated to newsletter sends (required at send time; fail closed).",
+  },
+  {
     key: "NEWSLETTER_FROM",
     required: false,
     group: "email",
-    description: "From address for newsletter sends.",
+    description:
+      "From address for newsletter sends (must be @news.echoesandvisions.com; required at send time).",
+  },
+  {
+    key: "NEWSLETTER_LIVE_LIST_DISABLED",
+    required: false,
+    group: "email",
+    description:
+      "When true, blocks live subscriber-list distribution (single-recipient test still allowed).",
+  },
+  {
+    key: "NEWSLETTER_UNSUB_SECRET",
+    required: false,
+    group: "email",
+    description:
+      "Optional HMAC secret for public unsubscribe tokens (falls back to derived newsletter key material).",
   },
   {
     key: "STRIPE_SECRET_KEY",
@@ -117,6 +162,25 @@ export const ENV_SPECS: EnvVarSpec[] = [
     required: false,
     group: "external",
     description: "Twitter/X access token secret.",
+  },
+  {
+    key: "LINKEDIN_CLIENT_ID",
+    required: false,
+    group: "external",
+    description: "LinkedIn OAuth app client ID (Share on LinkedIn + OpenID).",
+  },
+  {
+    key: "LINKEDIN_CLIENT_SECRET",
+    required: false,
+    group: "external",
+    description: "LinkedIn OAuth app client secret.",
+  },
+  {
+    key: "LINKEDIN_REDIRECT_URI",
+    required: false,
+    group: "external",
+    description:
+      "Exact LinkedIn OAuth callback URI registered in the Developer Portal (e.g. https://www.echoesandvisions.com/api/social/oauth/linkedin/callback).",
   },
   {
     key: "BRAVE_SEARCH_API_KEY",

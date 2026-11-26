@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 type SystemReadinessStatus = "READY" | "PARTIAL" | "BLOCKED"
 
@@ -99,6 +100,9 @@ const sections: SystemReadinessSection[] = [
 ]
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const overallCompletion = Math.round(
     sections.reduce((sum, section) => sum + section.completion, 0) /
       sections.length

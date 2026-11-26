@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 function percentChange(current: number, previous: number) {
   if (previous === 0) {
@@ -10,6 +11,9 @@ function percentChange(current: number, previous: number) {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const snapshots = await prisma.monthlySnapshot.findMany({
     orderBy: {
       month: "desc",

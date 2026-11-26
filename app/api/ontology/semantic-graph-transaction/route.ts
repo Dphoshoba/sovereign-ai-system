@@ -13,6 +13,7 @@ import {
   summarizeTransactionResult,
 } from "../../../../lib/ontology/semantic-graph-transaction-executor"
 import type { OntologyExtractionResult } from "../../../../lib/ontology"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 const ontologyExample: OntologyExtractionResult = {
   category: "ai-tools",
@@ -69,6 +70,9 @@ const ontologyExample: OntologyExtractionResult = {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const governedPlan = buildGovernedExecutionPlan(buildGovernedRequest())
 
   const dryRunPreview = await executeSemanticGraphTransaction({
@@ -106,6 +110,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
 
@@ -134,13 +141,13 @@ export async function POST(request: Request) {
       )
     }
 
-    if (!body.actorId || !body.organizationId || !body.workspaceId) {
+    if (!body.organizationId || !body.workspaceId) {
       return NextResponse.json(
         {
           ok: false,
           writesToPrisma: false,
           databaseAccess: false,
-          error: "actorId, organizationId, and workspaceId are required.",
+          error: "organizationId and workspaceId are required.",
         },
         { status: 400 }
       )
@@ -164,7 +171,7 @@ export async function POST(request: Request) {
         organizationId: body.organizationId,
         workspaceId: body.workspaceId,
       }),
-      requestedBy: body.actorId,
+      requestedBy: auth.actor,
       source: "phase-4c-guarded-write-executor",
       reason: body.reason || "Explicit controlled semantic graph write test.",
       dryRun: true,
@@ -175,7 +182,7 @@ export async function POST(request: Request) {
       dryRun: false,
       writeMode: SEMANTIC_GRAPH_EXPLICIT_TEST_WRITE_MODE,
       explicitWriteEnabled: true,
-      actorId: body.actorId,
+      actorId: auth.actor,
       organizationId: body.organizationId,
       workspaceId: body.workspaceId,
       reason: body.reason || "Explicit controlled semantic graph write test.",

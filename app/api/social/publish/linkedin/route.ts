@@ -1,82 +1,107 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requirePublishingEditor } from "../../../../../lib/publishing/require-editor-auth"
+import {
+  channelAuthorised,
+  resolveAuthorisedChannels,
+} from "../../../../../lib/publishing/distribution-scope"
+import {
+  publishApprovedLinkedInPost,
+  type LinkedInPublishStore,
+} from "../../../../../lib/social/linkedin-publish"
 
 export async function POST(req: NextRequest) {
+  const auth = await requirePublishingEditor()
+  if (!auth.ok) return auth.response
+
   try {
     const { postId } = await req.json()
 
-    if (!postId) {
+    if (!postId || typeof postId !== "string") {
       return NextResponse.json(
         { ok: false, error: "Missing postId" },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
     const post = await prisma.socialPost.findUnique({
       where: { id: postId },
       include: {
-        article: true,
+        article: {
+          include: { reviewNotes: true },
+        },
       },
     })
 
     if (!post) {
       return NextResponse.json(
         { ok: false, error: "Post not found" },
-        { status: 404 }
+        { status: 404 },
       )
     }
 
     if (post.platform !== "linkedin") {
       return NextResponse.json(
         { ok: false, error: "Not a LinkedIn post" },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
-    if (post.article && post.article.status !== "published") {
+    if (!post.articleId || !post.article) {
       return NextResponse.json(
         {
           ok: false,
-          error: "Linked article must be published before posting to LinkedIn.",
+          code: "article_required",
+          error: "LinkedIn publish requires a linked article with distribution scope.",
         },
-        { status: 403 }
+        { status: 403 },
       )
     }
 
-    if (!post.content || post.content.length < 1) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "LinkedIn post content is required.",
-        },
-        { status: 400 }
-      )
-    }
-
-    if (post.status === "published") {
-      return NextResponse.json({
-        ok: true,
-        alreadyPublished: true,
-        message: "This LinkedIn post has already been published.",
-        post,
-      })
-    }
-
-    return NextResponse.json({
-      ok: false,
-      error: "LinkedIn publishing is not connected yet.",
-      post,
+    const authorised = resolveAuthorisedChannels({
+      articleId: post.articleId,
+      reviewNotes: post.article.reviewNotes ?? [],
     })
+
+    if (authorised.stale) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "stale_scope",
+          error:
+            "Distribution scope is stale after material package changes; re-approval required.",
+        },
+        { status: 409 },
+      )
+    }
+
+    if (!channelAuthorised(authorised.scope, "linkedin")) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "channel_not_authorised",
+          error:
+            "LinkedIn is not in the approved distribution scope for this article.",
+        },
+        { status: 403 },
+      )
+    }
+
+    const result = await publishApprovedLinkedInPost({
+      postId,
+      store: prisma as unknown as LinkedInPublishStore,
+      actor: auth.actor,
+      requireCanonicalUrl: true,
+    })
+
+    return NextResponse.json(result.body, { status: result.status })
   } catch (error) {
     return NextResponse.json(
       {
         ok: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "LinkedIn publish failed",
+        error: error instanceof Error ? error.message : "LinkedIn publish failed",
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

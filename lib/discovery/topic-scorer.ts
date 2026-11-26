@@ -5,104 +5,39 @@ export type ScoredTopic = DiscoveredTopic & {
   reason: string
 }
 
-const CATEGORY_KEYWORDS: Record<string, string[]> = {
-  "ai-tools": [
-    "ai",
-    "automation",
-    "tools",
-    "creator",
-    "workflow",
-    "productivity",
-    "agent",
-    "copilot",
-  ],
-  "bible-stories": [
-    "bible",
-    "biblical",
-    "scripture",
-    "archaeology",
-    "testament",
-    "jesus",
-    "david",
-    "moses",
-  ],
-  motivation: [
-    "growth",
-    "mindset",
-    "discipline",
-    "leadership",
-    "habits",
-    "success",
-    "self improvement",
-  ],
-  history: [
-    "history",
-    "ancient",
-    "civilization",
-    "empire",
-    "war",
-    "archaeology",
-    "discovery",
-  ],
-  space: [
-    "space",
-    "nasa",
-    "astronomy",
-    "telescope",
-    "planet",
-    "galaxy",
-    "universe",
-  ],
-  health: [
-    "health",
-    "wellness",
-    "nutrition",
-    "fitness",
-    "sleep",
-    "mental health",
-    "lifestyle",
-  ],
-}
+function scoreTopicTitle(title: string) {
+  const text = title.toLowerCase()
 
-function scoreTopic(topic: DiscoveredTopic) {
-  const text = `${topic.title} ${topic.category}`.toLowerCase()
-  const keywords = CATEGORY_KEYWORDS[topic.category] || []
+  let score = 60
 
-  let score = 50
-
-  for (const keyword of keywords) {
-    if (text.includes(keyword)) {
-      score += 7
-    }
-  }
-
-  if (text.includes("2026") || text.includes("latest") || text.includes("new")) {
-    score += 5
-  }
-
-  if (text.includes("how") || text.includes("why") || text.includes("what")) {
-    score += 5
-  }
+  if (text.includes("ai")) score += 10
+  if (text.includes("automation")) score += 10
+  if (text.includes("church") || text.includes("ministr")) score += 8
+  if (text.includes("small business")) score += 8
+  if (text.includes("creator")) score += 6
+  if (text.includes("agent")) score += 6
+  if (text.includes("content")) score += 5
+  if (text.includes("2026") || text.includes("future")) score += 5
 
   return Math.min(score, 100)
 }
 
-function reasonForScore(score: number, category: string) {
-  if (score >= 85) return `High-value ${category} opportunity`
-  if (score >= 70) return `Strong ${category} opportunity`
-  if (score >= 60) return `Useful ${category} opportunity`
-  return `Moderate ${category} opportunity`
+function reasonForScore(score: number) {
+  if (score >= 90) return "High relevance opportunity"
+  if (score >= 80) return "Strong topic opportunity"
+  if (score >= 70) return "Useful content opportunity"
+  return "Moderate topic opportunity"
 }
 
 export function topicScorer(topics: DiscoveredTopic[]): ScoredTopic[] {
   return topics
     .map((topic) => {
-      const score = scoreTopic(topic)
+      const score = scoreTopicTitle(topic.title)
 
       return {
         ...topic,
         score,
-        reason: reasonForScore(score, topic.category),
+        reason: reasonForScore(score),
       }
     })
     .sort((a, b) => b.score - a.score)

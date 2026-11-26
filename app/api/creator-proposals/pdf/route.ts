@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { jsPDF } from "jspdf"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export const runtime = "nodejs"
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const { proposalId } = await request.json()
 

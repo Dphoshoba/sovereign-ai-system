@@ -11,8 +11,12 @@ import { civilizationStewardshipAgent } from "../../../../lib/agents/civilizatio
 import { metaCivilizationAgent } from "../../../../lib/agents/meta-civilization-agent"
 import { recursiveConstitutionalAgent } from "../../../../lib/agents/recursive-constitutional-agent"
 import { recursiveAlignmentAgent } from "../../../../lib/agents/recursive-alignment-agent"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await req.json()
 

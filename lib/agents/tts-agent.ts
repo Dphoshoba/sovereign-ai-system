@@ -2,9 +2,17 @@ import fs from "fs"
 import path from "path"
 import OpenAI from "openai"
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+function getOpenAI() {
+  const apiKey = process.env.OPENAI_API_KEY
+
+  if (!apiKey) {
+    throw new Error(
+      "OPENAI_API_KEY is not configured. Add it to your environment variables."
+    )
+  }
+
+  return new OpenAI({ apiKey })
+}
 
 type TTSInput = {
   text: string
@@ -19,7 +27,7 @@ export async function ttsAgent(input: TTSInput) {
     voice = "alloy",
   } = input
 
-  const speech = await openai.audio.speech.create({
+  const speech = await getOpenAI().audio.speech.create({
     model: "gpt-4o-mini-tts",
     voice: voice as any,
     input: text,

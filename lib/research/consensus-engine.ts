@@ -1,3 +1,8 @@
+import {
+  SCRIPTURE_EDITION_AUTHORITY_SCORE,
+  scriptureAuthorityScoreForUrl,
+} from "./biblical-editorial-evidence-profile"
+import { independentDocumentKey } from "./claim-source-attribution"
 import type { VerifiedFact } from "./fact-verification-engine"
 
 export type ConsensusGroup = {
@@ -8,6 +13,10 @@ export type ConsensusGroup = {
   consensusStatement: string
 }
 
+export const PUBLISH_READY_CONSENSUS_SCORE = 80
+export const PUBLISH_READY_SOURCE_QUALITY_SCORE = 70
+export const PUBLISH_READY_RECOMMENDATION = "publish-ready" as const
+
 export type ConsensusResult = {
   totalFacts: number
   verifiedFacts: number
@@ -16,6 +25,7 @@ export type ConsensusResult = {
   consensusScore: number
   sourceQualityScore: number
   consensusGroups: ConsensusGroup[]
+  zeroSourceGroups: ConsensusGroup[]
   consensusGroupCount: number
   publicationRecommendation:
     | "publish-ready"
@@ -240,15 +250,59 @@ const THEMES: { theme: string; keywords: string[]; body: string }[] = [
 ]
 
 const GENERAL_THEME = "General Findings"
+const NEUTRAL_CONSENSUS_STATEMENT =
+  "The available evidence does not support a conclusion beyond the supplied source text."
 
-function classifyTheme(claim: string): string {
+function isNistGovernanceClaim(claim: string): boolean {
+  const text = claim.toLowerCase()
+  const mentionsFramework =
+    /\bnist\b/.test(text) ||
+    /\brmf\b/.test(text) ||
+    text.includes("risk management framework") ||
+    text.includes("ai risk")
+  const functionCount = ["govern", "map", "measure", "manage"].filter((name) =>
+    new RegExp(`\\b${name}\\b`).test(text),
+  ).length
+  return mentionsFramework && functionCount > 0
+}
+
+// Prefixes kept as stems. Ordinary keywords use word boundaries.
+const EXPLICIT_THEME_STEMS = new Set([
+  "automat",
+  "integrat",
+  "produc",
+  "generat",
+  "distribut",
+  "syndicat",
+  "monetiz",
+  "monetis",
+  "analytic",
+  "ethic",
+  "responsib",
+  "accountab",
+])
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+function keywordMatches(text: string, keyword: string): boolean {
+  if (EXPLICIT_THEME_STEMS.has(keyword)) {
+    return text.includes(keyword)
+  }
+  return new RegExp(`\\b${escapeRegExp(keyword)}\\b`, "i").test(text)
+}
+
+export function classifyConsensusTheme(claim: string): string {
+  if (isNistGovernanceClaim(claim)) return "AI Risk Governance"
+
   const text = claim.toLowerCase()
   let bestTheme = GENERAL_THEME
   let bestScore = 0
 
   for (const { theme, keywords } of THEMES) {
     const score = keywords.reduce((total, keyword) => {
-      if (!text.includes(keyword)) {
+      if (!keywordMatches(text, keyword)) {
         return total
       }
 
@@ -264,6 +318,10 @@ function classifyTheme(claim: string): string {
   return bestTheme
 }
 
+function classifyTheme(claim: string): string {
+  return classifyConsensusTheme(claim)
+}
+
 function themeBody(theme: string): string {
   const match = THEMES.find((entry) => entry.theme === theme)
 
@@ -273,6 +331,13 @@ function themeBody(theme: string): string {
 }
 
 function authorityScoreForUrl(url: string): number {
+  // independentDocumentKey may return scripture:<edition>[:chapter] identities.
+  if (/^scripture:/i.test(url)) {
+    return SCRIPTURE_EDITION_AUTHORITY_SCORE
+  }
+  const scripture = scriptureAuthorityScoreForUrl(url)
+  if (scripture != null) return scripture
+
   const lower = url.toLowerCase()
 
   if (lower.includes(".gov")) return 100
@@ -341,36 +406,57 @@ function authorityScoreForUrl(url: string): number {
 
   return 50
 }
-function countUniqueSources(facts: VerifiedFact[]): number {
+function acceptedSourceUrls(facts: VerifiedFact[]): string[] {
   const urls = new Set<string>()
 
   for (const fact of facts) {
-    if (fact.supportingSources.length > 0) {
-      for (const source of fact.supportingSources) {
-        if (source.sourceUrl) urls.add(source.sourceUrl)
+    for (const source of fact.supportingSources) {
+      if (typeof source.sourceUrl === "string" && source.sourceUrl.trim()) {
+        urls.add(independentDocumentKey(source.sourceUrl))
       }
-    } else if (fact.sourceUrl) {
-      urls.add(fact.sourceUrl)
     }
   }
 
-  return urls.size
+  return Array.from(urls)
+}
+
+function evidenceGroundedStatement(facts: VerifiedFact[]): string {
+  for (const fact of facts) {
+    const claim = fact.claim.trim()
+    if (claim.length < 40) continue
+    const evidence = fact.evidenceText.toLowerCase()
+    const excerpt = claim.toLowerCase().slice(0, Math.min(80, claim.length))
+    if (evidence.includes(excerpt)) {
+      return /[.!?]$/.test(claim) ? claim : `${claim}.`
+    }
+  }
+
+  return NEUTRAL_CONSENSUS_STATEMENT
+}
+
+function consensusStatement(
+  sourceCount: number,
+  facts: VerifiedFact[],
+  theme: string,
+): string {
+  if (sourceCount === 0) {
+    return `No accepted source supports this group yet, which concerns ${themeBody(theme)}.`
+  }
+
+  const grounded = evidenceGroundedStatement(facts)
+  if (grounded === NEUTRAL_CONSENSUS_STATEMENT) return grounded
+  if (sourceCount >= 2) {
+    return `Independent sources support this statement: ${grounded}`
+  }
+  return `One source supports this statement: ${grounded}`
+}
+
+function countUniqueSources(facts: VerifiedFact[]): number {
+  return acceptedSourceUrls(facts).length
 }
 
 function calculateSourceQualityScore(facts: VerifiedFact[]): number {
-  const urls = new Set<string>()
-
-  for (const fact of facts) {
-    if (fact.supportingSources.length > 0) {
-      for (const source of fact.supportingSources) {
-        if (source.sourceUrl) urls.add(source.sourceUrl)
-      }
-    } else if (fact.sourceUrl) {
-      urls.add(fact.sourceUrl)
-    }
-  }
-
-  const scores = Array.from(urls).map(authorityScoreForUrl)
+  const scores = acceptedSourceUrls(facts).map(authorityScoreForUrl)
 
   if (scores.length === 0) return 0
 
@@ -396,19 +482,12 @@ function buildConsensusGroups(facts: VerifiedFact[]): ConsensusGroup[] {
     const sourceCount = countUniqueSources(themeFacts)
     const sourceQualityScore = calculateSourceQualityScore(themeFacts)
 
-    const prefix =
-      sourceCount >= 3
-        ? "Strong multi-source evidence indicates that"
-        : sourceCount === 2
-          ? "Multiple sources indicate that"
-          : "A source indicates that"
-
     return {
       theme,
       facts: themeFacts,
       sourceCount,
       sourceQualityScore,
-      consensusStatement: `${prefix} ${themeBody(theme)}.`,
+      consensusStatement: consensusStatement(sourceCount, themeFacts, theme),
     }
   })
 }
@@ -429,6 +508,8 @@ export function consensusEngine(facts: VerifiedFact[]): ConsensusResult {
   ).length
 
   const consensusGroups = buildConsensusGroups(facts)
+  const zeroSourceGroups = consensusGroups.filter((group) => group.sourceCount === 0)
+  const sourcedGroups = consensusGroups.filter((group) => group.sourceCount > 0)
   const consensusGroupCount = consensusGroups.length
 
   const stronglyCorroborated = consensusGroups.filter(
@@ -440,18 +521,19 @@ export function consensusEngine(facts: VerifiedFact[]): ConsensusResult {
   ).length
 
   const sourceQualityScore =
-    consensusGroups.length > 0
+    sourcedGroups.length > 0
       ? Math.round(
-          consensusGroups.reduce(
+          sourcedGroups.reduce(
             (sum, group) => sum + group.sourceQualityScore,
             0
-          ) / consensusGroups.length
+          ) / sourcedGroups.length
         )
       : 0
 
   const verificationStrength =
-    verifiedFacts * 100 +
-    partiallyVerifiedFacts * 75
+    totalFacts === 0
+      ? 0
+      : (verifiedFacts * 100 + partiallyVerifiedFacts * 75) / totalFacts
 
   const corroborationStrength =
     stronglyCorroborated * 100 +
@@ -466,23 +548,32 @@ export function consensusEngine(facts: VerifiedFact[]): ConsensusResult {
           sourceQualityScore * 0.25
         )
 
-  const consensusScore = Math.min(rawConsensusScore, 100)
+  const consensusScore = Math.max(0, Math.min(rawConsensusScore, 100))
+
+  const averageVerificationScore =
+    totalFacts === 0
+      ? 0
+      : Math.round(
+          facts.reduce((sum, fact) => sum + fact.verificationScore, 0) /
+            totalFacts,
+        )
+
+  const singleSourceFacts = facts.filter(
+    (fact) =>
+      fact.verificationCount < 2 ||
+      fact.verificationMethod === "single-source-supported",
+  ).length
 
   const publicationRecommendation =
-    consensusScore >= 80 && sourceQualityScore >= 70
-      ? "publish-ready"
+    consensusScore >= PUBLISH_READY_CONSENSUS_SCORE &&
+    sourceQualityScore >= PUBLISH_READY_SOURCE_QUALITY_SCORE &&
+    averageVerificationScore >= PUBLISH_READY_CONSENSUS_SCORE &&
+    unverifiedFacts === 0 &&
+    singleSourceFacts === 0
+      ? PUBLISH_READY_RECOMMENDATION
       : consensusScore >= 50 || totalFacts >= 2
         ? "review-required"
         : "blocked"
-
- console.log(
-  "Consensus Groups:",
-  consensusGroups.map(group => ({
-    theme: group.theme,
-    sourceCount: group.sourceCount,
-    facts: group.facts.map(f => f.claim)
-  }))
-)
 
   return {
     totalFacts,
@@ -492,6 +583,7 @@ export function consensusEngine(facts: VerifiedFact[]): ConsensusResult {
     consensusScore,
     sourceQualityScore,
     consensusGroups,
+    zeroSourceGroups,
     consensusGroupCount,
     publicationRecommendation,
     summary:

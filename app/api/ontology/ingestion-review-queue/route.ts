@@ -11,6 +11,7 @@ import {
   summarizeReviewQueue,
 } from "../../../../lib/ontology/ingestion-review-queue"
 import type { OntologyExtractionResult } from "../../../../lib/ontology"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 const ontologyExample: OntologyExtractionResult = {
   category: "ai-tools",
@@ -95,6 +96,9 @@ const mockExistingCandidates: ExistingEntityCandidate[] = [
 ]
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const payload = buildSemanticGraphPayload(ontologyExample)
   const entityResolutionPlan = buildEntityResolutionPlan(
     payload,

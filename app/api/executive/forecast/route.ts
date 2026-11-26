@@ -7,8 +7,12 @@ import {
 } from "@/lib/executive/monthly-review"
 import { getExecutivePlatformSnapshot } from "@/lib/executive/platform-snapshot"
 import { EXECUTIVE_LIST_LIMITS } from "@/lib/executive/list-limits"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const cutoff = getMonthlyReviewDateCutoff()
 

@@ -7,8 +7,12 @@ import { reinforcementClusteringAgent } from "../../../../lib/agents/reinforceme
 import { strategicPolicyMutationAgent } from "../../../../lib/agents/strategic-policy-mutation-agent"
 
 import { experimentalBranchingAgent } from "../../../../lib/agents/experimental-branching-agent"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const memories =
       await prisma.videoPerformanceMemory.findMany({

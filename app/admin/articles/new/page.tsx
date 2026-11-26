@@ -132,7 +132,7 @@ export default function NewArticlePage() {
           >
             <option value="draft">Draft</option>
             <option value="review">Review</option>
-            <option value="published">Published</option>
+            <option value="review-required">Review Required</option>
           </select>
         </label>
 

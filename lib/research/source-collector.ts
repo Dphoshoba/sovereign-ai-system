@@ -1,5 +1,6 @@
 import { searchAdapter } from "./search-adapter"
 import { fallbackSources } from "./fallback-source-provider"
+import { scriptureSourcesFromTopic } from "./scripture-ref"
 
 export type SourceRecord = {
   title: string
@@ -21,7 +22,7 @@ export type SourceCollectionResult = {
   collectionStatus: string
 }
 
-function scoreAuthority(url: string): number {
+export function scoreAuthority(url: string): number {
   const lower = url.toLowerCase()
 
   if (lower.includes(".gov")) return 100
@@ -45,7 +46,7 @@ function scoreAuthority(url: string): number {
   return 50
 }
 
-function scoreTrust(url: string): number {
+export function scoreTrust(url: string): number {
   const lower = url.toLowerCase()
 
   if (lower.includes(".gov")) return 95
@@ -105,20 +106,38 @@ function normalizeSources(sources: SourceRecord[]): SourceRecord[] {
   }))
 }
 
+export function scoreProvidedSources(sources: SourceRecord[]): SourceRecord[] {
+  return normalizeSources(sources)
+}
+
 export async function sourceCollector(
   topic: string,
   manualSources: SourceRecord[] = [],
   category = "ai-tools"
 ): Promise<SourceCollectionResult> {
   const searchResults = await searchAdapter(topic)
+  const bibleCategory = category.toLowerCase().includes("bible")
+  const topicScripture = bibleCategory ? scriptureSourcesFromTopic(topic) : []
 
-  const searchedSources =
-    searchResults.length > 0 ? searchResults : fallbackSources(topic, category)
+  // Bible topics: keep subject-preserving scripture sources first so empty or
+  // noisy search cannot silently substitute an unrelated biblical story.
+  const searchedSources = bibleCategory
+    ? topicScripture.length > 0
+      ? [...topicScripture, ...searchResults]
+      : searchResults.length > 0
+        ? searchResults
+        : fallbackSources(topic, category)
+    : searchResults.length > 0
+      ? searchResults
+      : fallbackSources(topic, category)
 
+  // Bible multi-passage briefs need more than 8 slots so Exodus + supporting
+  // NT chapters are not truncated after the first four dual-host chapters.
+  const sourceCap = bibleCategory ? 16 : 8;
   const collectedSources = normalizeSources([
     ...manualSources,
     ...searchedSources,
-  ]).slice(0, 8)
+  ]).slice(0, sourceCap)
 
   const sourceCount = collectedSources.length
 

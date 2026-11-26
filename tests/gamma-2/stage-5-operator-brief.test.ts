@@ -1,0 +1,106 @@
+import { describe, expect, it, vi } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
+import { GET } from "../../app/api/gamma/stage-5/operator-brief/route";
+import { buildGammaStage5OperatorBrief } from "../../src/lib/gamma-2/stage-5-operator-brief";
+vi.mock("@/lib/supabase/server", () => ({
+  createSupabaseServerClient: async () => ({
+    auth: {
+      getUser: async () => ({
+        data: {
+          user: {
+            id: "editor-1",
+            email: "editor@example.com",
+            app_metadata: { role: "editor" },
+          },
+        },
+        error: null,
+      }),
+    },
+  }),
+}))
+
+
+describe("Gamma 2 Stage 5 operator brief", () => {
+  it("builds a concise operator handoff brief", () => {
+    const brief = buildGammaStage5OperatorBrief();
+
+    expect(brief.id).toBe("gamma_2_stage_5_operator_brief");
+    expect(brief.status).toBe("ready-for-operator-review");
+    expect(brief.headline).toBe(
+      "Gamma 2 Stage 5 is verified and ready for controlled promotion."
+    );
+    expect(brief.summary).toContain("11 roadmap phases complete");
+    expect(brief.summary).toContain(GAMMA_STAGE_5_SMOKE_SUMMARY);
+    expect(brief.summary).toContain(`${GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints} Stage 5 API endpoints available`);
+  });
+
+  it("keeps only remaining operator actions in the action list", () => {
+    const brief = buildGammaStage5OperatorBrief();
+
+    expect(brief.nextOperatorActions).toEqual([
+      "Confirm Vercel public app URLs match production origin",
+      "Approve production promotion",
+    ]);
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/operator-brief");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-dashboard");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/api-manifest");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/openapi");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/sdk");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/contract-digest");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-attestation");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/rollback-plan");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/operator-handoff");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/audit-ledger");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/deployment-receipt");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/promotion-journal");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/operator-signoff");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/evidence-index");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-bundle");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-archive-manifest");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-retention-policy");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-compliance-matrix");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-exception-register");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-governance-map");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-decision-record");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-approval-packet");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-promotion-plan");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-cutover-checklist");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-traffic-shift-plan");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-monitoring-plan");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-post-promotion-review");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-operations-index");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-closeout-packet");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-closure-ledger");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-completion-certificate");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-finalization-index");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-operator-registry");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-operator-action-queue");
+    expect(brief.apiSurface).toContain("/api/gamma/stage-5/release-operator-approval-packet");
+    expect(brief.apiSurface).toContain(
+      "/api/gamma/stage-5/release-operator-approval-audit-trail"
+    );
+    expect(brief.apiSurface).toContain(
+      "/api/gamma/stage-5/release-operator-approval-receipt"
+    );
+    expect(brief.apiSurface).toContain(
+      "/api/gamma/stage-5/release-production-authorization-ledger"
+    );
+    expect(brief.apiSurface).toContain(
+      "/api/gamma/stage-5/release-production-cutover-packet"
+    );
+  });
+
+  it("is deterministic for repeated calls", () => {
+    expect(buildGammaStage5OperatorBrief()).toEqual(buildGammaStage5OperatorBrief());
+  });
+
+  it("serves the brief through the Stage 5 operator brief route", async () => {
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.id).toBe("gamma_2_stage_5_operator_brief");
+    expect(body.status).toBe("ready-for-operator-review");
+    expect(body.nextOperatorActions).toHaveLength(2);
+  });
+});

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { buildGoalSyncUpdates } from "@/lib/executive/initiative-performance"
+import { requireEditorAuth } from "../../../../../lib/publishing/require-editor-auth"
 
 export const PLANNING_CYCLE_ACTION_TYPES = [
   "sync-goals",
@@ -108,6 +109,9 @@ async function runSyncGoals() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
     const actionType =

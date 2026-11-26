@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server"
 
+import { requireEditorAuth } from "../../../../../lib/publishing/require-editor-auth"
 import { prioritizeResearchTopics } from "../../../../../lib/research/research-prioritization"
 import { discoverResearchTopics } from "../../../../../lib/research/topic-discovery"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const discovery = discoverResearchTopics(undefined, {
     recentCategories: ["ai-tools"],
     duplicateTopics: ["AI automation for creator workflows"],
@@ -24,6 +28,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
 

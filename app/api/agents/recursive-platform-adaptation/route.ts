@@ -48,8 +48,12 @@ import { recursiveAudienceResonanceAgent } from "../../../../lib/agents/recursiv
 import { recursiveCivilizationInfluenceAgent } from "../../../../lib/agents/recursive-civilization-influence-agent"
 import { recursiveMediaImpactOptimizationAgent } from "../../../../lib/agents/recursive-media-impact-optimization-agent"
 import { recursivePlatformAdaptationAgent } from "../../../../lib/agents/recursive-platform-adaptation-agent"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await req.json()
     const niche = body.niche || "AI + Faith"

@@ -18,6 +18,7 @@ import {
 } from "../../../../lib/ontology/semantic-graph-transaction-executor"
 import type { OntologyExtractionResult } from "../../../../lib/ontology"
 import type { IngestionReviewPackageResult } from "../../../../lib/ontology/ingestion-review-package"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 const ontologyExample: OntologyExtractionResult = {
   category: "ai-tools",
@@ -88,7 +89,10 @@ const mockExistingCandidates: ExistingEntityCandidate[] = [
 ]
 
 export async function GET() {
-  const flow = await buildReadinessFlow()
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
+  const flow = await buildReadinessFlow(auth.actor)
 
   return NextResponse.json({
     ok: true,
@@ -103,8 +107,7 @@ export async function GET() {
   })
 }
 
-async function buildReadinessFlow() {
-  const actorId = "human-reviewer-preview"
+async function buildReadinessFlow(actorId: string) {
   const organizationId = "preview-organization"
   const workspaceId = "preview-workspace"
   const payload = buildSemanticGraphPayload(ontologyExample, {

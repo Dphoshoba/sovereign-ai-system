@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 async function sendEmailExecution(emailId: string) {
   const response = await fetch(
@@ -23,6 +24,9 @@ async function sendEmailExecution(emailId: string) {
 }
 
 export async function POST() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const decisions = await prisma.orchestrationDecision.findMany({
       where: {

@@ -6,11 +6,13 @@ function formatDate(date: Date | null) {
   if (!date) return "Not scheduled"
 
   return new Intl.DateTimeFormat("en-AU", {
+    timeZone: "Australia/Adelaide",
     year: "numeric",
     month: "long",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
+    timeZoneName: "shortOffset",
   }).format(date)
 }
 

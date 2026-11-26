@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 type CompetitorVideo = {
   title: string
@@ -102,6 +103,9 @@ function buildRecommendations(topVideos: (CompetitorVideo & { score: number })[]
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = (await req.json()) as CompetitorInput
 
