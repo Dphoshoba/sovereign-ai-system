@@ -49,6 +49,7 @@ vi.mock("@/lib/prisma", () => ({
       findMany: harness.subscriberFindMany,
     },
     operationalEvent: {
+      findMany: vi.fn(async () => []),
       create: harness.operationalEventCreate,
     },
     externalOperationLog: {
@@ -105,6 +106,12 @@ function expectNoDelivery() {
 describe("newsletter and email send authorisation", () => {
   beforeEach(() => {
     vi.stubEnv("RESEND_API_KEY", "re_test_key");
+    vi.stubEnv("NEWSLETTER_RESEND_API_KEY", "re_newsletter_key");
+    vi.stubEnv(
+      "NEWSLETTER_FROM",
+      "Echoes & Visions <newsletter@news.echoesandvisions.com>",
+    );
+    vi.stubEnv("VERCEL_ENV", "production");
     harness.send.mockReset();
     harness.mockGetUser.mockReset();
     harness.emailFindUnique.mockReset();
@@ -246,7 +253,7 @@ describe("newsletter and email send authorisation", () => {
       content: "<p>Hello</p>",
     });
     harness.subscriberFindMany.mockResolvedValue([
-      { email: "reader@example.com", status: "active" },
+      { id: "sub-1", email: "reader@example.com", status: "active" },
     ]);
     harness.newsletterUpdate.mockResolvedValue({
       id: "news-1",
@@ -256,11 +263,16 @@ describe("newsletter and email send authorisation", () => {
     const response = await postNewsletter();
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toMatchObject({ ok: true, sent: 1 });
+    await expect(response.json()).resolves.toMatchObject({
+      ok: true,
+      providerAcceptedCount: 1,
+      inboxDeliveryClaimed: false,
+    });
     expect(harness.send).toHaveBeenCalledOnce();
     expect(harness.send.mock.calls[0]?.[0]).toMatchObject({
       to: "reader@example.com",
       subject: "Approved letter",
+      from: "Echoes & Visions <newsletter@news.echoesandvisions.com>",
     });
     expect(harness.newsletterUpdate).toHaveBeenCalledOnce();
   });
@@ -268,20 +280,15 @@ describe("newsletter and email send authorisation", () => {
 
 describe("POST /api/newsletters/send", () => {
   beforeEach(() => {
-    vi.stubEnv("RESEND_API_KEY", "re_test_key");
     harness.send.mockReset();
     harness.mockGetUser.mockReset();
-    harness.emailFindUnique.mockReset();
-    harness.emailUpdate.mockReset();
     harness.newsletterFindUnique.mockReset();
     harness.newsletterUpdate.mockReset();
     harness.subscriberFindMany.mockReset();
     harness.operationalEventCreate.mockReset();
-    harness.externalOperationLogCreate.mockReset();
-    harness.send.mockResolvedValue({ data: { id: "provider-1" }, error: null });
   });
 
-  it("rejects an anonymous caller before reading the identifier", async () => {
+  it("rejects an anonymous caller before any send work", async () => {
     harness.mockGetUser.mockResolvedValue({ data: { user: null } });
 
     const response = await postNewsletters({ newsletterId: "news-1" });
@@ -295,7 +302,7 @@ describe("POST /api/newsletters/send", () => {
   });
 
   it.each(["viewer", "reviewer"] as const)(
-    "rejects an authenticated %s before reading the identifier",
+    "rejects an authenticated %s before any send work",
     async (role) => {
       harness.mockGetUser.mockResolvedValue({
         data: {
@@ -319,71 +326,18 @@ describe("POST /api/newsletters/send", () => {
     },
   );
 
-  it("keeps an unapproved newsletter from being sent", async () => {
+  it("returns 410 Gone for authorised editors (no bypass path)", async () => {
     harness.mockGetUser.mockResolvedValue({ data: { user: editor() } });
-    harness.newsletterFindUnique.mockResolvedValue({
-      id: "news-1",
-      status: "review-required",
-      subject: "Draft",
-      previewText: "",
-      content: "<p>Draft</p>",
-    });
 
     const response = await postNewsletters();
 
-    expect(response.status).toBe(403);
-    await expect(response.json()).resolves.toEqual({
+    expect(response.status).toBe(410);
+    await expect(response.json()).resolves.toMatchObject({
       ok: false,
-      error: "Newsletter must be approved before sending.",
+      code: "route_retired",
     });
     expect(harness.send).not.toHaveBeenCalled();
-    expect(harness.newsletterUpdate).not.toHaveBeenCalled();
+    expect(harness.newsletterFindUnique).not.toHaveBeenCalled();
     expect(harness.subscriberFindMany).not.toHaveBeenCalled();
-  });
-
-  it("does not send a newsletter that was already sent", async () => {
-    harness.mockGetUser.mockResolvedValue({ data: { user: editor() } });
-    harness.newsletterFindUnique.mockResolvedValue({
-      id: "news-1",
-      status: "sent",
-      subject: "Sent letter",
-      previewText: "",
-      content: "<p>Sent</p>",
-    });
-
-    const response = await postNewsletters();
-
-    expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toEqual({
-      ok: false,
-      error: "This newsletter has already been sent.",
-    });
-    expect(harness.send).not.toHaveBeenCalled();
-    expect(harness.newsletterUpdate).not.toHaveBeenCalled();
-  });
-
-  it("sends an approved newsletter for an authorised editor", async () => {
-    harness.mockGetUser.mockResolvedValue({ data: { user: editor() } });
-    harness.newsletterFindUnique.mockResolvedValue({
-      id: "news-1",
-      status: "approved",
-      subject: "Approved letter",
-      previewText: "Preview",
-      content: "<p>Hello</p>",
-    });
-    harness.subscriberFindMany.mockResolvedValue([
-      { email: "reader@example.com", status: "active" },
-    ]);
-    harness.newsletterUpdate.mockResolvedValue({
-      id: "news-1",
-      status: "sent",
-    });
-
-    const response = await postNewsletters();
-
-    expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toMatchObject({ ok: true, sent: 1 });
-    expect(harness.send).toHaveBeenCalledOnce();
-    expect(harness.newsletterUpdate).toHaveBeenCalledOnce();
   });
 });

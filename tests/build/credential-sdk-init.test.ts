@@ -106,7 +106,7 @@ describe("credential SDK initialization", () => {
     })
   })
 
-  it("rejects newsletter sends when RESEND_API_KEY is missing", async () => {
+  it("rejects newsletter sends when NEWSLETTER_RESEND_API_KEY is missing and retires plural route", async () => {
     const singular = await import("../../app/api/newsletter/send/route")
     const plural = await import("../../app/api/newsletters/send/route")
     const first = await singular.POST(
@@ -114,21 +114,17 @@ describe("credential SDK initialization", () => {
         newsletterId: "news-1",
       }) as never
     )
-    const second = await plural.POST(
-      jsonRequest("http://localhost/api/newsletters/send", {
-        newsletterId: "news-1",
-      })
-    )
+    const second = await plural.POST()
 
     expect(first.status).toBe(500)
-    expect(second.status).toBe(500)
-    await expect(first.json()).resolves.toEqual({
+    expect(second.status).toBe(410)
+    await expect(first.json()).resolves.toMatchObject({
       ok: false,
-      error: "Missing RESEND_API_KEY",
+      code: "missing_newsletter_resend_api_key",
     })
-    await expect(second.json()).resolves.toEqual({
+    await expect(second.json()).resolves.toMatchObject({
       ok: false,
-      error: "Missing RESEND_API_KEY",
+      code: "route_retired",
     })
     expect(newsletterFindUnique).not.toHaveBeenCalled()
   })

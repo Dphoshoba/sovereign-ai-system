@@ -1,10 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { autoGenerateSocialPosts } from "../social/auto-generate-social";
 import { generateNewsletterForArticle } from "../newsletter/generate-newsletter";
+import { publishAuthorisedXAfterScheduledPublish } from "../social/after-scheduled-publish-x";
 import {
   ArticleLifecycleStore,
   transitionArticleLifecycle,
 } from "./article-lifecycle";
+import type { TwitterPublishStore } from "../social/publish-twitter-post";
 
 export type DueArticle = {
   id: string;
@@ -18,6 +20,7 @@ export type DueArticle = {
   featuredImage: string | null;
   status: string;
   scheduledFor: Date | null;
+  slug?: string;
   researchSources: Array<{
     title: string | null;
     url: string | null;
@@ -45,8 +48,31 @@ export type PublishDueArticlesStore = ArticleLifecycleStore & {
         reviewNotes: true;
       };
     }) => Promise<DueArticle[]>;
+    findUnique: (args: {
+      where: { id: string };
+      include?: { reviewNotes: true };
+    }) => Promise<{
+      id: string;
+      slug: string;
+      status: string;
+      featuredImage: string | null;
+      reviewNotes: Array<{ action: string; note: string | null }>;
+    } | null>;
   };
-};
+  socialPost: {
+    findMany: (args: {
+      where: { articleId: string };
+    }) => Promise<
+      Array<{
+        id: string;
+        platform: string;
+        content: string;
+        status: string;
+        externalId: string | null;
+      }>
+    >;
+  };
+} & TwitterPublishStore;
 
 export type PublishDueArticlesResult = {
   ok: true;
@@ -61,11 +87,77 @@ export type PublishDueArticlesResult = {
   publishedIds: string[];
   skippedItems: { id: string; category: string }[];
   failedItems: { id: string; category: string }[];
+  xOutcomes?: { id: string; outcome: string; detail?: string }[];
 };
 
-async function defaultAfterPublish(articleId: string) {
-  await autoGenerateSocialPosts(articleId);
+async function defaultAfterPublish(
+  articleId: string,
+  store: PublishDueArticlesStore,
+): Promise<{ xOutcome: string; detail?: string }> {
+  const article = await store.article.findUnique({
+    where: { id: articleId },
+    include: { reviewNotes: true },
+  });
+  if (!article) {
+    return { xOutcome: "article_missing" };
+  }
+
+  const { resolveAuthorisedChannels, channelAuthorised } = await import(
+    "./distribution-scope"
+  );
+  const authorised = resolveAuthorisedChannels({
+    articleId: article.id,
+    reviewNotes: article.reviewNotes,
+  });
+
+  // When X is authorised, never invent/regenerate announcement copy.
+  if (!channelAuthorised(authorised.scope, "x")) {
+    await autoGenerateSocialPosts(articleId);
+  }
+
+  // Newsletter draft generation only — never auto-send from the scheduler.
   await generateNewsletterForArticle(articleId);
+
+  const socialPosts = await store.socialPost.findMany({
+    where: { articleId },
+  });
+
+  // Preview / non-prod safety: never live-post to X from Preview.
+  if (process.env.VERCEL_ENV === "preview") {
+    return {
+      xOutcome: "skipped_preview",
+      detail: "Preview environment does not publish live social posts.",
+    };
+  }
+
+  try {
+    const { getTwitterClient } = await import("@/lib/twitter");
+    const xResult = await publishAuthorisedXAfterScheduledPublish({
+      article,
+      socialPosts,
+      store,
+      createClient: () => getTwitterClient(),
+      actor: "scheduler:publish-due-articles",
+    });
+
+    if (xResult.ok && xResult.skipped) {
+      return { xOutcome: "skipped", detail: xResult.reason };
+    }
+    if (xResult.ok) {
+      return {
+        xOutcome: "published",
+        detail: xResult.externalId
+          ? `externalId=${xResult.externalId}`
+          : undefined,
+      };
+    }
+    return { xOutcome: xResult.code, detail: xResult.reason };
+  } catch (error) {
+    return {
+      xOutcome: "x_side_effect_error",
+      detail: error instanceof Error ? error.message : "unknown",
+    };
+  }
 }
 
 export async function publishDueArticles(
@@ -74,7 +166,10 @@ export async function publishDueArticles(
     source?: string;
     invocationId?: string;
     prisma?: PublishDueArticlesStore;
-    afterPublish?: (articleId: string) => Promise<void>;
+    afterPublish?: (
+      articleId: string,
+      store: PublishDueArticlesStore,
+    ) => Promise<void | { xOutcome: string; detail?: string }>;
   } = {},
 ): Promise<PublishDueArticlesResult> {
   const now = input.now ?? new Date();
@@ -102,6 +197,7 @@ export async function publishDueArticles(
   const publishedIds: string[] = [];
   const skippedItems: { id: string; category: string }[] = [];
   const failedItems: { id: string; category: string }[] = [];
+  const xOutcomes: { id: string; outcome: string; detail?: string }[] = [];
 
   for (const article of eligibleArticles) {
     let transition;
@@ -130,8 +226,15 @@ export async function publishDueArticles(
     }
 
     try {
-      await afterPublish(article.id);
+      const side = await afterPublish(article.id, store);
       publishedIds.push(article.id);
+      if (side && typeof side === "object" && "xOutcome" in side) {
+        xOutcomes.push({
+          id: article.id,
+          outcome: side.xOutcome,
+          detail: side.detail,
+        });
+      }
     } catch {
       publishedIds.push(article.id);
       failedItems.push({ id: article.id, category: "side-effect" });
@@ -152,6 +255,7 @@ export async function publishDueArticles(
     publishedIds,
     skippedItems,
     failedItems,
+    xOutcomes,
   };
 
   console.info(
@@ -168,6 +272,7 @@ export async function publishDueArticles(
       publishedIds,
       skippedItems,
       failedItems,
+      xOutcomes,
     }),
   );
 

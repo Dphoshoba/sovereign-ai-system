@@ -72,7 +72,8 @@ export const ENV_SPECS: EnvVarSpec[] = [
     key: "RESEND_API_KEY",
     required: false,
     group: "email",
-    description: "Resend API key for newsletter and transactional email.",
+    description:
+      "Resend API key for transactional/non-newsletter email. Not used as a newsletter fallback.",
   },
   {
     key: "EMAIL_FROM",
@@ -81,10 +82,32 @@ export const ENV_SPECS: EnvVarSpec[] = [
     description: "Default from address for transactional email.",
   },
   {
+    key: "NEWSLETTER_RESEND_API_KEY",
+    required: false,
+    group: "email",
+    description:
+      "Resend API key dedicated to newsletter sends (required at send time; fail closed).",
+  },
+  {
     key: "NEWSLETTER_FROM",
     required: false,
     group: "email",
-    description: "From address for newsletter sends.",
+    description:
+      "From address for newsletter sends (must be @news.echoesandvisions.com; required at send time).",
+  },
+  {
+    key: "NEWSLETTER_LIVE_LIST_DISABLED",
+    required: false,
+    group: "email",
+    description:
+      "When true, blocks live subscriber-list distribution (single-recipient test still allowed).",
+  },
+  {
+    key: "NEWSLETTER_UNSUB_SECRET",
+    required: false,
+    group: "email",
+    description:
+      "Optional HMAC secret for public unsubscribe tokens (falls back to derived newsletter key material).",
   },
   {
     key: "STRIPE_SECRET_KEY",
