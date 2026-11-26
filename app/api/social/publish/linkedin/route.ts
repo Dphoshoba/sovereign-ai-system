@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
 
     const result = await publishApprovedLinkedInPost({
       postId,
-      store: prisma,
+      store: prisma as unknown as LinkedInPublishStore,
       actor: auth.actor,
       requireCanonicalUrl: true,
     })
