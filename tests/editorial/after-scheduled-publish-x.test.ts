@@ -10,13 +10,14 @@ import {
 } from "../../lib/publishing/publication-package"
 
 describe("distribution scope governance", () => {
-  it("maps Ordinary Work to X-only and never newsletter", () => {
+  it("maps Ordinary Work to X-only and never newsletter or LinkedIn", () => {
     const resolved = resolveAuthorisedChannels({
       articleId: ORDINARY_WORK_ARTICLE_ID,
       reviewNotes: [],
     })
     expect(resolved.channels).toEqual(["x"])
     expect(resolved.channels).not.toContain("newsletter")
+    expect(resolved.channels).not.toContain("linkedin")
     expect(resolved.source).toBe("ordinary-work-legacy")
   })
 
@@ -65,11 +66,44 @@ describe("distribution scope governance", () => {
         content: "Hello https://www.echoesandvisions.com/blog/t",
         status: "approved",
       },
+      linkedinAnnouncement: null,
       newsletter: null,
       requestedChannels: ["x", "newsletter"],
     })
     expect(pkg.complete).toBe(false)
     expect(pkg.missing).toContain("newsletter")
+  })
+
+  it("marks package incomplete without LinkedIn when channel requested", () => {
+    const pkg = buildPublicationPackage({
+      article: {
+        id: "art-1",
+        title: "T",
+        slug: "t",
+        status: "approved",
+        excerpt: "e",
+        content: "body",
+        featuredImage: "https://example.com/i.jpg",
+        seoTitle: "seo",
+        seoDescription: "desc",
+        seoKeywords: "k",
+        scheduledFor: "2026-12-02T20:30:00.000Z",
+        reviewNotes: [],
+      },
+      contentFingerprint: "fp",
+      evidenceSummary: {
+        auditId: "audit-1",
+        recommendation: "publish-ready",
+        consensusScore: 84,
+        sourceQualityScore: 85,
+      },
+      xAnnouncement: null,
+      linkedinAnnouncement: null,
+      newsletter: null,
+      requestedChannels: ["linkedin"],
+    })
+    expect(pkg.complete).toBe(false)
+    expect(pkg.missing).toContain("linkedin")
   })
 })
 

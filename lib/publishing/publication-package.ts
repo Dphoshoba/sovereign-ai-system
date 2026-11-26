@@ -36,6 +36,7 @@ export type PublicationPackageInputs = {
     sourceQualityScore: number | null
   }
   xAnnouncement: { id: string; content: string; status: string } | null
+  linkedinAnnouncement: { id: string; content: string; status: string } | null
   newsletter: {
     id: string
     subject: string
@@ -59,6 +60,7 @@ export type CompletePublicationPackage = {
   }
   evidence: PublicationPackageInputs["evidenceSummary"]
   x: PublicationPackageInputs["xAnnouncement"]
+  linkedin: PublicationPackageInputs["linkedinAnnouncement"]
   newsletter: PublicationPackageInputs["newsletter"]
   channels: DistributionChannel[]
   schedule: string | null
@@ -77,6 +79,12 @@ export function buildPublicationPackage(
   if (!input.article.seoTitle || !input.article.seoDescription) missing.push("seo")
   if (input.requestedChannels.includes("x") && !input.xAnnouncement?.content) {
     missing.push("x")
+  }
+  if (
+    input.requestedChannels.includes("linkedin") &&
+    !input.linkedinAnnouncement?.content
+  ) {
+    missing.push("linkedin")
   }
   if (input.requestedChannels.includes("newsletter")) {
     if (
@@ -102,6 +110,7 @@ export function buildPublicationPackage(
     seoDescription: input.article.seoDescription,
     seoKeywords: input.article.seoKeywords,
     xContent: input.xAnnouncement?.content ?? null,
+    linkedinContent: input.linkedinAnnouncement?.content ?? null,
     newsletterSubject: input.newsletter?.subject ?? null,
     newsletterPreview: input.newsletter?.previewText ?? null,
     newsletterBody: input.newsletter?.content ?? null,
@@ -128,6 +137,7 @@ export function buildPublicationPackage(
     },
     evidence: input.evidenceSummary,
     x: input.xAnnouncement,
+    linkedin: input.linkedinAnnouncement,
     newsletter: input.newsletter,
     channels: input.requestedChannels,
     schedule,

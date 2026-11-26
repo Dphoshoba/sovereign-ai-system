@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto"
 
-/** Channels this programme may authorise. FB/LI/Threads/IG/Pinterest remain out of scope. */
-export type DistributionChannel = "x" | "newsletter"
+/** Channels this programme may authorise. FB/Threads/IG/Pinterest remain out of scope. */
+export type DistributionChannel = "x" | "newsletter" | "linkedin"
 
 export const DISTRIBUTION_SCOPE_ACTION = "distribution-scope"
 
@@ -75,7 +75,7 @@ export function channelAuthorised(
 
 /**
  * Resolve authorised channels for post-publish automation.
- * OW is hard-mapped to X-only (never newsletter) to preserve Director intent.
+ * OW is hard-mapped to X-only (never newsletter / LinkedIn) to preserve Director intent.
  */
 export function resolveAuthorisedChannels(input: {
   articleId: string
@@ -98,7 +98,7 @@ export function resolveAuthorisedChannels(input: {
         contentFingerprint: ORDINARY_WORK_FINGERPRINT,
         boundAt: "2026-11-25T10:48:12.454Z",
         boundBy: "director-intervention-2",
-        note: "OW legacy: X after publish+verify only; newsletter not authorised",
+        note: "OW legacy: X after publish+verify only; newsletter/LinkedIn not authorised",
       },
       source: "ordinary-work-legacy",
       stale: false,
@@ -135,6 +135,7 @@ export function computePackageFingerprint(parts: {
   seoDescription: string | null
   seoKeywords: string | null
   xContent: string | null
+  linkedinContent: string | null
   newsletterSubject: string | null
   newsletterPreview: string | null
   newsletterBody: string | null
@@ -149,6 +150,7 @@ export function computePackageFingerprint(parts: {
     seoDescription: parts.seoDescription,
     seoKeywords: parts.seoKeywords,
     xContent: parts.xContent,
+    linkedinContent: parts.linkedinContent,
     newsletterSubject: parts.newsletterSubject,
     newsletterPreview: parts.newsletterPreview,
     newsletterBody: parts.newsletterBody,

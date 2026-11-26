@@ -164,6 +164,25 @@ export const ENV_SPECS: EnvVarSpec[] = [
     description: "Twitter/X access token secret.",
   },
   {
+    key: "LINKEDIN_CLIENT_ID",
+    required: false,
+    group: "external",
+    description: "LinkedIn OAuth app client ID (Share on LinkedIn + OpenID).",
+  },
+  {
+    key: "LINKEDIN_CLIENT_SECRET",
+    required: false,
+    group: "external",
+    description: "LinkedIn OAuth app client secret.",
+  },
+  {
+    key: "LINKEDIN_REDIRECT_URI",
+    required: false,
+    group: "external",
+    description:
+      "Exact LinkedIn OAuth callback URI registered in the Developer Portal (e.g. https://www.echoesandvisions.com/api/social/oauth/linkedin/callback).",
+  },
+  {
     key: "BRAVE_SEARCH_API_KEY",
     required: false,
     group: "external",
