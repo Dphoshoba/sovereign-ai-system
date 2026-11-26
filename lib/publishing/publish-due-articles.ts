@@ -2,11 +2,13 @@ import { randomUUID } from "node:crypto";
 import { autoGenerateSocialPosts } from "../social/auto-generate-social";
 import { generateNewsletterForArticle } from "../newsletter/generate-newsletter";
 import { publishAuthorisedXAfterScheduledPublish } from "../social/after-scheduled-publish-x";
+import { publishAuthorisedLinkedInAfterScheduledPublish } from "../social/after-scheduled-publish-linkedin";
 import {
   ArticleLifecycleStore,
   transitionArticleLifecycle,
 } from "./article-lifecycle";
 import type { TwitterPublishStore } from "../social/publish-twitter-post";
+import type { LinkedInPublishStore } from "../social/linkedin-publish";
 
 export type DueArticle = {
   id: string;
@@ -72,7 +74,8 @@ export type PublishDueArticlesStore = ArticleLifecycleStore & {
       }>
     >;
   };
-} & TwitterPublishStore;
+} & TwitterPublishStore &
+  LinkedInPublishStore;
 
 export type PublishDueArticlesResult = {
   ok: true;
@@ -88,18 +91,24 @@ export type PublishDueArticlesResult = {
   skippedItems: { id: string; category: string }[];
   failedItems: { id: string; category: string }[];
   xOutcomes?: { id: string; outcome: string; detail?: string }[];
+  linkedinOutcomes?: { id: string; outcome: string; detail?: string }[];
 };
 
 async function defaultAfterPublish(
   articleId: string,
   store: PublishDueArticlesStore,
-): Promise<{ xOutcome: string; detail?: string }> {
+): Promise<{
+  xOutcome: string;
+  detail?: string;
+  linkedinOutcome?: string;
+  linkedinDetail?: string;
+}> {
   const article = await store.article.findUnique({
     where: { id: articleId },
     include: { reviewNotes: true },
   });
   if (!article) {
-    return { xOutcome: "article_missing" };
+    return { xOutcome: "article_missing", linkedinOutcome: "article_missing" };
   }
 
   const { resolveAuthorisedChannels, channelAuthorised } = await import(
@@ -110,8 +119,11 @@ async function defaultAfterPublish(
     reviewNotes: article.reviewNotes,
   });
 
-  // When X is authorised, never invent/regenerate announcement copy.
-  if (!channelAuthorised(authorised.scope, "x")) {
+  // When X or LinkedIn is authorised, never invent/regenerate announcement copy.
+  if (
+    !channelAuthorised(authorised.scope, "x") &&
+    !channelAuthorised(authorised.scope, "linkedin")
+  ) {
     await autoGenerateSocialPosts(articleId);
   }
 
@@ -122,14 +134,18 @@ async function defaultAfterPublish(
     where: { articleId },
   });
 
-  // Preview / non-prod safety: never live-post to X from Preview.
+  // Preview / non-prod safety: never live-post social from Preview.
   if (process.env.VERCEL_ENV === "preview") {
     return {
       xOutcome: "skipped_preview",
       detail: "Preview environment does not publish live social posts.",
+      linkedinOutcome: "skipped_preview",
+      linkedinDetail: "Preview environment does not publish live social posts.",
     };
   }
 
+  let xOutcome = "skipped";
+  let detail: string | undefined;
   try {
     const { getTwitterClient } = await import("@/lib/twitter");
     const xResult = await publishAuthorisedXAfterScheduledPublish({
@@ -141,23 +157,50 @@ async function defaultAfterPublish(
     });
 
     if (xResult.ok && xResult.skipped) {
-      return { xOutcome: "skipped", detail: xResult.reason };
+      xOutcome = "skipped";
+      detail = xResult.reason;
+    } else if (xResult.ok) {
+      xOutcome = "published";
+      detail = xResult.externalId
+        ? `externalId=${xResult.externalId}`
+        : undefined;
+    } else {
+      xOutcome = xResult.code;
+      detail = xResult.reason;
     }
-    if (xResult.ok) {
-      return {
-        xOutcome: "published",
-        detail: xResult.externalId
-          ? `externalId=${xResult.externalId}`
-          : undefined,
-      };
-    }
-    return { xOutcome: xResult.code, detail: xResult.reason };
   } catch (error) {
-    return {
-      xOutcome: "x_side_effect_error",
-      detail: error instanceof Error ? error.message : "unknown",
-    };
+    xOutcome = "x_side_effect_error";
+    detail = error instanceof Error ? error.message : "unknown";
   }
+
+  let linkedinOutcome = "skipped";
+  let linkedinDetail: string | undefined;
+  try {
+    const liResult = await publishAuthorisedLinkedInAfterScheduledPublish({
+      article,
+      socialPosts,
+      store,
+      actor: "scheduler:publish-due-articles",
+    });
+
+    if (liResult.ok && liResult.skipped) {
+      linkedinOutcome = "skipped";
+      linkedinDetail = liResult.reason;
+    } else if (liResult.ok) {
+      linkedinOutcome = "published";
+      linkedinDetail = liResult.externalId
+        ? `externalId=${liResult.externalId}`
+        : undefined;
+    } else {
+      linkedinOutcome = liResult.code;
+      linkedinDetail = liResult.reason;
+    }
+  } catch (error) {
+    linkedinOutcome = "linkedin_side_effect_error";
+    linkedinDetail = error instanceof Error ? error.message : "unknown";
+  }
+
+  return { xOutcome, detail, linkedinOutcome, linkedinDetail };
 }
 
 export async function publishDueArticles(
@@ -169,7 +212,15 @@ export async function publishDueArticles(
     afterPublish?: (
       articleId: string,
       store: PublishDueArticlesStore,
-    ) => Promise<void | { xOutcome: string; detail?: string }>;
+    ) => Promise<
+      | void
+      | {
+          xOutcome: string;
+          detail?: string;
+          linkedinOutcome?: string;
+          linkedinDetail?: string;
+        }
+    >;
   } = {},
 ): Promise<PublishDueArticlesResult> {
   const now = input.now ?? new Date();
@@ -198,6 +249,8 @@ export async function publishDueArticles(
   const skippedItems: { id: string; category: string }[] = [];
   const failedItems: { id: string; category: string }[] = [];
   const xOutcomes: { id: string; outcome: string; detail?: string }[] = [];
+  const linkedinOutcomes: { id: string; outcome: string; detail?: string }[] =
+    [];
 
   for (const article of eligibleArticles) {
     let transition;
@@ -234,6 +287,13 @@ export async function publishDueArticles(
           outcome: side.xOutcome,
           detail: side.detail,
         });
+        if (typeof side.linkedinOutcome === "string") {
+          linkedinOutcomes.push({
+            id: article.id,
+            outcome: side.linkedinOutcome,
+            detail: side.linkedinDetail,
+          });
+        }
       }
     } catch {
       publishedIds.push(article.id);
@@ -256,6 +316,7 @@ export async function publishDueArticles(
     skippedItems,
     failedItems,
     xOutcomes,
+    linkedinOutcomes,
   };
 
   console.info(
@@ -273,6 +334,7 @@ export async function publishDueArticles(
       skippedItems,
       failedItems,
       xOutcomes,
+      linkedinOutcomes,
     }),
   );
 

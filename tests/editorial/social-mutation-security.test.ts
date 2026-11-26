@@ -457,8 +457,32 @@ describe("authorised social mutations still follow existing rules", () => {
     expect(harness.state.post?.content).toBe(ORIGINAL);
   });
 
+  it("keeps the LinkedIn distribution-scope gate before network for an editor", async () => {
+    harness.state.post = draftPost({ platform: "linkedin" });
+
+    const response = await callRoute(
+      "../../app/api/social/publish/linkedin/route",
+      "http://localhost/api/social/publish/linkedin",
+      { postId: "social-1" },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.code).toBe("channel_not_authorised");
+    expect(body.error).toContain("distribution scope");
+    expect(harness.socialFindUnique).toHaveBeenCalledTimes(1);
+    expect(harness.mockGetUser.mock.invocationCallOrder[0]).toBeLessThan(
+      harness.socialFindUnique.mock.invocationCallOrder[0],
+    );
+    expect(harness.socialUpdate).not.toHaveBeenCalled();
+    expect(harness.integrationFindUnique).not.toHaveBeenCalled();
+    expect(harness.eventCreate).not.toHaveBeenCalled();
+    expect(harness.fetchMock).not.toHaveBeenCalled();
+    expect(harness.state.post?.status).toBe("review-required");
+    expect(harness.state.post?.content).toBe(ORIGINAL);
+  });
+
   it.each([
-    ["linkedin", "linkedin", "../../app/api/social/publish/linkedin/route", "http://localhost/api/social/publish/linkedin"],
     ["threads", "threads", "../../app/api/social/publish/threads/route", "http://localhost/api/social/publish/threads"],
     ["facebook", "facebook", "../../app/api/social/publish/facebook/route", "http://localhost/api/social/publish/facebook"],
   ])(

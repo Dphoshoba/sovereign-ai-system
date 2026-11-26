@@ -11,7 +11,7 @@ import {
 } from "../../../../lib/publishing/distribution-scope"
 import { computeArticleAuditFingerprint } from "../../../../lib/research/article-audit-fingerprint"
 
-const ALLOWED: DistributionChannel[] = ["x", "newsletter"]
+const ALLOWED: DistributionChannel[] = ["x", "newsletter", "linkedin"]
 
 export async function POST(req: NextRequest) {
   const auth = await requirePublishingEditor()
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
           ok: false,
           code: "ordinary_work_protected",
           error:
-            "Ordinary Work distribution scope is fixed (X only). Do not add newsletter retrospectively.",
+            "Ordinary Work distribution scope is fixed (X only). Do not add newsletter or LinkedIn retrospectively.",
         },
         { status: 409 },
       )
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
           take: 1,
         },
         socialPosts: {
-          where: { platform: "twitter" },
+          where: { platform: { in: ["twitter", "linkedin"] } },
           orderBy: { updatedAt: "desc" },
         },
         newsletters: {
@@ -86,9 +86,17 @@ export async function POST(req: NextRequest) {
       sourceUrls,
     )
     const latestAudit = article.researchAudits[0] ?? null
+    const twitterPosts = article.socialPosts.filter((p) => p.platform === "twitter")
+    const linkedinPosts = article.socialPosts.filter(
+      (p) => p.platform === "linkedin",
+    )
     const xPost =
-      article.socialPosts.find((p) => p.status === "approved") ??
-      article.socialPosts[0] ??
+      twitterPosts.find((p) => p.status === "approved") ??
+      twitterPosts[0] ??
+      null
+    const linkedinPost =
+      linkedinPosts.find((p) => p.status === "approved") ??
+      linkedinPosts[0] ??
       null
     const newsletter = article.newsletters[0] ?? null
 
@@ -103,6 +111,13 @@ export async function POST(req: NextRequest) {
       },
       xAnnouncement: xPost
         ? { id: xPost.id, content: xPost.content, status: xPost.status }
+        : null,
+      linkedinAnnouncement: linkedinPost
+        ? {
+            id: linkedinPost.id,
+            content: linkedinPost.content,
+            status: linkedinPost.status,
+          }
         : null,
       newsletter: newsletter
         ? {

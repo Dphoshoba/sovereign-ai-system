@@ -1191,10 +1191,10 @@ describe('Social Platform — Provider Contracts', () => {
     expect(twitter.draftGeneration).toBe(true);
   });
 
-  it('social platform: LinkedIn is draft-only', () => {
+  it('social platform: LinkedIn is publish-capable after governed activation', () => {
     const linkedin = getPlatformCapabilities('linkedin');
-    expect(linkedin.publishStatus).toBe('draft_only');
-    expect(linkedin.textPublishing).toBe(false);
+    expect(linkedin.publishStatus).toBe('publish_capable');
+    expect(linkedin.textPublishing).toBe(true);
     expect(linkedin.draftGeneration).toBe(true);
   });
 
@@ -1218,11 +1218,11 @@ describe('Social Platform — Provider Contracts', () => {
     expect(serialized).not.toContain('TWITTER_ACCESS_SECRET');
   });
 
-  it('linkedin: capability registry reports draft-only before OAuth', () => {
+  it('linkedin: capability registry reports publish-capable text path', () => {
     const linkedin = getPlatformCapabilities('linkedin');
     expect(linkedin.draftGeneration).toBe(true);
-    expect(linkedin.textPublishing).toBe(false);
-    expect(linkedin.publishStatus).toBe('draft_only');
+    expect(linkedin.textPublishing).toBe(true);
+    expect(linkedin.publishStatus).toBe('publish_capable');
   });
 
   it('linkedin: registry does not expose secret values', () => {
