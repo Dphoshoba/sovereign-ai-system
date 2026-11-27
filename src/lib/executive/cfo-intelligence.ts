@@ -139,6 +139,7 @@ export async function buildCfoIntelligence(): Promise<CfoIntelligence> {
     buildRevenueIntelligence({ snapshot, memory }),
     buildClientIntelligence({ snapshot }),
     prisma.clientInvoice.findMany({
+      where: { isTest: false },
       orderBy: { createdAt: "desc" },
       take: QUERY_LIMIT,
       select: { status: true, amountAud: true, dueDate: true },

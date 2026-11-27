@@ -1,52 +1,54 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { publicationGuard } from "../../../../lib/publishing/publication-guard"
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { transitionArticleLifecycle } from "../../../../lib/publishing/article-lifecycle";
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth";
+import { autoGenerateSocialPosts } from "../../../../lib/social/auto-generate-social";
 
 export async function POST(req: NextRequest) {
   try {
-    const { articleId, approvedBy } = await req.json()
+    const auth = await requireEditorAuth();
+    if (!auth.ok) return auth.response;
+
+    const { articleId } = await req.json();
 
     if (!articleId) {
       return NextResponse.json(
         { ok: false, error: "Missing articleId" },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
 
-    const article = await prisma.article.findUnique({
-      where: { id: articleId },
-    })
+    const existingPostIds = (
+      await prisma.socialPost.findMany({
+        where: { articleId },
+        select: { id: true },
+      })
+    ).map((p) => p.id);
 
-    if (!article) {
-      return NextResponse.json(
-        { ok: false, error: "Article not found" },
-        { status: 404 }
-      )
-    }
-
-    const guard = publicationGuard(article.status)
-
-    if (!guard.allowed) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: guard.reason,
-          guard,
-        },
-        { status: 403 }
-      )
-    }
-
-    const publishedArticle = await prisma.article.update({
-      where: { id: articleId },
-      data: {
-        status: "published",
-        approvedAt: article.approvedAt || new Date(),
-        approvedBy: approvedBy || article.approvedBy || "system",
-        publishedAt: new Date(),
-        scheduledFor: null,
+    const result = await transitionArticleLifecycle(
+      {
+        articleId,
+        transition: "publish",
+        actor: auth.actor,
       },
-    })
+      { prisma },
+    );
+    if (!result.ok) {
+      return NextResponse.json(result, {
+        status: result.code === "not_found" ? 404 : 409,
+      });
+    }
+
+    let socialResult = null;
+    try {
+      socialResult = await autoGenerateSocialPosts(articleId);
+    } catch {
+      socialResult = {
+        ok: false,
+        reason: "Social draft generation failed",
+        posts: [],
+      };
+    }
 
     await prisma.newsletter.updateMany({
       where: {
@@ -56,36 +58,43 @@ export async function POST(req: NextRequest) {
       data: {
         status: "approved",
         approvedAt: new Date(),
-        approvedBy: approvedBy || article.approvedBy || "system",
+        approvedBy: auth.actor || result.article.approvedBy || "system",
       },
-    })
+    });
 
-    await prisma.socialPost.updateMany({
-      where: {
-        articleId,
-        status: "review-required",
-      },
-      data: {
-        status: "approved",
-      },
-    })
+    if (existingPostIds.length > 0) {
+      await prisma.socialPost.updateMany({
+        where: {
+          id: { in: existingPostIds },
+          status: "review-required",
+        },
+        data: {
+          status: "approved",
+        },
+      });
+    }
 
     return NextResponse.json({
       ok: true,
-      article: publishedArticle,
+      article: result.article,
       message:
-        "Article published, newsletter approved, and social posts approved.",
-    })
+        "Article published, newsletter approved, and social posts processed.",
+      socialDrafts: socialResult
+        ? {
+            generated: socialResult.ok,
+            reason: socialResult.reason,
+            count: socialResult.posts.length,
+          }
+        : undefined,
+    });
   } catch (error) {
     return NextResponse.json(
       {
         ok: false,
         error:
-          error instanceof Error
-            ? error.message
-            : "Package publish failed",
+          error instanceof Error ? error.message : "Package publish failed",
       },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }

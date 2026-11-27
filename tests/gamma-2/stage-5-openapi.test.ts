@@ -1,0 +1,163 @@
+import { describe, expect, it, vi } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
+import { GET } from "../../app/api/gamma/stage-5/openapi/route";
+import { PRODUCTION_APP_URL } from "../../src/lib/site-config";
+import { buildGammaStage5OpenApiDocument } from "../../src/lib/gamma-2/stage-5-openapi";
+vi.mock("@/lib/supabase/server", () => ({
+  createSupabaseServerClient: async () => ({
+    auth: {
+      getUser: async () => ({
+        data: {
+          user: {
+            id: "editor-1",
+            email: "editor@example.com",
+            app_metadata: { role: "editor" },
+          },
+        },
+        error: null,
+      }),
+    },
+  }),
+}))
+
+
+describe("Gamma 2 Stage 5 OpenAPI document", () => {
+  it("builds an OpenAPI document from the Stage 5 API manifest", () => {
+    const openapi = buildGammaStage5OpenApiDocument();
+
+    expect(openapi.openapi).toBe("3.1.0");
+    expect(openapi.info.title).toBe("Gamma 2 Stage 5 API");
+    expect(openapi.servers).toEqual([{ url: PRODUCTION_APP_URL }]);
+    expect(Object.keys(openapi.paths)).toHaveLength(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
+    expect(openapi.paths["/api/gamma/stage-5/openapi"].get.operationId).toBe(
+      "getStage5Openapi"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/sdk"].get.operationId).toBe("getStage5Sdk");
+    expect(openapi.paths["/api/gamma/stage-5/contract-digest"].get.operationId).toBe(
+      "getStage5ContractDigest"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/release-attestation"].get.operationId).toBe(
+      "getStage5ReleaseAttestation"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/rollback-plan"].get.operationId).toBe(
+      "getStage5RollbackPlan"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/operator-handoff"].get.operationId).toBe(
+      "getStage5OperatorHandoff"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/audit-ledger"].get.operationId).toBe(
+      "getStage5AuditLedger"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/deployment-receipt"].get.operationId).toBe(
+      "getStage5DeploymentReceipt"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/promotion-journal"].get.operationId).toBe(
+      "getStage5PromotionJournal"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/operator-signoff"].get.operationId).toBe(
+      "getStage5OperatorSignoff"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/evidence-index"].get.operationId).toBe(
+      "getStage5EvidenceIndex"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/release-bundle"].get.operationId).toBe(
+      "getStage5ReleaseBundle"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/release-archive-manifest"].get.operationId).toBe(
+      "getStage5ReleaseArchiveManifest"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/release-retention-policy"].get.operationId).toBe(
+      "getStage5ReleaseRetentionPolicy"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/release-compliance-matrix"].get.operationId).toBe(
+      "getStage5ReleaseComplianceMatrix"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/release-exception-register"].get.operationId).toBe(
+      "getStage5ReleaseExceptionRegister"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/release-governance-map"].get.operationId).toBe(
+      "getStage5ReleaseGovernanceMap"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/release-decision-record"].get.operationId).toBe(
+      "getStage5ReleaseDecisionRecord"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/release-approval-packet"].get.operationId).toBe(
+      "getStage5ReleaseApprovalPacket"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/release-promotion-plan"].get.operationId).toBe(
+      "getStage5ReleasePromotionPlan"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/release-cutover-checklist"].get.operationId).toBe(
+      "getStage5ReleaseCutoverChecklist"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/release-traffic-shift-plan"].get.operationId).toBe(
+      "getStage5ReleaseTrafficShiftPlan"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/release-monitoring-plan"].get.operationId).toBe(
+      "getStage5ReleaseMonitoringPlan"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/release-post-promotion-review"].get.operationId).toBe(
+      "getStage5ReleasePostPromotionReview"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/release-operations-index"].get.operationId).toBe(
+      "getStage5ReleaseOperationsIndex"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/release-closeout-packet"].get.operationId).toBe(
+      "getStage5ReleaseCloseoutPacket"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/release-closure-ledger"].get.operationId).toBe(
+      "getStage5ReleaseClosureLedger"
+    );
+    expect(
+      openapi.paths["/api/gamma/stage-5/release-completion-certificate"].get.operationId
+    ).toBe("getStage5ReleaseCompletionCertificate");
+    expect(openapi.paths["/api/gamma/stage-5/release-finalization-index"].get.operationId).toBe(
+      "getStage5ReleaseFinalizationIndex"
+    );
+    expect(openapi.paths["/api/gamma/stage-5/release-operator-registry"].get.operationId).toBe(
+      "getStage5ReleaseOperatorRegistry"
+    );
+    expect(
+      openapi.paths["/api/gamma/stage-5/release-operator-action-queue"].get.operationId
+    ).toBe("getStage5ReleaseOperatorActionQueue");
+    expect(
+      openapi.paths["/api/gamma/stage-5/release-operator-approval-packet"].get.operationId
+    ).toBe("getStage5ReleaseOperatorApprovalPacket");
+    expect(
+      openapi.paths["/api/gamma/stage-5/release-operator-approval-audit-trail"].get
+        .operationId
+    ).toBe("getStage5ReleaseOperatorApprovalAuditTrail");
+    expect(
+      openapi.paths["/api/gamma/stage-5/release-operator-approval-receipt"].get.operationId
+    ).toBe("getStage5ReleaseOperatorApprovalReceipt");
+    expect(
+      openapi.paths["/api/gamma/stage-5/release-production-authorization-ledger"].get
+        .operationId
+    ).toBe("getStage5ReleaseProductionAuthorizationLedger");
+    expect(
+      openapi.paths["/api/gamma/stage-5/release-production-cutover-packet"].get.operationId
+    ).toBe("getStage5ReleaseProductionCutoverPacket");
+  });
+
+  it("keeps operation metadata tied to source contracts", () => {
+    const openapi = buildGammaStage5OpenApiDocument();
+
+    expect(
+      openapi.paths["/api/gamma/stage-5/api-manifest"].get.responses["200"].description
+    ).toBe("src/lib/gamma-2/stage-5-api-manifest.ts response");
+    expect(openapi.paths["/api/gamma/stage-5/health"].get.tags).toContain("monitor");
+  });
+
+  it("is deterministic for repeated calls", () => {
+    expect(buildGammaStage5OpenApiDocument()).toEqual(buildGammaStage5OpenApiDocument());
+  });
+
+  it("serves the document through the Stage 5 OpenAPI route", async () => {
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.openapi).toBe("3.1.0");
+    expect(body["x-gamma-rule"]).toBe("openapi-derived-from-stage-5-api-manifest");
+  });
+});

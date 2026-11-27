@@ -6,8 +6,12 @@ import {
   summarizeDraftContracts,
 } from "../../../../lib/content/draft-generation-contracts"
 import { evaluateDraftReadiness } from "../../../../lib/content/draft-readiness"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   const orchestration = orchestrateContentCampaign()
   const contractSet = buildDraftGenerationContracts({
     campaign: orchestration.campaign,

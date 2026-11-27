@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import {
+  payloadWithinLimit,
+  publicCaptureAllowed,
+} from "../../../lib/security/public-capture"
 
 async function parseNewsletterPayload(req: Request) {
   const contentType = req.headers.get("content-type") || ""
@@ -23,6 +27,13 @@ async function parseNewsletterPayload(req: Request) {
 }
 
 export async function POST(req: Request) {
+  if (!payloadWithinLimit(req) || !(await publicCaptureAllowed("newsletter", req))) {
+    return NextResponse.json(
+      { success: false, message: "Too many requests" },
+      { status: 429 }
+    )
+  }
+
   try {
     const { name, email, wantsRedirect } = await parseNewsletterPayload(req)
 
@@ -40,7 +51,7 @@ export async function POST(req: Request) {
       )
     }
 
-    const subscriber = await prisma.newsletterSubscriber.upsert({
+    await prisma.newsletterSubscriber.upsert({
       where: {
         email: email.toLowerCase().trim(),
       },
@@ -64,7 +75,6 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       message: "Subscribed successfully",
-      subscriber,
     })
   } catch (error) {
     console.error("Newsletter signup failed:", error)

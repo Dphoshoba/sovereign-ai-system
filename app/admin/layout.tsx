@@ -2,6 +2,7 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { canPublishAsEditor } from "../../lib/publishing/editor-access"
 import GlobalPulseBar from "@/components/admin/GlobalPulseBar"
 
 
@@ -30,6 +31,10 @@ export default async function AdminLayout({
     redirect("/login")
   }
 
+  if (!canPublishAsEditor(user)) {
+    redirect("/")
+  }
+
   return (
     <div className="admin-shell" style={{ fontFamily: "Arial, sans-serif" }}>
       <header style={headerStyle}>
@@ -41,6 +46,8 @@ export default async function AdminLayout({
         <nav style={navStyle}>
           <Link href="/admin" style={linkStyle}>Dashboard</Link>
           <Link href="/admin/articles" style={linkStyle}>Articles</Link>
+          <Link href="/admin/director-board" style={linkStyle}>Decision Board</Link>
+          <Link href="/admin/director-checklist" style={linkStyle}>Checklist</Link>
           <Link href="/admin/ai-generator" style={linkStyle}>AI Generator</Link>
           <Link href="/admin/content-strategy" style={linkStyle}>Strategy</Link>
           <Link href="/admin/calendar" style={linkStyle}>Calendar</Link>

@@ -1,3 +1,20 @@
+import { publicBodyLeakBlockReason } from "../editorial/public-body-safeguard"
+import {
+  PUBLISH_READY_CONSENSUS_SCORE,
+  PUBLISH_READY_RECOMMENDATION,
+  PUBLISH_READY_SOURCE_QUALITY_SCORE,
+} from "../research/consensus-engine"
+import { qualifyingPublicationSourceIdentity } from "../research/claim-source-attribution"
+import {
+  evaluateBiblicalPastoralPublicationEligibility,
+  type BiblicalPastoralPublicationContext,
+} from "../research/biblical-pastoral-publication"
+import {
+  evaluateEvReg11PublicationEligibility,
+  isEvReg110Audit,
+} from "../research/primary-source-publication"
+import { versionedPublicationMetadataProblem } from "../research/versioned-publication"
+
 export type ArticlePublishStatus =
   | "draft"
   | "review-required"
@@ -12,7 +29,170 @@ export type PublicationGuardResult = {
   reason: string
 }
 
-export function publicationGuard(status: string): PublicationGuardResult {
+export type ResearchPublishabilityAudit = {
+  id?: unknown
+  consensusScore?: unknown
+  sourceQualityScore?: unknown
+  publicationRecommendation?: unknown
+  unverifiedCount?: unknown
+  facts?: unknown
+  specificationVersion?: unknown
+  disputes?: unknown
+  averageVerificationScore?: unknown
+  engineRevision?: unknown
+}
+
+function isFiniteScore(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value)
+}
+
+function distinctSourceIdentityProblem(
+  claim: string,
+  sources: unknown[],
+): "missing" | "insufficient" | null {
+  const identities = new Set<string>()
+  for (const source of sources) {
+    if (!source || typeof source !== "object") return "missing"
+    const url = (source as Record<string, unknown>).sourceUrl
+    if (typeof url !== "string" || url.trim().length === 0) return "missing"
+    const identity = qualifyingPublicationSourceIdentity(claim, url)
+    if (!identity) return "missing"
+    identities.add(identity)
+  }
+  return identities.size >= 2 ? null : "insufficient"
+}
+
+function storedVerificationProblem(
+  audit: ResearchPublishabilityAudit,
+): "missing" | "insufficient" | null {
+  if (typeof audit.unverifiedCount !== "number" || !Array.isArray(audit.facts)) {
+    return "missing"
+  }
+  if (audit.unverifiedCount > 0 || audit.facts.length === 0) {
+    return audit.facts.length === 0 ? "missing" : "insufficient"
+  }
+
+  for (const fact of audit.facts) {
+    if (!fact || typeof fact !== "object") return "missing"
+    const record = fact as Record<string, unknown>
+    const status = record.verificationStatus
+    const method = record.verificationMethod
+    const count = record.verificationCount
+    const sources = record.supportingSources
+    if (status === "unverified" || method === "single-source-supported") {
+      return "insufficient"
+    }
+    if (typeof count === "number" && count < 2) return "insufficient"
+    if (status == null || method == null || count == null || sources == null) {
+      return "missing"
+    }
+    if (
+      (status !== "verified" && status !== "partially verified") ||
+      (method !== "exact" && method !== "semantic") ||
+      typeof count !== "number" ||
+      count < 2 ||
+      !Array.isArray(sources)
+    ) {
+      return "missing"
+    }
+    const identityProblem = distinctSourceIdentityProblem(
+      typeof record.claim === "string" ? record.claim : "",
+      sources,
+    )
+    if (identityProblem) return identityProblem
+  }
+
+  return audit.unverifiedCount === 0 ? null : "insufficient"
+}
+
+export function researchPublicationBlockReason(
+  audit: ResearchPublishabilityAudit | null | undefined,
+  pastoralContext?: BiblicalPastoralPublicationContext,
+): string | null {
+  if (!audit) {
+    return "A current publish-ready research audit is required before scheduling or publication."
+  }
+
+  const versionedProblem = versionedPublicationMetadataProblem(audit)
+  if (versionedProblem) return versionedProblem
+
+  // EV-REG-SPEC-1.1.0: pathway eligibility with Director §3.4 redline.
+  if (isEvReg110Audit(audit.specificationVersion)) {
+    // BA-001 Category B: documented L2 pastoral article approval may satisfy
+    // biblical publication eligibility without inventing publish-ready scores.
+    if (pastoralContext) {
+      const pastoral = evaluateBiblicalPastoralPublicationEligibility({
+        audit,
+        context: pastoralContext,
+      })
+      if (pastoral.ready) return null
+    }
+
+    if (audit.publicationRecommendation !== PUBLISH_READY_RECOMMENDATION) {
+      return "Current research audit is not publish-ready."
+    }
+    const eligibility = evaluateEvReg11PublicationEligibility({
+      auditId: typeof audit.id === "string" ? audit.id : null,
+      specificationVersion: audit.specificationVersion,
+      consensusScore: audit.consensusScore,
+      sourceQualityScore: audit.sourceQualityScore,
+      averageVerificationScore: audit.averageVerificationScore,
+      publicationRecommendation: audit.publicationRecommendation,
+      facts: audit.facts,
+    })
+    return eligibility.ready ? null : eligibility.reason
+  }
+
+  const consensusReady =
+    isFiniteScore(audit.consensusScore) &&
+    audit.consensusScore >= PUBLISH_READY_CONSENSUS_SCORE
+  const qualityReady =
+    isFiniteScore(audit.sourceQualityScore) &&
+    audit.sourceQualityScore >= PUBLISH_READY_SOURCE_QUALITY_SCORE
+  const recommendationReady =
+    audit.publicationRecommendation === PUBLISH_READY_RECOMMENDATION
+
+  if (!(consensusReady && qualityReady && recommendationReady)) {
+    return "Current research audit is not publish-ready."
+  }
+
+  const verificationProblem = storedVerificationProblem(audit)
+  if (verificationProblem === "insufficient") {
+    return "Unverified or single-source claims remain. Human review is required before publication."
+  }
+  if (verificationProblem === "missing") {
+    return "Independent verification metadata is missing. Renew the research audit or return the article to review before scheduling or publication."
+  }
+
+  return null
+}
+
+/**
+ * Blocks schedule/publish (and approve) when the article body still contains
+ * internal editorial / audit commentary. Existing published rows are not rewritten.
+ */
+export function publicBodyPublicationBlockReason(
+  content: string | null | undefined,
+): string | null {
+  return publicBodyLeakBlockReason(content)
+}
+
+export function publicationGuard(
+  status: string,
+  auditState: { hasCurrentAudit: boolean },
+): PublicationGuardResult {
+  if (
+    (status === "approved" || status === "scheduled") &&
+    !auditState.hasCurrentAudit
+  ) {
+    return {
+      allowed: false,
+      status,
+      reason:
+        "Article requires a current research audit matching this content revision before publishing.",
+    }
+  }
+
   if (status === "approved") {
     return {
       allowed: true,

@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server"
 import { computeOverallHealthScore } from "@/lib/executive/platform-snapshot"
 import { getExecutivePlatformSnapshot } from "@/lib/executive/platform-snapshot"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const snapshot = await getExecutivePlatformSnapshot()
 

@@ -44,11 +44,6 @@ export default function ConsultationForm() {
       return
     }
 
-    if (result.alreadyExists) {
-      setMessage("You are already in our consultation list. We will follow up.")
-      return
-    }
-
     setMessage("Success. Your consultation request has been received.")
 
     setForm({

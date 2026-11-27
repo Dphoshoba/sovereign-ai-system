@@ -2,6 +2,9 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getOpenAI } from "@/lib/ai/openai"
 import { DAVID_WRITING_DNA } from "@/lib/ai/writing-dna"
+import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
+
+export const dynamic = "force-dynamic"
 
 async function seedCadenceGoals() {
   const existing = await prisma.publishingCadenceGoal.findMany()
@@ -43,6 +46,9 @@ async function seedCadenceGoals() {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   await seedCadenceGoals()
 
   const [goals, items, assets, runs, events, subscribers] = await Promise.all([
@@ -84,6 +90,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     await seedCadenceGoals()
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getOpenAI } from "@/lib/ai/openai"
 import { DAVID_WRITING_DNA } from "@/lib/ai/writing-dna"
+import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
 
 const starterSources = [
   {
@@ -37,6 +38,9 @@ const starterSources = [
 ]
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     let sources = await prisma.externalSignalSource.findMany({
       orderBy: { createdAt: "asc" },
@@ -80,6 +84,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json().catch(() => ({}))
     const scanType = body.scanType || "creator-ai-market"

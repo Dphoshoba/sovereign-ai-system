@@ -1,0 +1,26 @@
+openapi: 3.1.0
+info:
+  title: Google Calendar Connector API
+  version: 1.0.0
+  description: Gamma Platform connector for Google Calendar
+servers:
+  - url: http://localhost:3000
+    description: Development
+paths:
+  /api/connectors/calendar/status:
+    get:
+      summary: Get connector status
+      responses:
+        '200':
+          description: Connector status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  connector:
+                    type: string
+                  service:
+                    type: string

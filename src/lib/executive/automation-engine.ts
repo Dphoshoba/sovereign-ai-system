@@ -181,6 +181,7 @@ export async function generateExecutiveAutomationActions(options?: {
       },
     }),
     prisma.creatorLead.findMany({
+      where: { isTest: false },
       orderBy: { createdAt: "desc" },
       take: QUERY_LIMIT,
       select: {
@@ -192,6 +193,7 @@ export async function generateExecutiveAutomationActions(options?: {
       },
     }),
     prisma.creatorProposal.findMany({
+      where: { isTest: false },
       orderBy: { createdAt: "desc" },
       take: QUERY_LIMIT,
       select: { leadId: true, status: true, title: true },

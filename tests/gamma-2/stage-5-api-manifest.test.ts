@@ -1,0 +1,277 @@
+import { describe, expect, it, vi } from "vitest";
+import { GAMMA_STAGE_5_SMOKE_SUMMARY, GAMMA_STAGE_5_SURFACE_COUNTS } from "../../src/lib/gamma-2/stage-5-surface-registry";
+import { GET } from "../../app/api/gamma/stage-5/api-manifest/route";
+import { buildGammaStage5ApiManifest } from "../../src/lib/gamma-2/stage-5-api-manifest";
+vi.mock("@/lib/supabase/server", () => ({
+  createSupabaseServerClient: async () => ({
+    auth: {
+      getUser: async () => ({
+        data: {
+          user: {
+            id: "editor-1",
+            email: "editor@example.com",
+            app_metadata: { role: "editor" },
+          },
+        },
+        error: null,
+      }),
+    },
+  }),
+}))
+
+
+describe("Gamma 2 Stage 5 API manifest", () => {
+  it("builds a discovery manifest for Stage 5 API clients", () => {
+    const manifest = buildGammaStage5ApiManifest();
+
+    expect(manifest.id).toBe("gamma_2_stage_5_api_manifest");
+    expect(manifest.status).toBe("ready-for-client-adapters");
+    expect(manifest.endpointCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
+    expect(manifest.endpoints.every((endpoint) => endpoint.method === "GET")).toBe(true);
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/api-manifest",
+      method: "GET",
+      audience: "release-client",
+      sourceContract: "src/lib/gamma-2/stage-5-api-manifest.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/openapi",
+      method: "GET",
+      audience: "release-client",
+      sourceContract: "src/lib/gamma-2/stage-5-openapi.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/sdk",
+      method: "GET",
+      audience: "release-client",
+      sourceContract: "src/lib/gamma-2/stage-5-sdk.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/contract-digest",
+      method: "GET",
+      audience: "release-client",
+      sourceContract: "src/lib/gamma-2/stage-5-contract-digest.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-attestation",
+      method: "GET",
+      audience: "release-client",
+      sourceContract: "src/lib/gamma-2/stage-5-release-attestation.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/rollback-plan",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-rollback-plan.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/operator-handoff",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-operator-handoff.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/audit-ledger",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-audit-ledger.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/deployment-receipt",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-deployment-receipt.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/promotion-journal",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-promotion-journal.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/operator-signoff",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-operator-signoff.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/evidence-index",
+      method: "GET",
+      audience: "release-client",
+      sourceContract: "src/lib/gamma-2/stage-5-evidence-index.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-bundle",
+      method: "GET",
+      audience: "release-client",
+      sourceContract: "src/lib/gamma-2/stage-5-release-bundle.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-archive-manifest",
+      method: "GET",
+      audience: "release-client",
+      sourceContract: "src/lib/gamma-2/stage-5-release-archive-manifest.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-retention-policy",
+      method: "GET",
+      audience: "release-client",
+      sourceContract: "src/lib/gamma-2/stage-5-release-retention-policy.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-compliance-matrix",
+      method: "GET",
+      audience: "release-client",
+      sourceContract: "src/lib/gamma-2/stage-5-release-compliance-matrix.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-exception-register",
+      method: "GET",
+      audience: "release-client",
+      sourceContract: "src/lib/gamma-2/stage-5-release-exception-register.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-governance-map",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-release-governance-map.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-decision-record",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-release-decision-record.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-approval-packet",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-release-approval-packet.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-promotion-plan",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-release-promotion-plan.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-cutover-checklist",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-release-cutover-checklist.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-traffic-shift-plan",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-release-traffic-shift-plan.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-monitoring-plan",
+      method: "GET",
+      audience: "monitor",
+      sourceContract: "src/lib/gamma-2/stage-5-release-monitoring-plan.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-post-promotion-review",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-release-post-promotion-review.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-operations-index",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-release-operations-index.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-closeout-packet",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-release-closeout-packet.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-closure-ledger",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-release-closure-ledger.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-completion-certificate",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-release-completion-certificate.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-finalization-index",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-release-finalization-index.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-operator-registry",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-release-operator-registry.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-operator-action-queue",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-release-operator-action-queue.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-operator-approval-packet",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-release-operator-approval-packet.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-operator-approval-audit-trail",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-release-operator-approval-audit-trail.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-operator-approval-receipt",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-release-operator-approval-receipt.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-production-authorization-ledger",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-release-production-authorization-ledger.ts",
+    });
+    expect(manifest.endpoints).toContainEqual({
+      path: "/api/gamma/stage-5/release-production-cutover-packet",
+      method: "GET",
+      audience: "operator",
+      sourceContract: "src/lib/gamma-2/stage-5-release-production-cutover-packet.ts",
+    });
+  });
+
+  it("assigns monitoring to the compact health endpoint", () => {
+    const manifest = buildGammaStage5ApiManifest();
+
+    expect(manifest.endpoints.find((endpoint) => endpoint.path.endsWith("/health"))).toMatchObject({
+      audience: "monitor",
+      sourceContract: "src/lib/gamma-2/stage-5-health.ts",
+    });
+  });
+
+  it("is deterministic for repeated calls", () => {
+    expect(buildGammaStage5ApiManifest()).toEqual(buildGammaStage5ApiManifest());
+  });
+
+  it("serves the manifest through the Stage 5 API manifest route", async () => {
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.id).toBe("gamma_2_stage_5_api_manifest");
+    expect(body.endpointCount).toBe(GAMMA_STAGE_5_SURFACE_COUNTS.totalEndpoints);
+    expect(body.adapterRule).toBe("single-discovery-manifest-for-stage-5-api-clients");
+  });
+});

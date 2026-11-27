@@ -1,6 +1,7 @@
 import { getOpenAI } from "@/lib/ai/openai"
 import { NextResponse } from "next/server"
 import { DAVID_WRITING_DNA } from "@/lib/ai/writing-dna"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 async function runAgent(name: string, role: string, input: string) {
   const response = await getOpenAI().responses.create({
@@ -16,6 +17,9 @@ async function runAgent(name: string, role: string, input: string) {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
     const topic = body.topic || "AI automation for creators"

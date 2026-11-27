@@ -6,6 +6,7 @@ import {
   loadPlanningCycleInputs,
 } from "@/lib/executive/planning-cycle"
 import { EXECUTIVE_LIST_LIMITS } from "@/lib/executive/list-limits"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 function serializeCycle(cycle: {
   id: string
@@ -40,6 +41,9 @@ function serializeCycle(cycle: {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const cycles = await prisma.planningCycle.findMany({
       orderBy: { createdAt: "desc" },
@@ -65,6 +69,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     let cycleType = "weekly"
 
@@ -112,6 +119,9 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
     const id = typeof body?.id === "string" ? body.id.trim() : ""

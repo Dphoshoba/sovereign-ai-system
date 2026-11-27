@@ -9,6 +9,7 @@ import {
 } from "@/lib/executive/boardroom"
 import { saveBoardroomKeyDecisions } from "@/lib/executive/decision-memory"
 import { EXECUTIVE_LIST_LIMITS } from "@/lib/executive/list-limits"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 type StoredBoardroomDecisions = {
   agents: BoardroomAgentReport[]
@@ -88,6 +89,9 @@ function toStoredDecisions(session: BoardroomSession): StoredBoardroomDecisions 
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const sessions = await prisma.executiveBoardroomSession.findMany({
       orderBy: { createdAt: "desc" },
@@ -113,6 +117,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     let sessionType = "weekly"
 

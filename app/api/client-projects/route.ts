@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
 
 const PROJECT_STATUSES = ["active", "completed", "archived"] as const
 
@@ -18,6 +19,9 @@ async function attachClient(project: {
 }
 
 export async function GET(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const { searchParams } = new URL(request.url)
     const includeArchived = searchParams.get("includeArchived") === "true"
@@ -74,6 +78,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
 
@@ -158,6 +165,9 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await request.json()
     const id = body.id?.trim()

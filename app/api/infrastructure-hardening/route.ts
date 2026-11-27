@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
+import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
 
 type HealthCheckResult = {
   ok: boolean
@@ -51,6 +52,9 @@ async function runHealthCheck(
 }
 
 export async function GET(_request: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const checks = await Promise.all([
       runHealthCheck(

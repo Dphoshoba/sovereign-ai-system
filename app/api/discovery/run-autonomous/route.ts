@@ -3,8 +3,22 @@ import { prisma } from "@/lib/prisma"
 import { topicDiscovery } from "../../../../lib/discovery/topic-discovery"
 import { topicScorer } from "../../../../lib/discovery/topic-scorer"
 import { topicOpportunityGenerator } from "../../../../lib/discovery/topic-opportunity-generator"
+import {
+  authorizeEditorOrCron,
+  privilegedSameOriginHeaders,
+} from "../../../../lib/publishing/require-editor-auth"
+import {
+  trustedInternalUrl,
+  trustedOriginUnavailableResponse,
+} from "../../../../lib/publishing/trusted-internal-origin"
 
 export async function POST(request: Request) {
+  const auth = await authorizeEditorOrCron(request)
+  if (!auth.ok) return auth.response
+
+  const generateUrl = trustedInternalUrl("/api/ai/generate-article")
+  if (!generateUrl) return trustedOriginUnavailableResponse()
+
   try {
     const body = await request.json().catch(() => ({}))
 
@@ -60,13 +74,9 @@ export async function POST(request: Request) {
         data: { status: "researching" },
       })
 
-      const response = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-        }/api/ai/generate-article`,
-        {
+      const response = await fetch(generateUrl, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: privilegedSameOriginHeaders(request),
           body: JSON.stringify({
             topic: topic.title,
             category: topic.category || "ai-tools",
@@ -144,6 +154,6 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
-  return POST(new Request("http://localhost"))
+export async function GET(request: Request) {
+  return POST(request)
 }

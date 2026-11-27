@@ -1,0 +1,62 @@
+{
+  "kind": "calendar#events",
+  "etag": "\"etag-list-response\"",
+  "summary": "test@example.com",
+  "description": null,
+  "updated": "2026-07-18T12:00:00.000Z",
+  "timeZone": "America/New_York",
+  "accessRole": "reader",
+  "defaultReminders": [
+    { "method": "popup", "minutes": 30 }
+  ],
+  "nextPageToken": null,
+  "nextSyncToken": "sync-token-abc123",
+  "items": [
+    {
+      "kind": "calendar#event",
+      "etag": "\"event-etag-1\"",
+      "id": "event-001",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=event-001",
+      "created": "2026-07-17T10:00:00.000Z",
+      "updated": "2026-07-17T10:30:00.000Z",
+      "summary": "Team Standup",
+      "description": "Daily team standup meeting",
+      "location": null,
+      "colorId": "1",
+      "creator": { "id": null, "email": "creator@example.com", "displayName": "Creator", "self": true },
+      "organizer": { "id": null, "email": "organizer@example.com", "displayName": "Organizer", "self": true },
+      "start": { "dateTime": "2026-07-20T09:00:00", "date": null, "timeZone": "America/New_York" },
+      "end": { "dateTime": "2026-07-20T09:30:00", "date": null, "timeZone": "America/New_York" },
+      "recurringEventId": null,
+      "originalStartTime": null,
+      "iCalUID": "event-001@google.com",
+      "sequence": 0,
+      "reminders": { "useDefault": true, "overrides": null },
+      "eventType": "default"
+    },
+    {
+      "kind": "calendar#event",
+      "etag": "\"event-etag-2\"",
+      "id": "event-002",
+      "status": "confirmed",
+      "htmlLink": "https://www.google.com/calendar/event?eid=event-002",
+      "created": "2026-07-17T11:00:00.000Z",
+      "updated": "2026-07-17T11:30:00.000Z",
+      "summary": "Sprint Planning",
+      "description": "Biweekly sprint planning session",
+      "location": "Room 301",
+      "colorId": "3",
+      "creator": { "id": null, "email": "creator@example.com", "displayName": "Creator", "self": true },
+      "organizer": { "id": null, "email": "organizer@example.com", "displayName": "Organizer", "self": true },
+      "start": { "dateTime": "2026-07-21T14:00:00", "date": null, "timeZone": "America/New_York" },
+      "end": { "dateTime": "2026-07-21T15:30:00", "date": null, "timeZone": "America/New_York" },
+      "recurringEventId": null,
+      "originalStartTime": null,
+      "iCalUID": "event-002@google.com",
+      "sequence": 0,
+      "reminders": { "useDefault": true, "overrides": null },
+      "eventType": "default"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -11,9 +12,15 @@ const DISABLED_RESPONSE = {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   return NextResponse.json(DISABLED_RESPONSE, { status: 501 })
 }
 
 export async function POST() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   return NextResponse.json(DISABLED_RESPONSE, { status: 501 })
 }

@@ -1,8 +1,31 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireEditorAuth } from "../../../lib/publishing/require-editor-auth"
+
+const GOVERNED_INITIAL_STATUSES = new Set([
+  "approved",
+  "scheduled",
+  "published",
+  "rejected",
+  "archived",
+])
+const ALLOWED_INITIAL_STATUSES = new Set([
+  "draft",
+  "review",
+  "review-required",
+])
+const LIFECYCLE_METADATA_FIELDS = [
+  "approvedAt",
+  "approvedBy",
+  "scheduledFor",
+  "publishedAt",
+] as const
 
 export async function GET() {
   try {
+    const auth = await requireEditorAuth()
+    if (!auth.ok) return auth.response
+
     const articles = await prisma.article.findMany({
       orderBy: { createdAt: "desc" },
     })
@@ -24,9 +47,49 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const auth = await requireEditorAuth()
+    if (!auth.ok) return auth.response
+
     const body = await request.json()
 
     const status = body.status || "draft"
+    if (GOVERNED_INITIAL_STATUSES.has(status)) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "GOVERNED_INITIAL_STATUS_NOT_ALLOWED",
+          error: "Use the governed lifecycle routes after article creation.",
+          articleUnchanged: true,
+        },
+        { status: 409 }
+      )
+    }
+    if (!ALLOWED_INITIAL_STATUSES.has(status)) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "UNSUPPORTED_ARTICLE_STATUS",
+          error: "Unsupported initial article status.",
+          articleUnchanged: true,
+        },
+        { status: 422 }
+      )
+    }
+    if (
+      LIFECYCLE_METADATA_FIELDS.some((field) =>
+        Object.prototype.hasOwnProperty.call(body, field)
+      )
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: "LIFECYCLE_METADATA_NOT_ALLOWED",
+          error: "Lifecycle timestamps and approval metadata are server-managed.",
+          articleUnchanged: true,
+        },
+        { status: 422 }
+      )
+    }
 
     const article = await prisma.article.create({
       data: {
@@ -43,8 +106,10 @@ export async function POST(request: Request) {
         seoDescription: body.seoDescription || null,
         seoKeywords: body.seoKeywords || null,
 
-        publishedAt: status === "published" ? new Date() : null,
-        scheduledFor: body.scheduledFor ? new Date(body.scheduledFor) : null,
+        approvedAt: null,
+        approvedBy: null,
+        scheduledFor: null,
+        publishedAt: null,
       },
     })
 

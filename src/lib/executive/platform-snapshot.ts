@@ -186,13 +186,13 @@ export async function getExecutivePlatformSnapshot(): Promise<ExecutivePlatformS
     prisma.article.findMany(),
     prisma.subscriber.findMany(),
     prisma.leadMagnet.findMany(),
-    prisma.creatorLead.findMany(),
-    prisma.clientInvoice.findMany(),
-    prisma.clientProfile.findMany({ where: { type: "client" } }),
+    prisma.creatorLead.findMany({ where: { isTest: false } }),
+    prisma.clientInvoice.findMany({ where: { isTest: false } }),
+    prisma.clientProfile.findMany({ where: { type: "client", isTest: false } }),
     prisma.clientProject.findMany({
-      where: { status: { not: "archived" } },
+      where: { status: { not: "archived" }, isTest: false },
     }),
-    prisma.clientProjectTask.findMany(),
+    prisma.clientProjectTask.findMany({ where: { isTest: false } }),
   ])
 
   const reviewRequiredArticles = articles

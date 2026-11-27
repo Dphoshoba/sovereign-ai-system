@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { randomUUID } from "crypto"
 import { getOpenAI } from "@/lib/ai/openai"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 function createSlug(title: string) {
   const base = title
@@ -13,6 +14,9 @@ function createSlug(title: string) {
 }
 
 export async function GET() {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const articles = await prisma.article.findMany()
 
@@ -91,6 +95,10 @@ Return exactly:
           "Automatically created by the weekly planner.",
         content: "",
         status: "draft",
+        approvedAt: null,
+        approvedBy: null,
+        scheduledFor: null,
+        publishedAt: null,
       },
     })
 

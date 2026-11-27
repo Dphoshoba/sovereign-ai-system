@@ -2,6 +2,8 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { fromAdelaideWallClock } from "../../../lib/publishing/adelaide-time"
+import { AdelaideTimezoneHint } from "@/components/articles/AdelaideTimezoneHint"
 
 export function ScheduleArticleButton({
   articleId,
@@ -20,6 +22,12 @@ export function ScheduleArticleButton({
       return
     }
 
+    const converted = fromAdelaideWallClock(date)
+    if (!converted.ok) {
+      alert(converted.error)
+      return
+    }
+
     setLoading(true)
 
     const response = await fetch("/api/articles/schedule", {
@@ -29,7 +37,7 @@ export function ScheduleArticleButton({
       },
       body: JSON.stringify({
         articleId,
-        scheduledFor: date,
+        scheduledFor: converted.iso,
       }),
     })
 
@@ -65,32 +73,38 @@ export function ScheduleArticleButton({
       </button>
 
       {showForm && (
-        <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
-          <input
-            type="datetime-local"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            style={{
-              padding: "8px",
-              borderRadius: "6px",
-              border: "1px solid var(--border)",
-            }}
-          />
+        <div style={{ marginTop: "10px" }}>
+          <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+            <div>
+              <input
+                type="datetime-local"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                aria-label="Scheduled publish time in Australia/Adelaide"
+                style={{
+                  padding: "8px",
+                  borderRadius: "6px",
+                  border: "1px solid var(--border)",
+                }}
+              />
+              <AdelaideTimezoneHint />
+            </div>
 
-          <button
-            onClick={scheduleArticle}
-            disabled={loading}
-            style={{
-              padding: "8px 12px",
-              borderRadius: "6px",
-              border: "none",
-              background: "var(--hero-background)",
-              color: "var(--button-foreground)",
-              cursor: "pointer",
-            }}
-          >
-            {loading ? "Saving..." : "Save"}
-          </button>
+            <button
+              onClick={scheduleArticle}
+              disabled={loading}
+              style={{
+                padding: "8px 12px",
+                borderRadius: "6px",
+                border: "none",
+                background: "var(--hero-background)",
+                color: "var(--button-foreground)",
+                cursor: "pointer",
+              }}
+            >
+              {loading ? "Saving..." : "Save"}
+            </button>
+          </div>
         </div>
       )}
     </div>

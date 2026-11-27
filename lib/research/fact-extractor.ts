@@ -1,7 +1,11 @@
 import type { EvidenceRecord } from "./evidence-registry"
 import { factDeduplicator } from "./fact-deduplicator"
 import { genericSemanticClaims } from "./generic-semantic-claims"
-import { bibleExtractor } from "./bible-extractor"
+import {
+  bibleExtractor,
+  detectBibleSubject,
+  isDavidGoliathNarrativeClaim,
+} from "./bible-extractor"
 
 export type ExtractedFact = {
   claim: string
@@ -12,6 +16,9 @@ export type ExtractedFact = {
   evidenceText: string
   confidence: "high" | "medium" | "low"
   requiresHumanReview: boolean
+  articleExcerpt?: string
+  articleSection?: string
+  blockType?: string
 }
 
 export type FactExtractionResult = {
@@ -177,40 +184,6 @@ function aiAutomationClaims(sentence: string): string[] {
   return Array.from(claims).filter(isUsefulClaim)
 }
 
-function bibleClaims(sentence: string): string[] {
-  const text = sentence.toLowerCase()
-  const claims = new Set<string>()
-
-  if (text.includes("david") && text.includes("goliath")) {
-    claims.add("The account of David and Goliath centers on David confronting Goliath.")
-  }
-
-  if (text.includes("philistine") || text.includes("philistines")) {
-    claims.add("The David and Goliath account involves conflict with the Philistines.")
-   
-    return Array.from(claims).filter(isUsefulClaim)
-  }
-
-  if (text.includes("israel") || text.includes("israelites")) {
-    claims.add("The David and Goliath account involves Israel in a time of conflict.")
-  }
-
-  if (
-    text.includes("faith") ||
-    text.includes("trust") ||
-    text.includes("lord") ||
-    text.includes("god")
-  ) {
-    claims.add("The David and Goliath account highlights trust in God.")
-  }
-
-  if (text.includes("stone") || text.includes("sling")) {
-    claims.add("David used simple weapons in the confrontation with Goliath.")
-  }
-
-  return Array.from(claims).filter(isUsefulClaim)
-}
-
 function isUsefulSentence(sentence: string) {
   const text = sentence.toLowerCase()
 
@@ -299,11 +272,33 @@ function isUsefulSentence(sentence: string) {
     /\bgoliath\b/,
     /\bphilistines?\b/,
     /\bisraelites?\b/,
+    /\bpharaoh\b/,
+    /\bmoses\b/,
+    /\baaron\b/,
+    /\bexodus\b/,
+    /\begypt\b/,
+    /\bwilderness\b/,
+    /\bbrick/,
+    /\bflock/,
     /\blord\b/,
     /\bgod\b/,
     /\bfaith\b/,
     /\bsling\b/,
     /\bstone\b/,
+    /\bthief\b/,
+    /\bchrist\b/,
+    /\bjesus\b/,
+    /\bsatan\b/,
+    /\bdevil\b/,
+    /\bdisciple/,
+    /\bcross\b/,
+    /\barmour\b/,
+    /\barmor\b/,
+    /\bvigilant\b/,
+    /\bresist\b/,
+    /\bsacrifice\b/,
+    /\bdevices\b/,
+    /\babundantly\b/,
   ]
 
   return usefulPatterns.some((pattern) => pattern.test(text))
@@ -321,45 +316,66 @@ function buildClaims(
     .map(cleanSentence)
     .filter(isUsefulSentence)
 
-    console.log("Bible evidence sentences:", sentences.slice(0, 10))
-
-    const isAiCategory =
+  const isAiCategory =
     category.includes("ai") || category.includes("automation")
-  
+
   const isBibleCategory = category.includes("bible")
-  
+  const bibleSubject = isBibleCategory
+    ? detectBibleSubject(topic, evidence.extractedText)
+    : "generic"
+
   for (const sentence of sentences.slice(0, 20)) {
     if (isAiCategory) {
       for (const claim of aiAutomationClaims(sentence)) {
         claims.add(claim)
       }
     }
-  
+
     if (isBibleCategory) {
-      const bibleResult = bibleExtractor(sentence)
-  
+      const bibleResult = bibleExtractor(sentence, {
+        topic,
+        sourceUrl: evidence.sourceUrl,
+        sourceTitle: evidence.sourceTitle,
+      })
+
       for (const claim of bibleResult.claims) {
+        if (
+          bibleSubject !== "david-goliath" &&
+          isDavidGoliathNarrativeClaim(claim)
+        ) {
+          continue
+        }
         claims.add(claim)
       }
-  
+
       for (const event of bibleResult.events) {
+        if (
+          bibleSubject !== "david-goliath" &&
+          isDavidGoliathNarrativeClaim(event)
+        ) {
+          continue
+        }
         claims.add(event)
       }
-  
+
       for (const theme of bibleResult.themes) {
         claims.add(`The passage includes the theme of ${theme}.`)
       }
-  
-      for (const application of bibleResult.applications) {
-        claims.add(application)
-      }
+
+      // Pastoral applications stay out of FACT claims — they are not textual evidence.
     }
-  
+
     for (const claim of genericSemanticClaims(sentence)) {
+      if (
+        bibleSubject !== "david-goliath" &&
+        isDavidGoliathNarrativeClaim(claim)
+      ) {
+        continue
+      }
       claims.add(claim)
     }
   }
-  
+
   return Array.from(claims).slice(0, 12)
 }
 
@@ -382,18 +398,19 @@ export function factExtractor(
   ) as ExtractedFact[]
 
   const uniqueFacts = factDeduplicator(facts)
-
-  console.log(
-    "Extracted Unique Claims:",
-    Array.from(new Set(uniqueFacts.map((fact) => fact.claim)))
-  )
+  const evidenceBlob = evidenceRecords.map((record) => record.extractedText).join("\n")
+  const subject = detectBibleSubject(topic, evidenceBlob)
+  const subjectSafeFacts =
+    subject === "david-goliath"
+      ? uniqueFacts
+      : uniqueFacts.filter((fact) => !isDavidGoliathNarrativeClaim(fact.claim))
 
   return {
     topic,
-    facts: uniqueFacts,
-    factCount: uniqueFacts.length,
+    facts: subjectSafeFacts,
+    factCount: subjectSafeFacts.length,
     extractionStatus:
-      uniqueFacts.length > 0
+      subjectSafeFacts.length > 0
         ? "Expanded canonical facts extracted from evidence records."
         : "No facts extracted because no suitable evidence records were supplied.",
   }

@@ -37,8 +37,12 @@ import { recursiveSwarmConsensusAgent } from "../../../../lib/agents/recursive-s
 import { recursiveSwarmArbitrationAgent } from "../../../../lib/agents/recursive-swarm-arbitration-agent"
 import { recursiveSwarmAlignmentAgent } from "../../../../lib/agents/recursive-swarm-alignment-agent"
 import { recursiveSwarmResilienceAgent } from "../../../../lib/agents/recursive-swarm-resilience-agent"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await req.json()
     const niche = body.niche || "AI + Faith"

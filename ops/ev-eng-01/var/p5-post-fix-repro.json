@@ -1,0 +1,135 @@
+{
+  "baselineCommit": "918b8447",
+  "modeA": {
+    "consensusScore": 59,
+    "sourceQualityScore": 85,
+    "publicationRecommendation": "review-required",
+    "verifiedFacts": 0,
+    "partiallyVerifiedFacts": 4,
+    "groups": [
+      {
+        "theme": "Faith and Courage",
+        "sourceCount": 1,
+        "sourceQualityScore": 85,
+        "factCount": 2
+      },
+      {
+        "theme": "General Findings",
+        "sourceCount": 1,
+        "sourceQualityScore": 85,
+        "factCount": 2
+      }
+    ],
+    "keys": {
+      "gwIndependent": "scripture:esv:colossians-3",
+      "hubIndependent": "scripture:esv:colossians-3",
+      "gwIdentity": "scripture:esv",
+      "hubIdentity": "scripture:esv",
+      "gwCorroboration": "scripture:esv:colossians-3",
+      "hubCorroboration": "scripture:esv:colossians-3",
+      "distinctIndependent": false
+    }
+  },
+  "modeB": {
+    "supportLong": {
+      "supported": false,
+      "overlapCount": 11,
+      "requiredOverlap": 14,
+      "actionTokenMatches": [
+        "lord",
+        "whatever",
+        "work",
+        "heartily",
+        "men",
+        "knowing",
+        "receive",
+        "inheritance",
+        "reward",
+        "serving",
+        "christ"
+      ],
+      "missingActionTokens": [
+        "bondservants",
+        "obey",
+        "everything",
+        "those",
+        "who",
+        "earthly",
+        "masters",
+        "way",
+        "eye",
+        "service",
+        "people",
+        "pleasers",
+        "sincerity",
+        "heart",
+        "fearing",
+        "wrongdoer",
+        "paid",
+        "back",
+        "wrong",
+        "done",
+        "there",
+        "partiality",
+        "treat",
+        "justly",
+        "fairly",
+        "master",
+        "heaven"
+      ],
+      "failureReason": "insufficient-overlap"
+    },
+    "supportShort": {
+      "supported": true,
+      "failureReason": "supported",
+      "overlapCount": 11,
+      "requiredOverlap": 4,
+      "actionTokenMatches": [
+        "whatever",
+        "work",
+        "heartily",
+        "lord",
+        "men",
+        "knowing",
+        "receive",
+        "inheritance",
+        "reward",
+        "serving",
+        "christ"
+      ],
+      "missingActionTokens": []
+    },
+    "supportMark": {
+      "supported": true,
+      "failureReason": "supported",
+      "overlapCount": 1,
+      "requiredOverlap": 1,
+      "actionTokenMatches": [
+        "carpenter"
+      ],
+      "missingActionTokens": []
+    },
+    "supportChrome": {
+      "supported": false,
+      "overlapCount": 0,
+      "requiredOverlap": 0,
+      "actionTokenMatches": [],
+      "missingActionTokens": [],
+      "failureReason": "chrome"
+    },
+    "freshConsensus": {
+      "consensusScore": 0,
+      "sourceQualityScore": 0,
+      "publicationRecommendation": "review-required",
+      "unverifiedFacts": 9
+    },
+    "bindingShort": {
+      "role": "primary-scripture",
+      "exclusiveUrl": "https://www.biblegateway.com/passage?search=Colossians+3%3A23-24&version=ESV",
+      "exclusiveDocumentKey": "colossians-3",
+      "isMultiSource": false
+    },
+    "isPrimaryShort": true,
+    "isPrimarySamuel": true
+  }
+}

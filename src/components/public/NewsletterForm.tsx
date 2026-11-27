@@ -30,11 +30,7 @@ export default function NewsletterForm() {
       }
 
       setEmail("")
-      setMessage(
-        result.alreadySubscribed
-          ? "You're already subscribed."
-          : "You are now subscribed to the Sovereign Intelligence Newsletter."
-      )
+      setMessage("You are subscribed to the Sovereign Intelligence Newsletter.")
     } catch {
       setMessage("Signup failed. Please try again.")
     } finally {
@@ -61,7 +57,7 @@ export default function NewsletterForm() {
         disabled={loading}
         className="rounded-2xl bg-black px-6 py-4 font-semibold text-white disabled:opacity-60"
       >
-        {loading ? "Joining..." : "Join Now"}
+        {loading ? "Joining..." : "Join the Sovereign Intelligence Network"}
       </button>
 
       {message ? (

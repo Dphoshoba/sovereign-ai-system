@@ -18,8 +18,12 @@ import { recursiveCivilizationMemoryAgent } from "../../../../lib/agents/recursi
 import { recursiveWisdomAgent } from "../../../../lib/agents/recursive-wisdom-agent"
 import { recursiveEthicalJudgmentAgent } from "../../../../lib/agents/recursive-ethical-judgment-agent"
 import { recursiveLongHorizonGovernanceAgent } from "../../../../lib/agents/recursive-long-horizon-governance-agent"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 export async function POST(req: NextRequest) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const body = await req.json()
 

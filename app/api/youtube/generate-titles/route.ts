@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireEditorAuth } from "../../../../lib/publishing/require-editor-auth"
 
 function safeJsonParse<T>(value: unknown, fallback: T): T {
   if (!value || typeof value !== "string") return fallback
@@ -100,6 +101,9 @@ function buildTitleVariants(post: {
 }
 
 export async function POST(req: Request) {
+  const auth = await requireEditorAuth()
+  if (!auth.ok) return auth.response
+
   try {
     const rawBody = await req.text()
     const body = safeJsonParse(rawBody, {} as { youtubePostId?: string })

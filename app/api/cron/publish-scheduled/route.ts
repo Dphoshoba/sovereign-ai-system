@@ -1,70 +1,55 @@
-import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { publicationGuard } from "../../../../lib/publishing/publication-guard"
-import { autoGenerateSocialPosts } from "../../../../lib/social/auto-generate-social"
-import { generateNewsletterForArticle } from "../../../../lib/newsletter/generate-newsletter"
+import { NextRequest, NextResponse } from "next/server"
+import {
+  authorizeCronRequest,
+  cronUnauthorizedResponse,
+  resolveInvocationSource,
+} from "../../../../lib/publishing/cron-auth"
+import { publishDueArticles } from "../../../../lib/publishing/publish-due-articles"
 
-export async function GET() {
+async function handle(request: NextRequest) {
+  const auth = authorizeCronRequest(request)
+  if (!auth.ok) {
+    return cronUnauthorizedResponse()
+  }
+
   try {
-    const now = new Date()
-
-    // Only consider content that has cleared review. Never auto-publish
-    // drafts or articles still pending review.
-    const articles = await prisma.article.findMany({
-      where: {
-        status: { in: ["approved", "scheduled"] },
-        scheduledFor: {
-          lte: now,
-        },
-      },
+    const result = await publishDueArticles({
+      source: resolveInvocationSource(request),
     })
-
-    let published = 0
-    const skipped: { id: string; status: string; reason: string }[] = []
-
-    for (const article of articles) {
-      // Defense-in-depth: re-check each article against the publication guard
-      // before flipping it to published, in case the status changed.
-      const guard = publicationGuard(article.status)
-
-      if (!guard.allowed) {
-        skipped.push({
-          id: article.id,
-          status: article.status,
-          reason: guard.reason,
-        })
-        continue
-      }
-
-      const updatedArticle = await prisma.article.update({
-        where: {
-          id: article.id,
-        },
-        data: {
-          status: "published",
-          publishedAt: new Date(),
-        },
-      })
-
-      await autoGenerateSocialPosts(updatedArticle.id)
-      await generateNewsletterForArticle(updatedArticle.id)
-
-      published += 1
-    }
 
     return NextResponse.json({
       ok: true,
-      published,
-      skipped,
+      invocationId: result.invocationId,
+      source: result.source,
+      startedAt: result.startedAt,
+      finishedAt: result.finishedAt,
+      eligible: result.eligible,
+      published: result.published,
+      skipped: result.skipped,
+      failed: result.failed,
+      publishedIds: result.publishedIds,
+      skippedItems: result.skippedItems,
+      failedItems: result.failedItems,
     })
   } catch (error) {
-    console.error(error)
+    console.error("Scheduled publish failed", {
+      error: error instanceof Error ? error.message : "unknown",
+    })
 
     return NextResponse.json(
       {
         ok: false,
+        error: "Scheduled publish failed",
       },
       { status: 500 }
     )
   }
+}
+
+export async function GET(request: NextRequest) {
+  return handle(request)
+}
+
+export async function POST(request: NextRequest) {
+  return handle(request)
 }
