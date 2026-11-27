@@ -202,10 +202,22 @@ export async function publishAuthorisedFacebookAfterScheduledPublish(input: {
     return { ok: false, code: selected.code, reason: selected.reason }
   }
 
+  const { loadChannelExecutionState, recordChannelClaim, recordChannelOutcome } =
+    await import("../publishing/channel-execution-ledger")
+  const ledgerState =
+    input.openClaim || input.priorOutcome
+      ? { openClaim: input.openClaim ?? null, priorOutcome: input.priorOutcome ?? null }
+      : await loadChannelExecutionState({
+          store: input.store,
+          channel: "facebook",
+          articleId: input.article.id,
+          payloadId: selected.post.id,
+        })
+
   const claimBlock = shouldBlockRetry({
     existingExternalId: selected.post.externalId,
-    openClaim: input.openClaim,
-    priorOutcome: input.priorOutcome,
+    openClaim: ledgerState.openClaim,
+    priorOutcome: ledgerState.priorOutcome,
   })
   if (claimBlock.block) {
     return {
@@ -218,10 +230,17 @@ export async function publishAuthorisedFacebookAfterScheduledPublish(input: {
     }
   }
 
-  buildChannelClaimId({
+  const claimId = buildChannelClaimId({
     channel: "facebook",
     articleId: input.article.id,
     payloadId: selected.post.id,
+  })
+  await recordChannelClaim({
+    store: input.store,
+    channel: "facebook",
+    articleId: input.article.id,
+    payloadId: selected.post.id,
+    actor: input.actor || "scheduler:publish-due-articles",
   })
 
   const result = await publishApprovedFacebookPost({
@@ -229,6 +248,32 @@ export async function publishAuthorisedFacebookAfterScheduledPublish(input: {
     store: input.store,
     http: { fetch: fetchImpl },
     requireCanonicalUrl: true,
+  })
+
+  await recordChannelOutcome({
+    store: input.store,
+    outcome: {
+      v: 1,
+      channel: "facebook",
+      articleId: input.article.id,
+      payloadId: selected.post.id,
+      claimId,
+      status:
+        result.body.ok && (result.body.externalId || result.body.alreadyPublished)
+          ? result.body.alreadyPublished
+            ? "skipped_already_published"
+            : "provider_accepted"
+          : result.body.code === "ambiguous_provider_outcome"
+            ? "ambiguous"
+            : "provider_rejected",
+      externalId:
+        typeof result.body.externalId === "string"
+          ? result.body.externalId
+          : null,
+      recordedAt: new Date().toISOString(),
+      detail:
+        typeof result.body.error === "string" ? result.body.error : undefined,
+    },
   })
 
   if (result.body.code === "page_not_selected") {

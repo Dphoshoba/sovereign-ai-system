@@ -144,8 +144,23 @@ export function ensureMediaStorage(cwd: string = process.cwd()): {
   }
 }
 
+export function isYoutubeWorkerLiveUploadAllowed(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  return env.YOUTUBE_WORKER_ALLOW_LIVE === "1"
+}
+
+export function isYoutubeWorkerProductionGuardActive(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  // Refuse live/prod job processing unless explicitly armed.
+  // Verification-only and health checks remain available.
+  return env.YOUTUBE_WORKER_ALLOW_PROD_JOBS !== "1"
+}
+
 export function reportYoutubeWorkerHealth(
   cwd: string = process.cwd(),
+  env: NodeJS.ProcessEnv = process.env,
 ): YoutubeWorkerHealth {
   const runtime = detectYoutubeWorkerRuntime(cwd)
   const storage = ensureMediaStorage(cwd)
@@ -156,6 +171,8 @@ export function reportYoutubeWorkerHealth(
   if (!storage.writable) {
     blockers.push("Local media storage is not writable.")
   }
+  const liveArmed = isYoutubeWorkerLiveUploadAllowed(env)
+  const prodGuard = isYoutubeWorkerProductionGuardActive(env)
   return {
     ok: true,
     ready: blockers.length === 0,
@@ -172,6 +189,8 @@ export function reportYoutubeWorkerHealth(
       "duplicate-execution-protection",
       "provider-outcome-recording",
       "health-readiness",
+      liveArmed ? "live-upload-armed" : "verify-only-default",
+      prodGuard ? "production-jobs-blocked" : "production-jobs-allowed",
     ],
     blockers,
   }
@@ -525,7 +544,8 @@ export async function executeAuthorisedYoutubeUpload(input: {
           videoPath,
         }
 
-  if (input.dryRun || !input.uploadFn) {
+  const liveAllowed = isYoutubeWorkerLiveUploadAllowed()
+  if (input.dryRun || !input.uploadFn || !liveAllowed) {
     const outcome: ChannelExecutionOutcome = {
       v: 1,
       channel: input.kind === "long-form" ? "youtube" : "youtube-shorts",
@@ -535,7 +555,9 @@ export async function executeAuthorisedYoutubeUpload(input: {
       status: "provider_accepted",
       externalId: `dry-run-${input.kind}-${createHash("sha256").update(videoPath).digest("hex").slice(0, 10)}`,
       recordedAt: new Date().toISOString(),
-      detail: "dry-run; no live upload",
+      detail: liveAllowed
+        ? "dry-run; no live upload"
+        : "verify-only: YOUTUBE_WORKER_ALLOW_LIVE is not set; live upload blocked",
     }
     await input.store.operationalEvent.create({
       data: {
@@ -671,6 +693,20 @@ export async function runYoutubeWorkerOnce(input: {
   const health = reportYoutubeWorkerHealth(cwd)
   if (!health.ready) {
     return { health, job: null, result: { blocked: health.blockers } }
+  }
+
+  if (isYoutubeWorkerProductionGuardActive()) {
+    // Installation / connection verification must not claim Production AiJobs.
+    return {
+      health,
+      job: null,
+      result: {
+        blocked: [
+          "Production job claiming blocked until YOUTUBE_WORKER_ALLOW_PROD_JOBS=1",
+        ],
+        mode: "verify-only",
+      },
+    }
   }
 
   const job = await claimNextYoutubeWorkerJob({

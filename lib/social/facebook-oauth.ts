@@ -14,8 +14,14 @@
 
 export const FACEBOOK_INTEGRATION_NAME = "Facebook"
 export const FACEBOOK_OAUTH_STATE_COOKIE = "facebook_oauth_state"
-/** Current Graph API (Nov 2026). v21.0 retires 21 Jan 2027 — do not activate on v21. */
+/**
+ * Default Graph API version.
+ * Official source: https://developers.facebook.com/docs/graph-api/changelog
+ * Latest available version recorded there: v27.0 (introduced 4 Nov 2026).
+ */
 export const DEFAULT_FACEBOOK_GRAPH_VERSION = "v27.0"
+export const FACEBOOK_GRAPH_VERSION_SOURCE =
+  "https://developers.facebook.com/docs/graph-api/changelog"
 
 /** Minimum permissions for Page list + Page feed publishing. */
 export const FACEBOOK_OAUTH_SCOPES = [

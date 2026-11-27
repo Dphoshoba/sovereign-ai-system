@@ -198,10 +198,22 @@ export async function publishAuthorisedThreadsAfterScheduledPublish(input: {
     return { ok: false, code: selected.code, reason: selected.reason }
   }
 
+  const { loadChannelExecutionState, recordChannelClaim, recordChannelOutcome } =
+    await import("../publishing/channel-execution-ledger")
+  const ledgerState =
+    input.openClaim || input.priorOutcome
+      ? { openClaim: input.openClaim ?? null, priorOutcome: input.priorOutcome ?? null }
+      : await loadChannelExecutionState({
+          store: input.store,
+          channel: "threads",
+          articleId: input.article.id,
+          payloadId: selected.post.id,
+        })
+
   const claimBlock = shouldBlockRetry({
     existingExternalId: selected.post.externalId,
-    openClaim: input.openClaim,
-    priorOutcome: input.priorOutcome,
+    openClaim: ledgerState.openClaim,
+    priorOutcome: ledgerState.priorOutcome,
   })
   if (claimBlock.block) {
     return {
@@ -214,11 +226,17 @@ export async function publishAuthorisedThreadsAfterScheduledPublish(input: {
     }
   }
 
-  // Claim id is deterministic for duplicate/concurrent protection evidence.
-  buildChannelClaimId({
+  const claimId = buildChannelClaimId({
     channel: "threads",
     articleId: input.article.id,
     payloadId: selected.post.id,
+  })
+  await recordChannelClaim({
+    store: input.store,
+    channel: "threads",
+    articleId: input.article.id,
+    payloadId: selected.post.id,
+    actor: input.actor || "scheduler:publish-due-articles",
   })
 
   const result = await publishApprovedThreadsPost({
@@ -226,6 +244,30 @@ export async function publishAuthorisedThreadsAfterScheduledPublish(input: {
     store: input.store,
     http: { fetch: fetchImpl },
     requireCanonicalUrl: true,
+  })
+
+  await recordChannelOutcome({
+    store: input.store,
+    outcome: {
+      v: 1,
+      channel: "threads",
+      articleId: input.article.id,
+      payloadId: selected.post.id,
+      claimId,
+      status:
+        result.body.ok && (result.body.externalId || result.body.alreadyPublished)
+          ? result.body.alreadyPublished
+            ? "skipped_already_published"
+            : "provider_accepted"
+          : "provider_rejected",
+      externalId:
+        typeof result.body.externalId === "string"
+          ? result.body.externalId
+          : null,
+      recordedAt: new Date().toISOString(),
+      detail:
+        typeof result.body.error === "string" ? result.body.error : undefined,
+    },
   })
 
   if (result.status >= 200 && result.status < 300 && result.body.ok) {

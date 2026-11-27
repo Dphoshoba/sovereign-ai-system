@@ -16,6 +16,7 @@
     "youtube:auth": "node scripts/youtube-auth.js",
     "youtube:worker": "tsx scripts/youtube-media-worker.ts",
     "youtube:worker:health": "tsx scripts/youtube-media-worker.ts --health",
+    "youtube:worker:verify": "tsx scripts/youtube-media-worker.ts --verify-only",
     "youtube:worker:prepare-demo": "tsx scripts/youtube-media-worker.ts --prepare-demo",
     "sweep:mojibake": "tsx scripts/clean-article-mojibake.ts",
     "sweep:mojibake:dry": "tsx scripts/clean-article-mojibake.ts --dry",

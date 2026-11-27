@@ -18,15 +18,22 @@ import {
   shouldBlockRetry,
 } from "../../lib/publishing/channel-execution-guard"
 import { buildMultimediaPackageReadiness } from "../../lib/publishing/multimedia-package-readiness"
+import { requireAuthorisedChannel } from "../../lib/publishing/require-channel-scope"
+import { prepareMultimediaPackageForI2 } from "../../lib/publishing/prepare-multimedia-package"
 import { publishAuthorisedThreadsAfterScheduledPublish } from "../../lib/social/after-scheduled-publish-threads"
 import { publishAuthorisedFacebookAfterScheduledPublish } from "../../lib/social/after-scheduled-publish-facebook"
 import {
   claimNextYoutubeWorkerJob,
   executeAuthorisedYoutubeUpload,
+  isYoutubeWorkerLiveUploadAllowed,
+  isYoutubeWorkerProductionGuardActive,
   prepareRepresentativeFixturePackage,
   reportYoutubeWorkerHealth,
 } from "../../lib/youtube/worker/media-worker"
-import { DEFAULT_FACEBOOK_GRAPH_VERSION } from "../../lib/social/facebook-oauth"
+import {
+  DEFAULT_FACEBOOK_GRAPH_VERSION,
+  FACEBOOK_GRAPH_VERSION_SOURCE,
+} from "../../lib/social/facebook-oauth"
 import { THREADS_GRAPH_BASE } from "../../lib/social/threads-oauth"
 
 const cwd = process.cwd()
@@ -357,6 +364,7 @@ describe("EV-OPS-04 R4-A unified publishing", () => {
             events.push(data)
             return data
           },
+          findMany: async () => [],
         },
       }
 
@@ -448,6 +456,7 @@ describe("EV-OPS-04 R4-A unified publishing", () => {
         },
         operationalEvent: {
           create: async () => ({}),
+          findMany: async () => [],
         },
       }
 
@@ -525,6 +534,7 @@ describe("EV-OPS-04 R4-A unified publishing", () => {
         },
         operationalEvent: {
           create: async () => ({}),
+          findMany: async () => [],
         },
       }
 
@@ -669,18 +679,25 @@ describe("EV-OPS-04 R4-A unified publishing", () => {
       expect(restart.ok).toBe(true)
       if (restart.ok) expect(restart.skipped).toBe(true)
 
-      const ambiguous = await executeAuthorisedYoutubeUpload({
-        kind: "shorts",
-        articleId: demo.articleId,
-        youtubePostId: demo.youtubePostId,
-        binding: demo.binding,
-        post: {},
-        store: store as never,
-        workerId: "w1",
-        uploadFn: async () => ({ videoId: null, timedOut: true }),
-      })
-      expect(ambiguous.ok).toBe(false)
-      if (!ambiguous.ok) expect(ambiguous.code).toBe("ambiguous_unresolved")
+      const prevLive = process.env.YOUTUBE_WORKER_ALLOW_LIVE
+      process.env.YOUTUBE_WORKER_ALLOW_LIVE = "1"
+      try {
+        const ambiguous = await executeAuthorisedYoutubeUpload({
+          kind: "shorts",
+          articleId: demo.articleId,
+          youtubePostId: demo.youtubePostId,
+          binding: demo.binding,
+          post: {},
+          store: store as never,
+          workerId: "w1",
+          uploadFn: async () => ({ videoId: null, timedOut: true }),
+        })
+        expect(ambiguous.ok).toBe(false)
+        if (!ambiguous.ok) expect(ambiguous.code).toBe("ambiguous_unresolved")
+      } finally {
+        if (prevLive === undefined) delete process.env.YOUTUBE_WORKER_ALLOW_LIVE
+        else process.env.YOUTUBE_WORKER_ALLOW_LIVE = prevLive
+      }
     }, 120_000)
 
     it("replaces Shorts placeholder with vertical ffmpeg pipeline", () => {
@@ -708,12 +725,120 @@ describe("EV-OPS-04 R4-A unified publishing", () => {
   })
 
   describe("provider API readiness + security surfaces", () => {
-    it("uses supported Facebook Graph default (not retiring v21)", () => {
+    it("uses official Graph API v27.0 with documented source URL", () => {
       expect(DEFAULT_FACEBOOK_GRAPH_VERSION).toBe("v27.0")
+      expect(FACEBOOK_GRAPH_VERSION_SOURCE).toBe(
+        "https://developers.facebook.com/docs/graph-api/changelog",
+      )
     })
 
     it("keeps Threads on graph.threads.net/v1.0", () => {
       expect(THREADS_GRAPH_BASE).toBe("https://graph.threads.net/v1.0")
+    })
+
+    it("gates direct Threads/Facebook publish behind I2 scope", () => {
+      const denied = requireAuthorisedChannel({
+        articleId: "art-1",
+        reviewNotes: [],
+        channel: "threads",
+      })
+      expect(denied.ok).toBe(false)
+
+      const allowed = requireAuthorisedChannel({
+        articleId: "art-1",
+        reviewNotes: [
+          {
+            action: "distribution-scope",
+            note: serializeDistributionScope({
+              v: 1,
+              channels: ["threads", "facebook"],
+              packageFingerprint: "pfp",
+              articleId: "art-1",
+              boundAt: new Date().toISOString(),
+              boundBy: "director",
+            }),
+          },
+        ],
+        channel: "facebook",
+      })
+      expect(allowed.ok).toBe(true)
+
+      for (const rel of [
+        "app/api/social/publish/threads/route.ts",
+        "app/api/social/publish/facebook/route.ts",
+      ]) {
+        const src = fs.readFileSync(path.join(cwd, rel), "utf8")
+        expect(src).toContain("requireAuthorisedChannel")
+        expect(src).toContain("recordChannelClaim")
+      }
+    })
+
+    it("exposes autonomous preparation entrypoint that reports I2 gaps", async () => {
+      const result = await prepareMultimediaPackageForI2({
+        articleId: "prep-1",
+        actor: "test",
+        requestedChannels: ["x", "youtube"],
+        snapshot: {
+          article: {
+            id: "prep-1",
+            title: "T",
+            slug: "s",
+            status: "approved",
+            excerpt: "e",
+            content: "full article",
+            featuredImage: "https://cdn.example/i.jpg",
+            seoTitle: "seo",
+            seoDescription: "desc",
+            seoKeywords: "k",
+            scheduledFor: "2026-12-20T20:30:00.000Z",
+            reviewNotes: [],
+          },
+          contentFingerprint: "cfp",
+          evidenceSummary: {
+            auditId: "audit",
+            recommendation: "publish",
+            consensusScore: 1,
+            sourceQualityScore: 1,
+          },
+          requestedChannels: ["x", "youtube"],
+          xAnnouncement: { id: "x1", content: "x", status: "approved" },
+          linkedinAnnouncement: null,
+          threadsAnnouncement: null,
+          facebookAnnouncement: null,
+          newsletter: null,
+          youtubeAssets: null,
+        },
+      })
+      expect(result.ok).toBe(true)
+      expect(result.missingForI2).toEqual(expect.arrayContaining(["youtube"]))
+      expect(result.note).not.toMatch(/cinematic production proof/i)
+      expect(
+        fs.existsSync(
+          path.join(cwd, "app/api/articles/prepare-multimedia-package/route.ts"),
+        ),
+      ).toBe(true)
+    })
+
+    it("defaults worker to verify-only / non-live / prod-job blocked", () => {
+      expect(isYoutubeWorkerLiveUploadAllowed({})).toBe(false)
+      expect(isYoutubeWorkerProductionGuardActive({})).toBe(true)
+      expect(isYoutubeWorkerLiveUploadAllowed({ YOUTUBE_WORKER_ALLOW_LIVE: "1" })).toBe(
+        true,
+      )
+      expect(
+        isYoutubeWorkerProductionGuardActive({
+          YOUTUBE_WORKER_ALLOW_PROD_JOBS: "1",
+        }),
+      ).toBe(false)
+    })
+
+    it("documents file-based YouTube credentials (not YOUTUBE_* env)", () => {
+      const auth = fs.readFileSync(path.join(cwd, "scripts/youtube-auth.js"), "utf8")
+      expect(auth).toContain("credentials")
+      expect(auth).toContain("youtube-oauth.json")
+      expect(auth).toContain("youtube-token.json")
+      expect(auth).toContain("--verify")
+      expect(auth).not.toMatch(/process\.env\.YOUTUBE_CLIENT/)
     })
 
     it("wires after-publish Threads/Facebook into publish-due-articles", () => {
@@ -747,6 +872,17 @@ describe("EV-OPS-04 R4-A unified publishing", () => {
       )
       expect(worker).not.toMatch(/sk-[a-zA-Z0-9]{10,}/)
       expect(worker).not.toMatch(/ya29\.[a-zA-Z0-9_-]+/)
+    })
+
+    it("keeps public article canonical origin as echoesandvisions.com", () => {
+      const policy = fs.readFileSync(
+        path.join(cwd, "lib/social/x-publish-policy.ts"),
+        "utf8",
+      )
+      expect(policy).toContain(
+        'CANONICAL_ARTICLE_ORIGIN = "https://www.echoesandvisions.com"',
+      )
+      expect(policy).not.toContain("sovereign-ai-executive.vercel.app")
     })
   })
 })
