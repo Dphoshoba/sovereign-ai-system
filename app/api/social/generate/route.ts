@@ -47,6 +47,7 @@ Create:
 1 Twitter/X post
 1 LinkedIn post
 1 Threads post
+1 Facebook Page post
 
 Article title:
 ${article.title}
@@ -59,10 +60,12 @@ Return JSON:
 {
   "twitter": "...",
   "linkedin": "...",
-  "threads": "..."
+  "threads": "...",
+  "facebook": "..."
 }
 
 Do not use emojis. Do not use hype. Keep the tone wise, practical, clear, and human.
+Each post must be suitable for Director I2 review before publication.
           `,
         },
       ],
@@ -86,12 +89,17 @@ Do not use emojis. Do not use hype. Keep the tone wise, practical, clear, and hu
       ? encodingNormalizer(parsed.threads)
       : ""
 
+    const facebookContent = parsed.facebook
+      ? encodingNormalizer(parsed.facebook)
+      : ""
+
     const posts = await Promise.all([
       prisma.socialPost.create({
         data: {
           articleId: article.id,
           platform: "twitter",
           content: twitterContent,
+          status: "review-required",
         },
       }),
 
@@ -100,6 +108,7 @@ Do not use emojis. Do not use hype. Keep the tone wise, practical, clear, and hu
           articleId: article.id,
           platform: "linkedin",
           content: linkedinContent,
+          status: "review-required",
         },
       }),
 
@@ -108,6 +117,16 @@ Do not use emojis. Do not use hype. Keep the tone wise, practical, clear, and hu
           articleId: article.id,
           platform: "threads",
           content: threadsContent,
+          status: "review-required",
+        },
+      }),
+
+      prisma.socialPost.create({
+        data: {
+          articleId: article.id,
+          platform: "facebook",
+          content: facebookContent,
+          status: "review-required",
         },
       }),
     ])

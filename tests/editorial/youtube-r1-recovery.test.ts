@@ -352,14 +352,15 @@ describe("EV-OPS-04 R1 — YouTube recovery readiness", () => {
       expect(recoveryUpload).not.toMatch(/createReadStream\(/)
     })
 
-    it("distribution scope still excludes youtube until R4", async () => {
+    it("distribution scope includes youtube additively in R4-A without auto-expanding legacy packages", async () => {
       const scope = await import("../../lib/publishing/distribution-scope")
-      // Type-level channel union is not runtime-enumerable; assert source contract.
       const src = fs.readFileSync(
         path.join(cwd, "lib/publishing/distribution-scope.ts"),
         "utf8",
       )
-      expect(src).toMatch(/DistributionChannel = "x" \| "newsletter" \| "linkedin"/)
+      expect(src).toContain('"youtube"')
+      expect(src).toContain('"youtube-shorts"')
+      expect(src).toContain("isLegacyChannelSet")
       expect(scope.channelAuthorised).toBeTypeOf("function")
     })
   })

@@ -26,6 +26,24 @@ export type PublicationPackageArticle = {
   }>
 }
 
+export type SocialAnnouncement = {
+  id: string
+  content: string
+  status: string
+}
+
+export type YoutubePackageAssets = {
+  youtubePostId: string
+  title: string
+  description: string
+  longFormVideoSha256?: string | null
+  shortsVideoSha256?: string | null
+  thumbnailSha256?: string | null
+  voiceoverSha256?: string | null
+  longFormReady: boolean
+  shortsReady: boolean
+}
+
 export type PublicationPackageInputs = {
   article: PublicationPackageArticle
   contentFingerprint: string
@@ -35,8 +53,10 @@ export type PublicationPackageInputs = {
     consensusScore: number | null
     sourceQualityScore: number | null
   }
-  xAnnouncement: { id: string; content: string; status: string } | null
-  linkedinAnnouncement: { id: string; content: string; status: string } | null
+  xAnnouncement: SocialAnnouncement | null
+  linkedinAnnouncement: SocialAnnouncement | null
+  threadsAnnouncement?: SocialAnnouncement | null
+  facebookAnnouncement?: SocialAnnouncement | null
   newsletter: {
     id: string
     subject: string
@@ -44,6 +64,7 @@ export type PublicationPackageInputs = {
     content: string
     status: string
   } | null
+  youtubeAssets?: YoutubePackageAssets | null
   requestedChannels: DistributionChannel[]
 }
 
@@ -61,7 +82,10 @@ export type CompletePublicationPackage = {
   evidence: PublicationPackageInputs["evidenceSummary"]
   x: PublicationPackageInputs["xAnnouncement"]
   linkedin: PublicationPackageInputs["linkedinAnnouncement"]
+  threads: SocialAnnouncement | null
+  facebook: SocialAnnouncement | null
   newsletter: PublicationPackageInputs["newsletter"]
+  youtube: YoutubePackageAssets | null
   channels: DistributionChannel[]
   schedule: string | null
   packageFingerprint: string
@@ -86,6 +110,18 @@ export function buildPublicationPackage(
   ) {
     missing.push("linkedin")
   }
+  if (
+    input.requestedChannels.includes("threads") &&
+    !input.threadsAnnouncement?.content
+  ) {
+    missing.push("threads")
+  }
+  if (
+    input.requestedChannels.includes("facebook") &&
+    !input.facebookAnnouncement?.content
+  ) {
+    missing.push("facebook")
+  }
   if (input.requestedChannels.includes("newsletter")) {
     if (
       !input.newsletter?.subject ||
@@ -93,6 +129,16 @@ export function buildPublicationPackage(
       input.newsletter.previewText == null
     ) {
       missing.push("newsletter")
+    }
+  }
+  if (input.requestedChannels.includes("youtube")) {
+    if (!input.youtubeAssets?.longFormReady || !input.youtubeAssets.longFormVideoSha256) {
+      missing.push("youtube")
+    }
+  }
+  if (input.requestedChannels.includes("youtube-shorts")) {
+    if (!input.youtubeAssets?.shortsReady || !input.youtubeAssets.shortsVideoSha256) {
+      missing.push("youtube-shorts")
     }
   }
   if (input.requestedChannels.length === 0) missing.push("channels")
@@ -116,6 +162,10 @@ export function buildPublicationPackage(
     newsletterBody: input.newsletter?.content ?? null,
     channels: input.requestedChannels,
     scheduledFor: schedule,
+    threadsContent: input.threadsAnnouncement?.content ?? null,
+    facebookContent: input.facebookAnnouncement?.content ?? null,
+    youtubeAssetFingerprint: input.youtubeAssets?.longFormVideoSha256 ?? null,
+    youtubeShortsAssetFingerprint: input.youtubeAssets?.shortsVideoSha256 ?? null,
   })
 
   const authorised = resolveAuthorisedChannels({
@@ -138,7 +188,10 @@ export function buildPublicationPackage(
     evidence: input.evidenceSummary,
     x: input.xAnnouncement,
     linkedin: input.linkedinAnnouncement,
+    threads: input.threadsAnnouncement ?? null,
+    facebook: input.facebookAnnouncement ?? null,
     newsletter: input.newsletter,
+    youtube: input.youtubeAssets ?? null,
     channels: input.requestedChannels,
     schedule,
     packageFingerprint,

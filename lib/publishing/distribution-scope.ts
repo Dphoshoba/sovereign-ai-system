@@ -1,7 +1,23 @@
 import { createHash } from "node:crypto"
 
-/** Channels this programme may authorise. FB/Threads/IG/Pinterest remain out of scope. */
-export type DistributionChannel = "x" | "newsletter" | "linkedin"
+/**
+ * Channels this programme may authorise.
+ * R4-A additive expansion — legacy packages with x|newsletter|linkedin remain valid.
+ * YouTube long-form and Shorts are independently selectable.
+ */
+export const DISTRIBUTION_CHANNELS = [
+  "x",
+  "newsletter",
+  "linkedin",
+  "threads",
+  "facebook",
+  "youtube",
+  "youtube-shorts",
+] as const
+
+export type DistributionChannel = (typeof DISTRIBUTION_CHANNELS)[number]
+
+const LEGACY_CHANNELS = ["x", "newsletter", "linkedin"] as const
 
 export const DISTRIBUTION_SCOPE_ACTION = "distribution-scope"
 
@@ -9,6 +25,14 @@ export const DISTRIBUTION_SCOPE_ACTION = "distribution-scope"
 export const ORDINARY_WORK_ARTICLE_ID = "cmwrevh7j000i08jmldtvmtxx"
 export const ORDINARY_WORK_FINGERPRINT =
   "73bc3e1f52f7c2839aa1806f774ff268e644e17f00177d2a6e954d261c3cc0f4"
+
+/** Living Beyond — Website + X + newsletter + LinkedIn personal; no R4 channel expansion. */
+export const LIVING_BEYOND_ARTICLE_ID = "cmwytw0h8000007l3t7v45c5k"
+export const LIVING_BEYOND_PROTECTED_CHANNELS: DistributionChannel[] = [
+  "x",
+  "newsletter",
+  "linkedin",
+]
 
 export type DistributionScopePayload = {
   v: 1
@@ -27,6 +51,28 @@ export type ReviewNoteLike = {
   createdAt?: Date | string
 }
 
+export function isDistributionChannel(
+  value: unknown,
+): value is DistributionChannel {
+  return (
+    typeof value === "string" &&
+    (DISTRIBUTION_CHANNELS as readonly string[]).includes(value)
+  )
+}
+
+export function sanitizeDistributionChannels(
+  channels: unknown[],
+): DistributionChannel[] {
+  const seen = new Set<DistributionChannel>()
+  const out: DistributionChannel[] = []
+  for (const value of channels) {
+    if (!isDistributionChannel(value) || seen.has(value)) continue
+    seen.add(value)
+    out.push(value)
+  }
+  return out
+}
+
 export function serializeDistributionScope(
   payload: DistributionScopePayload,
 ): string {
@@ -41,7 +87,9 @@ export function parseDistributionScope(
     const parsed = JSON.parse(note) as DistributionScopePayload
     if (parsed?.v !== 1 || !Array.isArray(parsed.channels)) return null
     if (typeof parsed.packageFingerprint !== "string") return null
-    return parsed
+    const channels = sanitizeDistributionChannels(parsed.channels)
+    if (channels.length === 0) return null
+    return { ...parsed, channels }
   } catch {
     return null
   }
@@ -75,7 +123,7 @@ export function channelAuthorised(
 
 /**
  * Resolve authorised channels for post-publish automation.
- * OW is hard-mapped to X-only (never newsletter / LinkedIn) to preserve Director intent.
+ * OW is hard-mapped to X-only (never newsletter / LinkedIn / new channels).
  */
 export function resolveAuthorisedChannels(input: {
   articleId: string
@@ -98,7 +146,7 @@ export function resolveAuthorisedChannels(input: {
         contentFingerprint: ORDINARY_WORK_FINGERPRINT,
         boundAt: "2026-11-25T10:48:12.454Z",
         boundBy: "director-intervention-2",
-        note: "OW legacy: X after publish+verify only; newsletter/LinkedIn not authorised",
+        note: "OW legacy: X after publish+verify only; other channels not authorised",
       },
       source: "ordinary-work-legacy",
       stale: false,
@@ -127,6 +175,12 @@ export function resolveAuthorisedChannels(input: {
   }
 }
 
+function isLegacyChannelSet(channels: DistributionChannel[]): boolean {
+  return channels.every((c) =>
+    (LEGACY_CHANNELS as readonly string[]).includes(c),
+  )
+}
+
 export function computePackageFingerprint(parts: {
   articleId: string
   contentFingerprint: string
@@ -141,8 +195,14 @@ export function computePackageFingerprint(parts: {
   newsletterBody: string | null
   channels: DistributionChannel[]
   scheduledFor: string | null
+  /** Extended R4 fields — only hashed when corresponding channels are selected. */
+  threadsContent?: string | null
+  facebookContent?: string | null
+  youtubeAssetFingerprint?: string | null
+  youtubeShortsAssetFingerprint?: string | null
 }): string {
-  const canonical = JSON.stringify({
+  const sortedChannels = [...parts.channels].sort()
+  const canonical: Record<string, unknown> = {
     articleId: parts.articleId,
     contentFingerprint: parts.contentFingerprint,
     featuredImage: parts.featuredImage,
@@ -154,8 +214,26 @@ export function computePackageFingerprint(parts: {
     newsletterSubject: parts.newsletterSubject,
     newsletterPreview: parts.newsletterPreview,
     newsletterBody: parts.newsletterBody,
-    channels: [...parts.channels].sort(),
+    channels: sortedChannels,
     scheduledFor: parts.scheduledFor,
-  })
-  return createHash("sha256").update(canonical).digest("hex")
+  }
+
+  // Preserve exact legacy fingerprint bytes when only legacy channels are used.
+  if (!isLegacyChannelSet(sortedChannels)) {
+    if (sortedChannels.includes("threads")) {
+      canonical.threadsContent = parts.threadsContent ?? null
+    }
+    if (sortedChannels.includes("facebook")) {
+      canonical.facebookContent = parts.facebookContent ?? null
+    }
+    if (sortedChannels.includes("youtube")) {
+      canonical.youtubeAssetFingerprint = parts.youtubeAssetFingerprint ?? null
+    }
+    if (sortedChannels.includes("youtube-shorts")) {
+      canonical.youtubeShortsAssetFingerprint =
+        parts.youtubeShortsAssetFingerprint ?? null
+    }
+  }
+
+  return createHash("sha256").update(JSON.stringify(canonical)).digest("hex")
 }

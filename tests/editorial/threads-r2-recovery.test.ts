@@ -118,13 +118,13 @@ describe("EV-OPS-04 R2 — Threads recovery readiness", () => {
       expect(cap.draftGeneration).toBe(true)
     })
 
-    it("does not add threads to Production distribution-scope yet", () => {
+    it("keeps threads additive in distribution-scope without auto-expanding legacy packages", () => {
       const src = fs.readFileSync(
         path.join(cwd, "lib/publishing/distribution-scope.ts"),
         "utf8",
       )
-      expect(src).toMatch(/DistributionChannel = "x" \| "newsletter" \| "linkedin"/)
-      expect(src).not.toMatch(/"threads"/)
+      expect(src).toContain('"threads"')
+      expect(src).toContain("isLegacyChannelSet")
     })
   })
 
