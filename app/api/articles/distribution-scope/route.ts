@@ -55,8 +55,10 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const channelsRaw = Array.isArray(body?.channels) ? body.channels : []
-    const channels = channelsRaw.filter(
+    const channelsRaw: unknown[] = Array.isArray(body?.channels)
+      ? body.channels
+      : []
+    const channels: DistributionChannel[] = channelsRaw.filter(
       (c: unknown): c is DistributionChannel =>
         typeof c === "string" &&
         isDistributionChannel(c) &&
@@ -72,7 +74,9 @@ export async function POST(req: NextRequest) {
     // Fail closed: never silently expand Living Beyond protected set if id changes form.
     if (
       articleId === LIVING_BEYOND_ARTICLE_ID &&
-      channels.some((c) => !LIVING_BEYOND_PROTECTED_CHANNELS.includes(c))
+      channels.some(
+        (channel) => !LIVING_BEYOND_PROTECTED_CHANNELS.includes(channel),
+      )
     ) {
       return NextResponse.json(
         {
