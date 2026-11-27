@@ -51,6 +51,9 @@ public/voiceovers/
 public/subtitles
 public/thumbnail-frames/
 public/youtube-thumbnails/
+public/r1-fixtures/
+public/shorts/
+public/renders/
 
 # scratch / dumped artifacts
 *.log
