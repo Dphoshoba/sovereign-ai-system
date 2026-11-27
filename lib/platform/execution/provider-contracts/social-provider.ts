@@ -60,14 +60,15 @@ export const PLATFORM_CAPABILITIES: Record<SocialPlatform, PlatformCapabilitySta
   },
   threads: {
     platform: 'threads',
-    connectionStatus: 'not_configured',
+    // App OAuth credentials may be present; member connection is via ExternalIntegration.
+    connectionStatus: 'configured',
     draftGeneration: true,
     approvalSupported: true,
-    textPublishing: false,
+    textPublishing: true,
     mediaPublishing: false,
-    publishStatus: 'draft_only',
+    publishStatus: 'publish_capable',
     requiresCredentials: true,
-    status: 'draft_only',
+    status: 'publish_capable',
   },
   facebook: {
     platform: 'facebook',
