@@ -183,6 +183,31 @@ export const ENV_SPECS: EnvVarSpec[] = [
       "Exact LinkedIn OAuth callback URI registered in the Developer Portal (e.g. https://www.echoesandvisions.com/api/social/oauth/linkedin/callback).",
   },
   {
+    key: "FACEBOOK_APP_ID",
+    required: false,
+    group: "external",
+    description: "Meta app ID for Facebook Page OAuth (Facebook Login).",
+  },
+  {
+    key: "FACEBOOK_APP_SECRET",
+    required: false,
+    group: "external",
+    description: "Meta app secret for Facebook Page OAuth token exchange.",
+  },
+  {
+    key: "FACEBOOK_REDIRECT_URI",
+    required: false,
+    group: "external",
+    description:
+      "Exact Facebook OAuth callback URI (e.g. https://www.echoesandvisions.com/api/social/oauth/facebook/callback).",
+  },
+  {
+    key: "FACEBOOK_GRAPH_API_VERSION",
+    required: false,
+    group: "external",
+    description: "Optional Graph API version override (default v21.0).",
+  },
+  {
     key: "BRAVE_SEARCH_API_KEY",
     required: false,
     group: "external",
