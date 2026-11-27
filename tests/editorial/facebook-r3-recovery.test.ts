@@ -117,13 +117,14 @@ describe("EV-OPS-04 R3 — Facebook recovery readiness", () => {
       expect(cap.textPublishing).toBe(true)
     })
 
-    it("does not add facebook to Production distribution-scope yet", () => {
+    it("keeps facebook additive in distribution-scope without auto-expanding legacy packages", () => {
       const src = fs.readFileSync(
         path.join(cwd, "lib/publishing/distribution-scope.ts"),
         "utf8",
       )
-      expect(src).toMatch(/DistributionChannel = "x" \| "newsletter" \| "linkedin"/)
-      expect(src).not.toMatch(/"facebook"/)
+      expect(src).toContain('"facebook"')
+      expect(src).toContain("isLegacyChannelSet")
+      expect(src).toContain("LIVING_BEYOND_ARTICLE_ID")
     })
 
     it("publish helper uses canonical /blog/{slug}, never /blog/ai-tools/", () => {

@@ -42,8 +42,8 @@ export async function GET() {
     limitations: {
       personalProfilePublishing: false,
       autoPageSelection: false,
-      distributionScopeChannel: false,
-      note: "Facebook remains out of Production distribution-scope until R4. Explicit Page selection required.",
+      distributionScopeChannel: true,
+      note: "R4-A: Facebook Page is in the governed distribution contract. Explicit Page selection required. Production connection/activation requires Director-authorised R4-B.",
     },
   })
 }

@@ -40,8 +40,8 @@ export async function GET() {
     limitations: {
       organizationPublishing: false,
       mediaPublishing: false,
-      distributionScopeChannel: false,
-      note: "Threads remains out of Production distribution-scope until R4.",
+      distributionScopeChannel: true,
+      note: "R4-A: Threads is in the governed distribution contract. Production connection/activation requires Director-authorised R4-B. No default all-channel publishing.",
     },
   })
 }

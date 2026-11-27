@@ -58,3 +58,6 @@ public/renders/
 # scratch / dumped artifacts
 *.log
 twitter-search.txt
+
+# Local YouTube media worker storage (R4-A)
+public/youtube-worker-media/

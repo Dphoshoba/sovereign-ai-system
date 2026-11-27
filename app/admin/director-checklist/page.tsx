@@ -7,6 +7,9 @@ import {
   type DirectorMonitoringStatus,
 } from "../../../lib/publishing/director-checklist-monitoring"
 import { loadDirectorOperationalSignals } from "../../../lib/publishing/director-checklist-signals"
+import { buildMultimediaPackageReadiness } from "../../../lib/publishing/multimedia-package-readiness"
+import { latestDistributionScope } from "../../../lib/publishing/distribution-scope"
+import { computeArticleAuditFingerprint } from "../../../lib/research/article-audit-fingerprint"
 
 function monitoringColor(status: DirectorMonitoringStatus) {
   switch (status) {
@@ -61,7 +64,99 @@ export default async function DirectorChecklistPage({
       articleId: article.id,
       socialPostIds: article.socialPosts.map((post) => post.id),
     })
-    views.push(attachDirectorMonitoring(checklist, article, signals))
+    const monitored = attachDirectorMonitoring(checklist, article, signals)
+
+    let packageReadiness = null
+    if (articleId) {
+      const full = await prisma.article.findUnique({
+        where: { id: article.id },
+        include: {
+          researchSources: true,
+          researchAudits: { orderBy: { createdAt: "desc" }, take: 1 },
+          reviewNotes: true,
+          socialPosts: true,
+          newsletters: { orderBy: { updatedAt: "desc" }, take: 1 },
+        },
+      })
+      if (full) {
+        const sourceUrls = full.researchSources
+          .map((s) => s.url)
+          .filter((u): u is string => Boolean(u))
+        const contentFingerprint = computeArticleAuditFingerprint(full, sourceUrls)
+        const scope = latestDistributionScope(full.reviewNotes)
+        const byPlatform = (platform: string) => {
+          const posts = full.socialPosts.filter((p) => p.platform === platform)
+          return (
+            posts.find((p) => p.status === "approved") ?? posts[0] ?? null
+          )
+        }
+        const x = byPlatform("twitter")
+        const linkedin = byPlatform("linkedin")
+        const threads = byPlatform("threads")
+        const facebook = byPlatform("facebook")
+        const newsletter = full.newsletters[0] ?? null
+        const youtubePost = await prisma.youTubePost.findFirst({
+          where: { articleId: full.id },
+          orderBy: { updatedAt: "desc" },
+        })
+        packageReadiness = buildMultimediaPackageReadiness({
+          article: full,
+          contentFingerprint,
+          evidenceSummary: {
+            auditId: full.researchAudits[0]?.id ?? null,
+            recommendation:
+              full.researchAudits[0]?.publicationRecommendation ?? null,
+            consensusScore: full.researchAudits[0]?.consensusScore ?? null,
+            sourceQualityScore: full.researchAudits[0]?.sourceQualityScore ?? null,
+          },
+          xAnnouncement: x
+            ? { id: x.id, content: x.content, status: x.status }
+            : null,
+          linkedinAnnouncement: linkedin
+            ? {
+                id: linkedin.id,
+                content: linkedin.content,
+                status: linkedin.status,
+              }
+            : null,
+          threadsAnnouncement: threads
+            ? {
+                id: threads.id,
+                content: threads.content,
+                status: threads.status,
+              }
+            : null,
+          facebookAnnouncement: facebook
+            ? {
+                id: facebook.id,
+                content: facebook.content,
+                status: facebook.status,
+              }
+            : null,
+          newsletter: newsletter
+            ? {
+                id: newsletter.id,
+                subject: newsletter.subject,
+                previewText: newsletter.previewText,
+                content: newsletter.content,
+                status: newsletter.status,
+              }
+            : null,
+          youtubeAssets: youtubePost
+            ? {
+                youtubePostId: youtubePost.id,
+                title: youtubePost.title,
+                description: youtubePost.description,
+                longFormReady: Boolean(youtubePost.renderedVideoUrl),
+                shortsReady: Boolean(youtubePost.shortsVideoUrl),
+              }
+            : null,
+        })
+        void scope
+      }
+    }
+
+    views.push({ ...monitored, packageReadiness })
   }
 
   return (
@@ -136,6 +231,59 @@ export default async function DirectorChecklistPage({
                   </span>
                 )}
               </div>
+
+              {view.packageReadiness ? (
+                <div
+                  style={{
+                    marginTop: 18,
+                    padding: 16,
+                    borderRadius: 12,
+                    border: "1px solid var(--border)",
+                    background: "var(--background)",
+                  }}
+                >
+                  <div style={{ fontWeight: 700, marginBottom: 8 }}>
+                    Complete package review
+                  </div>
+                  <p style={{ margin: "0 0 10px", color: "var(--muted)", fontSize: 14 }}>
+                    Approval: {view.packageReadiness.approvalState}
+                    {view.packageReadiness.schedule
+                      ? ` · Schedule: ${view.packageReadiness.schedule}`
+                      : ""}
+                    {view.packageReadiness.packageFingerprint
+                      ? ` · FP: ${view.packageReadiness.packageFingerprint.slice(0, 12)}…`
+                      : ""}
+                  </p>
+                  <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.7 }}>
+                    {view.packageReadiness.rows.map((row) => (
+                      <li key={row.channel}>
+                        <strong>{row.channel}</strong>
+                        {row.authorised ? " · authorised" : " · not authorised"}
+                        {row.assetReady ? " · asset ready" : " · asset missing"}
+                        {row.accountOrPage ? ` · ${row.accountOrPage}` : ""}
+                        {row.blocker ? ` · blocker: ${row.blocker}` : ""}
+                        {row.outcome ? ` · outcome: ${row.outcome}` : ""}
+                      </li>
+                    ))}
+                  </ul>
+                  {view.packageReadiness.socialCopy.x ||
+                  view.packageReadiness.socialCopy.threads ||
+                  view.packageReadiness.socialCopy.facebook ? (
+                    <div style={{ marginTop: 12, fontSize: 13, color: "var(--muted)" }}>
+                      Exact social copy is bound in Social posts — open Social to
+                      preview before I2 approval. YouTube long-form ready:{" "}
+                      {view.packageReadiness.youtubePreview?.longFormReady
+                        ? "yes"
+                        : "no"}
+                      ; Shorts ready:{" "}
+                      {view.packageReadiness.youtubePreview?.shortsReady
+                        ? "yes"
+                        : "no"}
+                      .
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
 
               <ol
                 style={{

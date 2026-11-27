@@ -5,12 +5,16 @@ import { sendAuthorisedNewsletterAfterScheduledPublish } from "../newsletter/aft
 import type { NewsletterSendStore } from "../newsletter/send-newsletter";
 import { publishAuthorisedXAfterScheduledPublish } from "../social/after-scheduled-publish-x";
 import { publishAuthorisedLinkedInAfterScheduledPublish } from "../social/after-scheduled-publish-linkedin";
+import { publishAuthorisedThreadsAfterScheduledPublish } from "../social/after-scheduled-publish-threads";
+import { publishAuthorisedFacebookAfterScheduledPublish } from "../social/after-scheduled-publish-facebook";
 import {
   ArticleLifecycleStore,
   transitionArticleLifecycle,
 } from "./article-lifecycle";
 import type { TwitterPublishStore } from "../social/publish-twitter-post";
 import type { LinkedInPublishStore } from "../social/linkedin-publish";
+import type { ThreadsPublishStore } from "../social/threads-publish";
+import type { FacebookPublishStore } from "../social/facebook-publish";
 
 export type DueArticle = {
   id: string;
@@ -90,6 +94,8 @@ export type PublishDueArticlesStore = ArticleLifecycleStore & {
   };
 } & TwitterPublishStore &
   LinkedInPublishStore &
+  ThreadsPublishStore &
+  FacebookPublishStore &
   NewsletterSendStore;
 
 export type PublishDueArticlesResult = {
@@ -108,6 +114,8 @@ export type PublishDueArticlesResult = {
   xOutcomes?: { id: string; outcome: string; detail?: string }[];
   linkedinOutcomes?: { id: string; outcome: string; detail?: string }[];
   newsletterOutcomes?: { id: string; outcome: string; detail?: string }[];
+  threadsOutcomes?: { id: string; outcome: string; detail?: string }[];
+  facebookOutcomes?: { id: string; outcome: string; detail?: string }[];
 };
 
 async function defaultAfterPublish(
@@ -120,6 +128,10 @@ async function defaultAfterPublish(
   linkedinDetail?: string;
   newsletterOutcome?: string;
   newsletterDetail?: string;
+  threadsOutcome?: string;
+  threadsDetail?: string;
+  facebookOutcome?: string;
+  facebookDetail?: string;
 }> {
   const article = await store.article.findUnique({
     where: { id: articleId },
@@ -130,6 +142,8 @@ async function defaultAfterPublish(
       xOutcome: "article_missing",
       linkedinOutcome: "article_missing",
       newsletterOutcome: "article_missing",
+      threadsOutcome: "article_missing",
+      facebookOutcome: "article_missing",
     };
   }
 
@@ -141,10 +155,12 @@ async function defaultAfterPublish(
     reviewNotes: article.reviewNotes,
   });
 
-  // When X or LinkedIn is authorised, never invent/regenerate announcement copy.
+  // When social channels are authorised, never invent/regenerate announcement copy.
   if (
     !channelAuthorised(authorised.scope, "x") &&
-    !channelAuthorised(authorised.scope, "linkedin")
+    !channelAuthorised(authorised.scope, "linkedin") &&
+    !channelAuthorised(authorised.scope, "threads") &&
+    !channelAuthorised(authorised.scope, "facebook")
   ) {
     await autoGenerateSocialPosts(articleId);
   }
@@ -171,6 +187,10 @@ async function defaultAfterPublish(
       linkedinDetail: "Preview environment does not publish live social posts.",
       newsletterOutcome: "skipped_preview",
       newsletterDetail: "Preview environment does not send live newsletter lists.",
+      threadsOutcome: "skipped_preview",
+      threadsDetail: "Preview environment does not publish live social posts.",
+      facebookOutcome: "skipped_preview",
+      facebookDetail: "Preview environment does not publish live social posts.",
     };
   }
 
@@ -255,6 +275,61 @@ async function defaultAfterPublish(
     newsletterDetail = error instanceof Error ? error.message : "unknown";
   }
 
+  // Partial channel failure must not prevent reporting of other channels.
+  let threadsOutcome = "skipped";
+  let threadsDetail: string | undefined;
+  try {
+    const threadsResult = await publishAuthorisedThreadsAfterScheduledPublish({
+      article,
+      socialPosts,
+      store,
+      actor: "scheduler:publish-due-articles",
+    });
+
+    if (threadsResult.ok && threadsResult.skipped) {
+      threadsOutcome = "skipped";
+      threadsDetail = threadsResult.reason;
+    } else if (threadsResult.ok) {
+      threadsOutcome = "published";
+      threadsDetail = threadsResult.externalId
+        ? `externalId=${threadsResult.externalId}`
+        : undefined;
+    } else {
+      threadsOutcome = threadsResult.code;
+      threadsDetail = threadsResult.reason;
+    }
+  } catch (error) {
+    threadsOutcome = "threads_side_effect_error";
+    threadsDetail = error instanceof Error ? error.message : "unknown";
+  }
+
+  let facebookOutcome = "skipped";
+  let facebookDetail: string | undefined;
+  try {
+    const fbResult = await publishAuthorisedFacebookAfterScheduledPublish({
+      article,
+      socialPosts,
+      store,
+      actor: "scheduler:publish-due-articles",
+    });
+
+    if (fbResult.ok && fbResult.skipped) {
+      facebookOutcome = "skipped";
+      facebookDetail = fbResult.reason;
+    } else if (fbResult.ok) {
+      facebookOutcome = "published";
+      facebookDetail = fbResult.externalId
+        ? `externalId=${fbResult.externalId}`
+        : undefined;
+    } else {
+      facebookOutcome = fbResult.code;
+      facebookDetail = fbResult.reason;
+    }
+  } catch (error) {
+    facebookOutcome = "facebook_side_effect_error";
+    facebookDetail = error instanceof Error ? error.message : "unknown";
+  }
+
   return {
     xOutcome,
     detail,
@@ -262,6 +337,10 @@ async function defaultAfterPublish(
     linkedinDetail,
     newsletterOutcome,
     newsletterDetail,
+    threadsOutcome,
+    threadsDetail,
+    facebookOutcome,
+    facebookDetail,
   };
 }
 
@@ -283,6 +362,10 @@ export async function publishDueArticles(
           linkedinDetail?: string;
           newsletterOutcome?: string;
           newsletterDetail?: string;
+          threadsOutcome?: string;
+          threadsDetail?: string;
+          facebookOutcome?: string;
+          facebookDetail?: string;
         }
     >;
   } = {},
@@ -316,6 +399,10 @@ export async function publishDueArticles(
   const linkedinOutcomes: { id: string; outcome: string; detail?: string }[] =
     [];
   const newsletterOutcomes: { id: string; outcome: string; detail?: string }[] =
+    [];
+  const threadsOutcomes: { id: string; outcome: string; detail?: string }[] =
+    [];
+  const facebookOutcomes: { id: string; outcome: string; detail?: string }[] =
     [];
 
   for (const article of eligibleArticles) {
@@ -367,6 +454,20 @@ export async function publishDueArticles(
             detail: side.newsletterDetail,
           });
         }
+        if (typeof side.threadsOutcome === "string") {
+          threadsOutcomes.push({
+            id: article.id,
+            outcome: side.threadsOutcome,
+            detail: side.threadsDetail,
+          });
+        }
+        if (typeof side.facebookOutcome === "string") {
+          facebookOutcomes.push({
+            id: article.id,
+            outcome: side.facebookOutcome,
+            detail: side.facebookDetail,
+          });
+        }
       }
     } catch {
       publishedIds.push(article.id);
@@ -391,6 +492,8 @@ export async function publishDueArticles(
     xOutcomes,
     linkedinOutcomes,
     newsletterOutcomes,
+    threadsOutcomes,
+    facebookOutcomes,
   };
 
   console.info(
@@ -410,6 +513,8 @@ export async function publishDueArticles(
       xOutcomes,
       linkedinOutcomes,
       newsletterOutcomes,
+      threadsOutcomes,
+      facebookOutcomes,
     }),
   );
 
