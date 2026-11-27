@@ -72,14 +72,15 @@ export const PLATFORM_CAPABILITIES: Record<SocialPlatform, PlatformCapabilitySta
   },
   facebook: {
     platform: 'facebook',
-    connectionStatus: 'not_configured',
-    draftGeneration: false,
-    approvalSupported: false,
-    textPublishing: false,
+    // App OAuth credentials may be present; Page connection is via ExternalIntegration.
+    connectionStatus: 'configured',
+    draftGeneration: true,
+    approvalSupported: true,
+    textPublishing: true,
     mediaPublishing: false,
-    publishStatus: 'unavailable',
+    publishStatus: 'publish_capable',
     requiresCredentials: true,
-    status: 'unavailable',
+    status: 'publish_capable',
   },
   instagram: {
     platform: 'instagram',

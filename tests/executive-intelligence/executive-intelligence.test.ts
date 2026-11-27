@@ -1198,10 +1198,11 @@ describe('Social Platform — Provider Contracts', () => {
     expect(linkedin.draftGeneration).toBe(true);
   });
 
-  it('social platform: Facebook is unavailable', () => {
+  it('social platform: Facebook is publish-capable after R3 recovery', () => {
     const fb = getPlatformCapabilities('facebook');
-    expect(fb.publishStatus).toBe('unavailable');
-    expect(fb.draftGeneration).toBe(false);
+    expect(fb.publishStatus).toBe('publish_capable');
+    expect(fb.textPublishing).toBe(true);
+    expect(fb.draftGeneration).toBe(true);
   });
 
   it('social platform: YouTube is unsupported', () => {
